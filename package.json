@@ -23,4 +23,8 @@
     "nodemailer": "^6.3.1",
     "path": "^0.12.7"
   }
+"repository": {
+  "type": "git",
+  "url": "git://github.com/beyondewallet/backend-user-services.git"
+}
 }
