@@ -9,8 +9,11 @@ const BankSchema = new mongoose.Schema({
   user_id: { type: String, required: true },
   logo: { type: String, required: false },
   contract: { type: String, required: false },
+  username: { type: String, required: true, unique:true },
   password: { type: String, required: true },
   created_at: { type: Date, default: Date.now },
-  modified_at: { type: Date, default: null }
+  modified_at: { type: Date, default: null },
+  initial_setup: { type: Boolean, default: false },
+  token: {type: String, required:false, default:null}
 });
 module.exports = mongoose.model('Bank', BankSchema);

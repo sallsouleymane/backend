@@ -128,6 +128,33 @@ router.post('/login', function(req, res) {
   });
 });
 
+
+router.post('/bankLogin', function(req, res) {
+  const { username, password } = req.body;
+   Bank.findOne({ username, password }, function(err, bank) {
+
+    if (err) {
+      res.status(500)
+        .json({
+        error: 'Internal error please try again'
+      });
+    } else if (!bank) {
+      res.status(401)
+      .json({
+        error: 'Incorrect username or password'
+      });
+    } else {
+      let token = makeid(10);
+
+      User.findByIdAndUpdate(bank._id, {token: token}, (err) => {
+        if (err) return res.status(400).json({ error: err });
+        res.status(200).json({ token: token, name: bank.name, initial_setup: bank.initial_setup, username: bank.username });
+      });
+      
+     }
+  });
+});
+
 router.post('/getDashStats', function(req, res) {
   const { token } = req.body;
   User.findOne({ token }, function(err, user) {
@@ -176,6 +203,7 @@ router.post('/addBank', (req, res) => {
       data.address1 = address1;
       data.address2 = address2;
       data.mobile = mobile;
+      data.username = mobile;
       data.email = email;
       data.user_id = user._id;
       data.logo = logo;
@@ -186,7 +214,7 @@ router.post('/addBank', (req, res) => {
   
       data.save((err, ) => {
         if (err) return res.json({error: err });
-        let content  = "<p>Your bank is added in E-Wallet application</p><p>&nbsp;</p><p>Your username: "+data.mobile+"</p><p>Your password: "+data.password+"</p>";
+        let content  = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://34.90.64.186/bank'>http://34.90.64.186/bank</a></p><p><p>Your username: "+data.username+"</p><p>Your password: "+data.password+"</p>";
 
         let info = transporter.sendMail({
           from: '"E-Wallet" <no-reply@ewallet.com>', // sender address
