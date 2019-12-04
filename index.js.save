@@ -265,9 +265,8 @@ router.post('/logout', function(req, res) {
 });
 
 router.post('/fileUpload', function(req, res) {
-console.log(req.query);
-  const  token  = req.query.token;
-
+console.log(req.body)
+  const { token } = req.body;
   User.findOne({ token }, function(err, user) {
     if (err) {
       res.status(401)
