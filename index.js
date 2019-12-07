@@ -214,7 +214,7 @@ router.post('/addBank', (req, res) => {
   
       data.save((err, ) => {
         if (err) return res.json({error: err });
-        let content  = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/bank'>http://34.90.64.186/bank</a></p><p><p>Your username: "+data.username+"</p><p>Your password: "+data.password+"</p>";
+        let content  = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/bank'>http://35.204.144.169/bank</a></p><p><p>Your username: "+data.username+"</p><p>Your password: "+data.password+"</p>";
 
         let info = transporter.sendMail({
           from: '"E-Wallet" <no-reply@ewallet.com>', // sender address
