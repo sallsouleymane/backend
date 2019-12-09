@@ -2,8 +2,11 @@
 const mongoose = require('mongoose');
 const BankSchema = new mongoose.Schema({
   name: { type: String, required: true},
-  address1: { type: String, required: false },
-  address2: { type: String, required: false },
+  address1: { type: String, required: true },
+  state: { type: String, required: true },
+  zip: { type: String, required: true },
+  country: { type: String, required: true },
+  ccode: { type: String, required: false },
   mobile: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   user_id: { type: String, required: true },

@@ -9,6 +9,7 @@ const logger = require('morgan');
 const Data = require('./data');
 const User = require('./models/User');
 const Bank = require('./models/Bank');
+const OTP = require('./models/OTP');
 const nodemailer = require("nodemailer");
 //const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
@@ -18,6 +19,16 @@ const API_PORT = 3001;
 function makeid(length) {
   var result           = '';
   var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  var charactersLength = characters.length;
+  for ( var i = 0; i < length; i++ ) {
+     result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
+
+function makeotp(length) {
+  var result           = '';
+  var characters       = '0123456789';
   var charactersLength = characters.length;
   for ( var i = 0; i < length; i++ ) {
      result += characters.charAt(Math.floor(Math.random() * charactersLength));
@@ -145,12 +156,36 @@ router.post('/bankLogin', function(req, res) {
       });
     } else {
       let token = makeid(10);
-
-      User.findByIdAndUpdate(bank._id, {token: token}, (err) => {
+      Bank.findByIdAndUpdate(bank._id, {token: token}, (err) => {
         if (err) return res.status(400).json({ error: err });
         res.status(200).json({ token: token, name: bank.name, initial_setup: bank.initial_setup, username: bank.username });
       });
       
+     }
+  });
+});
+
+router.post('/bankSetupUpdate', function(req, res) {
+  const { username, password, token } = req.body;
+   Bank.findOne({ token }, function(err, bank) {
+    if (err) {
+      res.status(500)
+        .json({
+        error: 'Internal error please try again'
+      });
+    } else if (!bank) {
+      res.status(401)
+      .json({
+        error: 'Incorrect username or password'
+      });
+    } else {
+      Bank.findByIdAndUpdate(bank._id, {username: username, password: password, initial_setup: true}, (err) => {
+        if (err) return res.status(400).json({ error: err });
+        res.status(200)
+        .json({
+          success: 'Updated successfully'
+        });
+        });
      }
   });
 });
@@ -184,7 +219,7 @@ router.post('/getDashStats', function(req, res) {
 
 router.post('/addBank', (req, res) => {
   let data = new Bank();
-  const { name, address1, address2, mobile, email, token, logo, contract } = req.body;
+  const { name, address1, state, zip, country, ccode, mobile, email, token, logo, contract, otp } = req.body;
   User.findOne({ token }, function(err, user) {
     if (err) {
       res.status(401)
@@ -192,7 +227,17 @@ router.post('/addBank', (req, res) => {
       error: err
     });
     }else{
-      if (name == '' || address1 == '' || address2 == '' || mobile == '' || email == '' ) {
+      const user_id = user._id;
+      OTP.findOne({ user_id }, function(err, otpd) {
+        if (err) {
+          res.status(401)
+          .json({
+          error: err
+        });
+        }else{
+          if(otpd.otp == otp){
+
+      if (name == '' || address1 == '' || state == '' || mobile == '' || email == '' ) {
         return res.status(402)
         .json({
         error: 'Please provide valid inputs'
@@ -201,7 +246,10 @@ router.post('/addBank', (req, res) => {
       
       data.name = name;
       data.address1 = address1;
-      data.address2 = address2;
+      data.state = state;
+      data.country = country;
+      data.zip = zip;
+      data.ccode = ccode;
       data.mobile = mobile;
       data.username = mobile;
       data.email = email;
@@ -209,8 +257,6 @@ router.post('/addBank', (req, res) => {
       data.logo = logo;
       data.contract = contract;
       data.password = makeid(10);
-
-      
   
       data.save((err, ) => {
         if (err) return res.json({error: err });
@@ -226,6 +272,16 @@ router.post('/addBank', (req, res) => {
         return res.status(200).json(data);
       });
     }
+    else{
+      res.status(200)
+          .json({
+          error: 'OTP Missmatch'
+        });
+    }
+  }
+    });
+    }
+ 
 });
 });
 
@@ -257,6 +313,35 @@ router.post('/getBanks', function(req, res) {
     }
 });
 });
+
+
+router.post('/generateOTP', function(req, res) {
+  let data = new OTP();
+  const { token, name, mobile, page } = req.body;
+  User.findOne({ token }, function(err, user) {
+    if (err) {
+      res.status(401)
+      .json({
+      error: err
+    });
+    }else{
+      
+      data.user_id = user._id;
+      data.otp = makeotp(6);
+      data.page = page;
+      data.mobile = mobile;
+
+      data.save((err, ) => {
+        if (err) return res.json({error: err });
+              res.status(200)
+              .json({
+                otp: true
+              });
+        });
+    }
+});
+});
+
 
 router.post('/checkToken', function(req, res) {
   const { token } = req.body;
