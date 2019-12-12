@@ -19,6 +19,26 @@ const cookieParser = require('cookie-parser');
 // const withAuth = require('./middleware');
 const API_PORT = 3001;
 
+
+const app = express();
+app.use(cors());
+app.use(cookieParser());
+app.use(express.static('public'));
+const router = express.Router();
+
+const dbRoute = 'mongodb://127.0.0.1:27017/ewallet';
+mongoose.connect(dbRoute, {
+  useNewUrlParser: true
+});
+let db = mongoose.connection;
+db.once('open', () => console.log('connected to the database'));
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
+app.use(logger('dev'));
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
+
+
 function makeid(length) {
   var result = '';
   var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -129,25 +149,6 @@ let transporter = nodemailer.createTransport({
   }
 });
 
-
-const app = express();
-app.use(cors());
-app.use(cookieParser());
-app.use(express.static('public'));
-const router = express.Router();
-
-const dbRoute = 'mongodb://127.0.0.1:27017/ewallet';
-mongoose.connect(dbRoute, {
-  useNewUrlParser: true
-});
-let db = mongoose.connection;
-db.once('open', () => console.log('connected to the database'));
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-app.use(bodyParser.urlencoded({
-  extended: false
-}));
-app.use(bodyParser.json());
-app.use(logger('dev'));
 
 /* Infra APIs start  */
 router.post('/login', function (req, res) {
