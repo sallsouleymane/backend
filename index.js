@@ -49,6 +49,75 @@ function sendSMS(url) {
     return body;
   });
 }
+// async function createWallet(arr){
+//   arr.forEach(url => { 
+//     var options = {
+//       uri: 'http://34.70.46.65:8000/createEWallet',
+//       method: 'POST',
+//       json: {
+//         "wallet_id": url,
+//         "type": "test",
+//         "remarks": ""
+//       }
+//     };
+
+//     request(options, function (error, response, body) {
+//       if (!error && response.statusCode == 200) {
+//         console.log(body);
+//         if(body.Error){
+//           await body.Error;
+//         }else{
+//           return "";
+//         }
+//       }else{
+//         return 'Network Error';
+//       }
+//       await 
+//     });
+    
+//   });
+//   await printString("A")
+//   await printString("B")
+//   await printString("C")
+// }
+function doRequest(url) {
+  var options = {
+    uri: 'http://34.70.46.65:8000/createEWallet',
+    method: 'POST',
+    json: {
+      "wallet_id": url,
+      "type": "test",
+      "remarks": ""
+    }
+  };
+  return new Promise(function (resolve, reject) {
+    request(options, function (error, res, body) {
+      if (!error && res.statusCode == 200) {
+        resolve(body);
+      } else {
+        reject(error);
+      }
+    });
+  });
+}
+
+async function createWallet(arr) {
+  var err = [];
+  await Promise.all(arr.map(async (url) => {
+    let res = await doRequest(url);
+      console.log(res);
+      if(res.Error){
+        err.push(res.Reason);
+      }
+    }));
+  return err.toString();
+}
+
+
+function createWallset(url) {
+
+
+}
 
 let transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -220,7 +289,8 @@ router.post('/addBank', (req, res) => {
     } else {
       const user_id = user._id;
       OTP.findOne({
-        user_id
+        user_id,
+        otp
       }, function (err, otpd) {
         if (err) {
           res.status(401)
@@ -228,6 +298,7 @@ router.post('/addBank', (req, res) => {
               error: err
             });
         } else {
+          console.log(otpd.otp+ " "+ otp);
           if (otpd.otp == otp) {
 
             if (name == '' || address1 == '' || state == '' || mobile == '' || email == '') {
@@ -253,7 +324,7 @@ router.post('/addBank', (req, res) => {
 
             data.save((err, ) => {
               if (err) return res.json({
-                error: err
+                error: "Duplicate entry!"
               });
               let content = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/bank'>http://35.204.144.169/bank</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
 
@@ -645,14 +716,21 @@ router.post('/bankActivate', function (req, res) {
         });
     } else {
       Bank.findByIdAndUpdate(bank._id, {
-        status: 1
+        status: 0
       }, (err) => {
         if (err) return res.status(400).json({
           error: err
         });
-        res.status(200).json({
-          status: 'activated'
-        });
+
+        createWallet(['operational@'+bank.name, 'escrow@'+bank.name, 'master@'+bank.name, 'infra_operational@'+bank.name, 'infra_master@'+bank.name]).then(function(result) {
+          res.status(200).json({
+            status: 'activated',
+            walletStatus: result
+          });
+      });
+    
+
+       
       });
 
     }
@@ -721,7 +799,7 @@ router.post('/bankForgotPassword', function (req, res) {
         if (err) return res.status(400).json({
           error: err
         });
-        sendSMS("http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=EWALET&route=1&number=" + mobile + "&message=Your OTP to change password is " + data.otp);
+        sendSMS("http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=kmindz&route=1&number=" + mobile + "&message=Your OTP to change password is " + data.otp);
         res.status(200)
           .json({
             mobile: mobile,
@@ -870,7 +948,7 @@ router.post('/fileUpload', function (req, res) {
         if (!fs.existsSync(dir)) {
           fs.mkdirSync(dir);
         }
-        console.log(files.file);
+        
         var oldpath = files.file.path;
         var newpath = dir + "/" + files.file.name;
         var savepath = user._id + "/" + files.file.name;
