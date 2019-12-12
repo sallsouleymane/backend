@@ -2,23 +2,21 @@ const request = require('request');
 const mongoose = require('mongoose');
 const express = require('express');
 var formidable = require('formidable');
-var path = require('path'); //used for file path
+var path = require('path');
 var fs = require('fs-extra')
 var cors = require('cors');
 const bodyParser = require('body-parser');
 const logger = require('morgan');
-const Data = require('./data');
+const nodemailer = require("nodemailer");
+const cookieParser = require('cookie-parser');
+
 const Infra = require('./models/Infra');
 const Fee = require('./models/Fee');
 const User = require('./models/User');
 const Bank = require('./models/Bank');
 const OTP = require('./models/OTP');
-const nodemailer = require("nodemailer");
-//const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
-// const withAuth = require('./middleware');
-const API_PORT = 3001;
 
+const API_PORT = 3001;
 
 const app = express();
 app.use(cors());
@@ -156,6 +154,7 @@ return res.status(200).json(
   }
 );
 });
+
 
 /* Infra APIs start  */
 router.post('/login', function (req, res) {
