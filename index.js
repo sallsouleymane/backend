@@ -18,8 +18,6 @@ const nodemailer = require("nodemailer");
 const cookieParser = require('cookie-parser');
 // const withAuth = require('./middleware');
 const API_PORT = 3001;
-
-
 const app = express();
 app.use(cors());
 app.use(cookieParser());
@@ -35,8 +33,8 @@ db.once('open', () => console.log('connected to the database'));
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 app.use(logger('dev'));
-app.use(bodyParser.json({limit: '50mb'}));
-app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: false}));
 
 
 function makeid(length) {
@@ -70,7 +68,7 @@ function sendSMS(url) {
   });
 }
 // async function createWallet(arr){
-//   arr.forEach(url => { 
+//   arr.forEach(url => {
 //     var options = {
 //       uri: 'http://34.70.46.65:8000/createEWallet',
 //       method: 'POST',
@@ -92,9 +90,9 @@ function sendSMS(url) {
 //       }else{
 //         return 'Network Error';
 //       }
-//       await 
+//       await
 //     });
-    
+
 //   });
 //   await printString("A")
 //   await printString("B")
@@ -150,6 +148,10 @@ let transporter = nodemailer.createTransport({
 });
 
 router.get('/testGet', function(req, res){
+return res.status(200).json(req);
+});
+
+router.post('/testPost', function(req, res){
 return res.status(200).json(req);
 });
 
@@ -395,7 +397,7 @@ router.post('/createRules', (req, res) => {
         if (err) return res.status(400).json({
           error: err
         });
-        
+
         res.status(200)
           .json({
             success: true
@@ -528,7 +530,7 @@ router.post('/approveFee', function (req, res) {
           error: err
         });
     } else {
-      
+
       Fee.findByIdAndUpdate(id, {
         status: 1
       }, (err) => {
@@ -560,7 +562,7 @@ router.post('/declineFee', function (req, res) {
           error: err
         });
     } else {
-      
+
       Fee.findByIdAndUpdate(id, {
         status: 2
       }, (err) => {
@@ -732,9 +734,9 @@ router.post('/bankActivate', function (req, res) {
             walletStatus: result
           });
       });
-    
 
-       
+
+
       });
 
     }
@@ -952,7 +954,7 @@ router.post('/fileUpload', function (req, res) {
         if (!fs.existsSync(dir)) {
           fs.mkdirSync(dir);
         }
-        
+
         var oldpath = files.file.path;
         var newpath = dir + "/" + files.file.name;
         var savepath = user._id + "/" + files.file.name;
