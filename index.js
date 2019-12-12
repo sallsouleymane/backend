@@ -723,7 +723,7 @@ router.post('/bankActivate', function (req, res) {
         });
     } else {
       Bank.findByIdAndUpdate(bank._id, {
-        status: 0
+        status: 1
       }, (err) => {
         if (err) return res.status(400).json({
           error: err
@@ -806,7 +806,7 @@ router.post('/bankForgotPassword', function (req, res) {
         if (err) return res.status(400).json({
           error: err
         });
-        sendSMS("http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=kmindz&route=1&number=" + mobile + "&message=Your OTP to change password is " + data.otp);
+        sendSMS("http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=EWALET&route=1&number=" + mobile + "&message=Your OTP to change password is " + data.otp);
         res.status(200)
           .json({
             mobile: mobile,
