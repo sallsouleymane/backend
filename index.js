@@ -149,6 +149,9 @@ let transporter = nodemailer.createTransport({
   }
 });
 
+router.get('/testGet', function(req, res){
+return res.status(200).json(req);
+});
 
 /* Infra APIs start  */
 router.post('/login', function (req, res) {
