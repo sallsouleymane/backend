@@ -17,6 +17,7 @@ const BankSchema = new mongoose.Schema({
   created_at: { type: Date, default: Date.now },
   modified_at: { type: Date, default: null },
   initial_setup: { type: Boolean, default: false },
+  status: {type: Number, required:true, default:0},
   token: {type: String, required:false, default:null}
 });
 module.exports = mongoose.model('Bank', BankSchema);
