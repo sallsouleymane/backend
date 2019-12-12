@@ -70,7 +70,7 @@ function sendSMS(url) {
   });
 }
 // async function createWallet(arr){
-//   arr.forEach(url => { 
+//   arr.forEach(url => {
 //     var options = {
 //       uri: 'http://34.70.46.65:8000/createEWallet',
 //       method: 'POST',
@@ -92,9 +92,9 @@ function sendSMS(url) {
 //       }else{
 //         return 'Network Error';
 //       }
-//       await 
+//       await
 //     });
-    
+
 //   });
 //   await printString("A")
 //   await printString("B")
@@ -150,7 +150,11 @@ let transporter = nodemailer.createTransport({
 });
 
 router.get('/testGet', function(req, res){
-return res.status(200).json(req);
+return res.status(200).json(
+  {
+    status: 'Internal error please try again'
+  }
+);
 });
 
 /* Infra APIs start  */
@@ -395,7 +399,7 @@ router.post('/createRules', (req, res) => {
         if (err) return res.status(400).json({
           error: err
         });
-        
+
         res.status(200)
           .json({
             success: true
@@ -528,7 +532,7 @@ router.post('/approveFee', function (req, res) {
           error: err
         });
     } else {
-      
+
       Fee.findByIdAndUpdate(id, {
         status: 1
       }, (err) => {
@@ -560,7 +564,7 @@ router.post('/declineFee', function (req, res) {
           error: err
         });
     } else {
-      
+
       Fee.findByIdAndUpdate(id, {
         status: 2
       }, (err) => {
@@ -732,9 +736,9 @@ router.post('/bankActivate', function (req, res) {
             walletStatus: result
           });
       });
-    
 
-       
+
+
       });
 
     }
@@ -952,7 +956,7 @@ router.post('/fileUpload', function (req, res) {
         if (!fs.existsSync(dir)) {
           fs.mkdirSync(dir);
         }
-        
+
         var oldpath = files.file.path;
         var newpath = dir + "/" + files.file.name;
         var savepath = user._id + "/" + files.file.name;
