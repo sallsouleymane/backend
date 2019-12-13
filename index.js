@@ -15,6 +15,8 @@ const Fee = require('./models/Fee');
 const User = require('./models/User');
 const Bank = require('./models/Bank');
 const OTP = require('./models/OTP');
+const Wallet = require('./models/Wallet');
+const Transaction = require('./models/Transaction');
 
 const API_PORT = 3001;
 
@@ -98,16 +100,7 @@ function sendSMS(url) {
 //   await printString("B")
 //   await printString("C")
 // }
-function doRequest(url) {
-  var options = {
-    uri: 'http://34.70.46.65:8000/createEWallet',
-    method: 'POST',
-    json: {
-      "wallet_id": url,
-      "type": "test",
-      "remarks": ""
-    }
-  };
+function doRequest(options) {
   return new Promise(function (resolve, reject) {
     request(options, function (error, res, body) {
       if (!error && res.statusCode == 200) {
@@ -119,16 +112,78 @@ function doRequest(url) {
   });
 }
 
-async function createWallet(arr) {
+async function createWallet(arr, bank, infra) {
   var err = [];
   await Promise.all(arr.map(async (url) => {
-    let res = await doRequest(url);
-      console.log(res);
+    var options = {
+      uri: 'http://34.70.46.65:8000/createEWallet',
+      method: 'POST',
+      json: {
+        "wallet_id": url,
+        "type": "test",
+        "remarks": ""
+      }
+    };
+    let res = await doRequest(options);
+      
       if(res.Error){
         err.push(res.Reason);
+      }else{
+        let data = new Wallet();
+        let temp = url.split("@");
+        data.address = url;
+        data.type = temp[0];
+        data.infra_id = infra;
+        data.bank_id = bank;
+        data.balance = 0;
+        data.save((e, ) => {
+          if (e){
+            err.push("failed to create "+url);
+          }
+        });
+
       }
+
     }));
   return err.toString();
+}
+
+
+async function recharge(arr) {
+  var err = [];
+  await Promise.all(arr.map(async (url) => {
+    err.push(Math.round(new Date().getTime()/1000));
+    // var options = {
+    //   uri: 'http://34.70.46.65:8000/rechargeEWallet',
+    //   method: 'POST',
+    //   json: {
+    //     "wallet_id": url.to,
+    //     "amount": url.amount,
+    //     "remarks": ""
+    //   }
+    // };
+    // let res = await doRequest(options);
+    // console.log(res);
+      
+    //   if(res.Error){
+    //     err.push(res.Reason);
+    //   }else{
+    //     let data = new Wallet();
+    //     let temp = url.split("@");
+    //     data.address = url;
+    //     data.type = temp[0];
+    //     data.infra_id = infra;
+    //     data.bank_id = bank;
+    //     data.balance = 0;
+    //     data.save((e, ) => {
+    //       if (e){
+    //         err.push("failed to create "+url);
+    //       }
+    //     });
+    //   }
+
+    }));
+  return err;
 }
 
 
@@ -236,6 +291,25 @@ router.post('/login', function (req, res) {
   });
 });
 
+router.get('/checkInfra', function (req, res) {
+ 
+  Infra.countDocuments({}, function (err, c) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+     
+          res.status(200)
+            .json({
+              infras: c
+            });
+      
+    }
+  });
+});
+
 router.post('/getDashStats', function (req, res) {
   const {
     token
@@ -283,6 +357,7 @@ router.post('/addBank', (req, res) => {
     token,
     logo,
     contract,
+    otp_id,
     otp
   } = req.body;
   Infra.findOne({
@@ -294,10 +369,10 @@ router.post('/addBank', (req, res) => {
           error: err
         });
     } else {
-      const user_id = user._id;
+      // const user_id = user._id;
       OTP.findOne({
-        user_id,
-        otp
+        _id: otp_id,
+        otp: otp
       }, function (err, otpd) {
         if (err) {
           res.status(401)
@@ -355,6 +430,56 @@ router.post('/addBank', (req, res) => {
     }
 
   });
+});
+
+router.get('/infraTopup', (req, res) => {
+  console.log(req);
+  const {amount, bank} = req.query;
+  Infra.findOne({
+    name: "Infra Admin"
+  }, function (err, infra) {
+    if(err) return res.status(401);
+    Bank.findOne({
+      name: bank
+    }, function (err, ba) {
+      if(err) return res.status(401);
+
+      let data = new Transaction();
+      let fee = (amount*10/100);
+      // data.trans_id = Math.round(new Date().getTime()/1000);
+      data.fee = fee;
+      data.amount = amount-fee;
+      data.from = "recharge";
+      data.to = "infra_master@"+ba.name;  
+
+      let data2 = new Transaction();
+      // data.trans_id = Math.round(new Date().getTime()/1000);
+      data2.fee = 0;
+      data2.amount = fee;
+      data2.from = "recharge";
+      data2.to = "infra_operational@"+ba.name;  
+
+      recharge([data, data2]).then(function(result) {
+        data.trans_id = result[0];
+        data2.trans_id = result[1];
+        console.log(data);
+        console.log(data2);
+        
+        data.save((err, ) => {
+     
+        });
+        data2.save((err, ) => {
+     
+        });
+        res.status(200)
+        .json({
+          status: 'success'
+        });
+      });
+     
+  });
+  
+});
 });
 
 router.post('/createRules', (req, res) => {
@@ -443,6 +568,59 @@ router.post('/getBank', function (req, res) {
 
     }
   });
+});
+
+router.post('/getWallets', function (req, res) {
+  //res.send("hi");
+  const {
+    token, bank_id
+  } = req.body;
+
+      console.log(bank_id);
+      Bank.findOne({
+        "_id": bank_id
+      }, function (err, bank) {
+        if (err) {
+          res.status(500)
+            .json({
+              error: err
+            });
+        } else {
+          res.status(200)
+            .json({
+              from: 'infra_master@'+bank.name,
+              to: 'master@'+bank.name,
+            });
+        }
+      });
+
+});
+
+
+router.post('/getWalletsMaster', function (req, res) {
+  //res.send("hi");
+  const {
+    token, bank_id
+  } = req.body;
+
+      console.log(bank_id);
+      Bank.findOne({
+        "_id": bank_id
+      }, function (err, bank) {
+        if (err) {
+          res.status(500)
+            .json({
+              error: err
+            });
+        } else {
+          res.status(200)
+            .json({
+              from: 'infra_operational@'+bank.name,
+              to: 'infra_master@'+bank.name,
+            });
+        }
+      });
+
 });
 
 router.post('/getRules', function (req, res) {
@@ -616,45 +794,30 @@ router.post('/getBanks', function (req, res) {
 });
 
 router.post('/setupUpdate', function (req, res) {
+  let data = new Infra();
   const {
     username,
     password,
     email,
-    mobile,
-    token
+    mobile
   } = req.body;
-  Infra.findOne({
-    token
-  }, function (err, bank) {
-    if (err) {
-      res.status(500)
-        .json({
-          error: 'Internal error please try again'
-        });
-    } else if (!bank) {
-      res.status(401)
-        .json({
-          error: 'Incorrect username or password'
-        });
-    } else {
-      console.log(bank);
-      Infra.findByIdAndUpdate(bank._id, {
-        username: username,
-        password: password,
-        email: email,
-        mobile: mobile,
-        initial_setup: true
-      }, (err) => {
-        if (err) return res.status(402).json({
-          error: err
-        });
-        res.status(200)
-          .json({
-            success: 'Updated successfully'
-          });
+  
+  data.name = "Infra Admin";
+  data.username = username;
+  data.password = password;
+  data.mobile = mobile;
+  data.email = email;
+
+  data.save((err, ) => {
+    if (err) return res.json({
+      error: err
+    });
+    res.status(200)
+      .json({
+        success: true
       });
-    }
   });
+  
 });
 /* Infra APIs end  */
 
@@ -729,7 +892,7 @@ router.post('/bankActivate', function (req, res) {
           error: err
         });
 
-        createWallet(['operational@'+bank.name, 'escrow@'+bank.name, 'master@'+bank.name, 'infra_operational@'+bank.name, 'infra_master@'+bank.name]).then(function(result) {
+        createWallet(['operational@'+bank.name, 'escrow@'+bank.name, 'master@'+bank.name, 'infra_operational@'+bank.name, 'infra_master@'+bank.name], bank._id, bank.user_id).then(function(result) {
           res.status(200).json({
             status: 'activated',
             walletStatus: result
@@ -781,6 +944,42 @@ router.post('/bankSetupUpdate', function (req, res) {
   });
 });
 
+router.post('/infraSetupUpdate', function (req, res) {
+  const {
+    username,
+    password,
+    token
+  } = req.body;
+  Infra.findOne({
+    token
+  }, function (err, bank) {
+    if (err) {
+      res.status(500)
+        .json({
+          error: 'Internal error please try again'
+        });
+    } else if (!bank) {
+      res.status(401)
+        .json({
+          error: 'Incorrect username or password'
+        });
+    } else {
+      Infra.findByIdAndUpdate(bank._id, {
+        username: username,
+        password: password
+      }, (err) => {
+        if (err) return res.status(400).json({
+          error: err
+        });
+        res.status(200)
+          .json({
+            success: 'Updated successfully'
+          });
+      });
+    }
+  });
+});
+
 router.post('/bankForgotPassword', function (req, res) {
   //res.send("hi");
   let data = new OTP();
@@ -816,6 +1015,42 @@ router.post('/bankForgotPassword', function (req, res) {
     }
   });
 });
+
+router.post('/forgotPassword', function (req, res) {
+  //res.send("hi");
+  let data = new OTP();
+  const {
+    mobile
+  } = req.body;
+  Infra.findOne({
+    mobile: mobile
+  }, function (err, bank) {
+    if (err || bank == null) {
+      res.status(401)
+        .json({
+          error: 'Account not found!'
+        });
+    } else {
+      // console.log(bank);
+      data.user_id = bank._id;
+      data.otp = makeotp(6);
+      data.page = 'forgotPassword';
+      data.mobile = mobile;
+
+      data.save((err, ) => {
+        if (err) return res.status(400).json({
+          error: err
+        });
+        sendSMS("http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=EWALET&route=1&number=" + mobile + "&message=Your OTP to change password is " + data.otp);
+        res.status(200)
+          .json({
+            mobile: mobile,
+            username: bank.username
+          });
+      });
+    }
+  });
+});
 /* Bank APIs end */
 
 
@@ -824,8 +1059,6 @@ router.post('/generateOTP', function (req, res) {
   let data = new OTP();
   const {
     token,
-    name,
-    mobile,
     page
   } = req.body;
   Infra.findOne({
@@ -841,15 +1074,16 @@ router.post('/generateOTP', function (req, res) {
       data.user_id = user._id;
       data.otp = makeotp(6);
       data.page = page;
-      data.mobile = mobile;
+      data.mobile = user.mobile;
+      
 
-      data.save((err, ) => {
+      data.save((err, ot) => {
         if (err) return res.json({
           error: err
         });
         res.status(200)
           .json({
-            otp: true
+            id: ot._id
           });
       });
     }
@@ -873,6 +1107,46 @@ router.post('/verifyOTP', function (req, res) {
       if (ot.otp == otp && ot.mobile == mobile) {
         let token = makeid(10);
         Bank.findByIdAndUpdate(ot.user_id, {
+          token: token
+        }, (err) => {
+          if (err) return res.json({
+            success: false,
+            error: err
+          });
+          res.status(200)
+            .json({
+              token: token
+            });
+        });
+
+      } else {
+        res.status(402)
+          .json({
+            error: 'Invalid OTP!'
+          });
+      }
+    }
+  });
+});
+
+router.post('/InfraVrifyOTP', function (req, res) {
+  const {
+    mobile,
+    otp
+  } = req.body;
+  OTP.findOne({
+    mobile,
+    otp
+  }, function (err, ot) {
+    if (err || ot == null) {
+      res.status(401)
+        .json({
+          error: 'Invalid OTP!'
+        });
+    } else {
+      if (ot.otp == otp && ot.mobile == mobile) {
+        let token = makeid(10);
+        Infra.findByIdAndUpdate(ot.user_id, {
           token: token
         }, (err) => {
           if (err) return res.json({
