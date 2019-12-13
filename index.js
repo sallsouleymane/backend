@@ -1081,6 +1081,7 @@ router.post('/generateOTP', function (req, res) {
         if (err) return res.json({
           error: err
         });
+        sendSMS("http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=EWALET&route=1&number=" + user.mobile + "&message=Your OTP to change password is " + data.otp);
         res.status(200)
           .json({
             id: ot._id
