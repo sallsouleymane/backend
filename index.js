@@ -28,6 +28,10 @@ app.use(express.static('public'));
 const router = express.Router();
 
 const dbRoute = 'mongodb://127.0.0.1:27017/ewallet';
+mongoose.set('useNewUrlParser', true);
+mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
+mongoose.set('useUnifiedTopology', true);
 mongoose.connect(dbRoute, {
   useNewUrlParser: true
 });
@@ -154,14 +158,18 @@ async function rechargeNow(arr) {
         err.push(res.Reason);
       }
 
-    }));
+    })).catch((errr) =>{
+      console.log(errr);
+      return errr;
+    });
   return err.toString();
 }
 
 async function transferNow(arr) {
   var err = [];
   await Promise.all(arr.map(async (url) => {
-    // err.push(Math.round(new Date().getTime()/1000));
+    console.log(url);
+    err.push(Math.round(new Date().getTime()/1000));
     var options = {
       uri: 'http://34.70.46.65:8000/transferBtwEWallets',
       method: 'POST',
@@ -177,9 +185,26 @@ async function transferNow(arr) {
       console.log(res);
       if(res != true){
         err.push(res.Reason);
+      }else{
+        if(url.email1 && url.email1 != ''){
+        sendMail("<p>You have sent "+url.amount+" to the wallet "+url.to+"</p>", "Payment Sent", url.email1);
+        }
+        if(url.email2 && url.email2 != ''){
+        sendMail("<p>You have received "+url.amount+" from the wallet "+url.from+"</p>", "Payment Received", url.email2);
+        }
+        if(url.mobile1 && url.mobile1 != ''){
+        sendSMS("You have sent "+url.amount+" to the wallet "+url.to, url.mobile1);
+        }
+        if(url.mobile1 && url.mobile1 != ''){
+        sendSMS("You have received "+url.amount+" from the wallet "+url.from, url.mobile2);
+        }
+        
       }
 
-    }));
+    })).catch((errr) =>{
+      console.log(errr);
+      return errr;
+    });
   return err.toString();
 }
 
@@ -746,15 +771,68 @@ router.post('/addInfraUser', (req, res) => {
   });
 });
 
+router.post('/editInfraUser', (req, res) => {
+    const {
+    name,
+    email,
+    mobile,
+    username,
+    password,
+    profile_id,
+    logo,
+    user_id,
+    token
+  } = req.body;
+  Infra.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+     
+         
+            var _id = user_id;
+console.log(_id);
+            Infra.findOneAndUpdate({"_id" : _id}, {
+              name: name,
+              email: email,
+              mobile: mobile,
+              username: username,
+              password: password,
+              profile_id: profile_id,
+              logo: logo
+            }, (err, d) => {
+              if (err) return res.status(400).json({
+                error: err
+              });
+              console.log(d);
+              return res.status(200).json({
+                success: true
+              });
+            });
+         
+        }
+
+  });
+});
+
 router.get('/infraTopup', (req, res) => {
     const {amount, bank} = req.query;
   Infra.findOne({
     name: "Infra Admin"
   }, function (err, infra) {
+    const infra_email = infra.email;
+    const infra_mobile = infra.mobile;
+
     if(err) return res.status(401);
     Bank.findOne({
       name: bank
     }, function (err, ba) {
+      const bank_email = ba.email;
+      const bank_mobile = ba.mobile;
       if(err) return res.status(401);
 
       let data = {};
@@ -765,21 +843,27 @@ router.get('/infraTopup', (req, res) => {
       data.from = "recharge";
       data.to = "testuser@"+ba.name;  
 
-      let data2 = {};
-      data2.fee = 0;
-      data2.amount = fee;
-      data2.from = "recharge";
-      data2.to = "operational@"+ba.name;  
+      rechargeNow([data]).then(function(result) {
 
-      rechargeNow([data, data2]).then(function(result) {
         let data2 = {};
-        data2.fee = 0;
-        data2.amount = fee3;
-        data2.from = "operational@"+ba.name; 
-        data2.to = "infra_operational@"+ba.name; 
-        data.note = "commission";
+        data2.amount = fee;
+        data2.from = "testuser@"+ba.name;
+        data2.to = "operational@"+ba.name;  
+        data2.note = "recharge commission";
+        data2.email2 = bank_email;
+        data2.mobile2 = bank_mobile;
 
-        transferNow([data2]).then(function(result) {
+        let data3 = {};
+        data3.amount = fee3;
+        data3.from = "operational@"+ba.name; 
+        data3.to = "infra_operational@"+ba.name; 
+        data3.note = "commission";
+        data3.email1 = bank_email ;
+        data3.email2 = infra_email;
+        data3.mobile1 = bank_mobile;
+        data3.mobile2 = infra_mobile;
+
+        transferNow([data2, data3]).then(function(result) {
           res.status(200).json({
             status: 'success',
             walletStatus: result.toString()
@@ -1787,11 +1871,16 @@ router.post('/transferMoney', function (req, res) {
             error: err
           });
       } else {
+        const infra_email = f.email;
+        const infra_mobile = f.mobile;
+
         var c = to.split("@");
         const bank = c[1];
         Bank.findOne({
           name : bank,
         }, function (err, b) {
+          const bank_email = b.email;
+          const bank_mobile = b.mobile;
           var total_trans = b.total_trans ? b.total_trans : 0;
           var temp = amount*10/100;
           var fee = temp;
@@ -1825,18 +1914,30 @@ router.post('/transferMoney', function (req, res) {
             data.from = from;
             data.to = to;  
             data.note = note;
+            data.email1 = infra_email;
+            data.email2 = infra_email;
+            data.mobile1 = infra_mobile;
+            data.mobile2 = infra_mobile;
 
             let data2 = {};
             data2.amount = fee.toString();
             data2.from = from;
             data2.to = "operational@"+bank;  
             data2.note = "commission";
+            data2.email1 = infra_email;
+            data2.email2 = bank_email;
+            data2.mobile1 = infra_mobile;
+            data2.mobile2 = bank_mobile;
 
             let data3 = {};
             data3.amount = fee3.toString();
             data3.from = "operational@"+bank; 
             data3.to = "infra_operational@"+bank;  
             data3.note = "operational commission";
+            data3.email1 = bank_email;
+            data3.email2 = infra_email;
+            data3.mobile1 = bank_mobile;
+            data3.mobile2 = infra_mobile;
 
  console.log(data);
 console.log(data2);
