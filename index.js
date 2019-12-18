@@ -578,23 +578,44 @@ router.post('/getDashStats', function (req, res) {
           error: err
         });
     } else {
+
       const user_id = user._id;
       console.log(user_id);
-      Bank.countDocuments({
-        "user_id" : user_id
-      }, function (err, bank) {
-        if (err) {
-          res.status(402)
-            .json({
-              error: err
-            });
-        } else {
-          res.status(200)
-            .json({
-              totalBanks: bank
-            });
-        }
-      });
+      if(user.name == "Infra Admin"){
+        Bank.countDocuments({
+          
+        }, function (err, bank) {
+          if (err) {
+            res.status(402)
+              .json({
+                error: err
+              });
+          } else {
+            res.status(200)
+              .json({
+                totalBanks: bank
+              });
+          }
+        });
+      }else{
+        Bank.countDocuments({
+          "user_id" : user_id
+        }, function (err, bank) {
+          if (err) {
+            res.status(402)
+              .json({
+                error: err
+              });
+          } else {
+            res.status(200)
+              .json({
+                totalBanks: bank
+              });
+          }
+        });
+      }
+ 
+
     }
   });
 });
