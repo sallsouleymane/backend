@@ -100,7 +100,30 @@ function doRequest(options) {
     });
   });
 }
-
+async function fileUpload(path){
+  const options = {
+    method: "POST",
+    uri: "http://34.70.46.65:5001/api/v0/add",
+    headers: {
+        "Content-Type": "multipart/form-data"
+    },
+    formData : {
+        "file" : fs.createReadStream(path)
+    }
+};
+let res = await doRequest(options);
+// await request(options, function (err, res, body) {
+//     if(err) console.log(err);
+return res;
+    // if(res.Hash){
+        
+    //     return res.Hash;
+        
+    // }else{
+    //   return false;
+    // }
+// });
+}
 async function createWallet(arr, bank, infra) {
   var err = [];
   await Promise.all(arr.map(async (url) => {
@@ -528,6 +551,33 @@ router.get('/getInfraOperationalBalance', function (req, res) {
         });
     } else {
       const wallet_id = "infra_operational@"+ba.name;
+      
+      getBalance(wallet_id).then(function(result) {
+        res.status(200).json({
+          status: 'success',
+          balance: result
+        });
+      });
+
+    }
+  });
+});
+
+router.get('/getBankOperationalBalance', function (req, res) {
+  const {
+    bank
+  } = req.query;
+  console.log(bank);
+  Bank.findOne({
+    token : bank
+  }, function (err, ba) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+      const wallet_id = "operational@"+ba.name;
       
       getBalance(wallet_id).then(function(result) {
         res.status(200).json({
@@ -2435,53 +2485,75 @@ router.get('/clearDb', function (req, res) {
 router.post('/fileUpload', function (req, res) {
   const token = req.query.token;
 
-  Infra.findOne({
-    token
-  }, function (err, user) {
-    if (err) {
-      res.status(401)
-        .json({
-          error: err
-        });
-    } else {
-      var form = new formidable.IncomingForm();
-      const dir = __dirname + '/public/uploads/' + user._id;
+  var form = new formidable.IncomingForm();
+      
       form.parse(req, function (err, fields, files) {
-        if (!fs.existsSync(dir)) {
-          fs.mkdirSync(dir);
-        }
+        
 
         var oldpath = files.file.path;
-        var newpath = dir + "/" + files.file.name;
-        var savepath = user._id + "/" + files.file.name;
-
-        fs.readFile(oldpath, function (err, data) {
-          if (err) res.status(402);
-
-          fs.writeFile(newpath, data, function (err) {
-            if (err) res.status(402);
-            res.status(200)
-              .json({
-                name: savepath
-              });
-          });
-
-          fs.unlink(oldpath, function (err) {});
-        });
-        // fs.renameSync(oldpath, newpath, function (err) {
-        //   if (err) {
-        //     res.status(402);
-        //   }else{
-        //     res.status(200)
-        //     .json({
-        //       name: newpath
-        //     });
-        //   }
-        // });
-
+      fileUpload(oldpath).then(function(result){
+        var out;
+        if(result){
+          result = JSON.parse(result);
+        }
+        console.log(result);
+        res.status(200).json({
+                      name: result.Hash
+                    });
+                });
+      
       });
-    }
-  });
+
+
+
+  
+  // Infra.findOne({
+  //   token
+  // }, function (err, user) {
+  //   if (err) {
+  //     res.status(401)
+  //       .json({
+  //         error: err
+  //       });
+  //   } else {
+  //     var form = new formidable.IncomingForm();
+  //     const dir = __dirname + '/public/uploads/' + user._id;
+  //     form.parse(req, function (err, fields, files) {
+  //       if (!fs.existsSync(dir)) {
+  //         fs.mkdirSync(dir);
+  //       }
+
+  //       var oldpath = files.file.path;
+  //       var newpath = dir + "/" + files.file.name;
+  //       var savepath = user._id + "/" + files.file.name;
+
+  //       fs.readFile(oldpath, function (err, data) {
+  //         if (err) res.status(402);
+
+  //         fs.writeFile(newpath, data, function (err) {
+  //           if (err) res.status(402);
+  //           res.status(200)
+  //             .json({
+  //               name: savepath
+  //             });
+  //         });
+
+  //         fs.unlink(oldpath, function (err) {});
+  //       });
+  //       // fs.renameSync(oldpath, newpath, function (err) {
+  //       //   if (err) {
+  //       //     res.status(402);
+  //       //   }else{
+  //       //     res.status(200)
+  //       //     .json({
+  //       //       name: newpath
+  //       //     });
+  //       //   }
+  //       // });
+
+  //     });
+  //   }
+  // });
 });
 /* General APIs End */
 
