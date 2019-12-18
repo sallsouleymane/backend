@@ -824,6 +824,91 @@ router.post('/editBank', (req, res) => {
   });
 });
 
+router.post('/editBankBank', (req, res) => {
+  let data = new Bank();
+  const {
+    bank_id,
+    name,
+    address1,
+    state,
+    zip,
+    country,
+    ccode,
+    mobile,
+    email,
+    token,
+    logo,
+    contract,
+    otp_id,
+    otp
+  } = req.body;
+
+      // const user_id = user._id;
+      OTP.findOne({
+        _id: otp_id,
+        otp: otp
+      }, function (err, otpd) {
+        if (err) {
+          res.status(401)
+            .json({
+              error: err
+            });
+        } else {
+          if (otpd.otp == otp) {
+
+            if (name == '' || address1 == '' || state == '' || mobile == '' || email == '') {
+              return res.status(402)
+                .json({
+                  error: 'Please provide valid inputs'
+                });
+            }
+
+            Bank.findByIdAndUpdate(bank_id, {
+              name: name,
+              address1: address1,
+              state: state,
+              zip: zip,
+              ccode: ccode,
+              mobile: mobile,
+              email: email,
+              logo: logo,
+              contract: contract
+            }, (err) => {
+              if (err) return res.status(400).json({
+                error: err
+              });
+
+              let data2 = new Document();
+              data2.bank_id = bank_id;
+              data2.contract = contract;
+              data2.save((err, ) => {
+
+              });
+              return res.status(200).json({
+                success: true
+              });
+            });
+            // data.save((err, ) => {
+            //   if (err) return res.json({
+            //     error: "Duplicate entry!"
+            //   });
+
+              // let content = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/bank'>http://35.204.144.169/bank</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
+              // sendMail(content, "Bank Account Created", email);
+              
+              //return res.status(200).json(data);
+            //});
+          } else {
+            res.status(200)
+              .json({
+                error: 'OTP Missmatch'
+              });
+          }
+        }
+      });
+
+});
+
 router.post('/addProfile', (req, res) => {
   let data = new Profile();
   const {
@@ -1887,9 +1972,9 @@ router.post('/generateOTP', function (req, res) {
               error: err
             });
     
-            let content = "Your OTP to add Bank is " + data.otp;
-            sendSMS(content, user.mobile);
-            sendMail(content, "OTP", user.email);
+            let content = "Your OTP to edit Bank is " + data.otp;
+            sendSMS(content, bank.mobile);
+            sendMail(content, "OTP", bank.email);
             
             res.status(200)
               .json({
@@ -1915,13 +2000,47 @@ router.post('/generateOTP', function (req, res) {
             });
         });
       }
-      console.log(data);
-      
-
-    
+      console.log(data);    
     }
   });
 });
+
+
+router.post('/generateOTPBank', function (req, res) {
+  let data = new OTP();
+  const {
+    token,
+    username,
+    page
+  } = req.body;
+ 
+        Bank.findOne({
+          username
+        }, function (err, bank) {
+          data.user_id = "0";
+          data.otp = makeotp(6);
+      data.page = "bankbankinfo";
+          data.mobile = bank.mobile;
+          data.save((err, ot) => {
+            if (err) return res.json({
+              error: err
+            });
+    
+            let content = "Your OTP to edit Bank is " + data.otp;
+            sendSMS(content, bank.mobile);
+            sendMail(content, "OTP", bank.email);
+            
+            res.status(200)
+              .json({
+                id: ot._id
+              });
+          });
+        });
+
+      
+});
+
+
 router.post('/verifyOTP', function (req, res) {
   const {
     mobile,
