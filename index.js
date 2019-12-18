@@ -213,7 +213,7 @@ async function transferNow(arr) {
 }
 
 
-async function transferThis(t1, t2) {
+async function transferThis(t1, t2, t3 = false) {
   var err = [];
 
     var url = t1;
@@ -278,6 +278,41 @@ async function transferThis(t1, t2) {
       }
       if(url.mobile2 && url.mobile2 != ''){
       sendSMS("You have received "+url.amount+" from the wallet "+url.from, url.mobile2);
+      }
+
+
+      if(t3){
+        url = t3;
+        options = {
+          uri: 'http://34.70.46.65:8000/transferBtwEWallets',
+          method: 'POST',
+          json: {
+            "wallet_id1": url.from.toString(),
+            "wallet_id2": url.to.toString(),
+            "amount": url.amount.toString(),
+            "remarks": url.note.toString()
+          }
+        };
+        console.log(options);
+        res = await doRequest(options);
+          console.log("output: ");
+          console.log(res);
+          if(res != true){
+            err.push(res.Reason);
+          }
+    
+        if(url.email1 && url.email1 != ''){
+          sendMail("<p>You have sent "+url.amount+" to the wallet "+url.to+"</p>", "Payment Sent", url.email1);
+          }
+          if(url.email2 && url.email2 != ''){
+          sendMail("<p>You have received "+url.amount+" from the wallet "+url.from+"</p>", "Payment Received", url.email2);
+          }
+          if(url.mobile1 && url.mobile1 != ''){
+          sendSMS("You have sent "+url.amount+" to the wallet "+url.to, url.mobile1);
+          }
+          if(url.mobile2 && url.mobile2 != ''){
+          sendSMS("You have received "+url.amount+" from the wallet "+url.from, url.mobile2);
+          }
       }
 
       
@@ -592,7 +627,7 @@ router.post('/addBank', (req, res) => {
     } else {
       // const user_id = user._id;
       OTP.findOne({
-        _id: otp_id,
+        "_id": otp_id,
         otp: otp
       }, function (err, otpd) {
         if (err) {
@@ -601,6 +636,12 @@ router.post('/addBank', (req, res) => {
               error: err
             });
         } else {
+          if(!otpd){
+            res.status(401)
+              .json({
+                error: 'OTP Missmatch'
+              });
+          }
           if (otpd.otp == otp) {
 
             if (name == '' || address1 == '' || state == '' || mobile == '' || email == '') {
@@ -638,7 +679,9 @@ router.post('/addBank', (req, res) => {
 
               let content = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/bank'>http://35.204.144.169/bank</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
               sendMail(content, "Bank Account Created", email);
-              
+              let content2 = "Your bank is added in E-Wallet application Login URL: http://35.204.144.169/bank Your username: " + data.username + " Your password: " + data.password ;
+              sendSMS(content2, mobile);
+
               return res.status(200).json(data);
             });
           } else {
@@ -804,6 +847,52 @@ router.post('/addProfile', (req, res) => {
 });
 
 
+router.post('/editProfile', (req, res) => {
+  let data = new Profile();
+  const {
+    pro_name,
+    pro_description,
+    create_bank,
+    edit_bank,
+    create_fee,
+    profile_id,
+    token
+  } = req.body;
+  Infra.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+      
+     
+      var _id = profile_id;
+      console.log(_id);
+      var c = {create_bank, edit_bank, create_fee};
+            let c2 = JSON.stringify(c);
+                  Profile.findOneAndUpdate({"_id" : _id}, {
+                    name: pro_name,
+                    description: pro_description,
+                    permissions: c2
+                  }, (err, d) => {
+                    if (err) return res.status(400).json({
+                      error: err
+                    });
+                    console.log(d);
+                    return res.status(200).json({
+                      success: true
+                    });
+                  });
+         
+        }
+
+  });
+});
+
+
 router.post('/addInfraUser', (req, res) => {
   let data = new Infra();
   const {
@@ -838,6 +927,10 @@ router.post('/addInfraUser', (req, res) => {
               if (err) return res.json({
                 error: err.toString()
               });
+              let content = "<p>Your have been added as Infra in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/'>http://35.204.144.169/</a></p><p><p>Your username: " + username + "</p><p>Your password: " + password + "</p>";
+              sendMail(content, "Infra Account Created", email);
+              let content2 = "Your have been added as Infra in E-Wallet application Login URL: http://35.204.144.169 Your username: " + username + " Your password: " + password ;
+              sendSMS(content2, mobile);
               return res.status(200).json({
                 success: "True"
               });
@@ -2019,8 +2112,11 @@ router.post('/transferMoney', function (req, res) {
             data3.mobile2 = infra_mobile;
 
 
-            transferNow([data, data2, data3]).then(function(result) {
+            // transferNow([data, data2, data3]).then(function(result) {
               
+            // });
+            transferThis(data, data2, data3).then(function(result) {
+         
             });
             res.status(200).json({
               status: 'success'
