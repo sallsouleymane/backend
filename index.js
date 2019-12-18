@@ -65,6 +65,7 @@ function makeotp(length) {
 }
 
 function sendSMS(content, mobile) {
+  console.log(content);
   let url = "http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=EWALET&route=1&number=" + mobile + "&message="+content;
   request(url, {
     json: true
@@ -77,6 +78,7 @@ function sendSMS(content, mobile) {
 }
 
 function sendMail(content, subject, email){
+  console.log(content);
   let info = transporter.sendMail({
     from: '"E-Wallet" <no-reply@ewallet.com>', // sender address
     to: email, // list of receivers
@@ -142,17 +144,19 @@ async function rechargeNow(arr) {
   var err = [];
   await Promise.all(arr.map(async (url) => {
     // err.push(Math.round(new Date().getTime()/1000));
+    
     var options = {
       uri: 'http://34.70.46.65:8000/rechargeEWallet',
       method: 'POST',
       json: {
         "wallet_id": url.to.toString(),
         "amount": url.amount.toString(),
-        "remarks": ""
+        "remarks": "recharge"
       }
     };
-    
+    console.log(options);
     let res = await doRequest(options);
+      console.log("output: ");
       console.log(res);
       if(res != true){
         err.push(res.Reason);
@@ -168,7 +172,6 @@ async function rechargeNow(arr) {
 async function transferNow(arr) {
   var err = [];
   await Promise.all(arr.map(async (url) => {
-    console.log(url);
     err.push(Math.round(new Date().getTime()/1000));
     var options = {
       uri: 'http://34.70.46.65:8000/transferBtwEWallets',
@@ -180,13 +183,12 @@ async function transferNow(arr) {
         "remarks": url.note.toString()
       }
     };
-    
+    console.log(options);
     let res = await doRequest(options);
+      console.log("output: ");
       console.log(res);
-      if(res != true){
-        err.push(res.Reason);
-      }else{
-        if(url.email1 && url.email1 != ''){
+
+      if(url.email1 && url.email1 != ''){
         sendMail("<p>You have sent "+url.amount+" to the wallet "+url.to+"</p>", "Payment Sent", url.email1);
         }
         if(url.email2 && url.email2 != ''){
@@ -195,16 +197,91 @@ async function transferNow(arr) {
         if(url.mobile1 && url.mobile1 != ''){
         sendSMS("You have sent "+url.amount+" to the wallet "+url.to, url.mobile1);
         }
-        if(url.mobile1 && url.mobile1 != ''){
+        if(url.mobile2 && url.mobile2 != ''){
         sendSMS("You have received "+url.amount+" from the wallet "+url.from, url.mobile2);
         }
-        
+
+      if(res != true){
+        err.push(res.Reason);
       }
 
     })).catch((errr) =>{
       console.log(errr);
       return errr;
     });
+  return err.toString();
+}
+
+
+async function transferThis(t1, t2) {
+  var err = [];
+
+    var url = t1;
+    var options = {
+      uri: 'http://34.70.46.65:8000/transferBtwEWallets',
+      method: 'POST',
+      json: {
+        "wallet_id1": url.from.toString(),
+        "wallet_id2": url.to.toString(),
+        "amount": url.amount.toString(),
+        "remarks": url.note.toString()
+      }
+    };
+    console.log(options);
+    let res = await doRequest(options);
+      console.log("output: ");
+      console.log(res);
+      if(res != true){
+        err.push(res.Reason);
+      }
+
+    if(url.email1 && url.email1 != ''){
+      sendMail("<p>You have sent "+url.amount+" to the wallet "+url.to+"</p>", "Payment Sent", url.email1);
+      }
+      if(url.email2 && url.email2 != ''){
+      sendMail("<p>You have received "+url.amount+" from the wallet "+url.from+"</p>", "Payment Received", url.email2);
+      }
+      if(url.mobile1 && url.mobile1 != ''){
+      sendSMS("You have sent "+url.amount+" to the wallet "+url.to, url.mobile1);
+      }
+      if(url.mobile2 && url.mobile2 != ''){
+      sendSMS("You have received "+url.amount+" from the wallet "+url.from, url.mobile2);
+      }
+
+    url = t2;
+    options = {
+      uri: 'http://34.70.46.65:8000/transferBtwEWallets',
+      method: 'POST',
+      json: {
+        "wallet_id1": url.from.toString(),
+        "wallet_id2": url.to.toString(),
+        "amount": url.amount.toString(),
+        "remarks": url.note.toString()
+      }
+    };
+    console.log(options);
+    res = await doRequest(options);
+      console.log("output: ");
+      console.log(res);
+      if(res != true){
+        err.push(res.Reason);
+      }
+
+    if(url.email1 && url.email1 != ''){
+      sendMail("<p>You have sent "+url.amount+" to the wallet "+url.to+"</p>", "Payment Sent", url.email1);
+      }
+      if(url.email2 && url.email2 != ''){
+      sendMail("<p>You have received "+url.amount+" from the wallet "+url.from+"</p>", "Payment Received", url.email2);
+      }
+      if(url.mobile1 && url.mobile1 != ''){
+      sendSMS("You have sent "+url.amount+" to the wallet "+url.to, url.mobile1);
+      }
+      if(url.mobile2 && url.mobile2 != ''){
+      sendSMS("You have received "+url.amount+" from the wallet "+url.from, url.mobile2);
+      }
+
+      
+
   return err.toString();
 }
 
@@ -838,15 +915,13 @@ router.get('/infraTopup', (req, res) => {
       let data = {};
       let fee = (amount*mainFee/100);
       let fee3 = (fee*10/100);
-      data.fee = fee;
-      data.amount = amount-fee;
+      data.amount = (amount-fee).toString();
       data.from = "recharge";
-      data.to = "testuser@"+ba.name;  
+      data.to = ("testuser@"+ba.name).toString();  
 
       rechargeNow([data]).then(function(result) {
-
         let data2 = {};
-        data2.amount = fee;
+        data2.amount = fee.toString();
         data2.from = "testuser@"+ba.name;
         data2.to = "operational@"+ba.name;  
         data2.note = "recharge commission";
@@ -854,7 +929,7 @@ router.get('/infraTopup', (req, res) => {
         data2.mobile2 = bank_mobile;
 
         let data3 = {};
-        data3.amount = fee3;
+        data3.amount = fee3.toString();
         data3.from = "operational@"+ba.name; 
         data3.to = "infra_operational@"+ba.name; 
         data3.note = "commission";
@@ -863,11 +938,15 @@ router.get('/infraTopup', (req, res) => {
         data3.mobile1 = bank_mobile;
         data3.mobile2 = infra_mobile;
 
-        transferNow([data2, data3]).then(function(result) {
-          res.status(200).json({
-            status: 'success',
-            walletStatus: result.toString()
-          });
+        // transferNow([data2, data3]).then(function(result) {
+         
+        // });
+        transferThis(data2, data3).then(function(result) {
+         
+        });
+
+        res.status(200).json({
+          status: result + " Transfer initiated and will be notified via email and sms"
         });
       });
      
@@ -1939,9 +2018,6 @@ router.post('/transferMoney', function (req, res) {
             data3.mobile1 = bank_mobile;
             data3.mobile2 = infra_mobile;
 
- console.log(data);
-console.log(data2);
-console.log(data3);
 
             transferNow([data, data2, data3]).then(function(result) {
               
