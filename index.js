@@ -1207,6 +1207,56 @@ router.post('/createRules', (req, res) => {
   });
 });
 
+router.post('/editRule', (req, res) => {
+  
+  const {
+    name,
+    trans_type,
+    active,
+    trans_from,
+    trans_to,
+    transcount_from,
+    transcount_to,
+    token,
+    fixed_amount,
+    percentage,
+    bank_id,
+    rule_id
+  } = req.body;
+  Infra.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+     
+      Fee.findByIdAndUpdate(
+        {"_id": rule_id }, {
+        name: name,
+        trans_type: trans_type,
+        active: active,
+        trans_from: trans_from,
+        trans_to: trans_to,
+        transcount_from: transcount_from,
+        transcount_to: transcount_to,
+        fixed_amount: fixed_amount,
+        percentage: percentage
+      }, (err) => {
+        if (err) return res.status(400).json({
+          error: err
+        });
+        res.status(200).json({
+          status: true
+        });
+      });
+    }
+
+  });
+});
+
 router.post('/getBank', function (req, res) {
   //res.send("hi");
   const {
@@ -1345,6 +1395,45 @@ router.post('/getRules', function (req, res) {
         }
       });
     }
+
+    }
+  });
+});
+
+router.post('/getRule', function (req, res) {
+  //res.send("hi");
+  const {
+    token,
+    rule_id
+  } = req.body;
+  Infra.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+      const user_id = user._id;
+      
+      Fee.findOne({
+        "_id" : rule_id
+      }, function (err, rules) {
+        if (err) {
+          res.status(404)
+            .json({
+              error: err
+            });
+        } else {
+          res.status(200)
+            .json({
+              rules: rules
+            });
+        }
+      });
+    
+    
 
     }
   });
