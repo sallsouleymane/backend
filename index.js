@@ -21,6 +21,9 @@ const Document = require('./models/Document');
 
 const API_PORT = 3001;
 const mainFee = 10;
+const defaultFee = 10;
+const defaultAmt = 1;
+
 const app = express();
 app.use(cors());
 app.use(cookieParser());
@@ -1157,18 +1160,22 @@ router.get('/infraTopup', (req, res) => {
     Bank.findOne({
       name: bank
     }, function (err, ba) {
+
       const bank_email = ba.email;
       const bank_mobile = ba.mobile;
       if(err) return res.status(401);
 
       let data = {};
+
       let fee = (amount*mainFee/100);
-      let fee3 = (fee*10/100);
+      let fee3 = (fee*defaultFee/100)+defaultAmt;
+
       data.amount = (amount-fee).toString();
       data.from = "recharge";
       data.to = ("testuser@"+ba.name).toString();  
 
       rechargeNow([data]).then(function(result) {
+
         let data2 = {};
         data2.amount = fee.toString();
         data2.from = "testuser@"+ba.name;
@@ -1228,6 +1235,16 @@ router.post('/createRules', (req, res) => {
           error: err
         });
     } else {
+
+      Bank.findOne({
+        "_id" : bank_id
+      }, function (err, bank) {
+        if (err) {
+          res.status(401)
+            .json({
+              error: err
+            });
+        } else {
       data.bank_id = bank_id;
       data.user_id = user._id;
       data.name = name;
@@ -1245,7 +1262,9 @@ router.post('/createRules', (req, res) => {
         if (err) return res.status(400).json({
           error: err
         });
+ let content = "<p>New fee rule has been added for your bank in E-Wallet application</p><p>&nbsp;</p><p>Fee Name: "+name+"</p><p>Trans Type: "+trans_type+"</p><p>Active: "+active+"</p><p>From: "+trans_from+"</p><p>To: "+trans_to+"</p><p>Trans Count From: "+transcount_from+"</p><p>Trans Count To: "+transcount_to+"</p><p>Fixed Amount: "+fixed_amount+"</p><p>Percentage: "+percentage+"</p>";   
 
+   let result = sendMail(content, "New Rule Added", bank.email);
         res.status(200)
           .json({
             success: true
@@ -1255,6 +1274,10 @@ router.post('/createRules', (req, res) => {
     }
 
   });
+
+}
+
+});
 });
 
 router.post('/editRule', (req, res) => {
@@ -1282,6 +1305,16 @@ router.post('/editRule', (req, res) => {
           error: err
         });
     } else {
+
+      Bank.findOne({
+        "_id" : bank_id
+      }, function (err, bank) {
+        if (err) {
+          res.status(401)
+            .json({
+              error: err
+            });
+        } else {
      
       Fee.findByIdAndUpdate(
         {"_id": rule_id }, {
@@ -1293,15 +1326,22 @@ router.post('/editRule', (req, res) => {
         transcount_from: transcount_from,
         transcount_to: transcount_to,
         fixed_amount: fixed_amount,
-        percentage: percentage
+        percentage: percentage,
+        status: 0
       }, (err) => {
         if (err) return res.status(400).json({
           error: err
         });
+        let content = "<p>Rule "+name+" has been updated, check it out</p>";   
+
+        let result = sendMail(content, "Rule Updated", bank.email);
         res.status(200).json({
           status: true
         });
       });
+    }
+
+  });
     }
 
   });
@@ -2333,29 +2373,35 @@ router.post('/transferMoney', function (req, res) {
           const bank_email = b.email;
           const bank_mobile = b.mobile;
           var total_trans = b.total_trans ? b.total_trans : 0;
-          var temp = amount*10/100;
+          var temp = amount*mainFee/100;
           var fee = temp;
           var oamount = amount - fee;
-          var fee3 = 0;
 
+          var fee3 = 0;
+// console.log(total_trans);
+// console.log(fee);
           Fee.findOne({
             bank_id : b._id,
             trans_type: "Wallet to Wallet",
             transcount_from: { $lte : total_trans},
             transcount_to: { $gte : total_trans},
             trans_from: { $lte : fee},
-            trans_to: { $gte : fee}
+            trans_to: { $gte : fee},
+            status: 1
           }, function (err, fe) {
+
+            
+            // res.status(200).json({
+            //     status: fe
+            //   });
             if(!fe){
-              var temp = fee*10/100;
-              fee3 = temp;
+              var temp = fee*defaultFee/100;
+              fee3 = temp+defaultAmt;
             }else{
-              if(fe.fixed_amount && fe.fixed_amount > 0){
-                fee3 = fe.fixed_amount;
-              }else{
+              
                 var temp = fee*fe.percentage/100;
-                fee3 = temp;
-              }
+                fee3 = temp+fe.fixed_amount;
+              
             }
             
           
@@ -2395,7 +2441,8 @@ router.post('/transferMoney', function (req, res) {
               
             // });
             transferThis(data, data2, data3).then(function(result) {
-         
+              Bank.findByIdAndUpdate( {"_id": b._id}, { $inc: { total_trans: 1 } }, (err) => {
+              });
             });
             res.status(200).json({
               status: 'success'
