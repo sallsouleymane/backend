@@ -43,8 +43,13 @@ db.once('open', () => console.log('connected to the database'));
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 app.use(logger('dev'));
-app.use(bodyParser.json({limit: '50mb'}));
-app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
+app.use(bodyParser.json({
+  limit: '50mb'
+}));
+app.use(bodyParser.urlencoded({
+  limit: '50mb',
+  extended: true
+}));
 
 
 function makeid(length) {
@@ -69,7 +74,7 @@ function makeotp(length) {
 
 function sendSMS(content, mobile) {
   console.log(content);
-  let url = "http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=EWALET&route=1&number=" + mobile + "&message="+content;
+  let url = "http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=EWALET&route=1&number=" + mobile + "&message=" + content;
   request(url, {
     json: true
   }, (err, res, body) => {
@@ -80,7 +85,7 @@ function sendSMS(content, mobile) {
   });
 }
 
-function sendMail(content, subject, email){
+function sendMail(content, subject, email) {
   console.log(content);
   let info = transporter.sendMail({
     from: '"E-Wallet" <no-reply@ewallet.com>', // sender address
@@ -103,30 +108,22 @@ function doRequest(options) {
     });
   });
 }
-async function fileUpload(path){
+
+async function fileUpload(path) {
   const options = {
     method: "POST",
     uri: "http://34.70.46.65:5001/api/v0/add",
     headers: {
-        "Content-Type": "multipart/form-data"
+      "Content-Type": "multipart/form-data"
     },
-    formData : {
-        "file" : fs.createReadStream(path)
+    formData: {
+      "file": fs.createReadStream(path)
     }
-};
-let res = await doRequest(options);
-// await request(options, function (err, res, body) {
-//     if(err) console.log(err);
-return res;
-    // if(res.Hash){
-        
-    //     return res.Hash;
-        
-    // }else{
-    //   return false;
-    // }
-// });
+  };
+  let res = await doRequest(options);
+  return res;
 }
+
 async function createWallet(arr, bank, infra) {
   var err = [];
   await Promise.all(arr.map(async (url) => {
@@ -140,26 +137,26 @@ async function createWallet(arr, bank, infra) {
       }
     };
     let res = await doRequest(options);
-      
-      if(res.Error){
-        err.push(res.Reason);
-      }else{
-        let data = new Wallet();
-        let temp = url.split("@");
-        data.address = url;
-        data.type = temp[0];
-        data.infra_id = infra;
-        data.bank_id = bank;
-        data.balance = 0;
-        data.save((e, ) => {
-          if (e){
-            err.push("failed to create "+url);
-          }
-        });
 
-      }
+    if (res.Error) {
+      err.push(res.Reason);
+    } else {
+      let data = new Wallet();
+      let temp = url.split("@");
+      data.address = url;
+      data.type = temp[0];
+      data.infra_id = infra;
+      data.bank_id = bank;
+      data.balance = 0;
+      data.save((e, ) => {
+        if (e) {
+          err.push("failed to create " + url);
+        }
+      });
 
-    }));
+    }
+
+  }));
   return err.toString();
 }
 
@@ -169,8 +166,6 @@ async function createWallet(arr, bank, infra) {
 async function rechargeNow(arr) {
   var err = [];
   await Promise.all(arr.map(async (url) => {
-    // err.push(Math.round(new Date().getTime()/1000));
-    
     var options = {
       uri: 'http://34.70.46.65:8000/rechargeEWallet',
       method: 'POST',
@@ -182,59 +177,13 @@ async function rechargeNow(arr) {
     };
     console.log(options);
     let res = await doRequest(options);
-      console.log("output: ");
-      console.log(res);
-      if(res != true){
-        err.push(res.Reason);
-      }
+    if (res != true) {
+      err.push(res.Reason);
+    }
 
-    })).catch((errr) =>{
-      console.log(errr);
-      return errr;
-    });
-  return err.toString();
-}
-
-async function transferNow(arr) {
-  var err = [];
-  await Promise.all(arr.map(async (url) => {
-    err.push(Math.round(new Date().getTime()/1000));
-    var options = {
-      uri: 'http://34.70.46.65:8000/transferBtwEWallets',
-      method: 'POST',
-      json: {
-        "wallet_id1": url.from.toString(),
-        "wallet_id2": url.to.toString(),
-        "amount": url.amount.toString(),
-        "remarks": url.note.toString()
-      }
-    };
-    console.log(options);
-    let res = await doRequest(options);
-      console.log("output: ");
-      console.log(res);
-
-      if(url.email1 && url.email1 != ''){
-        sendMail("<p>You have sent "+url.amount+" to the wallet "+url.to+"</p>", "Payment Sent", url.email1);
-        }
-        if(url.email2 && url.email2 != ''){
-        sendMail("<p>You have received "+url.amount+" from the wallet "+url.from+"</p>", "Payment Received", url.email2);
-        }
-        if(url.mobile1 && url.mobile1 != ''){
-        sendSMS("You have sent "+url.amount+" to the wallet "+url.to, url.mobile1);
-        }
-        if(url.mobile2 && url.mobile2 != ''){
-        sendSMS("You have received "+url.amount+" from the wallet "+url.from, url.mobile2);
-        }
-
-      if(res != true){
-        err.push(res.Reason);
-      }
-
-    })).catch((errr) =>{
-      console.log(errr);
-      return errr;
-    });
+  })).catch((errr) => {
+    return errr;
+  });
   return err.toString();
 }
 
@@ -242,39 +191,71 @@ async function transferNow(arr) {
 async function transferThis(t1, t2, t3 = false) {
   var err = [];
 
-    var url = t1;
-    var options = {
-      uri: 'http://34.70.46.65:8000/transferBtwEWallets',
-      method: 'POST',
-      json: {
-        "wallet_id1": url.from.toString(),
-        "wallet_id2": url.to.toString(),
-        "amount": url.amount.toString(),
-        "remarks": url.note.toString()
-      }
-    };
-    console.log(options);
-    let res = await doRequest(options);
-      console.log("output: ");
-      console.log(res);
-      if(res != true){
-        err.push(res.Reason);
-      }
+  var url = t1;
+  var options = {
+    uri: 'http://34.70.46.65:8000/transferBtwEWallets',
+    method: 'POST',
+    json: {
+      "wallet_id1": url.from.toString(),
+      "wallet_id2": url.to.toString(),
+      "amount": url.amount.toString(),
+      "remarks": url.note.toString()
+    }
+  };
+  console.log(options);
+  let res = await doRequest(options);
+  console.log("output: ");
+  console.log(res);
+  if (res != true) {
+    err.push(res.Reason);
+  }
 
-    if(url.email1 && url.email1 != ''){
-      sendMail("<p>You have sent "+url.amount+" to the wallet "+url.to+"</p>", "Payment Sent", url.email1);
-      }
-      if(url.email2 && url.email2 != ''){
-      sendMail("<p>You have received "+url.amount+" from the wallet "+url.from+"</p>", "Payment Received", url.email2);
-      }
-      if(url.mobile1 && url.mobile1 != ''){
-      sendSMS("You have sent "+url.amount+" to the wallet "+url.to, url.mobile1);
-      }
-      if(url.mobile2 && url.mobile2 != ''){
-      sendSMS("You have received "+url.amount+" from the wallet "+url.from, url.mobile2);
-      }
+  if (url.email1 && url.email1 != '') {
+    sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
+  }
+  if (url.email2 && url.email2 != '') {
+    sendMail("<p>You have received " + url.amount + " from the wallet " + url.from + "</p>", "Payment Received", url.email2);
+  }
+  if (url.mobile1 && url.mobile1 != '') {
+    sendSMS("You have sent " + url.amount + " to the wallet " + url.to, url.mobile1);
+  }
+  if (url.mobile2 && url.mobile2 != '') {
+    sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
+  }
 
-    url = t2;
+  url = t2;
+  options = {
+    uri: 'http://34.70.46.65:8000/transferBtwEWallets',
+    method: 'POST',
+    json: {
+      "wallet_id1": url.from.toString(),
+      "wallet_id2": url.to.toString(),
+      "amount": url.amount.toString(),
+      "remarks": url.note.toString()
+    }
+  };
+  console.log(options);
+  res = await doRequest(options);
+  if (res != true) {
+    err.push(res.Reason);
+  }
+
+  if (url.email1 && url.email1 != '') {
+    sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
+  }
+  if (url.email2 && url.email2 != '') {
+    sendMail("<p>You have received " + url.amount + " from the wallet " + url.from + "</p>", "Payment Received", url.email2);
+  }
+  if (url.mobile1 && url.mobile1 != '') {
+    sendSMS("You have sent " + url.amount + " to the wallet " + url.to, url.mobile1);
+  }
+  if (url.mobile2 && url.mobile2 != '') {
+    sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
+  }
+
+
+  if (t3) {
+    url = t3;
     options = {
       uri: 'http://34.70.46.65:8000/transferBtwEWallets',
       method: 'POST',
@@ -287,67 +268,33 @@ async function transferThis(t1, t2, t3 = false) {
     };
     console.log(options);
     res = await doRequest(options);
-      console.log("output: ");
-      console.log(res);
-      if(res != true){
-        err.push(res.Reason);
-      }
+    console.log("output: ");
+    console.log(res);
+    if (res != true) {
+      err.push(res.Reason);
+    }
 
-    if(url.email1 && url.email1 != ''){
-      sendMail("<p>You have sent "+url.amount+" to the wallet "+url.to+"</p>", "Payment Sent", url.email1);
-      }
-      if(url.email2 && url.email2 != ''){
-      sendMail("<p>You have received "+url.amount+" from the wallet "+url.from+"</p>", "Payment Received", url.email2);
-      }
-      if(url.mobile1 && url.mobile1 != ''){
-      sendSMS("You have sent "+url.amount+" to the wallet "+url.to, url.mobile1);
-      }
-      if(url.mobile2 && url.mobile2 != ''){
-      sendSMS("You have received "+url.amount+" from the wallet "+url.from, url.mobile2);
-      }
+    if (url.email1 && url.email1 != '') {
+      sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
+    }
+    if (url.email2 && url.email2 != '') {
+      sendMail("<p>You have received " + url.amount + " from the wallet " + url.from + "</p>", "Payment Received", url.email2);
+    }
+    if (url.mobile1 && url.mobile1 != '') {
+      sendSMS("You have sent " + url.amount + " to the wallet " + url.to, url.mobile1);
+    }
+    if (url.mobile2 && url.mobile2 != '') {
+      sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
+    }
+  }
 
 
-      if(t3){
-        url = t3;
-        options = {
-          uri: 'http://34.70.46.65:8000/transferBtwEWallets',
-          method: 'POST',
-          json: {
-            "wallet_id1": url.from.toString(),
-            "wallet_id2": url.to.toString(),
-            "amount": url.amount.toString(),
-            "remarks": url.note.toString()
-          }
-        };
-        console.log(options);
-        res = await doRequest(options);
-          console.log("output: ");
-          console.log(res);
-          if(res != true){
-            err.push(res.Reason);
-          }
-    
-        if(url.email1 && url.email1 != ''){
-          sendMail("<p>You have sent "+url.amount+" to the wallet "+url.to+"</p>", "Payment Sent", url.email1);
-          }
-          if(url.email2 && url.email2 != ''){
-          sendMail("<p>You have received "+url.amount+" from the wallet "+url.from+"</p>", "Payment Received", url.email2);
-          }
-          if(url.mobile1 && url.mobile1 != ''){
-          sendSMS("You have sent "+url.amount+" to the wallet "+url.to, url.mobile1);
-          }
-          if(url.mobile2 && url.mobile2 != ''){
-          sendSMS("You have received "+url.amount+" from the wallet "+url.from, url.mobile2);
-          }
-      }
-
-      
 
   return err.toString();
 }
 
 async function getStatement(arr) {
-  
+
   var options = {
     uri: 'http://34.70.46.65:8000/getEWalletStatement',
     method: 'GET',
@@ -355,43 +302,34 @@ async function getStatement(arr) {
       "wallet_id": arr.toString()
     }
   };
-  
+
   let res = await doRequest(options);
-    if(res.result && res.result == "success"){
-      return res.payload;
-    }else{
-      return [];
-    }
+  if (res.result && res.result == "success") {
+    return res.payload;
+  } else {
+    return [];
+  }
 
 }
 
 
 async function getBalance(arr) {
-  
-    var options = {
-      uri: 'http://34.70.46.65:8000/showEWalletBalance',
-      method: 'GET',
-      json: {
-        "wallet_id": arr.toString()
-      }
-    };
-    
-    let res = await doRequest(options);
-      
-      if(res.result && res.result == "success"){
-        return res.payload.balance;
-      }else{
-        return 0;
-      }
 
+  var options = {
+    uri: 'http://34.70.46.65:8000/showEWalletBalance',
+    method: 'GET',
+    json: {
+      "wallet_id": arr.toString()
+    }
+  };
 
-}
+  let res = await doRequest(options);
 
-
-
-
-function createWallset(url) {
-
+  if (res.result && res.result == "success") {
+    return res.payload.balance;
+  } else {
+    return 0;
+  }
 
 }
 
@@ -405,12 +343,10 @@ let transporter = nodemailer.createTransport({
   }
 });
 
-router.get('/testGet', function(req, res){
-return res.status(200).json(
-  {
+router.get('/testGet', function (req, res) {
+  return res.status(200).json({
     status: 'Internal error please try again'
-  }
-);
+  });
 });
 
 
@@ -443,11 +379,11 @@ router.post('/login', function (req, res) {
           error: err
         });
 
-        if(user.profile_id && user.profile_id != ''){
+        if (user.profile_id && user.profile_id != '') {
           Profile.findOne({
-            "_id" : user.profile_id
+            "_id": user.profile_id
           }, function (err, profile) {
-            
+
             var p = JSON.parse(profile.permissions);
             res.status(200).json({
               token: token,
@@ -456,15 +392,15 @@ router.post('/login', function (req, res) {
               initial_setup: user.initial_setup,
             });
           })
-        }else{
-          if(user.name == "Infra Admin"){
+        } else {
+          if (user.name == "Infra Admin") {
             res.status(200).json({
               token: token,
               permissions: 'all',
               name: user.name,
               initial_setup: user.initial_setup,
             });
-          }else{
+          } else {
             res.status(200).json({
               token: token,
               permissions: '',
@@ -472,9 +408,9 @@ router.post('/login', function (req, res) {
               initial_setup: user.initial_setup,
             });
           }
-          
+
         }
-        
+
       });
 
 
@@ -522,7 +458,7 @@ router.post('/login', function (req, res) {
 });
 
 router.get('/checkInfra', function (req, res) {
- 
+
   Infra.countDocuments({}, function (err, c) {
     if (err) {
       res.status(401)
@@ -530,12 +466,12 @@ router.get('/checkInfra', function (req, res) {
           error: err
         });
     } else {
-     
-          res.status(200)
-            .json({
-              infras: c
-            });
-      
+
+      res.status(200)
+        .json({
+          infras: c
+        });
+
     }
   });
 });
@@ -553,9 +489,9 @@ router.get('/getInfraOperationalBalance', function (req, res) {
           error: err
         });
     } else {
-      const wallet_id = "infra_operational@"+ba.name;
-      
-      getBalance(wallet_id).then(function(result) {
+      const wallet_id = "infra_operational@" + ba.name;
+
+      getBalance(wallet_id).then(function (result) {
         res.status(200).json({
           status: 'success',
           balance: result
@@ -572,7 +508,7 @@ router.get('/getBankOperationalBalance', function (req, res) {
   } = req.query;
   console.log(bank);
   Bank.findOne({
-    token : bank
+    token: bank
   }, function (err, ba) {
     if (err) {
       res.status(401)
@@ -580,9 +516,9 @@ router.get('/getBankOperationalBalance', function (req, res) {
           error: err
         });
     } else {
-      const wallet_id = "operational@"+ba.name;
-      
-      getBalance(wallet_id).then(function(result) {
+      const wallet_id = "operational@" + ba.name;
+
+      getBalance(wallet_id).then(function (result) {
         res.status(200).json({
           status: 'success',
           balance: result
@@ -606,9 +542,9 @@ router.get('/getInfraMasterBalance', function (req, res) {
           error: err
         });
     } else {
-      const wallet_id = "infra_master@"+ba.name;
-      
-      getBalance(wallet_id).then(function(result) {
+      const wallet_id = "infra_master@" + ba.name;
+
+      getBalance(wallet_id).then(function (result) {
         res.status(200).json({
           status: 'success',
           balance: result
@@ -634,9 +570,9 @@ router.post('/getDashStats', function (req, res) {
 
       const user_id = user._id;
       console.log(user_id);
-      if(user.name == "Infra Admin"){
+      if (user.name == "Infra Admin") {
         Bank.countDocuments({
-          
+
         }, function (err, bank) {
           if (err) {
             res.status(402)
@@ -650,9 +586,9 @@ router.post('/getDashStats', function (req, res) {
               });
           }
         });
-      }else{
+      } else {
         Bank.countDocuments({
-          "user_id" : user_id
+          "user_id": user_id
         }, function (err, bank) {
           if (err) {
             res.status(402)
@@ -667,7 +603,7 @@ router.post('/getDashStats', function (req, res) {
           }
         });
       }
- 
+
 
     }
   });
@@ -710,7 +646,7 @@ router.post('/addBank', (req, res) => {
               error: err
             });
         } else {
-          if(!otpd){
+          if (!otpd) {
             res.status(401)
               .json({
                 error: 'OTP Missmatch'
@@ -753,7 +689,7 @@ router.post('/addBank', (req, res) => {
 
               let content = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/bank'>http://35.204.144.169/bank</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
               sendMail(content, "Bank Account Created", email);
-              let content2 = "Your bank is added in E-Wallet application Login URL: http://35.204.144.169/bank Your username: " + data.username + " Your password: " + data.password ;
+              let content2 = "Your bank is added in E-Wallet application Login URL: http://35.204.144.169/bank Your username: " + data.username + " Your password: " + data.password;
               sendSMS(content2, mobile);
 
               return res.status(200).json(data);
@@ -859,10 +795,10 @@ router.post('/editBank', (req, res) => {
             //     error: "Duplicate entry!"
             //   });
 
-              // let content = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/bank'>http://35.204.144.169/bank</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
-              // sendMail(content, "Bank Account Created", email);
-              
-              //return res.status(200).json(data);
+            // let content = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/bank'>http://35.204.144.169/bank</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
+            // sendMail(content, "Bank Account Created", email);
+
+            //return res.status(200).json(data);
             //});
           } else {
             res.status(200)
@@ -896,69 +832,69 @@ router.post('/editBankBank', (req, res) => {
     otp
   } = req.body;
 
-      // const user_id = user._id;
-      OTP.findOne({
-        _id: otp_id,
-        otp: otp
-      }, function (err, otpd) {
-        if (err) {
-          res.status(401)
+  // const user_id = user._id;
+  OTP.findOne({
+    _id: otp_id,
+    otp: otp
+  }, function (err, otpd) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+      if (otpd.otp == otp) {
+
+        if (name == '' || address1 == '' || state == '' || mobile == '' || email == '') {
+          return res.status(402)
             .json({
-              error: err
+              error: 'Please provide valid inputs'
             });
-        } else {
-          if (otpd.otp == otp) {
-
-            if (name == '' || address1 == '' || state == '' || mobile == '' || email == '') {
-              return res.status(402)
-                .json({
-                  error: 'Please provide valid inputs'
-                });
-            }
-
-            Bank.findByIdAndUpdate(bank_id, {
-              name: name,
-              address1: address1,
-              state: state,
-              zip: zip,
-              ccode: ccode,
-              mobile: mobile,
-              email: email,
-              logo: logo,
-              contract: contract
-            }, (err) => {
-              if (err) return res.status(400).json({
-                error: err
-              });
-
-              let data2 = new Document();
-              data2.bank_id = bank_id;
-              data2.contract = contract;
-              data2.save((err, ) => {
-
-              });
-              return res.status(200).json({
-                success: true
-              });
-            });
-            // data.save((err, ) => {
-            //   if (err) return res.json({
-            //     error: "Duplicate entry!"
-            //   });
-
-              // let content = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/bank'>http://35.204.144.169/bank</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
-              // sendMail(content, "Bank Account Created", email);
-              
-              //return res.status(200).json(data);
-            //});
-          } else {
-            res.status(200)
-              .json({
-                error: 'OTP Missmatch'
-              });
-          }
         }
-      });
+
+        Bank.findByIdAndUpdate(bank_id, {
+          name: name,
+          address1: address1,
+          state: state,
+          zip: zip,
+          ccode: ccode,
+          mobile: mobile,
+          email: email,
+          logo: logo,
+          contract: contract
+        }, (err) => {
+          if (err) return res.status(400).json({
+            error: err
+          });
+
+          let data2 = new Document();
+          data2.bank_id = bank_id;
+          data2.contract = contract;
+          data2.save((err, ) => {
+
+          });
+          return res.status(200).json({
+            success: true
+          });
+        });
+        // data.save((err, ) => {
+        //   if (err) return res.json({
+        //     error: "Duplicate entry!"
+        //   });
+
+        // let content = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/bank'>http://35.204.144.169/bank</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
+        // sendMail(content, "Bank Account Created", email);
+
+        //return res.status(200).json(data);
+        //});
+      } else {
+        res.status(200)
+          .json({
+            error: 'OTP Missmatch'
+          });
+      }
+    }
+  });
 
 });
 
@@ -982,25 +918,29 @@ router.post('/addProfile', (req, res) => {
         });
     } else {
       const user_id = user._id;
-     
-            data.name = pro_name;
-            data.description = pro_description;
-            var c = {create_bank, edit_bank, create_fee};
-            data.permissions = JSON.stringify(c);
-            data.user_id = user_id;
-            
-            data.save((err, ) => {
-              if (err) return res.json({
-                error: err.toString()
-              });
 
-              
-              return res.status(200).json({
-                success: "True"
-              });
-            });
-         
-        }
+      data.name = pro_name;
+      data.description = pro_description;
+      var c = {
+        create_bank,
+        edit_bank,
+        create_fee
+      };
+      data.permissions = JSON.stringify(c);
+      data.user_id = user_id;
+
+      data.save((err, ) => {
+        if (err) return res.json({
+          error: err.toString()
+        });
+
+
+        return res.status(200).json({
+          success: "True"
+        });
+      });
+
+    }
 
   });
 });
@@ -1026,27 +966,33 @@ router.post('/editProfile', (req, res) => {
           error: err
         });
     } else {
-      
-     
+
+
       var _id = profile_id;
       console.log(_id);
-      var c = {create_bank, edit_bank, create_fee};
-            let c2 = JSON.stringify(c);
-                  Profile.findOneAndUpdate({"_id" : _id}, {
-                    name: pro_name,
-                    description: pro_description,
-                    permissions: c2
-                  }, (err, d) => {
-                    if (err) return res.status(400).json({
-                      error: err
-                    });
-                    console.log(d);
-                    return res.status(200).json({
-                      success: true
-                    });
-                  });
-         
-        }
+      var c = {
+        create_bank,
+        edit_bank,
+        create_fee
+      };
+      let c2 = JSON.stringify(c);
+      Profile.findOneAndUpdate({
+        "_id": _id
+      }, {
+        name: pro_name,
+        description: pro_description,
+        permissions: c2
+      }, (err, d) => {
+        if (err) return res.status(400).json({
+          error: err
+        });
+        console.log(d);
+        return res.status(200).json({
+          success: true
+        });
+      });
+
+    }
 
   });
 });
@@ -1073,35 +1019,35 @@ router.post('/addInfraUser', (req, res) => {
           error: err
         });
     } else {
-     
-            data.name = name;
-            data.email = email;
-            data.mobile = mobile;
-            data.username = username;
-            data.password = password;
-            data.profile_id = profile_id;
-            data.logo = logo;
-            console.log(data);
-            data.save((err, ) => {
-              if (err) return res.json({
-                error: err.toString()
-              });
-              let content = "<p>Your have been added as Infra in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/'>http://35.204.144.169/</a></p><p><p>Your username: " + username + "</p><p>Your password: " + password + "</p>";
-              sendMail(content, "Infra Account Created", email);
-              let content2 = "Your have been added as Infra in E-Wallet application Login URL: http://35.204.144.169 Your username: " + username + " Your password: " + password ;
-              sendSMS(content2, mobile);
-              return res.status(200).json({
-                success: "True"
-              });
-            });
-         
-        }
+
+      data.name = name;
+      data.email = email;
+      data.mobile = mobile;
+      data.username = username;
+      data.password = password;
+      data.profile_id = profile_id;
+      data.logo = logo;
+      console.log(data);
+      data.save((err, ) => {
+        if (err) return res.json({
+          error: err.toString()
+        });
+        let content = "<p>Your have been added as Infra in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/'>http://35.204.144.169/</a></p><p><p>Your username: " + username + "</p><p>Your password: " + password + "</p>";
+        sendMail(content, "Infra Account Created", email);
+        let content2 = "Your have been added as Infra in E-Wallet application Login URL: http://35.204.144.169 Your username: " + username + " Your password: " + password;
+        sendSMS(content2, mobile);
+        return res.status(200).json({
+          success: "True"
+        });
+      });
+
+    }
 
   });
 });
 
 router.post('/editInfraUser', (req, res) => {
-    const {
+  const {
     name,
     email,
     mobile,
@@ -1121,94 +1067,99 @@ router.post('/editInfraUser', (req, res) => {
           error: err
         });
     } else {
-     
-         
-            var _id = user_id;
-console.log(_id);
-            Infra.findOneAndUpdate({"_id" : _id}, {
-              name: name,
-              email: email,
-              mobile: mobile,
-              username: username,
-              password: password,
-              profile_id: profile_id,
-              logo: logo
-            }, (err, d) => {
-              if (err) return res.status(400).json({
-                error: err
-              });
-              console.log(d);
-              return res.status(200).json({
-                success: true
-              });
-            });
-         
-        }
+
+
+      var _id = user_id;
+      console.log(_id);
+      Infra.findOneAndUpdate({
+        "_id": _id
+      }, {
+        name: name,
+        email: email,
+        mobile: mobile,
+        username: username,
+        password: password,
+        profile_id: profile_id,
+        logo: logo
+      }, (err, d) => {
+        if (err) return res.status(400).json({
+          error: err
+        });
+        console.log(d);
+        return res.status(200).json({
+          success: true
+        });
+      });
+
+    }
 
   });
 });
 
 router.get('/infraTopup', (req, res) => {
-    const {amount, bank} = req.query;
+  const {
+    amount,
+    bank
+  } = req.query;
   Infra.findOne({
     name: "Infra Admin"
   }, function (err, infra) {
     const infra_email = infra.email;
     const infra_mobile = infra.mobile;
 
-    if(err) return res.status(401);
+    if (err) return res.status(401);
     Bank.findOne({
       name: bank
     }, function (err, ba) {
 
       const bank_email = ba.email;
       const bank_mobile = ba.mobile;
-      if(err) return res.status(401);
+      if (err) return res.status(401);
 
       let data = {};
 
-      let fee = (amount*mainFee/100);
-      let fee3 = (fee*defaultFee/100)+defaultAmt;
+      let fee = (amount * mainFee / 100);
+      let fee3 = (fee * defaultFee / 100) + defaultAmt;
 
-      data.amount = (amount-fee).toString();
+      data.amount = (amount - fee).toString();
       data.from = "recharge";
-      data.to = ("testuser@"+ba.name).toString();  
+      data.to = ("testuser@" + ba.name).toString();
 
-      rechargeNow([data]).then(function(result) {
+      rechargeNow([data]).then(function (result) {
 
         let data2 = {};
         data2.amount = fee.toString();
-        data2.from = "testuser@"+ba.name;
-        data2.to = "operational@"+ba.name;  
+        data2.from = "testuser@" + ba.name;
+        data2.to = "operational@" + ba.name;
         data2.note = "recharge commission";
         data2.email2 = bank_email;
         data2.mobile2 = bank_mobile;
 
         let data3 = {};
         data3.amount = fee3.toString();
-        data3.from = "operational@"+ba.name; 
-        data3.to = "infra_operational@"+ba.name; 
+        data3.from = "operational@" + ba.name;
+        data3.to = "infra_operational@" + ba.name;
         data3.note = "commission";
-        data3.email1 = bank_email ;
+        data3.email1 = bank_email;
         data3.email2 = infra_email;
         data3.mobile1 = bank_mobile;
         data3.mobile2 = infra_mobile;
 
         // transferNow([data2, data3]).then(function(result) {
-         
+
         // });
-        transferThis(data2, data3).then(function(result) {
-         
+        transferThis(data2, data3).then(function (result) {
+
         });
 
         res.status(200).json({
           status: result + " Transfer initiated and will be notified via email and sms"
         });
       });
-     
+
+    });
+
   });
-  
-});
 });
 
 router.post('/createRules', (req, res) => {
@@ -1237,7 +1188,7 @@ router.post('/createRules', (req, res) => {
     } else {
 
       Bank.findOne({
-        "_id" : bank_id
+        "_id": bank_id
       }, function (err, bank) {
         if (err) {
           res.status(401)
@@ -1245,43 +1196,43 @@ router.post('/createRules', (req, res) => {
               error: err
             });
         } else {
-      data.bank_id = bank_id;
-      data.user_id = user._id;
-      data.name = name;
-      data.trans_type = trans_type;
-      data.active = active;
-      data.trans_from = trans_from;
-      data.trans_to = trans_to;
-      data.transcount_from = transcount_from;
-      data.transcount_to = transcount_to;
-      data.fixed_amount = fixed_amount;
-      data.percentage = percentage;
+          data.bank_id = bank_id;
+          data.user_id = user._id;
+          data.name = name;
+          data.trans_type = trans_type;
+          data.active = active;
+          data.trans_from = trans_from;
+          data.trans_to = trans_to;
+          data.transcount_from = transcount_from;
+          data.transcount_to = transcount_to;
+          data.fixed_amount = fixed_amount;
+          data.percentage = percentage;
 
 
-      data.save((err, ) => {
-        if (err) return res.status(400).json({
-          error: err
-        });
- let content = "<p>New fee rule has been added for your bank in E-Wallet application</p><p>&nbsp;</p><p>Fee Name: "+name+"</p><p>Trans Type: "+trans_type+"</p><p>Active: "+active+"</p><p>From: "+trans_from+"</p><p>To: "+trans_to+"</p><p>Trans Count From: "+transcount_from+"</p><p>Trans Count To: "+transcount_to+"</p><p>Fixed Amount: "+fixed_amount+"</p><p>Percentage: "+percentage+"</p>";   
+          data.save((err, ) => {
+            if (err) return res.status(400).json({
+              error: err
+            });
+            let content = "<p>New fee rule has been added for your bank in E-Wallet application</p><p>&nbsp;</p><p>Fee Name: " + name + "</p><p>Trans Type: " + trans_type + "</p><p>Active: " + active + "</p><p>From: " + trans_from + "</p><p>To: " + trans_to + "</p><p>Trans Count From: " + transcount_from + "</p><p>Trans Count To: " + transcount_to + "</p><p>Fixed Amount: " + fixed_amount + "</p><p>Percentage: " + percentage + "</p>";
 
-   let result = sendMail(content, "New Rule Added", bank.email);
-        res.status(200)
-          .json({
-            success: true
+            let result = sendMail(content, "New Rule Added", bank.email);
+            res.status(200)
+              .json({
+                success: true
+              });
           });
+
+        }
+
       });
 
     }
 
   });
-
-}
-
-});
 });
 
 router.post('/editRule', (req, res) => {
-  
+
   const {
     name,
     trans_type,
@@ -1307,7 +1258,7 @@ router.post('/editRule', (req, res) => {
     } else {
 
       Bank.findOne({
-        "_id" : bank_id
+        "_id": bank_id
       }, function (err, bank) {
         if (err) {
           res.status(401)
@@ -1315,33 +1266,34 @@ router.post('/editRule', (req, res) => {
               error: err
             });
         } else {
-     
-      Fee.findByIdAndUpdate(
-        {"_id": rule_id }, {
-        name: name,
-        trans_type: trans_type,
-        active: active,
-        trans_from: trans_from,
-        trans_to: trans_to,
-        transcount_from: transcount_from,
-        transcount_to: transcount_to,
-        fixed_amount: fixed_amount,
-        percentage: percentage,
-        status: 0
-      }, (err) => {
-        if (err) return res.status(400).json({
-          error: err
-        });
-        let content = "<p>Rule "+name+" has been updated, check it out</p>";   
 
-        let result = sendMail(content, "Rule Updated", bank.email);
-        res.status(200).json({
-          status: true
-        });
+          Fee.findByIdAndUpdate({
+            "_id": rule_id
+          }, {
+            name: name,
+            trans_type: trans_type,
+            active: active,
+            trans_from: trans_from,
+            trans_to: trans_to,
+            transcount_from: transcount_from,
+            transcount_to: transcount_to,
+            fixed_amount: fixed_amount,
+            percentage: percentage,
+            status: 0
+          }, (err) => {
+            if (err) return res.status(400).json({
+              error: err
+            });
+            let content = "<p>Rule " + name + " has been updated, check it out</p>";
+
+            let result = sendMail(content, "Rule Updated", bank.email);
+            res.status(200).json({
+              status: true
+            });
+          });
+        }
+
       });
-    }
-
-  });
     }
 
   });
@@ -1350,7 +1302,8 @@ router.post('/editRule', (req, res) => {
 router.post('/getBank', function (req, res) {
   //res.send("hi");
   const {
-    token, bank_id
+    token,
+    bank_id
   } = req.body;
   Infra.findOne({
     token
@@ -1361,7 +1314,7 @@ router.post('/getBank', function (req, res) {
           error: err
         });
     } else {
-      
+
       Bank.findOne({
         _id: bank_id
       }, function (err, bank) {
@@ -1385,26 +1338,27 @@ router.post('/getBank', function (req, res) {
 router.post('/getWalletsOperational', function (req, res) {
   //res.send("hi");
   const {
-    token, bank_id
+    token,
+    bank_id
   } = req.body;
 
-      
-      Bank.findOne({
-        "_id": bank_id
-      }, function (err, bank) {
-        if (err) {
-          res.status(500)
-            .json({
-              error: err
-            });
-        } else {
-          res.status(200)
-            .json({
-              from: 'infra_operational@'+bank.name,
-              to: 'infra_master@'+bank.name,
-            });
-        }
-      });
+
+  Bank.findOne({
+    "_id": bank_id
+  }, function (err, bank) {
+    if (err) {
+      res.status(500)
+        .json({
+          error: err
+        });
+    } else {
+      res.status(200)
+        .json({
+          from: 'infra_operational@' + bank.name,
+          to: 'infra_master@' + bank.name,
+        });
+    }
+  });
 
 });
 
@@ -1412,26 +1366,27 @@ router.post('/getWalletsOperational', function (req, res) {
 router.post('/getWalletsMaster', function (req, res) {
   //res.send("hi");
   const {
-    token, bank_id
+    token,
+    bank_id
   } = req.body;
 
-      
-      Bank.findOne({
-        "_id": bank_id
-      }, function (err, bank) {
-        if (err) {
-          res.status(500)
-            .json({
-              error: err
-            });
-        } else {
-          res.status(200)
-            .json({
-              from: 'infra_master@'+bank.name,
-              to: 'master@'+bank.name,
-            });
-        }
-      });
+
+  Bank.findOne({
+    "_id": bank_id
+  }, function (err, bank) {
+    if (err) {
+      res.status(500)
+        .json({
+          error: err
+        });
+    } else {
+      res.status(200)
+        .json({
+          from: 'infra_master@' + bank.name,
+          to: 'master@' + bank.name,
+        });
+    }
+  });
 
 });
 
@@ -1451,40 +1406,40 @@ router.post('/getRules', function (req, res) {
         });
     } else {
       const user_id = user._id;
-      if(user.name =="Infra Admin"){
-      Fee.find({
-        bank_id
-      }, function (err, rules) {
-        if (err) {
-          res.status(404)
-            .json({
-              error: err
-            });
-        } else {
-          res.status(200)
-            .json({
-              rules: rules
-            });
-        }
-      });
-    }else{
-      Fee.find({
-        user_id,
-        bank_id
-      }, function (err, rules) {
-        if (err) {
-          res.status(404)
-            .json({
-              error: err
-            });
-        } else {
-          res.status(200)
-            .json({
-              rules: rules
-            });
-        }
-      });
-    }
+      if (user.name == "Infra Admin") {
+        Fee.find({
+          bank_id
+        }, function (err, rules) {
+          if (err) {
+            res.status(404)
+              .json({
+                error: err
+              });
+          } else {
+            res.status(200)
+              .json({
+                rules: rules
+              });
+          }
+        });
+      } else {
+        Fee.find({
+          user_id,
+          bank_id
+        }, function (err, rules) {
+          if (err) {
+            res.status(404)
+              .json({
+                error: err
+              });
+          } else {
+            res.status(200)
+              .json({
+                rules: rules
+              });
+          }
+        });
+      }
 
     }
   });
@@ -1506,9 +1461,9 @@ router.post('/getRule', function (req, res) {
         });
     } else {
       const user_id = user._id;
-      
+
       Fee.findOne({
-        "_id" : rule_id
+        "_id": rule_id
       }, function (err, rules) {
         if (err) {
           res.status(404)
@@ -1522,8 +1477,8 @@ router.post('/getRule', function (req, res) {
             });
         }
       });
-    
-    
+
+
 
     }
   });
@@ -1570,7 +1525,7 @@ router.post('/bankStatus', function (req, res) {
   //res.send("hi");
   const {
     token,
-    status, 
+    status,
     bank_id
   } = req.body;
 
@@ -1608,16 +1563,16 @@ router.post('/getDocs', function (req, res) {
   Document.find({
     bank_id
   }, function (err, user) {
-    if(err) {
+    if (err) {
       res.status(404)
-      .json({
-        error: err
-      });
+        .json({
+          error: err
+        });
     }
     res.status(200)
-    .json({
-      docs: user
-    });    
+      .json({
+        docs: user
+      });
   });
 });
 
@@ -1627,7 +1582,7 @@ router.post('/getBankRules', function (req, res) {
     bank_id
   } = req.body;
   Bank.findOne({
-    _id : bank_id
+    _id: bank_id
   }, function (err, user) {
     if (err) {
       res.status(401)
@@ -1734,9 +1689,9 @@ router.post('/getBanks', function (req, res) {
         });
     } else {
       const user_id = user._id;
-      if(user.name =="Infra Admin"){
+      if (user.name == "Infra Admin") {
         Bank.find({
-          
+
         }, function (err, bank) {
           if (err) {
             res.status(404)
@@ -1750,7 +1705,7 @@ router.post('/getBanks', function (req, res) {
               });
           }
         });
-      }else{
+      } else {
         Bank.find({
           user_id
         }, function (err, bank) {
@@ -1824,7 +1779,7 @@ router.post('/getInfraUsers', function (req, res) {
     } else {
       const user_id = user._id;
       Infra.find({
-        
+
       }, function (err, bank) {
         if (err) {
           res.status(404)
@@ -1843,6 +1798,82 @@ router.post('/getInfraUsers', function (req, res) {
   });
 });
 
+router.post('/getProfile', function (req, res) {
+  //res.send("hi");
+  const {
+    token
+  } = req.body;
+  Infra.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+
+          res.status(200)
+            .json({
+              users: user
+            });
+ 
+
+    }
+  });
+});
+
+router.post('/editProfile', function (req, res) {
+  //res.send("hi");
+  const {
+    name,
+    username,
+    email,
+    mobile,
+    password,
+    ccode,
+    token
+  } = req.body;
+  Infra.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+      let upd = {};
+      if(password == ''){
+        upd = {
+          name: name,
+          email: email,
+          mobile: mobile,
+          username: username,
+          ccode: ccode,
+        }
+      }else{
+        upd = {
+          name: name,
+          email: email,
+          mobile: mobile,
+          password: password,
+          username: username,
+          ccode: ccode,
+        };
+      }
+      Infra.findByIdAndUpdate(user._id, upd, (err) => {
+        if (err) return res.status(400).json({
+          error: err
+        });
+        res.status(200).json({
+          success: true
+        });
+      });
+    }
+  });
+});
+
 router.post('/setupUpdate', function (req, res) {
   let data = new Infra();
   const {
@@ -1852,7 +1883,7 @@ router.post('/setupUpdate', function (req, res) {
     mobile,
     ccode
   } = req.body;
-  
+
   data.name = "Infra Admin";
   data.username = username;
   data.password = password;
@@ -1864,14 +1895,14 @@ router.post('/setupUpdate', function (req, res) {
     if (err) return res.json({
       error: err
     });
-    let content = "<p>Your Infra account is activated in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169'>http://35.204.144.169</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";   
-   let result = sendMail(content, "Infra Account Created", data.email);
+    let content = "<p>Your Infra account is activated in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169'>http://35.204.144.169</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
+    let result = sendMail(content, "Infra Account Activated", data.email);
     res.status(200)
       .json({
         success: true
       });
   });
-  
+
 });
 /* Infra APIs end  */
 
@@ -1886,7 +1917,7 @@ router.post('/bankLogin', function (req, res) {
     username,
     password
   }, function (err, bank) {
-    
+
     if (err) {
       res.status(500)
         .json({
@@ -1897,7 +1928,7 @@ router.post('/bankLogin', function (req, res) {
         .json({
           error: 'Incorrect username or password'
         });
-    }  else if (bank.status == -1) {
+    } else if (bank.status == -1) {
       res.status(401)
         .json({
           error: 'Your account has been blocked, pls contact the admin!'
@@ -1951,12 +1982,12 @@ router.post('/bankActivate', function (req, res) {
           error: err
         });
 
-        createWallet(['testuser@'+bank.name, 'operational@'+bank.name, 'escrow@'+bank.name, 'master@'+bank.name, 'infra_operational@'+bank.name, 'infra_master@'+bank.name], bank._id, bank.user_id).then(function(result) {
+        createWallet(['testuser@' + bank.name, 'operational@' + bank.name, 'escrow@' + bank.name, 'master@' + bank.name, 'infra_operational@' + bank.name, 'infra_master@' + bank.name], bank._id, bank.user_id).then(function (result) {
           res.status(200).json({
             status: 'activated',
             walletStatus: result
           });
-      });
+        });
 
 
 
@@ -2054,7 +2085,7 @@ router.post('/bankForgotPassword', function (req, res) {
           error: 'Account not found!'
         });
     } else {
-            data.user_id = bank._id;
+      data.user_id = bank._id;
       data.otp = makeotp(6);
       data.page = 'bankForgotPassword';
       data.mobile = mobile;
@@ -2093,7 +2124,7 @@ router.post('/forgotPassword', function (req, res) {
           error: 'Account not found!'
         });
     } else {
-      
+
       data.user_id = bank._id;
       data.otp = makeotp(6);
       data.page = 'forgotPassword';
@@ -2141,7 +2172,7 @@ router.post('/generateOTP', function (req, res) {
       data.user_id = user._id;
       data.otp = makeotp(6);
       data.page = page;
-      if(page == 'editBank'){
+      if (page == 'editBank') {
         Bank.findOne({
           username
         }, function (err, bank) {
@@ -2150,11 +2181,11 @@ router.post('/generateOTP', function (req, res) {
             if (err) return res.json({
               error: err
             });
-    
+
             let content = "Your OTP to edit Bank is " + data.otp;
             sendSMS(content, bank.mobile);
             sendMail(content, "OTP", bank.email);
-            
+
             res.status(200)
               .json({
                 id: ot._id
@@ -2162,24 +2193,24 @@ router.post('/generateOTP', function (req, res) {
           });
         });
 
-      }else{
+      } else {
         data.mobile = user.mobile;
         data.save((err, ot) => {
           if (err) return res.json({
             error: err
           });
-  
+
           let content = "Your OTP to add Bank is " + data.otp;
           sendSMS(content, user.mobile);
           sendMail(content, "OTP", user.email);
-          
+
           res.status(200)
             .json({
               id: ot._id
             });
         });
       }
-      console.log(data);    
+      console.log(data);
     }
   });
 });
@@ -2192,31 +2223,31 @@ router.post('/generateOTPBank', function (req, res) {
     username,
     page
   } = req.body;
- 
-        Bank.findOne({
-          username
-        }, function (err, bank) {
-          data.user_id = "0";
-          data.otp = makeotp(6);
-      data.page = "bankbankinfo";
-          data.mobile = bank.mobile;
-          data.save((err, ot) => {
-            if (err) return res.json({
-              error: err
-            });
-    
-            let content = "Your OTP to edit Bank is " + data.otp;
-            sendSMS(content, bank.mobile);
-            sendMail(content, "OTP", bank.email);
-            
-            res.status(200)
-              .json({
-                id: ot._id
-              });
-          });
-        });
 
-      
+  Bank.findOne({
+    username
+  }, function (err, bank) {
+    data.user_id = "0";
+    data.otp = makeotp(6);
+    data.page = "bankbankinfo";
+    data.mobile = bank.mobile;
+    data.save((err, ot) => {
+      if (err) return res.json({
+        error: err
+      });
+
+      let content = "Your OTP to edit Bank is " + data.otp;
+      sendSMS(content, bank.mobile);
+      sendMail(content, "OTP", bank.email);
+
+      res.status(200)
+        .json({
+          id: ot._id
+        });
+    });
+  });
+
+
 });
 
 
@@ -2351,8 +2382,8 @@ router.post('/transferMoney', function (req, res) {
     auth,
     token
   } = req.body;
-  
-  if(auth == "infra"){
+
+  if (auth == "infra") {
     Infra.findOne({
       token
     }, function (err, f) {
@@ -2368,48 +2399,56 @@ router.post('/transferMoney', function (req, res) {
         var c = to.split("@");
         const bank = c[1];
         Bank.findOne({
-          name : bank,
+          name: bank,
         }, function (err, b) {
           const bank_email = b.email;
           const bank_mobile = b.mobile;
           var total_trans = b.total_trans ? b.total_trans : 0;
-          var temp = amount*mainFee/100;
+          var temp = amount * mainFee / 100;
           var fee = temp;
           var oamount = amount - fee;
 
           var fee3 = 0;
-// console.log(total_trans);
-// console.log(fee);
+          // console.log(total_trans);
+          // console.log(fee);
           Fee.findOne({
-            bank_id : b._id,
+            bank_id: b._id,
             trans_type: "Wallet to Wallet",
-            transcount_from: { $lte : total_trans},
-            transcount_to: { $gte : total_trans},
-            trans_from: { $lte : fee},
-            trans_to: { $gte : fee},
+            transcount_from: {
+              $lte: total_trans
+            },
+            transcount_to: {
+              $gte: total_trans
+            },
+            trans_from: {
+              $lte: fee
+            },
+            trans_to: {
+              $gte: fee
+            },
             status: 1
           }, function (err, fe) {
 
-            
+
             // res.status(200).json({
             //     status: fe
             //   });
-            if(!fe){
-              var temp = fee*defaultFee/100;
-              fee3 = temp+defaultAmt;
-            }else{
-              
-                var temp = fee*fe.percentage/100;
-                fee3 = temp+fe.fixed_amount;
-              
+            if (!fe) {
+              var temp = fee * defaultFee / 100;
+              fee3 = temp + defaultAmt;
+            } else {
+
+              var temp = fee * fe.percentage / 100;
+              fee3 = temp + fe.fixed_amount;
+
             }
-            
-          
-            
+
+
+
             let data = {};
             data.amount = oamount.toString();
             data.from = from;
-            data.to = to;  
+            data.to = to;
             data.note = note;
             data.email1 = infra_email;
             data.email2 = infra_email;
@@ -2419,7 +2458,7 @@ router.post('/transferMoney', function (req, res) {
             let data2 = {};
             data2.amount = fee.toString();
             data2.from = from;
-            data2.to = "operational@"+bank;  
+            data2.to = "operational@" + bank;
             data2.note = "commission";
             data2.email1 = infra_email;
             data2.email2 = bank_email;
@@ -2428,8 +2467,8 @@ router.post('/transferMoney', function (req, res) {
 
             let data3 = {};
             data3.amount = fee3.toString();
-            data3.from = "operational@"+bank; 
-            data3.to = "infra_operational@"+bank;  
+            data3.from = "operational@" + bank;
+            data3.to = "infra_operational@" + bank;
             data3.note = "operational commission";
             data3.email1 = bank_email;
             data3.email2 = infra_email;
@@ -2438,21 +2477,26 @@ router.post('/transferMoney', function (req, res) {
 
 
             // transferNow([data, data2, data3]).then(function(result) {
-              
+
             // });
-            transferThis(data, data2, data3).then(function(result) {
-              Bank.findByIdAndUpdate( {"_id": b._id}, { $inc: { total_trans: 1 } }, (err) => {
-              });
+            transferThis(data, data2, data3).then(function (result) {
+              Bank.findByIdAndUpdate({
+                "_id": b._id
+              }, {
+                $inc: {
+                  total_trans: 1
+                }
+              }, (err) => {});
             });
             res.status(200).json({
               status: 'success'
             });
           });
-          
-          
-         });
+
+
+        });
         // const wallet_id = "infra_master@"+ba.name;
-        
+
         // getBalance(wallet_id).then(function(result) {
         //   res.status(200).json({
         //     status: 'success',
@@ -2461,13 +2505,51 @@ router.post('/transferMoney', function (req, res) {
         // });
       }
     });
-  }else{
+  } else {
     res.status(200)
-    .json({
-      status : null
-    });
+      .json({
+        status: null
+      });
   }
-   
+
+
+});
+
+router.post('/checkFee', function (req, res) {
+  const {
+    from,
+    to,
+    amount,
+    auth,
+    token
+  } = req.body;
+
+  if (auth == "infra") {
+    Infra.findOne({
+      token
+    }, function (err, f) {
+      if (err) {
+        res.status(401)
+          .json({
+            error: err
+          });
+      } else {
+        var temp = amount * mainFee / 100;
+        var fee = temp;
+        res.status(200).json({
+          fee: fee
+        });
+
+    
+      }
+    });
+  } else {
+    res.status(200)
+      .json({
+        fee: null
+      });
+  }
+
 
 });
 
@@ -2478,129 +2560,127 @@ router.post('/getInfraHistory', function (req, res) {
     bank_id,
     token
   } = req.body;
-  
-    Infra.findOne({
-      token
-    }, function (err, f) {
-      if (err) {
-        res.status(401)
-          .json({
-            error: err
-          });
-      } else {
-        
-        Bank.findOne({
-          "_id" : bank_id,
-        }, function (err, b) {
-          const wallet = "infra_"+from+"@"+b.name;
-          
-          getStatement(wallet).then(function(result) {
-            res.status(200).json({
-              status: 'success',
-              history: result
-            });
-          });
 
-         });
-      }
-    });
+  Infra.findOne({
+    token
+  }, function (err, f) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+
+      Bank.findOne({
+        "_id": bank_id,
+      }, function (err, b) {
+        const wallet = "infra_" + from + "@" + b.name;
+
+        getStatement(wallet).then(function (result) {
+          res.status(200).json({
+            status: 'success',
+            history: result
+          });
+        });
+
+      });
+    }
+  });
 
 });
 
 router.get('/clearDb', function (req, res) {
   const type = req.query.type;
 
-  if(type == 'all' || type == 'infra'){
-    Infra.remove({}, function (err, c) {
-    });
+  if (type == 'all' || type == 'infra') {
+    Infra.remove({}, function (err, c) {});
   }
-  if(type == 'all' || type == 'bank'){
-    Bank.remove({}, function (err, c) {
-    });
+  if (type == 'all' || type == 'bank') {
+    Bank.remove({}, function (err, c) {});
   }
-  if(type == 'all' || type == 'fee'){
-    Fee.remove({}, function (err, c) {
-    });
+  if (type == 'all' || type == 'fee') {
+    Fee.remove({}, function (err, c) {});
   }
 
   res.status(200).json({
     status: 'success'
   });
-  
+
 });
 
 router.post('/fileUpload', function (req, res) {
   const token = req.query.token;
 
-  var form = new formidable.IncomingForm();
-      
+  Infra.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+      var form = new formidable.IncomingForm();
+      const dir = __dirname + '/public/uploads/' + user._id;
       form.parse(req, function (err, fields, files) {
-        
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir);
+        }
 
         var oldpath = files.file.path;
-      fileUpload(oldpath).then(function(result){
-        var out;
-        if(result){
-          result = JSON.parse(result);
-        }
-        console.log(result);
-        res.status(200).json({
-                      name: result.Hash
-                    });
-                });
-      
+        var newpath = dir + "/" + files.file.name;
+        var savepath = user._id + "/" + files.file.name;
+
+        fs.readFile(oldpath, function (err, data) {
+          if (err) res.status(402);
+
+          fs.writeFile(newpath, data, function (err) {
+            if (err) res.status(402);
+            res.status(200)
+              .json({
+                name: savepath
+              });
+          });
+
+          fs.unlink(oldpath, function (err) {});
+        });
+        // fs.renameSync(oldpath, newpath, function (err) {
+        //   if (err) {
+        //     res.status(402);
+        //   }else{
+        //     res.status(200)
+        //     .json({
+        //       name: newpath
+        //     });
+        //   }
+        // });
+
       });
+    }
+  });
+});
+
+router.post('/ipfsUpload', function (req, res) {
+  const token = req.query.token;
+
+  var form = new formidable.IncomingForm();
+
+  form.parse(req, function (err, fields, files) {
 
 
+    var oldpath = files.file.path;
+    fileUpload(oldpath).then(function (result) {
+      var out;
+      if (result) {
+        result = JSON.parse(result);
+      }
+      console.log(result);
+      res.status(200).json({
+        name: result.Hash
+      });
+    });
 
-  
-  // Infra.findOne({
-  //   token
-  // }, function (err, user) {
-  //   if (err) {
-  //     res.status(401)
-  //       .json({
-  //         error: err
-  //       });
-  //   } else {
-  //     var form = new formidable.IncomingForm();
-  //     const dir = __dirname + '/public/uploads/' + user._id;
-  //     form.parse(req, function (err, fields, files) {
-  //       if (!fs.existsSync(dir)) {
-  //         fs.mkdirSync(dir);
-  //       }
-
-  //       var oldpath = files.file.path;
-  //       var newpath = dir + "/" + files.file.name;
-  //       var savepath = user._id + "/" + files.file.name;
-
-  //       fs.readFile(oldpath, function (err, data) {
-  //         if (err) res.status(402);
-
-  //         fs.writeFile(newpath, data, function (err) {
-  //           if (err) res.status(402);
-  //           res.status(200)
-  //             .json({
-  //               name: savepath
-  //             });
-  //         });
-
-  //         fs.unlink(oldpath, function (err) {});
-  //       });
-  //       // fs.renameSync(oldpath, newpath, function (err) {
-  //       //   if (err) {
-  //       //     res.status(402);
-  //       //   }else{
-  //       //     res.status(200)
-  //       //     .json({
-  //       //       name: newpath
-  //       //     });
-  //       //   }
-  //       // });
-
-  //     });
-  //   }
-  // });
+  });
 });
 /* General APIs End */
 
