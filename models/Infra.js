@@ -9,7 +9,8 @@ const InfraSchema = new mongoose.Schema({
   password: { type: String, required: true },
   profile_id: {type: String, required: false},
   logo: {type: String, required: false},
-  token: { type: String, required: false }
+  token: { type: String, required: false },
+  isAdmin: { type: Boolean, required: true,  default: false}
 });
 module.exports = mongoose.model('Infra', InfraSchema);
 

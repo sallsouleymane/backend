@@ -15,7 +15,6 @@ const Fee = require('./models/Fee');
 const User = require('./models/User');
 const Bank = require('./models/Bank');
 const OTP = require('./models/OTP');
-const Wallet = require('./models/Wallet');
 const Profile = require('./models/Profile');
 const Document = require('./models/Document');
 
@@ -389,6 +388,7 @@ router.post('/login', function (req, res) {
               token: token,
               permissions: profile.permissions,
               name: user.name,
+              isAdmin: user.isAdmin,
               initial_setup: user.initial_setup,
             });
           })
@@ -398,6 +398,7 @@ router.post('/login', function (req, res) {
               token: token,
               permissions: 'all',
               name: user.name,
+              isAdmin: user.isAdmin,
               initial_setup: user.initial_setup,
             });
           } else {
@@ -405,6 +406,7 @@ router.post('/login', function (req, res) {
               token: token,
               permissions: '',
               name: user.name,
+              isAdmin: user.isAdmin,
               initial_setup: user.initial_setup,
             });
           }
@@ -651,7 +653,7 @@ router.post('/addBank', (req, res) => {
               .json({
                 error: 'OTP Missmatch'
               });
-          }
+          }else{
           if (otpd.otp == otp) {
 
             if (name == '' || address1 == '' || state == '' || mobile == '' || email == '') {
@@ -700,6 +702,7 @@ router.post('/addBank', (req, res) => {
                 error: 'OTP Missmatch'
               });
           }
+        }
         }
       });
     }
@@ -1890,6 +1893,7 @@ router.post('/setupUpdate', function (req, res) {
   data.mobile = mobile;
   data.email = email;
   data.ccode = ccode;
+  data.isAdmin = true;
 
   data.save((err, ) => {
     if (err) return res.json({
@@ -2595,11 +2599,20 @@ router.get('/clearDb', function (req, res) {
   if (type == 'all' || type == 'infra') {
     Infra.remove({}, function (err, c) {});
   }
+  if (type == 'all' || type == 'otp') {
+    OTP.remove({}, function (err, c) {});
+  }
   if (type == 'all' || type == 'bank') {
     Bank.remove({}, function (err, c) {});
   }
+  if (type == 'all' || type == 'profile') {
+    Profile.remove({}, function (err, c) {});
+  }
   if (type == 'all' || type == 'fee') {
     Fee.remove({}, function (err, c) {});
+  }
+  if (type == 'all' || type == 'document') {
+    Document.remove({}, function (err, c) {});
   }
 
   res.status(200).json({
@@ -2630,7 +2643,7 @@ router.post('/fileUpload', function (req, res) {
         var oldpath = files.file.path;
         var newpath = dir + "/" + files.file.name;
         var savepath = user._id + "/" + files.file.name;
-
+console.log("file");
         fs.readFile(oldpath, function (err, data) {
           if (err) res.status(402);
 
@@ -2667,7 +2680,7 @@ router.post('/ipfsUpload', function (req, res) {
 
   form.parse(req, function (err, fields, files) {
 
-
+    console.log("ipfs");
     var oldpath = files.file.path;
     fileUpload(oldpath).then(function (result) {
       var out;
