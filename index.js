@@ -29,7 +29,7 @@ app.use(cookieParser());
 app.use(express.static('public'));
 const router = express.Router();
 
-const dbRoute = 'mongodb://127.0.0.1:27017/ewallet';
+const dbRoute = 'mongodb://mongo:27017/ewallet';
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
