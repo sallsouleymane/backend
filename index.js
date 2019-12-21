@@ -331,6 +331,26 @@ async function getBalance(arr) {
 
 }
 
+async function getTransactionCount(arr) {
+
+  var options = {
+    uri: 'http://34.70.46.65:8000/getEWalletTransactionCount',
+    method: 'GET',
+    json: {
+      "wallet_id": arr.toString()
+    }
+  };
+
+  let res = await doRequest(options);
+
+  if (res.result && res.result == "success") {
+    return res.payload;
+  } else {
+    return 0;
+  }
+
+}
+
 let transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
@@ -1121,7 +1141,7 @@ router.get('/infraTopup', (req, res) => {
       let data = {};
 
       let fee = (amount * mainFee / 100);
-      let fee3 = (fee * defaultFee / 100) + defaultAmt;
+      let fee3 = (fee * 10 / 100) + 1;
 
       data.amount = (amount - fee).toString();
       data.from = "recharge";
@@ -1199,27 +1219,37 @@ router.post('/createRules', (req, res) => {
           data.trans_type = trans_type;
           data.active = active;
           data.ranges = JSON.stringify(ranges);
-
-
-          data.save((err, ) => {
-            if (err) return res.status(400).json({
-              error: err
-            });
-            let content = "<p>New fee rule has been added for your bank in E-Wallet application</p><p>&nbsp;</p><p>Fee Name: " + name + "</p>";
-
-            let result = sendMail(content, "New Rule Added", bank.email);
-            res.status(200)
-              .json({
-                success: true
+          data.editedRanges = JSON.stringify(ranges);
+          
+          Fee.findOne({
+            "trans_type": trans_type,
+            "bank_id" : bank_id
+          }, function (err, fee) {
+            if(fee == null){
+              data.save((err, ) => {
+                if (err) return res.status(400).json({
+                  error: err
+                });
+                let content = "<p>New fee rule has been added for your bank in E-Wallet application</p><p>&nbsp;</p><p>Fee Name: " + name + "</p>";
+    
+                let result = sendMail(content, "New Rule Added", bank.email);
+                res.status(200)
+                  .json({
+                    success: true
+                  });
               });
+              
+            }else{
+              res.status(400)
+              .json({
+                error: "This rule type already exists for this bank"
+              });
+            }
+            
           });
-
         }
-
       });
-
     }
-
   });
 });
 
@@ -1229,15 +1259,11 @@ router.post('/editRule', (req, res) => {
     name,
     trans_type,
     active,
-    trans_from,
-    trans_to,
-    transcount_from,
-    transcount_to,
+    ranges,
     token,
-    fixed_amount,
-    percentage,
     bank_id,
     rule_id
+    
   } = req.body;
   Infra.findOne({
     token
@@ -1259,19 +1285,22 @@ router.post('/editRule', (req, res) => {
             });
         } else {
 
+          // Fee.findOne({
+          //   "trans_type": trans_type,
+          //   "bank_id" : bank_id
+          // }, function (err, fee) {
+
+            
+          // });
+
           Fee.findByIdAndUpdate({
             "_id": rule_id
           }, {
             name: name,
             trans_type: trans_type,
             active: active,
-            trans_from: trans_from,
-            trans_to: trans_to,
-            transcount_from: transcount_from,
-            transcount_to: transcount_to,
-            fixed_amount: fixed_amount,
-            percentage: percentage,
-            status: 0
+            editedRanges: JSON.stringify(ranges),
+            edit_status: 0
           }, (err) => {
             if (err) return res.status(400).json({
               error: err
@@ -1617,9 +1646,14 @@ router.post('/approveFee', function (req, res) {
           error: err
         });
     } else {
-
+      
+      Fee.findOne({
+        "_id": id
+      }, function (err, fee) {
       Fee.findByIdAndUpdate(id, {
-        status: 1
+        status: 1,
+        edit_status: 1,
+        ranges: fee.editedRanges
       }, (err) => {
         if (err) return res.status(402).json({
           error: err
@@ -1629,6 +1663,8 @@ router.post('/approveFee', function (req, res) {
             success: 'Updated successfully'
           });
       });
+      });
+      
 
     }
   });
@@ -1651,7 +1687,8 @@ router.post('/declineFee', function (req, res) {
     } else {
 
       Fee.findByIdAndUpdate(id, {
-        status: 2
+        status: 2,
+        edit_status: 2
       }, (err) => {
         if (err) return res.status(402).json({
           error: err
@@ -2394,6 +2431,7 @@ router.post('/transferMoney', function (req, res) {
         Bank.findOne({
           name: bank,
         }, function (err, b) {
+
           const bank_email = b.email;
           const bank_mobile = b.mobile;
           var total_trans = b.total_trans ? b.total_trans : 0;
@@ -2402,41 +2440,41 @@ router.post('/transferMoney', function (req, res) {
           var oamount = amount - fee;
 
           var fee3 = 0;
-          // console.log(total_trans);
-          // console.log(fee);
-          Fee.findOne({
+
+             getTransactionCount(from).then(function (count) {
+               Fee.findOne({
             bank_id: b._id,
             trans_type: "Wallet to Wallet",
-            transcount_from: {
-              $lte: total_trans
-            },
-            transcount_to: {
-              $gte: total_trans
-            },
-            trans_from: {
-              $lte: fee
-            },
-            trans_to: {
-              $gte: fee
-            },
             status: 1
           }, function (err, fe) {
 
 
-            // res.status(200).json({
-            //     status: fe
-            //   });
-            if (!fe) {
+       
+            if (!fe || fe == null) {
               var temp = fee * defaultFee / 100;
               fee3 = temp + defaultAmt;
             } else {
-
-              var temp = fee * fe.percentage / 100;
-              fee3 = temp + fe.fixed_amount;
-
+              var ranges = JSON.parse(fe.ranges);
+              if(ranges.length > 0){
+                
+              ranges.map(function(v) {
+                
+                if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
+                  var temp = fee * Number(v.percentage) / 100;
+                  fee3 = temp + Number(v.fixed_amount);
+                  console.log(fee3);
+                }
+              
+              });
+            }else{
+              var temp = fee * defaultFee / 100;
+              fee3 = temp + defaultAmt;
+            }
             }
 
-
+              // res.status(200).json({
+              //   status: fee3
+              // });
 
             let data = {};
             data.amount = oamount.toString();
@@ -2473,29 +2511,26 @@ router.post('/transferMoney', function (req, res) {
 
             // });
             transferThis(data, data2, data3).then(function (result) {
-              Bank.findByIdAndUpdate({
-                "_id": b._id
-              }, {
-                $inc: {
-                  total_trans: 1
-                }
-              }, (err) => {});
+                // Bank.findByIdAndUpdate({
+                //   "_id": b._id
+                // }, {
+                //   $inc: {
+                //     total_trans: 1
+                //   }
+                // }, (err) => {});
+              });
+              res.status(200).json({
+                status: 'success'
+              });
+
             });
-            res.status(200).json({
-              status: 'success'
+             
             });
-          });
+
 
 
         });
-        // const wallet_id = "infra_master@"+ba.name;
-
-        // getBalance(wallet_id).then(function(result) {
-        //   res.status(200).json({
-        //     status: 'success',
-        //     balance: result
-        //   });
-        // });
+   
       }
     });
   } else {
