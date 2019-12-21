@@ -20,8 +20,8 @@ const Document = require('./models/Document');
 
 const API_PORT = 3001;
 const mainFee = 10;
-const defaultFee = 10;
-const defaultAmt = 1;
+const defaultFee = 0;
+const defaultAmt = 0;
 
 const app = express();
 app.use(cors());
@@ -140,19 +140,18 @@ async function createWallet(arr, bank, infra) {
     if (res.Error) {
       err.push(res.Reason);
     } else {
-      let data = new Wallet();
-      let temp = url.split("@");
-      data.address = url;
-      data.type = temp[0];
-      data.infra_id = infra;
-      data.bank_id = bank;
-      data.balance = 0;
-      data.save((e, ) => {
-        if (e) {
-          err.push("failed to create " + url);
-        }
-      });
-
+      // let data = {};
+      // let temp = url.split("@");
+      // data.address = url;
+      // data.type = temp[0];
+      // data.infra_id = infra;
+      // data.bank_id = bank;
+      // data.balance = 0;
+      // data.save((e, ) => {
+      //   if (e) {
+      //     err.push("failed to create " + url);
+      //   }
+      // });
     }
 
   }));
@@ -1171,14 +1170,9 @@ router.post('/createRules', (req, res) => {
     name,
     trans_type,
     active,
-    trans_from,
-    trans_to,
-    transcount_from,
-    transcount_to,
-    token,
-    fixed_amount,
-    percentage,
-    bank_id
+    ranges,
+    bank_id,
+    token
   } = req.body;
   Infra.findOne({
     token
@@ -1204,19 +1198,14 @@ router.post('/createRules', (req, res) => {
           data.name = name;
           data.trans_type = trans_type;
           data.active = active;
-          data.trans_from = trans_from;
-          data.trans_to = trans_to;
-          data.transcount_from = transcount_from;
-          data.transcount_to = transcount_to;
-          data.fixed_amount = fixed_amount;
-          data.percentage = percentage;
+          data.ranges = JSON.stringify(ranges);
 
 
           data.save((err, ) => {
             if (err) return res.status(400).json({
               error: err
             });
-            let content = "<p>New fee rule has been added for your bank in E-Wallet application</p><p>&nbsp;</p><p>Fee Name: " + name + "</p><p>Trans Type: " + trans_type + "</p><p>Active: " + active + "</p><p>From: " + trans_from + "</p><p>To: " + trans_to + "</p><p>Trans Count From: " + transcount_from + "</p><p>Trans Count To: " + transcount_to + "</p><p>Fixed Amount: " + fixed_amount + "</p><p>Percentage: " + percentage + "</p>";
+            let content = "<p>New fee rule has been added for your bank in E-Wallet application</p><p>&nbsp;</p><p>Fee Name: " + name + "</p>";
 
             let result = sendMail(content, "New Rule Added", bank.email);
             res.status(200)
