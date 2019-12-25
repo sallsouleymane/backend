@@ -1428,7 +1428,7 @@ router.post('/getRules', function (req, res) {
         });
     } else {
       const user_id = user._id;
-      if (user.isAdmin) {
+      // if (user.isAdmin) {
         Fee.find({
           bank_id
         }, function (err, rules) {
@@ -1444,24 +1444,24 @@ router.post('/getRules', function (req, res) {
               });
           }
         });
-      } else {
-        Fee.find({
-          user_id,
-          bank_id
-        }, function (err, rules) {
-          if (err) {
-            res.status(404)
-              .json({
-                error: err
-              });
-          } else {
-            res.status(200)
-              .json({
-                rules: rules
-              });
-          }
-        });
-      }
+      // } else {
+      //   Fee.find({
+      //     user_id,
+      //     bank_id
+      //   }, function (err, rules) {
+      //     if (err) {
+      //       res.status(404)
+      //         .json({
+      //           error: err
+      //         });
+      //     } else {
+      //       res.status(200)
+      //         .json({
+      //           rules: rules
+      //         });
+      //     }
+      //   });
+      // }
 
     }
   });
@@ -1719,7 +1719,7 @@ router.post('/getBanks', function (req, res) {
         });
     } else {
       const user_id = user._id;
-      if (user.isAdmin) {
+      // if (user.isAdmin) {
         Bank.find({
 
         }, function (err, bank) {
@@ -1735,23 +1735,23 @@ router.post('/getBanks', function (req, res) {
               });
           }
         });
-      } else {
-        Bank.find({
-          user_id
-        }, function (err, bank) {
-          if (err) {
-            res.status(404)
-              .json({
-                error: err
-              });
-          } else {
-            res.status(200)
-              .json({
-                banks: bank
-              });
-          }
-        });
-      }
+      // } else {
+      //   Bank.find({
+      //     user_id
+      //   }, function (err, bank) {
+      //     if (err) {
+      //       res.status(404)
+      //         .json({
+      //           error: err
+      //         });
+      //     } else {
+      //       res.status(200)
+      //         .json({
+      //           banks: bank
+      //         });
+      //     }
+      //   });
+      // }
 
 
     }
@@ -1929,6 +1929,8 @@ router.post('/setupUpdate', function (req, res) {
     });
     let content = "<p>Your Infra account is activated in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169'>http://35.204.144.169</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
     let result = sendMail(content, "Infra Account Activated", data.email);
+    let content2 = "Your Infra account is activated in E-Wallet application. Login URL: http://35.204.144.169 Your username: " + data.username + " Your password: " + data.password;
+    sendSMS(content2, mobile);
     res.status(200)
       .json({
         success: true
