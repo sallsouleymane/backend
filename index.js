@@ -412,7 +412,7 @@ router.post('/login', function (req, res) {
             });
           })
         } else {
-          if (user.name == "Infra Admin") {
+          if (user.isAdmin) {
             res.status(200).json({
               token: token,
               permissions: 'all',
@@ -590,10 +590,9 @@ router.post('/getDashStats', function (req, res) {
     } else {
 
       const user_id = user._id;
-      console.log(user_id);
-      if (user.name == "Infra Admin") {
+      // console.log(user_id);
+      // if (user.isAdmin) {
         Bank.countDocuments({
-
         }, function (err, bank) {
           if (err) {
             res.status(402)
@@ -607,23 +606,23 @@ router.post('/getDashStats', function (req, res) {
               });
           }
         });
-      } else {
-        Bank.countDocuments({
-          "user_id": user_id
-        }, function (err, bank) {
-          if (err) {
-            res.status(402)
-              .json({
-                error: err
-              });
-          } else {
-            res.status(200)
-              .json({
-                totalBanks: bank
-              });
-          }
-        });
-      }
+      // } else {
+      //   Bank.countDocuments({
+      //     "user_id": user_id
+      //   }, function (err, bank) {
+      //     if (err) {
+      //       res.status(402)
+      //         .json({
+      //           error: err
+      //         });
+      //     } else {
+      //       res.status(200)
+      //         .json({
+      //           totalBanks: bank
+      //         });
+      //     }
+      //   });
+      // }
 
 
     }
@@ -795,6 +794,7 @@ router.post('/editBank', (req, res) => {
               state: state,
               zip: zip,
               ccode: ccode,
+              country: country,
               mobile: mobile,
               email: email,
               logo: logo,
@@ -881,6 +881,7 @@ router.post('/editBankBank', (req, res) => {
           zip: zip,
           ccode: ccode,
           mobile: mobile,
+          country: country,
           email: email,
           logo: logo,
           contract: contract
@@ -1052,7 +1053,7 @@ router.post('/addInfraUser', (req, res) => {
       console.log(data);
       data.save((err, ) => {
         if (err) return res.json({
-          error: err.toString()
+          error: "Email / Username/ Mobile already exist!"
         });
         let content = "<p>Your have been added as Infra in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/'>http://35.204.144.169/</a></p><p><p>Your username: " + username + "</p><p>Your password: " + password + "</p>";
         sendMail(content, "Infra Account Created", email);
@@ -1427,7 +1428,7 @@ router.post('/getRules', function (req, res) {
         });
     } else {
       const user_id = user._id;
-      if (user.name == "Infra Admin") {
+      if (user.isAdmin) {
         Fee.find({
           bank_id
         }, function (err, rules) {
@@ -1718,7 +1719,7 @@ router.post('/getBanks', function (req, res) {
         });
     } else {
       const user_id = user._id;
-      if (user.name == "Infra Admin") {
+      if (user.isAdmin) {
         Bank.find({
 
         }, function (err, bank) {
@@ -1852,8 +1853,7 @@ router.post('/getProfile', function (req, res) {
   });
 });
 
-router.post('/editProfile', function (req, res) {
-  //res.send("hi");
+router.post('/editInfraProfile', function (req, res) {
   const {
     name,
     username,
@@ -1873,14 +1873,15 @@ router.post('/editProfile', function (req, res) {
         });
     } else {
       let upd = {};
-      if(password == ''){
+      console.log(password);
+      if(password == '' || password == undefined || password == null){
         upd = {
           name: name,
           email: email,
           mobile: mobile,
           username: username,
           ccode: ccode,
-        }
+        };
       }else{
         upd = {
           name: name,
@@ -1891,6 +1892,7 @@ router.post('/editProfile', function (req, res) {
           ccode: ccode,
         };
       }
+      
       Infra.findByIdAndUpdate(user._id, upd, (err) => {
         if (err) return res.status(400).json({
           error: err
@@ -1923,7 +1925,7 @@ router.post('/setupUpdate', function (req, res) {
 
   data.save((err, ) => {
     if (err) return res.json({
-      error: err
+      error: "Email / Mobile / Username already exist"
     });
     let content = "<p>Your Infra account is activated in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169'>http://35.204.144.169</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
     let result = sendMail(content, "Infra Account Activated", data.email);
@@ -2657,6 +2659,7 @@ router.post('/fileUpload', function (req, res) {
           error: err
         });
     } else {
+      
       var form = new formidable.IncomingForm();
       const dir = __dirname + '/public/uploads/' + user._id;
       form.parse(req, function (err, fields, files) {
@@ -2667,16 +2670,21 @@ router.post('/fileUpload', function (req, res) {
         var oldpath = files.file.path;
         var newpath = dir + "/" + files.file.name;
         var savepath = user._id + "/" + files.file.name;
-console.log("file");
+
         fs.readFile(oldpath, function (err, data) {
           if (err) res.status(402);
 
           fs.writeFile(newpath, data, function (err) {
-            if (err) res.status(402);
+            if (err) {
+              res.status(402).json({
+              error: 'File upload error'
+            });
+          }else{
             res.status(200)
               .json({
                 name: savepath
               });
+            }
           });
 
           fs.unlink(oldpath, function (err) {});
@@ -2703,19 +2711,38 @@ router.post('/ipfsUpload', function (req, res) {
   var form = new formidable.IncomingForm();
 
   form.parse(req, function (err, fields, files) {
-
-    console.log("ipfs");
+    var fn = files.file.name.split('.').pop();
+    fn = fn.toLowerCase();
+    console.log(fn);
+    if(fn != "pdf"){
+      res.status(200).json({
+        error: "Only PDF files are accepted"
+      });
+    }else{
+    
     var oldpath = files.file.path;
     fileUpload(oldpath).then(function (result) {
       var out;
       if (result) {
         result = JSON.parse(result);
-      }
-      console.log(result);
-      res.status(200).json({
-        name: result.Hash
-      });
+        if(!result.Hash || result.Hash == undefined){
+          res.status(200).json({
+            error: "File Upload Error"
+          });
+        }else{
+          res.status(200).json({
+            name: result.Hash
+          });
+        }
+      
+      }else{
+        res.status(200).json({
+          error: "File Upload Error"
+        });
+      }      
+
     });
+  }
 
   });
 });
