@@ -37,6 +37,7 @@ mongoose.set('useUnifiedTopology', true);
 mongoose.connect(dbRoute, {
   useNewUrlParser: true
 });
+
 let db = mongoose.connection;
 db.once('open', () => console.log('connected to the database'));
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
@@ -1720,9 +1721,7 @@ router.post('/getBanks', function (req, res) {
     } else {
       const user_id = user._id;
       // if (user.isAdmin) {
-        Bank.find({
-
-        }, function (err, bank) {
+        Bank.find({}, function (err, bank) {
           if (err) {
             res.status(404)
               .json({
