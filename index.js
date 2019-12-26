@@ -634,6 +634,7 @@ router.post('/addBank', (req, res) => {
   let data = new Bank();
   const {
     name,
+    bcode,
     address1,
     state,
     zip,
@@ -683,6 +684,7 @@ router.post('/addBank', (req, res) => {
             }
 
             data.name = name;
+            data.bcode = bcode;
             data.address1 = address1;
             data.state = state;
             data.country = country;
@@ -734,6 +736,7 @@ router.post('/editBank', (req, res) => {
   const {
     bank_id,
     name,
+    bcode,
     address1,
     state,
     zip,
@@ -780,6 +783,7 @@ router.post('/editBank', (req, res) => {
             data.address1 = address1;
             data.state = state;
             data.country = country;
+            data.bcode = bcode;
             data.zip = zip;
             data.ccode = ccode;
             data.mobile = mobile;
@@ -841,6 +845,7 @@ router.post('/editBankBank', (req, res) => {
   const {
     bank_id,
     name,
+    bcode,
     address1,
     state,
     zip,
@@ -877,6 +882,7 @@ router.post('/editBankBank', (req, res) => {
 
         Bank.findByIdAndUpdate(bank_id, {
           name: name,
+          bcode: bcode,
           address1: address1,
           state: state,
           zip: zip,
