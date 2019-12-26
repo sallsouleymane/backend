@@ -29,7 +29,7 @@ app.use(cookieParser());
 app.use(express.static('public'));
 const router = express.Router();
 
-const dbRoute = 'mongodb://mongo:27017/ewallet';
+const dbRoute = 'mongodb://127.0.0.1:27017/ewallet';
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
@@ -2664,6 +2664,16 @@ router.post('/fileUpload', function (req, res) {
       var form = new formidable.IncomingForm();
       const dir = __dirname + '/public/uploads/' + user._id;
       form.parse(req, function (err, fields, files) {
+
+        var fn = files.file.name.split('.').pop();
+    fn = fn.toLowerCase();
+
+    if(fn != "jpeg" && fn != "png" && fn != "jpg" ){
+      res.status(200).json({
+        error: "Only JPG / PNG files are accepted"
+      });
+    }else{
+
         if (!fs.existsSync(dir)) {
           fs.mkdirSync(dir);
         }
@@ -2700,7 +2710,7 @@ router.post('/fileUpload', function (req, res) {
         //     });
         //   }
         // });
-
+      }
       });
     }
   });
