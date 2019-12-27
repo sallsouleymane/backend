@@ -107,6 +107,11 @@ function doRequest(options) {
       }
     });
   });
+  // return new Promise(resolve => {
+  //   setTimeout(() => {
+  //     resolve(options);
+  //   }, 2000);
+  // });
 }
 
 async function fileUpload(path) {
@@ -201,78 +206,11 @@ async function transferThis(t1, t2, t3 = false) {
       "remarks": url.note.toString()
     }
   };
-  console.log(options);
+  
   let res = await doRequest(options);
-  console.log("output: ");
-  console.log(res);
   if (res != true) {
     err.push(res.Reason);
-  }
-
-  if (url.email1 && url.email1 != '') {
-    sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
-  }
-  if (url.email2 && url.email2 != '') {
-    sendMail("<p>You have received " + url.amount + " from the wallet " + url.from + "</p>", "Payment Received", url.email2);
-  }
-  if (url.mobile1 && url.mobile1 != '') {
-    sendSMS("You have sent " + url.amount + " to the wallet " + url.to, url.mobile1);
-  }
-  if (url.mobile2 && url.mobile2 != '') {
-    sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
-  }
-
-  url = t2;
-  options = {
-    uri: 'http://34.70.46.65:8000/transferBtwEWallets',
-    method: 'POST',
-    json: {
-      "wallet_id1": url.from.toString(),
-      "wallet_id2": url.to.toString(),
-      "amount": url.amount.toString(),
-      "remarks": url.note.toString()
-    }
-  };
-  console.log(options);
-  res = await doRequest(options);
-  if (res != true) {
-    err.push(res.Reason);
-  }
-
-  if (url.email1 && url.email1 != '') {
-    sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
-  }
-  if (url.email2 && url.email2 != '') {
-    sendMail("<p>You have received " + url.amount + " from the wallet " + url.from + "</p>", "Payment Received", url.email2);
-  }
-  if (url.mobile1 && url.mobile1 != '') {
-    sendSMS("You have sent " + url.amount + " to the wallet " + url.to, url.mobile1);
-  }
-  if (url.mobile2 && url.mobile2 != '') {
-    sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
-  }
-
-
-  if (t3) {
-    url = t3;
-    options = {
-      uri: 'http://34.70.46.65:8000/transferBtwEWallets',
-      method: 'POST',
-      json: {
-        "wallet_id1": url.from.toString(),
-        "wallet_id2": url.to.toString(),
-        "amount": url.amount.toString(),
-        "remarks": url.note.toString()
-      }
-    };
-    console.log(options);
-    res = await doRequest(options);
-    console.log("output: ");
-    console.log(res);
-    if (res != true) {
-      err.push(res.Reason);
-    }
-
+  }else{
     if (url.email1 && url.email1 != '') {
       sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
     }
@@ -285,7 +223,78 @@ async function transferThis(t1, t2, t3 = false) {
     if (url.mobile2 && url.mobile2 != '') {
       sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
     }
+  
+    url = t2;
+    options = {
+      uri: 'http://34.70.46.65:8000/transferBtwEWallets',
+      method: 'POST',
+      json: {
+        "wallet_id1": url.from.toString(),
+        "wallet_id2": url.to.toString(),
+        "amount": url.amount.toString(),
+        "remarks": url.note.toString()
+      }
+    };
+    
+    res = await doRequest(options);
+    console.log("output 2: ");
+    console.log(res);
+    if (res != true) {
+      err.push(res.Reason);
+    }else{
+      if (url.email1 && url.email1 != '') {
+        sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
+      }
+      if (url.email2 && url.email2 != '') {
+        sendMail("<p>You have received " + url.amount + " from the wallet " + url.from + "</p>", "Payment Received", url.email2);
+      }
+      if (url.mobile1 && url.mobile1 != '') {
+        sendSMS("You have sent " + url.amount + " to the wallet " + url.to, url.mobile1);
+      }
+      if (url.mobile2 && url.mobile2 != '') {
+        sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
+      }
+    
+    
+      if (t3) {
+        url = t3;
+        options = {
+          uri: 'http://34.70.46.65:8000/transferBtwEWallets',
+          method: 'POST',
+          json: {
+            "wallet_id1": url.from.toString(),
+            "wallet_id2": url.to.toString(),
+            "amount": url.amount.toString(),
+            "remarks": url.note.toString()
+          }
+        };
+        
+        res = await doRequest(options);
+        console.log("output 3: ");
+        console.log(res);
+        if (res != true) {
+          err.push(res.Reason);
+        }
+    
+        if (url.email1 && url.email1 != '') {
+          sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
+        }
+        if (url.email2 && url.email2 != '') {
+          sendMail("<p>You have received " + url.amount + " from the wallet " + url.from + "</p>", "Payment Received", url.email2);
+        }
+        if (url.mobile1 && url.mobile1 != '') {
+          sendSMS("You have sent " + url.amount + " to the wallet " + url.to, url.mobile1);
+        }
+        if (url.mobile2 && url.mobile2 != '') {
+          sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
+        }
+    }
+  
+  
+    }
   }
+
+  
 
 
 
@@ -764,7 +773,7 @@ router.post('/editBank', (req, res) => {
         _id: otp_id,
         otp: otp
       }, function (err, otpd) {
-        if (err) {
+        if (err || !otpd) {
           res.status(401)
             .json({
               error: err
@@ -799,6 +808,7 @@ router.post('/editBank', (req, res) => {
               state: state,
               zip: zip,
               ccode: ccode,
+              bcode: bcode,
               country: country,
               mobile: mobile,
               email: email,
@@ -887,6 +897,7 @@ router.post('/editBankBank', (req, res) => {
           state: state,
           zip: zip,
           ccode: ccode,
+          bcode: bcode,
           mobile: mobile,
           country: country,
           email: email,
@@ -1179,7 +1190,7 @@ router.get('/infraTopup', (req, res) => {
 
         // });
         transferThis(data2, data3).then(function (result) {
-
+          console.log(result);
         });
 
         res.status(200).json({
@@ -1239,8 +1250,9 @@ router.post('/createRules', (req, res) => {
                   error: err
                 });
                 let content = "<p>New fee rule has been added for your bank in E-Wallet application</p><p>&nbsp;</p><p>Fee Name: " + name + "</p>";
-    
                 let result = sendMail(content, "New Rule Added", bank.email);
+                let content2 = "New fee rule has been added for your bank in E-Wallet application Fee Name: " + name;
+                sendSMS(content2, bank.mobile);
                 res.status(200)
                   .json({
                     success: true
@@ -1314,8 +1326,9 @@ router.post('/editRule', (req, res) => {
               error: err
             });
             let content = "<p>Rule " + name + " has been updated, check it out</p>";
-
             let result = sendMail(content, "Rule Updated", bank.email);
+            let content2 = "Rule " + name + " has been updated, check it out";
+            sendSMS(content2, bank.mobile);
             res.status(200).json({
               status: true
             });
@@ -2451,6 +2464,7 @@ router.post('/transferMoney', function (req, res) {
           var fee3 = 0;
 
              getTransactionCount(from).then(function (count) {
+               count = Number(count)+1;
                Fee.findOne({
             bank_id: b._id,
             trans_type: "Wallet to Wallet",
@@ -2515,18 +2529,14 @@ router.post('/transferMoney', function (req, res) {
             data3.mobile1 = bank_mobile;
             data3.mobile2 = infra_mobile;
 
-
+            // console.log(data);
+            // console.log(data2);
+            // console.log(data3);
             // transferNow([data, data2, data3]).then(function(result) {
 
             // });
             transferThis(data, data2, data3).then(function (result) {
-                // Bank.findByIdAndUpdate({
-                //   "_id": b._id
-                // }, {
-                //   $inc: {
-                //     total_trans: 1
-                //   }
-                // }, (err) => {});
+              console.log(result);
               });
               res.status(200).json({
                 status: 'success'
@@ -2621,6 +2631,40 @@ router.post('/getInfraHistory', function (req, res) {
         });
 
       });
+    }
+  });
+
+});
+
+router.post('/getBankHistory', function (req, res) {
+  const {
+    from,
+    token
+  } = req.body;
+
+  Bank.findOne({
+    token
+  }, function (err, b) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+
+      // Bank.findOne({
+      //   "_id": f._id,
+      // }, function (err, b) {
+        const wallet = from + "@" + b.name;
+
+        getStatement(wallet).then(function (result) {
+          res.status(200).json({
+            status: 'success',
+            history: result
+          });
+        });
+
+      // });
     }
   });
 
