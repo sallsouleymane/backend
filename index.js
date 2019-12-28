@@ -384,10 +384,12 @@ router.post('/login', function (req, res) {
     username,
     password
   } = req.body;
+  
   Infra.findOne({
-    username,
+    username: { $regex : new RegExp(username, "i") },
     password
   }, function (err, user) {
+    console.log(user);
     if (err) {
       res.status(500)
         .json({
@@ -1935,6 +1937,7 @@ router.post('/setupUpdate', function (req, res) {
 
   data.name = "Infra Admin";
   data.username = username;
+  console.log(username);
   data.password = password;
   data.mobile = mobile;
   data.email = email;
@@ -1943,7 +1946,7 @@ router.post('/setupUpdate', function (req, res) {
 
   data.save((err, ) => {
     if (err) return res.json({
-      error: "Email / Mobile / Username already exist"
+      error: err.toString()
     });
     let content = "<p>Your Infra account is activated in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169'>http://35.204.144.169</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
     let result = sendMail(content, "Infra Account Activated", data.email);
