@@ -783,9 +783,9 @@ router.post('/addBank', (req, res) => {
 
               });
 
-              let content = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/bank'>http://35.204.144.169/bank</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
+              let content = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/bank'>http://"+config.mainIP+"/bank</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
               sendMail(content, "Bank Account Created", email);
-              let content2 = "Your bank is added in E-Wallet application Login URL: http://35.204.144.169/bank Your username: " + data.username + " Your password: " + data.password;
+              let content2 = "Your bank is added in E-Wallet application Login URL: http://"+config.mainIP+"/bank Your username: " + data.username + " Your password: " + data.password;
               sendSMS(content2, mobile);
 
               return res.status(200).json(data);
@@ -896,7 +896,7 @@ router.post('/editBank', (req, res) => {
             //     error: "Duplicate entry!"
             //   });
 
-            // let content = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/bank'>http://35.204.144.169/bank</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
+            // let content = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/bank'>http://"+config.mainIP+"/bank</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
             // sendMail(content, "Bank Account Created", email);
 
             //return res.status(200).json(data);
@@ -987,7 +987,7 @@ router.post('/editBankBank', (req, res) => {
         //     error: "Duplicate entry!"
         //   });
 
-        // let content = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/bank'>http://35.204.144.169/bank</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
+        // let content = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/bank'>http://"+config.mainIP+"/bank</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
         // sendMail(content, "Bank Account Created", email);
 
         //return res.status(200).json(data);
@@ -1137,9 +1137,9 @@ router.post('/addInfraUser', (req, res) => {
         if (err) return res.json({
           error: "Email / Username/ Mobile already exist!"
         });
-        let content = "<p>Your have been added as Infra in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169/'>http://35.204.144.169/</a></p><p><p>Your username: " + username + "</p><p>Your password: " + password + "</p>";
+        let content = "<p>Your have been added as Infra in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/'>http://"+config.mainIP+"/</a></p><p><p>Your username: " + username + "</p><p>Your password: " + password + "</p>";
         sendMail(content, "Infra Account Created", email);
-        let content2 = "Your have been added as Infra in E-Wallet application Login URL: http://35.204.144.169 Your username: " + username + " Your password: " + password;
+        let content2 = "Your have been added as Infra in E-Wallet application Login URL: http://"+config.mainIP+" Your username: " + username + " Your password: " + password;
         sendSMS(content2, mobile);
         return res.status(200).json({
           success: "True"
@@ -2083,9 +2083,9 @@ router.post('/setupUpdate', function (req, res) {
     if (err) return res.json({
       error: err.toString()
     });
-    let content = "<p>Your Infra account is activated in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://35.204.144.169'>http://35.204.144.169</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
+    let content = "<p>Your Infra account is activated in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"'>http://"+config.mainIP+"</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
     let result = sendMail(content, "Infra Account Activated", data.email);
-    let content2 = "Your Infra account is activated in E-Wallet application. Login URL: http://35.204.144.169 Your username: " + data.username + " Your password: " + data.password;
+    let content2 = "Your Infra account is activated in E-Wallet application. Login URL: http://"+config.mainIP+" Your username: " + data.username + " Your password: " + data.password;
     sendSMS(content2, mobile);
     res.status(200)
       .json({
