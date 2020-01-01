@@ -1,6 +1,8 @@
 const request = require('request');
 const mongoose = require('mongoose');
 const express = require('express');
+const config = require('./config.json');
+
 var formidable = require('formidable');
 var path = require('path');
 var fs = require('fs-extra')
@@ -19,9 +21,9 @@ const Profile = require('./models/Profile');
 const Document = require('./models/Document');
 
 const API_PORT = 3001;
-const mainFee = 10;
-const defaultFee = 0;
-const defaultAmt = 0;
+const mainFee = config.mainFee;
+const defaultFee = config.defaultFee;
+const defaultAmt = config.defaultAmt;
 
 const app = express();
 app.use(cors());
@@ -29,7 +31,7 @@ app.use(cookieParser());
 app.use(express.static('public'));
 const router = express.Router();
 
-const dbRoute = 'mongodb://mongo:27017/ewallet';
+const dbRoute = 'mongodb://'+config.dbHost+':'+config.dbPort+'/'+config.dbName;
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
@@ -73,7 +75,6 @@ function makeotp(length) {
 }
 
 function sendSMS(content, mobile) {
-  console.log(content);
   let url = "http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=EWALET&route=1&number=" + mobile + "&message=" + content;
   request(url, {
     json: true
@@ -117,7 +118,7 @@ function doRequest(options) {
 async function fileUpload(path) {
   const options = {
     method: "POST",
-    uri: "http://34.70.46.65:5001/api/v0/add",
+    uri: 'http://'+config.blockChainIP+':5001/api/v0/add',
     headers: {
       "Content-Type": "multipart/form-data"
     },
@@ -133,7 +134,7 @@ async function createWallet(arr, bank, infra) {
   var err = [];
   await Promise.all(arr.map(async (url) => {
     var options = {
-      uri: 'http://34.70.46.65:8000/createEWallet',
+      uri: 'http://'+config.blockChainIP+':8000/createEWallet',
       method: 'POST',
       json: {
         "wallet_id": url,
@@ -171,7 +172,7 @@ async function rechargeNow(arr) {
   var err = [];
   await Promise.all(arr.map(async (url) => {
     var options = {
-      uri: 'http://34.70.46.65:8000/rechargeEWallet',
+      uri: 'http://'+config.blockChainIP+':8000/rechargeEWallet',
       method: 'POST',
       json: {
         "wallet_id": url.to.toString(),
@@ -192,12 +193,12 @@ async function rechargeNow(arr) {
 }
 
 
-async function transferThis(t1, t2, t3 = false) {
+async function transferThis(t1, t2 = false, t3 = false) {
   var err = [];
 
   var url = t1;
   var options = {
-    uri: 'http://34.70.46.65:8000/transferBtwEWallets',
+    uri: 'http://'+config.blockChainIP+':8000/transferBtwEWallets',
     method: 'POST',
     json: {
       "wallet_id1": url.from.toString(),
@@ -223,10 +224,10 @@ async function transferThis(t1, t2, t3 = false) {
     if (url.mobile2 && url.mobile2 != '') {
       sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
     }
-  
+    if (t2) {
     url = t2;
     options = {
-      uri: 'http://34.70.46.65:8000/transferBtwEWallets',
+      uri: 'http://'+config.blockChainIP+':8000/transferBtwEWallets',
       method: 'POST',
       json: {
         "wallet_id1": url.from.toString(),
@@ -259,7 +260,7 @@ async function transferThis(t1, t2, t3 = false) {
       if (t3) {
         url = t3;
         options = {
-          uri: 'http://34.70.46.65:8000/transferBtwEWallets',
+          uri: 'http://'+config.blockChainIP+':8000/transferBtwEWallets',
           method: 'POST',
           json: {
             "wallet_id1": url.from.toString(),
@@ -293,6 +294,7 @@ async function transferThis(t1, t2, t3 = false) {
   
     }
   }
+  }
 
   
 
@@ -304,7 +306,7 @@ async function transferThis(t1, t2, t3 = false) {
 async function getStatement(arr) {
 
   var options = {
-    uri: 'http://34.70.46.65:8000/getEWalletStatement',
+    uri: 'http://'+config.blockChainIP+':8000/getEWalletStatement',
     method: 'GET',
     json: {
       "wallet_id": arr.toString()
@@ -324,7 +326,7 @@ async function getStatement(arr) {
 async function getBalance(arr) {
 
   var options = {
-    uri: 'http://34.70.46.65:8000/showEWalletBalance',
+    uri: 'http://'+config.blockChainIP+':8000/showEWalletBalance',
     method: 'GET',
     json: {
       "wallet_id": arr.toString()
@@ -344,7 +346,7 @@ async function getBalance(arr) {
 async function getTransactionCount(arr) {
 
   var options = {
-    uri: 'http://34.70.46.65:8000/getEWalletTransactionCount',
+    uri: 'http://'+config.blockChainIP+':8000/getEWalletTransactionCount',
     method: 'GET',
     json: {
       "wallet_id": arr.toString()
@@ -486,6 +488,66 @@ router.post('/login', function (req, res) {
       //       });
       //    }
       //});
+    }
+  });
+});
+
+router.post('/getPermission', function (req, res) {
+  const {
+   token
+  } = req.body;
+  
+  Infra.findOne({
+    token
+  }, function (err, user) {
+    
+    if (err) {
+      res.status(500)
+        .json({
+          error: 'Internal error please try again'
+        });
+    } else if (!user) {
+      res.status(401)
+        .json({
+          error: 'Incorrect username or password'
+        });
+    } else {
+      
+      if (user.profile_id && user.profile_id != '') {
+        Profile.findOne({
+          "_id": user.profile_id
+        }, function (err, profile) {
+
+          var p = JSON.parse(profile.permissions);
+          res.status(200).json({
+            token: token,
+            permissions: p,
+            name: user.name,
+            isAdmin: user.isAdmin,
+            initial_setup: user.initial_setup,
+          });
+        })
+      } else {
+        if (user.isAdmin) {
+          res.status(200).json({
+            token: token,
+            permissions: 'all',
+            name: user.name,
+            isAdmin: user.isAdmin,
+            initial_setup: user.initial_setup,
+          });
+        } else {
+          res.status(200).json({
+            token: token,
+            permissions: '',
+            name: user.name,
+            isAdmin: user.isAdmin,
+            initial_setup: user.initial_setup,
+          });
+        }
+
+      }
+        
     }
   });
 });
@@ -1162,43 +1224,116 @@ router.get('/infraTopup', (req, res) => {
       let data = {};
 
       let fee = (amount * mainFee / 100);
-      let fee3 = (fee * 10 / 100) + 1;
+      var temp = fee * defaultFee / 100;
+       let fee3 = temp + defaultAmt;
 
       data.amount = (amount - fee).toString();
       data.from = "recharge";
       data.to = ("testuser@" + ba.name).toString();
+      const bank = ba.name;
 
-      rechargeNow([data]).then(function (result) {
+      getTransactionCount(data.to).then(function (count) {
+        count = Number(count)+1;
+        Fee.findOne({
+         bank_id: ba._id,
+         trans_type: "Wallet to Wallet",
+         status: 1
+   }, function (err, fe) {
 
-        let data2 = {};
-        data2.amount = fee.toString();
-        data2.from = "testuser@" + ba.name;
-        data2.to = "operational@" + ba.name;
-        data2.note = "recharge commission";
-        data2.email2 = bank_email;
-        data2.mobile2 = bank_mobile;
-
-        let data3 = {};
-        data3.amount = fee3.toString();
-        data3.from = "operational@" + ba.name;
-        data3.to = "infra_operational@" + ba.name;
-        data3.note = "commission";
-        data3.email1 = bank_email;
-        data3.email2 = infra_email;
-        data3.mobile1 = bank_mobile;
-        data3.mobile2 = infra_mobile;
-
-        // transferNow([data2, data3]).then(function(result) {
-
-        // });
-        transferThis(data2, data3).then(function (result) {
-          console.log(result);
-        });
-
-        res.status(200).json({
-          status: result + " Transfer initiated and will be notified via email and sms"
-        });
+     if (!fe || fe == null) {
+      res.status(200).json({
+        status: "No revenue rule found, transaction Failed!"
       });
+     } else {
+       var ranges = JSON.parse(fe.ranges);
+       if(ranges.length > 0){
+         
+       ranges.map(function(v) {
+         
+         if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
+           var temp = fee * Number(v.percentage) / 100;
+           fee3 = temp + Number(v.fixed_amount);
+           console.log(fee3);
+         }
+       
+       });
+     }
+     rechargeNow([data]).then(function (result) {
+
+      let data2 = {};
+      data2.amount = fee.toString();
+      data2.from = "testuser@"+bank;
+      data2.to = "operational@" + bank;
+      data2.note = "commission";
+      data2.email2 = bank_email;
+      data2.mobile2 = bank_mobile;
+ 
+      let data3 = {};
+      data3.amount = fee3.toString();
+      data3.from = "operational@" + bank;
+      data3.to = "infra_operational@" + bank;
+      data3.note = "operational commission";
+      data3.email1 = bank_email;
+      data3.email2 = infra_email;
+      data3.mobile1 = bank_mobile;
+      data3.mobile2 = infra_mobile;
+ 
+      // console.log(data);
+      // console.log(data2);
+      // console.log(data3);
+      // transferNow([data, data2, data3]).then(function(result) {
+ 
+      // });
+      transferThis(data2, data3).then(function (result) {
+        console.log(result);
+        });
+        res.status(200).json({
+         status: result + " Transfer initiated and will be notified via email and sms"
+       });
+ 
+      });
+     }
+
+       // res.status(200).json({
+       //   status: fee3
+       // });
+
+     
+    });
+      
+     });
+
+      // rechargeNow([data]).then(function (result) {
+
+      //   let data2 = {};
+      //   data2.amount = fee.toString();
+      //   data2.from = "testuser@" + ba.name;
+      //   data2.to = "operational@" + ba.name;
+      //   data2.note = "recharge commission";
+      //   data2.email2 = bank_email;
+      //   data2.mobile2 = bank_mobile;
+
+      //   let data3 = {};
+      //   data3.amount = fee3.toString();
+      //   data3.from = "operational@" + ba.name;
+      //   data3.to = "infra_operational@" + ba.name;
+      //   data3.note = "commission";
+      //   data3.email1 = bank_email;
+      //   data3.email2 = infra_email;
+      //   data3.mobile1 = bank_mobile;
+      //   data3.mobile2 = infra_mobile;
+
+      //   // transferNow([data2, data3]).then(function(result) {
+
+      //   // });
+      //   transferThis(data2, data3).then(function (result) {
+      //     console.log(result);
+      //   });
+
+      //   res.status(200).json({
+      //     status: result + " Transfer initiated and will be notified via email and sms"
+      //   });
+      // });
 
     });
 
@@ -2004,6 +2139,7 @@ router.post('/bankLogin', function (req, res) {
           username: bank.username,
           status: bank.status,
           contract: bank.contract,
+          logo: bank.logo,
           id: bank._id
         });
       });
@@ -2462,41 +2598,42 @@ router.post('/transferMoney', function (req, res) {
           var total_trans = b.total_trans ? b.total_trans : 0;
           var temp = amount * mainFee / 100;
           var fee = temp;
-          var oamount = amount - fee;
+          //var oamount = amount - fee;
+          var oamount = amount;
 
           var fee3 = 0;
 
-             getTransactionCount(from).then(function (count) {
-               count = Number(count)+1;
-               Fee.findOne({
-            bank_id: b._id,
-            trans_type: "Wallet to Wallet",
-            status: 1
-          }, function (err, fe) {
+          //    getTransactionCount(from).then(function (count) {
+          //      count = Number(count)+1;
+          //      Fee.findOne({
+          //       bank_id: b._id,
+          //       trans_type: "Wallet to Wallet",
+          //       status: 1
+          // }, function (err, fe) {
 
 
        
-            if (!fe || fe == null) {
-              var temp = fee * defaultFee / 100;
-              fee3 = temp + defaultAmt;
-            } else {
-              var ranges = JSON.parse(fe.ranges);
-              if(ranges.length > 0){
+            // if (!fe || fe == null) {
+            //   var temp = fee * defaultFee / 100;
+            //   fee3 = temp + defaultAmt;
+            // } else {
+            //   var ranges = JSON.parse(fe.ranges);
+            //   if(ranges.length > 0){
                 
-              ranges.map(function(v) {
+            //   ranges.map(function(v) {
                 
-                if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
-                  var temp = fee * Number(v.percentage) / 100;
-                  fee3 = temp + Number(v.fixed_amount);
-                  console.log(fee3);
-                }
+            //     if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
+            //       var temp = fee * Number(v.percentage) / 100;
+            //       fee3 = temp + Number(v.fixed_amount);
+            //       console.log(fee3);
+            //     }
               
-              });
-            }else{
-              var temp = fee * defaultFee / 100;
-              fee3 = temp + defaultAmt;
-            }
-            }
+            //   });
+            // }else{
+            //   var temp = fee * defaultFee / 100;
+            //   fee3 = temp + defaultAmt;
+            // }
+            // }
 
               // res.status(200).json({
               //   status: fee3
@@ -2512,25 +2649,25 @@ router.post('/transferMoney', function (req, res) {
             data.mobile1 = infra_mobile;
             data.mobile2 = infra_mobile;
 
-            let data2 = {};
-            data2.amount = fee.toString();
-            data2.from = from;
-            data2.to = "operational@" + bank;
-            data2.note = "commission";
-            data2.email1 = infra_email;
-            data2.email2 = bank_email;
-            data2.mobile1 = infra_mobile;
-            data2.mobile2 = bank_mobile;
+            // let data2 = {};
+            // data2.amount = fee.toString();
+            // data2.from = from;
+            // data2.to = "operational@" + bank;
+            // data2.note = "commission";
+            // data2.email1 = infra_email;
+            // data2.email2 = bank_email;
+            // data2.mobile1 = infra_mobile;
+            // data2.mobile2 = bank_mobile;
 
-            let data3 = {};
-            data3.amount = fee3.toString();
-            data3.from = "operational@" + bank;
-            data3.to = "infra_operational@" + bank;
-            data3.note = "operational commission";
-            data3.email1 = bank_email;
-            data3.email2 = infra_email;
-            data3.mobile1 = bank_mobile;
-            data3.mobile2 = infra_mobile;
+            // let data3 = {};
+            // data3.amount = fee3.toString();
+            // data3.from = "operational@" + bank;
+            // data3.to = "infra_operational@" + bank;
+            // data3.note = "operational commission";
+            // data3.email1 = bank_email;
+            // data3.email2 = infra_email;
+            // data3.mobile1 = bank_mobile;
+            // data3.mobile2 = infra_mobile;
 
             // console.log(data);
             // console.log(data2);
@@ -2538,16 +2675,16 @@ router.post('/transferMoney', function (req, res) {
             // transferNow([data, data2, data3]).then(function(result) {
 
             // });
-            transferThis(data, data2, data3).then(function (result) {
+            transferThis(data).then(function (result) {
               console.log(result);
               });
               res.status(200).json({
                 status: 'success'
               });
 
-            });
+            // });
              
-            });
+            // });
 
 
 
