@@ -31,7 +31,7 @@ app.use(cookieParser());
 app.use(express.static('public'));
 const router = express.Router();
 
-const dbRoute = 'mongodb://'+config.dbHost+':'+config.dbPort+'/'+config.dbName;
+const dbRoute = 'mongodb://'+config.dbHost+':'+config.dbPort+'/'+config.dbName; 
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
