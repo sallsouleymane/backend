@@ -1237,7 +1237,8 @@ router.get('/infraTopup', (req, res) => {
         Fee.findOne({
          bank_id: ba._id,
          trans_type: "Wallet to Wallet",
-         status: 1
+         status: 1,
+         active: 'Active'
    }, function (err, fe) {
 
      if (!fe || fe == null) {
