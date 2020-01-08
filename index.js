@@ -2349,7 +2349,11 @@ router.post('/generateOTP', function (req, res) {
   const {
     token,
     username,
-    page
+    page,
+    name,
+    email,
+    mobile,
+    bcode
   } = req.body;
   Infra.findOne({
     token
@@ -2386,23 +2390,36 @@ router.post('/generateOTP', function (req, res) {
         });
 
       } else {
-        data.mobile = user.mobile;
-        data.save((err, ot) => {
-          if (err) return res.json({
-            error: err
-          });
+        Bank.find({ $or:[ {'name':name}, {'email':email}, {'mobile':mobile}, {'bcode':bcode} ]}, function (err, bank) {
+          console.log(err);
+          console.log(bank);
+          if(bank == null || bank == undefined || bank.length == 0){
+            data.mobile = user.mobile;
 
-          let content = "Your OTP to add Bank is " + data.otp;
-          sendSMS(content, user.mobile);
-          sendMail(content, "OTP", user.email);
-
-          res.status(200)
-            .json({
-              id: ot._id
+            data.save((err, ot) => {
+              if (err) return res.json({
+                error: err
+              });
+    
+              let content = "Your OTP to add Bank is " + data.otp;
+              sendSMS(content, user.mobile);
+              sendMail(content, "OTP", user.email);
+    
+              res.status(200)
+                .json({
+                  id: ot._id
+                });
             });
+          }else{
+            res.status(400)
+            .json({
+              error: 'Duplicate Entry'
+            });
+          }
         });
+        
       }
-      console.log(data);
+     
     }
   });
 });
