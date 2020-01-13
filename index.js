@@ -19,6 +19,7 @@ const Bank = require('./models/Bank');
 const OTP = require('./models/OTP');
 const Profile = require('./models/Profile');
 const Document = require('./models/Document');
+const Branch = require('./models/Branch');
 
 const API_PORT = 3001;
 const mainFee = config.mainFee;
@@ -31,7 +32,7 @@ app.use(cookieParser());
 app.use(express.static('public'));
 const router = express.Router();
 
-const dbRoute = 'mongodb://'+config.dbHost+':'+config.dbPort+'/'+config.dbName; 
+const dbRoute = 'mongodb://'+config.dbHost+':'+config.dbPort+'/'+config.dbName;
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
@@ -207,7 +208,7 @@ async function transferThis(t1, t2 = false, t3 = false) {
       "remarks": url.note.toString()
     }
   };
-  
+
   let res = await doRequest(options);
   if (res != true) {
     err.push(res.Reason);
@@ -236,7 +237,7 @@ async function transferThis(t1, t2 = false, t3 = false) {
         "remarks": url.note.toString()
       }
     };
-    
+
     res = await doRequest(options);
     console.log("output 2: ");
     console.log(res);
@@ -255,8 +256,8 @@ async function transferThis(t1, t2 = false, t3 = false) {
       if (url.mobile2 && url.mobile2 != '') {
         sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
       }
-    
-    
+
+
       if (t3) {
         url = t3;
         options = {
@@ -269,14 +270,14 @@ async function transferThis(t1, t2 = false, t3 = false) {
             "remarks": url.note.toString()
           }
         };
-        
+
         res = await doRequest(options);
         console.log("output 3: ");
         console.log(res);
         if (res != true) {
           err.push(res.Reason);
         }
-    
+
         if (url.email1 && url.email1 != '') {
           sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
         }
@@ -290,13 +291,13 @@ async function transferThis(t1, t2 = false, t3 = false) {
           sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
         }
     }
-  
-  
+
+
     }
   }
   }
 
-  
+
 
 
 
@@ -386,7 +387,7 @@ router.post('/login', function (req, res) {
     username,
     password
   } = req.body;
-  
+
   Infra.findOne({
     username: { $regex : new RegExp(username, "i") },
     password
@@ -496,11 +497,11 @@ router.post('/getPermission', function (req, res) {
   const {
    token
   } = req.body;
-  
+
   Infra.findOne({
     token
   }, function (err, user) {
-    
+
     if (err) {
       res.status(500)
         .json({
@@ -512,7 +513,7 @@ router.post('/getPermission', function (req, res) {
           error: 'Incorrect username or password'
         });
     } else {
-      
+
       if (user.profile_id && user.profile_id != '') {
         Profile.findOne({
           "_id": user.profile_id
@@ -547,7 +548,7 @@ router.post('/getPermission', function (req, res) {
         }
 
       }
-        
+
     }
   });
 });
@@ -804,6 +805,66 @@ router.post('/addBank', (req, res) => {
   });
 });
 
+router.post('/addBranch', (req, res) => {
+  let data = new Branch();
+  const {
+    name,
+    bcode,
+    username,
+    credit_limit,
+    address1,
+    state,
+    zip,
+    country,
+    ccode,
+    mobile,
+    email,
+    token
+  } = req.body;
+
+  Bank.findOne({
+    token
+  }, function (err, bank) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+
+            data.name = name;
+            data.bcode = bcode;
+            if(credit_limit == '' || credit_limit == null){
+              data.credit_limit = credit_limit;
+            }
+            data.username = username;
+            data.address1 = address1;
+            data.state = state;
+            data.country = country;
+            data.zip = zip;
+            data.ccode = ccode;
+            data.mobile = mobile;
+            data.email = email;
+            data.bank_id = bank._id;
+            data.password = makeid(10);
+
+            data.save((err, d) => {
+              if (err) return res.json({
+                error: "Duplicate entry!"
+              });
+
+              let content = "<p>Your bracnch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/branch'>http://"+config.mainIP+"/branch</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
+              sendMail(content, "Bank Account Created", email);
+              let content2 = "Your branch is added in E-Wallet application Login URL: http://"+config.mainIP+"/branch Your username: " + data.username + " Your password: " + data.password;
+              sendSMS(content2, mobile);
+              return res.status(200).json(data);
+            });
+
+        }
+      });
+});
+
+
 router.post('/editBank', (req, res) => {
   let data = new Bank();
   const {
@@ -823,6 +884,7 @@ router.post('/editBank', (req, res) => {
     otp_id,
     otp
   } = req.body;
+
   Infra.findOne({
     token
   }, function (err, user) {
@@ -909,6 +971,61 @@ router.post('/editBank', (req, res) => {
           }
         }
       });
+    }
+
+  });
+});
+
+
+router.post('/editBranch', (req, res) => {
+  let data = new Branch();
+  const {
+    branch_id,
+    name,
+    username,
+    credit_limit,
+    bcode,
+    address1,
+    state,
+    zip,
+    country,
+    ccode,
+    mobile,
+    email,
+    token
+  } = req.body;
+
+  Bank.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+
+
+            Branch.findByIdAndUpdate(branch_id, {
+              name: name,
+              credit_limit: credit_limit,
+              username: username,
+              address1: address1,
+              state: state,
+              zip: zip,
+              ccode: ccode,
+              bcode: bcode,
+              country: country,
+              mobile: mobile,
+              email: email
+            }, (err) => {
+              if (err) return res.status(400).json({
+                error: err
+              });
+
+              return res.status(200).json(data);
+            });
+
     }
 
   });
@@ -1248,15 +1365,15 @@ router.get('/infraTopup', (req, res) => {
      } else {
        var ranges = JSON.parse(fe.ranges);
        if(ranges.length > 0){
-         
+
        ranges.map(function(v) {
-         
+
          if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
            var temp = fee * Number(v.percentage) / 100;
            fee3 = temp + Number(v.fixed_amount);
            console.log(fee3);
          }
-       
+
        });
      }
      rechargeNow([data]).then(function (result) {
@@ -1268,7 +1385,7 @@ router.get('/infraTopup', (req, res) => {
       data2.note = "commission";
       data2.email2 = bank_email;
       data2.mobile2 = bank_mobile;
- 
+
       let data3 = {};
       data3.amount = fee3.toString();
       data3.from = "operational@" + bank;
@@ -1278,12 +1395,12 @@ router.get('/infraTopup', (req, res) => {
       data3.email2 = infra_email;
       data3.mobile1 = bank_mobile;
       data3.mobile2 = infra_mobile;
- 
+
       // console.log(data);
       // console.log(data2);
       // console.log(data3);
       // transferNow([data, data2, data3]).then(function(result) {
- 
+
       // });
       transferThis(data2, data3).then(function (result) {
         console.log(result);
@@ -1291,7 +1408,7 @@ router.get('/infraTopup', (req, res) => {
         res.status(200).json({
          status: result + " Transfer initiated and will be notified via email and sms"
        });
- 
+
       });
      }
 
@@ -1299,9 +1416,9 @@ router.get('/infraTopup', (req, res) => {
        //   status: fee3
        // });
 
-     
+
     });
-      
+
      });
 
       // rechargeNow([data]).then(function (result) {
@@ -1377,7 +1494,7 @@ router.post('/createRules', (req, res) => {
           data.active = active;
           data.ranges = JSON.stringify(ranges);
           data.editedRanges = JSON.stringify(ranges);
-          
+
           Fee.findOne({
             "trans_type": trans_type,
             "bank_id" : bank_id
@@ -1396,14 +1513,14 @@ router.post('/createRules', (req, res) => {
                     success: true
                   });
               });
-              
+
             }else{
               res.status(400)
               .json({
                 error: "This rule type already exists for this bank"
               });
             }
-            
+
           });
         }
       });
@@ -1421,7 +1538,7 @@ router.post('/editRule', (req, res) => {
     token,
     bank_id,
     rule_id
-    
+
   } = req.body;
   Infra.findOne({
     token
@@ -1448,7 +1565,7 @@ router.post('/editRule', (req, res) => {
           //   "bank_id" : bank_id
           // }, function (err, fee) {
 
-            
+
           // });
 
           Fee.findByIdAndUpdate({
@@ -1507,6 +1624,42 @@ router.post('/getBank', function (req, res) {
           res.status(200)
             .json({
               banks: bank
+            });
+        }
+      });
+
+    }
+  });
+});
+
+router.post('/getBranch', function (req, res) {
+  //res.send("hi");
+  const {
+    token,
+    branch_id
+  } = req.body;
+  Bank.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+
+      Branch.findOne({
+        _id: branch_id
+      }, function (err, branch) {
+        if (err) {
+          res.status(404)
+            .json({
+              error: err
+            });
+        } else {
+          res.status(200)
+            .json({
+              branches: branch
             });
         }
       });
@@ -1735,6 +1888,40 @@ router.post('/bankStatus', function (req, res) {
 
 });
 
+router.post('/branchStatus', function (req, res) {
+  //res.send("hi");
+  const {
+    token,
+    status,
+    branch_id
+  } = req.body;
+
+  Bank.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+
+      Branch.findByIdAndUpdate(branch_id, {
+        status: status
+      }, (err) => {
+        if (err) return res.status(400).json({
+          error: err
+        });
+        res.status(200).json({
+          status: true
+        });
+      });
+
+    }
+  });
+
+});
+
 router.post('/getDocs', function (req, res) {
   //res.send("hi");
   const {
@@ -1805,7 +1992,7 @@ router.post('/approveFee', function (req, res) {
           error: err
         });
     } else {
-      
+
       Fee.findOne({
         "_id": id
       }, function (err, fee) {
@@ -1823,7 +2010,7 @@ router.post('/approveFee', function (req, res) {
           });
       });
       });
-      
+
 
     }
   });
@@ -1909,6 +2096,40 @@ router.post('/getBanks', function (req, res) {
       //   });
       // }
 
+
+    }
+  });
+});
+
+router.post('/getBranches', function (req, res) {
+
+  const {
+    token
+  } = req.body;
+  Bank.findOne({
+    token
+  }, function (err, bank) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+      const bank_id = bank._id;
+      // if (user.isAdmin) {
+        Branch.find({bank_id : bank_id}, function (err, branch) {
+          if (err) {
+            res.status(404)
+              .json({
+                error: err
+              });
+          } else {
+            res.status(200)
+              .json({
+                branches: branch
+              });
+          }
+        });
 
     }
   });
@@ -2003,7 +2224,7 @@ router.post('/getProfile', function (req, res) {
             .json({
               users: user
             });
- 
+
 
     }
   });
@@ -2048,7 +2269,7 @@ router.post('/editInfraProfile', function (req, res) {
           ccode: ccode,
         };
       }
-      
+
       Infra.findByIdAndUpdate(user._id, upd, (err) => {
         if (err) return res.status(400).json({
           error: err
@@ -2400,11 +2621,11 @@ router.post('/generateOTP', function (req, res) {
               if (err) return res.json({
                 error: err
               });
-    
+
               let content = "Your OTP to add Bank is " + data.otp;
               sendSMS(content, user.mobile);
               sendMail(content, "OTP", user.email);
-    
+
               res.status(200)
                 .json({
                   id: ot._id
@@ -2417,9 +2638,9 @@ router.post('/generateOTP', function (req, res) {
             });
           }
         });
-        
+
       }
-     
+
     }
   });
 });
@@ -2630,22 +2851,22 @@ router.post('/transferMoney', function (req, res) {
           // }, function (err, fe) {
 
 
-       
+
             // if (!fe || fe == null) {
             //   var temp = fee * defaultFee / 100;
             //   fee3 = temp + defaultAmt;
             // } else {
             //   var ranges = JSON.parse(fe.ranges);
             //   if(ranges.length > 0){
-                
+
             //   ranges.map(function(v) {
-                
+
             //     if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
             //       var temp = fee * Number(v.percentage) / 100;
             //       fee3 = temp + Number(v.fixed_amount);
             //       console.log(fee3);
             //     }
-              
+
             //   });
             // }else{
             //   var temp = fee * defaultFee / 100;
@@ -2701,13 +2922,13 @@ router.post('/transferMoney', function (req, res) {
               });
 
             // });
-             
+
             // });
 
 
 
         });
-   
+
       }
     });
   } else {
@@ -2745,7 +2966,7 @@ router.post('/checkFee', function (req, res) {
           fee: fee
         });
 
-    
+
       }
     });
   } else {
@@ -2868,7 +3089,7 @@ router.post('/fileUpload', function (req, res) {
           error: err
         });
     } else {
-      
+
       var form = new formidable.IncomingForm();
       const dir = __dirname + '/public/uploads/' + user._id;
       form.parse(req, function (err, fields, files) {
@@ -2938,7 +3159,7 @@ router.post('/ipfsUpload', function (req, res) {
         error: "Only PDF files are accepted"
       });
     }else{
-    
+
     var oldpath = files.file.path;
     fileUpload(oldpath).then(function (result) {
       var out;
@@ -2953,12 +3174,12 @@ router.post('/ipfsUpload', function (req, res) {
             name: result.Hash
           });
         }
-      
+
       }else{
         res.status(200).json({
           error: "File Upload Error"
         });
-      }      
+      }
 
     });
   }
