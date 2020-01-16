@@ -580,7 +580,7 @@ router.get('/getInfraOperationalBalance', function (req, res) {
   Bank.findOne({
     "_id": bank
   }, function (err, ba) {
-    if (err) {
+    if (err || ba == null) {
       res.status(401)
         .json({
           error: err
@@ -2481,7 +2481,7 @@ router.post('/bankLogin', function (req, res) {
         });
     } else {
       let token = makeid(10);
-
+      console.log(bank._id);
       Bank.findByIdAndUpdate(bank._id, {
         token: token
       }, (err) => {
