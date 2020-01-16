@@ -20,6 +20,7 @@ const OTP = require('./models/OTP');
 const Profile = require('./models/Profile');
 const Document = require('./models/Document');
 const Branch = require('./models/Branch');
+const BankUser = require('./models/BankUser');
 
 const API_PORT = 3001;
 const mainFee = config.mainFee;
@@ -976,6 +977,139 @@ router.post('/editBank', (req, res) => {
   });
 });
 
+router.post('/addBankUser', (req, res) => {
+  let data = new BankUser();
+  const {
+    name,
+    email,
+    mobile,
+    username,
+    password,
+    branch_id,
+    logo,
+    token
+  } = req.body;
+  Bank.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+
+      data.name = name;
+      data.email = email;
+      data.mobile = mobile;
+      data.username = username;
+      data.password = password;
+      data.branch_id = branch_id;
+      data.bank_id = user._id;
+      data.logo = logo;
+      
+      data.save((err, ) => {
+        if (err) return res.json({
+          error: 'User ID / Email / Mobile already exists'
+        });
+        let content = "<p>Your have been added as a Bank User in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/bankuser'>http://"+config.mainIP+"/</a></p><p><p>Your username: " + username + "</p><p>Your password: " + password + "</p>";
+        sendMail(content, "Bank User Account Created", email);
+        let content2 = "Your have been added as Bank User in E-Wallet application Login URL: http://"+config.mainIP+"/bankuser Your username: " + username + " Your password: " + password;
+        sendSMS(content2, mobile);
+        return res.status(200).json({
+          success: "True"
+        });
+      });
+
+    }
+
+  });
+});
+
+router.post('/editBankUser', (req, res) => {
+  const {
+    name,
+    email,
+    mobile,
+    username,
+    password,
+    branch_id,
+    logo,
+    user_id,
+    token
+  } = req.body;
+  Bank.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+
+
+      var _id = user_id;
+      
+      BankUser.findOneAndUpdate({
+        "_id": _id
+      }, {
+        name: name,
+        email: email,
+        mobile: mobile,
+        username: username,
+        password: password,
+        branch_id: branch_id,
+        logo: logo
+      }, (err, d) => {
+        if (err) return res.status(400).json({
+          error: err
+        });
+        console.log(d);
+        return res.status(200).json({
+          success: true
+        });
+      });
+
+    }
+
+  });
+});
+
+router.post('/getBankUsers', function (req, res) {
+  //res.send("hi");
+  const {
+    token
+  } = req.body;
+  Bank.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+      const user_id = user._id;
+      BankUser.find({
+        bank_id : user_id
+      }, function (err, bank) {
+        if (err) {
+          res.status(404)
+            .json({
+              error: err
+            });
+        } else {
+          res.status(200)
+            .json({
+              users: bank
+            });
+        }
+      });
+
+    }
+  });
+});
 
 router.post('/editBranch', (req, res) => {
   let data = new Branch();
@@ -3079,8 +3213,13 @@ router.get('/clearDb', function (req, res) {
 
 router.post('/fileUpload', function (req, res) {
   const token = req.query.token;
-
-  Infra.findOne({
+  const from =req.query.from;
+  console.log(from);
+  let table = Infra;
+  if(from && from =='bank'){
+    table = Bank;
+  }
+  table.findOne({
     token
   }, function (err, user) {
     if (err) {
