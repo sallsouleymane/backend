@@ -86,6 +86,7 @@ function sendSMS(content, mobile) {
     }
     return body;
   });
+  // return '';
 }
 
 function sendMail(content, subject, email) {
@@ -603,11 +604,11 @@ router.get('/getBankOperationalBalance', function (req, res) {
   const {
     bank
   } = req.query;
-  console.log(bank);
+  console.log("token"+bank);
   Bank.findOne({
     token: bank
   }, function (err, ba) {
-    if (err) {
+    if (err || ba == null) {
       res.status(401)
         .json({
           error: err
@@ -1007,7 +1008,7 @@ router.post('/addBankUser', (req, res) => {
       data.branch_id = branch_id;
       data.bank_id = user._id;
       data.logo = logo;
-      
+
       data.save((err, ) => {
         if (err) return res.json({
           error: 'User ID / Email / Mobile already exists'
@@ -1050,7 +1051,7 @@ router.post('/editBankUser', (req, res) => {
 
 
       var _id = user_id;
-      
+
       BankUser.findOneAndUpdate({
         "_id": _id
       }, {
@@ -1766,6 +1767,33 @@ router.post('/getBank', function (req, res) {
   });
 });
 
+router.post('/getBankByName', function (req, res) {
+  //res.send("hi");
+  const {
+    name
+  } = req.body;
+
+
+      Bank.findOne({
+        name: name
+      }, function (err, bank) {
+        if (err) {
+          res.status(404)
+            .json({
+              error: err
+            });
+        } else {
+          res.status(200)
+            .json({
+              banks: bank
+            });
+        }
+      });
+
+
+
+});
+
 router.post('/getBranch', function (req, res) {
   //res.send("hi");
   const {
@@ -1800,6 +1828,38 @@ router.post('/getBranch', function (req, res) {
 
     }
   });
+});
+
+router.post('/getBranchInfo', function (req, res) {
+  //res.send("hi");
+  const {
+    token
+  } = req.body;
+
+      Branch.findOne({
+        token: token
+      }, function (err, branch) {
+        if (err) {
+          res.status(404)
+            .json({
+              error: err
+            });
+        } else {
+          BankUser.find({
+            branch_id: branch._id
+          }, function (err, users) {
+
+            res.status(200)
+              .json({
+                branches: branch,
+                bankUsers: users
+              });
+          });
+
+
+        }
+      });
+
 });
 
 router.post('/getWalletsOperational', function (req, res) {
@@ -2481,7 +2541,7 @@ router.post('/bankLogin', function (req, res) {
         });
     } else {
       let token = makeid(10);
-      console.log(bank._id);
+      console.log(token);
       Bank.findByIdAndUpdate(bank._id, {
         token: token
       }, (err) => {
@@ -2499,6 +2559,62 @@ router.post('/bankLogin', function (req, res) {
           id: bank._id
         });
       });
+
+    }
+  });
+});
+
+
+router.post('/branchLogin', function (req, res) {
+  const {
+    username,
+    password
+  } = req.body;
+  Branch.findOne({
+    username,
+    password
+  }, function (err, bank) {
+
+    if (err) {
+      res.status(500)
+        .json({
+          error: 'Internal error please try again'
+        });
+    } else if (!bank) {
+      res.status(401)
+        .json({
+          error: 'Incorrect username or password'
+        });
+    } else if (bank.status == -1) {
+      res.status(401)
+        .json({
+          error: 'Your account has been blocked, pls contact the admin!'
+        });
+    } else {
+
+      Bank.findOne({
+        "_id" : bank.bank_id
+      }, function (err, ba) {
+        let logo = ba.logo;
+        let token = makeid(10);
+        Branch.findByIdAndUpdate(bank._id, {
+          token: token
+        }, (err) => {
+          if (err) return res.status(400).json({
+            error: err
+          });
+          res.status(200).json({
+            token: token,
+            name: bank.name,
+            initial_setup: bank.initial_setup,
+            username: bank.username,
+            status: bank.status,
+            logo: logo,
+            id: bank._id
+          });
+        });
+      });
+
 
     }
   });
@@ -2581,6 +2697,42 @@ router.post('/bankSetupUpdate', function (req, res) {
   });
 });
 
+router.post('/branchSetupUpdate', function (req, res) {
+  const {
+    username,
+    password,
+    token
+  } = req.body;
+  Branch.findOne({
+    token
+  }, function (err, bank) {
+    if (err) {
+      res.status(500)
+        .json({
+          error: 'Internal error please try again'
+        });
+    } else if (!bank) {
+      res.status(401)
+        .json({
+          error: 'Incorrect username or password'
+        });
+    } else {
+      Branch.findByIdAndUpdate(bank._id, {
+        password: password,
+        initial_setup: true
+      }, (err) => {
+        if (err) return res.status(400).json({
+          error: err
+        });
+        res.status(200)
+          .json({
+            success: 'Updated successfully'
+          });
+      });
+    }
+  });
+});
+
 router.post('/infraSetupUpdate', function (req, res) {
   const {
     username,
@@ -2648,6 +2800,44 @@ router.post('/bankForgotPassword', function (req, res) {
 
         res.status(200)
           .json({
+            mobile: mobile,
+            username: bank.username
+          });
+      });
+    }
+  });
+});
+
+router.post('/branchForgotPassword', function (req, res) {
+  //res.send("hi");
+  let data = new OTP();
+  const {
+    mobile
+  } = req.body;
+  Branch.findOne({
+    mobile: mobile
+  }, function (err, bank) {
+    if (err || bank == null) {
+      res.status(401)
+        .json({
+          error: 'Account not found!'
+        });
+    } else {
+      data.user_id = bank._id;
+      data.otp = makeotp(6);
+      data.page = 'branchForgotPassword';
+      data.mobile = mobile;
+
+      data.save((err, ) => {
+        if (err) return res.status(400).json({
+          error: err
+        });
+
+        let content = "Your OTP to change password is " + data.otp;
+        sendSMS(content, mobile);
+        sendMail(content, "OTP", bank.email);
+
+        res.status(200).json({
             mobile: mobile,
             username: bank.username
           });
@@ -2779,6 +2969,47 @@ router.post('/generateOTP', function (req, res) {
   });
 });
 
+router.post('/generateBankOTP', function (req, res) {
+  let data = new OTP();
+  const {
+    token,
+    page,
+    email,
+    mobile,
+    txt
+  } = req.body;
+  Bank.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+      data.user_id = user._id;
+      data.otp = makeotp(6);
+      data.page = page;
+      data.mobile = mobile;
+      data.save((err, ot) => {
+        if (err) return res.json({
+          error: err
+        });
+
+        let content = txt + data.otp;
+        sendSMS(content, mobile);
+        sendMail(content, "OTP", email);
+
+        res.status(200)
+          .json({
+            id: ot._id
+          });
+      });
+
+    }
+  });
+});
+
 
 router.post('/generateOTPBank', function (req, res) {
   let data = new OTP();
@@ -2795,6 +3026,7 @@ router.post('/generateOTPBank', function (req, res) {
     data.otp = makeotp(6);
     data.page = "bankbankinfo";
     data.mobile = bank.mobile;
+
     data.save((err, ot) => {
       if (err) return res.json({
         error: err
@@ -2810,7 +3042,6 @@ router.post('/generateOTPBank', function (req, res) {
         });
     });
   });
-
 
 });
 
@@ -2832,7 +3063,13 @@ router.post('/verifyOTP', function (req, res) {
     } else {
       if (ot.otp == otp && ot.mobile == mobile) {
         let token = makeid(10);
-        Bank.findByIdAndUpdate(ot.user_id, {
+        let page = Infra;
+        if(ot.page == 'bankForgotPassword'){
+          page = Bank;
+        }else if(ot.page == 'branchForgotPassword'){
+          page = Branch;
+        }
+        page.findByIdAndUpdate(ot.user_id, {
           token: token
         }, (err) => {
           if (err) return res.json({
