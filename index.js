@@ -849,15 +849,15 @@ router.post('/addBranch', (req, res) => {
             data.email = email;
             data.bank_id = bank._id;
             data.password = makeid(10);
-
+            let bankName = bank.name;
             data.save((err, d) => {
               if (err) return res.json({
                 error: "Duplicate entry!"
               });
 
-              let content = "<p>Your bracnch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/branch'>http://"+config.mainIP+"/branch</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
+              let content = "<p>Your bracnch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/branch/"+bankName+"'>http://"+config.mainIP+"/branch/"+bankName+"</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
               sendMail(content, "Bank Account Created", email);
-              let content2 = "Your branch is added in E-Wallet application Login URL: http://"+config.mainIP+"/branch Your username: " + data.username + " Your password: " + data.password;
+              let content2 = "Your branch is added in E-Wallet application Login URL: http://"+config.mainIP+"/branch/"+bankName+" Your username: " + data.username + " Your password: " + data.password;
               sendSMS(content2, mobile);
               return res.status(200).json(data);
             });
