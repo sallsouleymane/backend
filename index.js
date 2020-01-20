@@ -21,6 +21,7 @@ const Profile = require('./models/Profile');
 const Document = require('./models/Document');
 const Branch = require('./models/Branch');
 const BankUser = require('./models/BankUser');
+const Cashier = require('./models/Cashier');
 
 const API_PORT = 3001;
 const mainFee = config.mainFee;
@@ -55,6 +56,25 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
+function getTypeClass(key){
+  switch (key) {
+    case 'cashier':
+      return Cashier;
+      break;
+    case 'bank':
+      return Bank;
+      break;
+    case 'infra':
+      return Infra;
+      break;
+    case 'branch':
+      return Branch;
+      break;
+    default:
+      return null;
+      break;
+  }
+}
 
 function makeid(length) {
   var result = '';
@@ -706,6 +726,40 @@ router.post('/getDashStats', function (req, res) {
   });
 });
 
+router.post('/getBankDashStats', function (req, res) {
+  const {
+    token
+  } = req.body;
+  Bank.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+
+      const user_id = user._id;
+        Branch.countDocuments({
+          bank_id: user_id
+        }, function (err, branch) {
+          if (err) {
+            res.status(402)
+              .json({
+                error: err
+              });
+          } else {
+            res.status(200)
+              .json({
+                totalBranches: branch
+              });
+          }
+        });
+    }
+  });
+});
+
 router.post('/addBank', (req, res) => {
   let data = new Bank();
   const {
@@ -859,6 +913,106 @@ router.post('/addBranch', (req, res) => {
               sendMail(content, "Bank Account Created", email);
               let content2 = "Your branch is added in E-Wallet application Login URL: http://"+config.mainIP+"/branch/"+bankName+" Your username: " + data.username + " Your password: " + data.password;
               sendSMS(content2, mobile);
+              return res.status(200).json(data);
+            });
+
+        }
+      });
+});
+
+router.post('/addBranchCashier', (req, res) => {
+  let data = new Cashier();
+  const {
+    name,
+    bcode,
+    working_from,
+    working_to,
+    per_trans_amt,
+    max_trans_amt,
+    max_trans_count,
+    token
+  } = req.body;
+console.log(token);
+  Branch.findOne({
+    token
+  }, function (err, bank) {
+    console.log(bank);
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+
+            data.name = name;
+            data.bcode = bcode;
+            data.working_from = working_from;
+            data.working_to = working_to;
+            data.per_trans_amt = per_trans_amt;
+            data.max_trans_amt = max_trans_amt;
+            data.max_trans_count = max_trans_count;
+            data.branch_id = bank._id;
+            data.bank_id= bank.bank_id;
+            
+            data.save((err, d) => {
+              if (err) return res.json({
+                error: "Duplicate entry!"
+              });
+
+              // let content = "<p>You are added as Cashier in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/cashier/"+bankName+"'>http://"+config.mainIP+"/cashier/"+bankName+"</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
+              // sendMail(content, "Bank Account Created", email);
+              // let content2 = "You are added as Cashier in E-Wallet application Login URL: http://"+config.mainIP+"/cashier/"+bankName+" Your username: " + data.username + " Your password: " + data.password;
+              // sendSMS(content2, mobile);
+              return res.status(200).json(data);
+            });
+
+        }
+      });
+});
+
+router.post('/addCashier', (req, res) => {
+  let data = new Cashier();
+  const {
+    name,
+    branch_id,
+    bcode,
+    working_from,
+    working_to,
+    per_trans_amt,
+    max_trans_amt,
+    max_trans_count,
+    token
+  } = req.body;
+  Bank.findOne({
+    token
+  }, function (err, bank) {
+    console.log(bank);
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+
+            data.name = name;
+            data.bcode = bcode;
+            data.working_from = working_from;
+            data.working_to = working_to;
+            data.per_trans_amt = per_trans_amt;
+            data.max_trans_amt = max_trans_amt;
+            data.max_trans_count = max_trans_count;
+            data.bank_id = bank._id;
+            data.branch_id= branch_id;
+            
+            data.save((err, d) => {
+              if (err) return res.json({
+                error: err.toString()
+              });
+
+              // let content = "<p>You are added as Cashier in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/cashier/"+bankName+"'>http://"+config.mainIP+"/cashier/"+bankName+"</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
+              // sendMail(content, "Bank Account Created", email);
+              // let content2 = "You are added as Cashier in E-Wallet application Login URL: http://"+config.mainIP+"/cashier/"+bankName+" Your username: " + data.username + " Your password: " + data.password;
+              // sendSMS(content2, mobile);
               return res.status(200).json(data);
             });
 
@@ -1164,6 +1318,41 @@ router.post('/editBranch', (req, res) => {
     }
 
   });
+});
+
+router.post('/editCashier', (req, res) => {
+
+  const {
+    cashier_id,
+    name,
+    bcode,
+    working_from,
+    working_to,
+    per_trans_amt,
+    max_trans_amt,
+    max_trans_count,
+    token
+  } = req.body;
+
+
+
+
+            Cashier.findByIdAndUpdate(cashier_id, {
+              name: name,
+              working_from: working_from,
+              working_to: working_to,
+              per_trans_amt: per_trans_amt,
+              bcode: bcode,
+              max_trans_count: max_trans_count,
+              max_trans_amt: max_trans_amt
+            }, (err) => {
+              if (err) return res.status(400).json({
+                error: err
+              });
+
+              return res.status(200).json(true);
+            });
+
 });
 
 router.post('/editBankBank', (req, res) => {
@@ -2116,6 +2305,43 @@ router.post('/branchStatus', function (req, res) {
 
 });
 
+router.post('/updateStatus', function (req, res) {
+  //res.send("hi");
+  const {
+    token,
+    status,
+    type_id,
+    page,
+    type
+  } = req.body;
+  const pageClass = getTypeClass(page);
+  const typeClass = getTypeClass(type);
+  typeClass.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+
+      pageClass.findByIdAndUpdate(type_id, {
+        status: status
+      }, (err) => {
+        if (err) return res.status(400).json({
+          error: err
+        });
+        res.status(200).json({
+          status: true
+        });
+      });
+
+    }
+  });
+
+});
+
 router.post('/getDocs', function (req, res) {
   //res.send("hi");
   const {
@@ -2321,6 +2547,94 @@ router.post('/getBranches', function (req, res) {
             res.status(200)
               .json({
                 branches: branch
+              });
+          }
+        });
+
+    }
+  });
+});
+
+router.post('/getAll', function (req, res) {
+  const {
+    page,
+    type,
+    token
+  } = req.body;
+  
+  const pageClass = getTypeClass(page);
+  const typeClass = getTypeClass(type);
+
+  typeClass.findOne({
+    token
+  }, function (err, t1) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+      const type_id = t1._id;
+      let where = {};
+      if(type == 'bank'){
+        where = {bank_id : type_id};
+      }
+        pageClass.find(where, function (err, data) {
+          if (err) {
+            res.status(404)
+              .json({
+                error: err
+              });
+          } else {
+            res.status(200)
+              .json({
+                rows: data
+              });
+          }
+        });
+
+    }
+  });
+});
+
+router.post('/getOne', function (req, res) {
+  const {
+    page,
+    type,
+    page_id,
+    token
+  } = req.body;
+  
+  const pageClass = getTypeClass(page);
+  const typeClass = getTypeClass(type);
+
+  typeClass.findOne({
+    token
+  }, function (err, t1) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+      
+      let where = {};
+      if(type == 'bank' ){
+        where = {_id : page_id};
+      }else{
+        where = {_id : page_id};
+      }
+      console.log(where);  
+          pageClass.findOne(where, function (err, data) {
+          if (err) {
+            res.status(404)
+              .json({
+                error: err
+              });
+          } else {
+            res.status(200)
+              .json({
+                row: data
               });
           }
         });
@@ -2609,6 +2923,8 @@ router.post('/branchLogin', function (req, res) {
             initial_setup: bank.initial_setup,
             username: bank.username,
             status: bank.status,
+            email: bank.email,
+            mobile: bank.mobile,
             logo: logo,
             id: bank._id
           });
@@ -2994,6 +3310,50 @@ router.post('/generateBankOTP', function (req, res) {
       data.save((err, ot) => {
         if (err) return res.json({
           error: err
+        });
+
+        let content = txt + data.otp;
+        sendSMS(content, mobile);
+        sendMail(content, "OTP", email);
+
+        res.status(200)
+          .json({
+            id: ot._id
+          });
+      });
+
+    }
+  });
+});
+
+router.post('/sendOTP', function (req, res) {
+  let data = new OTP();
+  const {
+    token,
+    page,
+    type,
+    email,
+    mobile,
+    txt
+  } = req.body;
+  const typeClass = getTypeClass(type);
+  typeClass.findOne({
+    token
+  }, function (err, user) {
+    if (err) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+      data.user_id = user._id;
+      data.otp = makeotp(6);
+      data.page = page;
+      data.mobile = mobile;
+      console.log(data);
+      data.save((err, ot) => {
+        if (err) return res.json({
+          error: err.toString()
         });
 
         let content = txt + data.otp;
