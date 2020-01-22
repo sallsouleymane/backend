@@ -10,6 +10,7 @@ const BankUserSchema = new mongoose.Schema({
   branch_id: {type: String, required: true},
   bank_id: {type: String, required: true},
   logo: {type: String, required: false},
+  status: {type: Number, required:true, default:1},
   token: { type: String, required: false }
 });
 module.exports = mongoose.model('BankUser', BankUserSchema);
