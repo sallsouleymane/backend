@@ -2704,6 +2704,44 @@ router.post('/getOne', function (req, res) {
   });
 });
 
+router.post('/getCashier', function (req, res) {
+  const {
+    token
+  } = req.body;
+
+
+  Cashier.findOne({
+    token
+  }, function (err, t1) {
+    if (err || t1 == null) {
+      res.status(401)
+        .json({
+          error: err
+        });
+    } else {
+
+
+          Cashier.findOne({_id: t1._id}, function (err, data) {
+          if (err) {
+            res.status(404)
+              .json({
+                error: err
+              });
+          } else {
+            BankUser.findOne({_id: data.bank_user_id}, function (err, data2) {
+            res.status(200)
+              .json({
+                row: data,
+                row2: data2
+              });
+            });
+          }
+        });
+
+    }
+  });
+});
+
 router.put('/updateOne', function (req, res) {
   const {
     page,
