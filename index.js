@@ -2,7 +2,7 @@ const request = require('request');
 const mongoose = require('mongoose');
 const express = require('express');
 const config = require('./config.json');
- 
+
 var formidable = require('formidable');
 var path = require('path');
 var fs = require('fs-extra')
@@ -70,6 +70,9 @@ function getTypeClass(key){
     case 'branch':
       return Branch;
       break;
+    case 'bankuser':
+      return BankUser;
+      break;
     default:
       return null;
       break;
@@ -97,16 +100,16 @@ function makeotp(length) {
 }
 
 function sendSMS(content, mobile) {
-  let url = "http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=EWALET&route=1&number=" + mobile + "&message=" + content;
-  request(url, {
-    json: true
-  }, (err, res, body) => {
-    if (err) {
-      return err;
-    }
-    return body;
-  });
-  // return '';
+  // let url = "http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=EWALET&route=1&number=" + mobile + "&message=" + content;
+  // request(url, {
+  //   json: true
+  // }, (err, res, body) => {
+  //   if (err) {
+  //     return err;
+  //   }
+  //   return body;
+  // });
+   return '';
 }
 
 function sendMail(content, subject, email) {
@@ -414,7 +417,6 @@ router.post('/login', function (req, res) {
     username: { $regex : new RegExp(username, "i") },
     password
   }, function (err, user) {
-    console.log(user);
     if (err) {
       res.status(500)
         .json({
@@ -521,7 +523,8 @@ router.post('/getPermission', function (req, res) {
   } = req.body;
 
   Infra.findOne({
-    token
+    token,
+    status : 1
   }, function (err, user) {
 
     if (err) {
@@ -529,7 +532,7 @@ router.post('/getPermission', function (req, res) {
         .json({
           error: 'Internal error please try again'
         });
-    } else if (!user) {
+    } else if (user == null) {
       res.status(401)
         .json({
           error: 'Incorrect username or password'
@@ -592,19 +595,31 @@ router.get('/checkInfra', function (req, res) {
 
     }
   });
+
 });
 
 router.get('/getInfraOperationalBalance', function (req, res) {
   const {
-    bank
+    bank,
+    token
   } = req.query;
+  Infra.findOne({
+    token,
+    status:1
+  }, function(e, b){
+  if(e || b == null){
+    res.status(401)
+      .json({
+        error: "Unauthorized"
+      });
+  }else{
   Bank.findOne({
     "_id": bank
   }, function (err, ba) {
     if (err || ba == null) {
-      res.status(401)
+      res.status(404)
         .json({
-          error: err
+          error: "Not found"
         });
     } else {
       const wallet_id = "infra_operational@" + ba.name;
@@ -618,6 +633,8 @@ router.get('/getInfraOperationalBalance', function (req, res) {
 
     }
   });
+  }
+  });
 });
 
 router.get('/getBankOperationalBalance', function (req, res) {
@@ -626,12 +643,13 @@ router.get('/getBankOperationalBalance', function (req, res) {
   } = req.query;
   console.log("token"+bank);
   Bank.findOne({
-    token: bank
+    token: bank,
+    status:1
   }, function (err, ba) {
     if (err || ba == null) {
       res.status(401)
         .json({
-          error: err
+          error: "Unauthorized"
         });
     } else {
       const wallet_id = "operational@" + ba.name;
@@ -731,13 +749,14 @@ router.post('/getBankDashStats', function (req, res) {
     token
   } = req.body;
   Bank.findOne({
-    token
+    token,
+    status: 1
   }, function (err, user) {
-    if (err) {
+    if (err || user == null) {
       res.status(401)
-        .json({
-          error: err
-        });
+      .json({
+        error: "Unauthorized"
+      });
     } else {
 
       const user_id = user._id;
@@ -953,7 +972,7 @@ console.log(token);
             data.max_trans_count = max_trans_count;
             data.branch_id = bank._id;
             data.bank_id= bank.bank_id;
-            
+
             data.save((err, d) => {
               if (err) return res.json({
                 error: "Duplicate entry!"
@@ -1003,7 +1022,7 @@ router.post('/addCashier', (req, res) => {
             data.max_trans_count = max_trans_count;
             data.bank_id = bank._id;
             data.branch_id= branch_id;
-            
+
             data.save((err, d) => {
               if (err) return res.json({
                 error: err.toString()
@@ -1982,6 +2001,48 @@ router.post('/getBankByName', function (req, res) {
 
 
 });
+router.post('/getBranchByName', function (req, res) {
+  //res.send("hi");
+  const {
+    name
+  } = req.body;
+
+      Branch.findOne({
+        name: name
+      }, function (err, bank) {
+        if (err || bank == null) {
+          res.status(404)
+            .json({
+              error: "Not found"
+            });
+        } else {
+          Bank.findOne({
+            _id: bank.bank_id
+          }, function (err, ba) {
+            if (err || ba == null) {
+              res.status(404)
+                .json({
+                  error: "Not found"
+                });
+            } else {
+              var obj = {};
+              obj['logo'] = ba.logo;
+              obj['name'] = bank.name;
+              obj['mobile'] = bank.mobile;
+              obj['_id'] = bank._id;
+
+          res.status(200)
+            .json({
+              banks: obj
+            });
+          }
+        });
+        }
+      });
+
+
+
+});
 
 router.post('/getBranch', function (req, res) {
   //res.send("hi");
@@ -2561,7 +2622,7 @@ router.post('/getAll', function (req, res) {
     type,
     token
   } = req.body;
-  
+
   const pageClass = getTypeClass(page);
   const typeClass = getTypeClass(type);
 
@@ -2604,7 +2665,7 @@ router.post('/getOne', function (req, res) {
     page_id,
     token
   } = req.body;
-  
+
   const pageClass = getTypeClass(page);
   const typeClass = getTypeClass(type);
 
@@ -2617,14 +2678,14 @@ router.post('/getOne', function (req, res) {
           error: err
         });
     } else {
-      
+
       let where = {};
       if(type == 'bank' ){
         where = {_id : page_id};
       }else{
         where = {_id : page_id};
       }
-      console.log(where);  
+      console.log(where);
           pageClass.findOne(where, function (err, data) {
           if (err) {
             res.status(404)
@@ -2639,6 +2700,44 @@ router.post('/getOne', function (req, res) {
           }
         });
 
+    }
+  });
+});
+
+router.put('/updateOne', function (req, res) {
+  const {
+    page,
+    type,
+    page_id,
+    updateData,
+    token
+  } = req.body;
+
+  const pageClass = getTypeClass(page);
+  const typeClass = getTypeClass(type);
+
+  typeClass.findOne({
+    token
+  }, function (err, t1) {
+    if (err || t1 == null) {
+      res.status(401)
+        .json({
+          error: "Unauthorized"
+        });
+    } else {
+      pageClass.findByIdAndUpdate(page_id, updateData, function (err, data) {
+        if (err) {
+          res.status(404)
+            .json({
+              error: "Not Found"
+            });
+        } else {
+          res.status(200)
+            .json({
+              row: data
+            });
+        }
+      });
     }
   });
 });
@@ -2936,6 +3035,62 @@ router.post('/branchLogin', function (req, res) {
   });
 });
 
+
+router.post('/cashierLogin', function (req, res) {
+  const {
+    username,
+    password
+  } = req.body;
+  BankUser.findOne({
+    username,
+    password
+  }, function (err, bank) {
+
+    if (err) {
+      res.status(500)
+        .json({
+          error: 'Internal error please try again'
+        });
+    } else if (!bank || bank ==null) {
+      res.status(401)
+        .json({
+          error: 'Incorrect username or password'
+        });
+    } else if (bank.status == -1) {
+      res.status(401)
+        .json({
+          error: 'Your account has been blocked, pls contact the admin!'
+        });
+    } else {
+
+      Cashier.findOne({
+        "bank_user_id" : bank._id
+      }, function (err, ba) {
+        let token = makeid(10);
+        BankUser.findByIdAndUpdate(bank._id, {
+          token: token
+        }, (err) => {
+          if (err) return res.status(400).json({
+            error: err
+          });
+          res.status(200).json({
+            token: token,
+            name: ba.name,
+            username: bank.username,
+            status: ba.status,
+            email: bank.email,
+            mobile: bank.mobile,
+            cashier_id: ba._id,
+            id: bank._id
+          });
+        });
+      });
+
+
+    }
+  });
+});
+
 router.post('/bankActivate', function (req, res) {
   const {
     token
@@ -3049,6 +3204,42 @@ router.post('/branchSetupUpdate', function (req, res) {
   });
 });
 
+router.post('/cashierSetupUpdate', function (req, res) {
+  const {
+    username,
+    password,
+    token
+  } = req.body;
+  BankUser.findOne({
+    token
+  }, function (err, bank) {
+    if (err) {
+      res.status(500)
+        .json({
+          error: 'Internal error please try again'
+        });
+    } else if (!bank || bank == null) {
+      res.status(401)
+        .json({
+          error: 'Incorrect username or password'
+        });
+    } else {
+      BankUser.findByIdAndUpdate(bank._id, {
+        password: password,
+        initial_setup: true
+      }, (err) => {
+        if (err) return res.status(400).json({
+          error: err
+        });
+        res.status(200)
+          .json({
+            success: 'Updated successfully'
+          });
+      });
+    }
+  });
+});
+
 router.post('/infraSetupUpdate', function (req, res) {
   const {
     username,
@@ -3142,6 +3333,44 @@ router.post('/branchForgotPassword', function (req, res) {
       data.user_id = bank._id;
       data.otp = makeotp(6);
       data.page = 'branchForgotPassword';
+      data.mobile = mobile;
+
+      data.save((err, ) => {
+        if (err) return res.status(400).json({
+          error: err
+        });
+
+        let content = "Your OTP to change password is " + data.otp;
+        sendSMS(content, mobile);
+        sendMail(content, "OTP", bank.email);
+
+        res.status(200).json({
+            mobile: mobile,
+            username: bank.username
+          });
+      });
+    }
+  });
+});
+
+router.post('/cashierForgotPassword', function (req, res) {
+  //res.send("hi");
+  let data = new OTP();
+  const {
+    mobile
+  } = req.body;
+  BankUser.findOne({
+    mobile: mobile
+  }, function (err, bank) {
+    if (err || bank == null) {
+      res.status(401)
+        .json({
+          error: 'Account not found!'
+        });
+    } else {
+      data.user_id = bank._id;
+      data.otp = makeotp(6);
+      data.page = 'cashierForgotPassword';
       data.mobile = mobile;
 
       data.save((err, ) => {
@@ -3428,6 +3657,8 @@ router.post('/verifyOTP', function (req, res) {
           page = Bank;
         }else if(ot.page == 'branchForgotPassword'){
           page = Branch;
+        }else if(ot.page == 'cashierForgotPassword'){
+          page = BankUser;
         }
         page.findByIdAndUpdate(ot.user_id, {
           token: token
