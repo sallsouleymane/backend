@@ -22,6 +22,7 @@ const Document = require('./models/Document');
 const Branch = require('./models/Branch');
 const BankUser = require('./models/BankUser');
 const Cashier = require('./models/Cashier');
+const BankFee = require('./models/BankFee');
 
 const API_PORT = 3001;
 const mainFee = config.mainFee;
@@ -668,7 +669,8 @@ router.get('/getBankOperationalBalance', function (req, res) {
 
 router.get('/getInfraMasterBalance', function (req, res) {
   const {
-    bank
+    bank,
+    token
   } = req.query;
   Infra.findOne({
     token,
@@ -708,9 +710,10 @@ router.post('/getDashStats', function (req, res) {
   const {
     token
   } = req.body;
+  
   Infra.findOne({
     token,
-status:1
+    status:1
   }, function (err, user) {
     if (err || user == null) {
       res.status(401)
@@ -1901,6 +1904,67 @@ status:1
   });
 });
 
+router.post('/createBankRules', (req, res) => {
+  let data = new BankFee();
+  const {
+    name,
+    trans_type,
+    active,
+    ranges,
+
+    token
+  } = req.body;
+  Bank.findOne({
+    token,
+    status:1
+  }, function (err, bank) {
+    if (err || bank == null) {
+      res.status(401)
+        .json({
+          error: "Unauthorized"
+        });
+    } else {
+          const bank_id = bank._id;
+
+          data.bank_id = bank_id;
+          data.name = name;
+          data.trans_type = trans_type;
+          data.active = active;
+          data.ranges = JSON.stringify(ranges);
+          data.editedRanges = JSON.stringify(ranges);
+
+          BankFee.findOne({
+            "trans_type": trans_type,
+            "bank_id" : bank_id
+          }, function (err, fee) {
+            if(fee == null){
+              data.save((err, ) => {
+                if (err) return res.status(400).json({
+                  error: err
+                });
+                let content = "<p>New fee rule has been added for users of your bank in E-Wallet application</p><p>&nbsp;</p><p>Fee Name: " + name + "</p>";
+                let result = sendMail(content, "New Rule Added", bank.email);
+                let content2 = "New fee rule has been added for users of your bank in E-Wallet application Fee Name: " + name;
+                sendSMS(content2, bank.mobile);
+                res.status(200)
+                  .json({
+                    success: true
+                  });
+              });
+
+            }else{
+              res.status(400)
+              .json({
+                error: "This rule type already exists for this bank"
+              });
+            }
+
+          });
+
+    }
+  });
+});
+
 router.post('/editRule', (req, res) => {
 
   const {
@@ -1916,6 +1980,73 @@ router.post('/editRule', (req, res) => {
   Infra.findOne({
     token,
 status:1
+  }, function (err, user) {
+    if (err || user == null) {
+      res.status(401)
+        .json({
+          error: "Unauthorized"
+        });
+    } else {
+
+      Bank.findOne({
+        "_id": bank_id
+      }, function (err, bank) {
+        if (err) {
+          res.status(401)
+            .json({
+              error: err
+            });
+        } else {
+
+          // Fee.findOne({
+          //   "trans_type": trans_type,
+          //   "bank_id" : bank_id
+          // }, function (err, fee) {
+
+
+          // });
+
+          Fee.findByIdAndUpdate({
+            "_id": rule_id
+          }, {
+            name: name,
+            trans_type: trans_type,
+            active: active,
+            editedRanges: JSON.stringify(ranges),
+            edit_status: 0
+          }, (err) => {
+            if (err) return res.status(400).json({
+              error: err
+            });
+            let content = "<p>Rule " + name + " has been updated, check it out</p>";
+            let result = sendMail(content, "Rule Updated", bank.email);
+            let content2 = "Rule " + name + " has been updated, check it out";
+            sendSMS(content2, bank.mobile);
+            res.status(200).json({
+              status: true
+            });
+          });
+        }
+
+      });
+    }
+
+  });
+});
+
+router.post('/editBankRule', (req, res) => {
+
+  const {
+    name,
+    trans_type,
+    active,
+    ranges,
+    token,
+    rule_id
+  } = req.body;
+  Infra.findOne({
+    token,
+    status:1
   }, function (err, user) {
     if (err || user == null) {
       res.status(401)
