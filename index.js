@@ -74,6 +74,9 @@ function getTypeClass(key){
     case 'bankuser':
       return BankUser;
       break;
+    case 'bankfee':
+      return BankFee;
+      break;
     default:
       return null;
       break;
@@ -949,7 +952,7 @@ router.post('/addBranch', (req, res) => {
               });
 
               let content = "<p>Your bracnch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/branch/"+bankName+"'>http://"+config.mainIP+"/branch/"+bankName+"</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
-              sendMail(content, "Bank Account Created", email);
+              sendMail(content, "Bank Branch Created", email);
               let content2 = "Your branch is added in E-Wallet application Login URL: http://"+config.mainIP+"/branch/"+bankName+" Your username: " + data.username + " Your password: " + data.password;
               sendSMS(content2, mobile);
               return res.status(200).json(data);
@@ -1930,6 +1933,7 @@ router.post('/createBankRules', (req, res) => {
           data.name = name;
           data.trans_type = trans_type;
           data.active = active;
+          data.status = 1;
           data.ranges = JSON.stringify(ranges);
           data.editedRanges = JSON.stringify(ranges);
 
@@ -2032,6 +2036,50 @@ status:1
     }
 
   });
+});
+
+router.post('/editBankBankRule', (req, res) => {
+
+  const {
+    name,
+    trans_type,
+    active,
+    ranges,
+    token,
+    rule_id
+  } = req.body;
+  Bank.findOne({
+    token,
+    status:1
+  }, function (err, bank) {
+    if (err || bank == null) {
+      res.status(401)
+        .json({
+          error: "Unauthorized"
+        });
+    } else {
+
+          BankFee.findByIdAndUpdate(rule_id, {
+            name: name,
+            trans_type: trans_type,
+            active: active,
+            ranges: JSON.stringify(ranges)
+          }, (err) => {
+            if (err) return res.status(400).json({
+              error: err.toString()
+            });
+            let content = "<p>Rule " + name + " has been updated, check it out</p>";
+            let result = sendMail(content, "Rule Updated", bank.email);
+            let content2 = "Rule " + name + " has been updated, check it out";
+            sendSMS(content2, bank.mobile);
+            res.status(200).json({
+              status: true
+            });
+          });
+        }
+
+      });
+
 });
 
 router.post('/editBankRule', (req, res) => {
