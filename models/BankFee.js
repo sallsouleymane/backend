@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const BankFeeSchema = new mongoose.Schema({
   name: { type: String, required: true},
   trans_type: { type: String, required: true },
+  trans_from: { type: String, required: true },
+  trans_to: { type: String, required: true },
   active: { type: String, required: true },
   ranges: { type: String, required: true },
   editedRanges: { type: String, required: true },

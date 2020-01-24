@@ -160,7 +160,7 @@ async function fileUpload(path) {
   return res;
 }
 
-async function createWallet(arr, bank, infra) {
+async function createWallet(arr, bank = '', infra = '') {
   var err = [];
   await Promise.all(arr.map(async (url) => {
     var options = {
@@ -641,6 +641,51 @@ router.get('/getInfraOperationalBalance', function (req, res) {
   });
 });
 
+router.get('/getWalletBalance', function (req, res) {
+  const {
+    bank,
+    type,
+    page,
+    token
+  } = req.query;
+  const typeClass = getTypeClass(type);
+  typeClass.findOne({
+    token,
+    status:1
+  }, function(e, b){
+  if(e || b == null){
+    res.status(401)
+      .json({
+        error: "Unauthorized"
+      });
+  }else{
+  Bank.findOne({
+    "name": bank
+  }, function (err, ba) {
+    if (err || ba == null) {
+      res.status(404)
+        .json({
+          error: "Not found"
+        });
+    } else {
+      let wallet_id = page+"@" + ba.name;
+      if(type == 'branch'){
+        wallet_id = b.bcode+"_"+page+"@"+ba.name;
+      }
+
+      getBalance(wallet_id).then(function (result) {
+        res.status(200).json({
+          status: 'success',
+          balance: result
+        });
+      });
+
+    }
+  });
+  }
+  });
+});
+
 router.get('/getBankOperationalBalance', function (req, res) {
   const {
     bank
@@ -950,12 +995,18 @@ router.post('/addBranch', (req, res) => {
               if (err) return res.json({
                 error: "Duplicate entry!"
               });
-
-              let content = "<p>Your bracnch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/branch/"+bankName+"'>http://"+config.mainIP+"/branch/"+bankName+"</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
+              createWallet([bcode+'_operational@' + bank.name,  bcode+'_master@' + bank.name]).then(function (result) {
+                let content = "<p>Your bracnch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/branch/"+bankName+"'>http://"+config.mainIP+"/branch/"+bankName+"</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
               sendMail(content, "Bank Branch Created", email);
               let content2 = "Your branch is added in E-Wallet application Login URL: http://"+config.mainIP+"/branch/"+bankName+" Your username: " + data.username + " Your password: " + data.password;
               sendSMS(content2, mobile);
-              return res.status(200).json(data);
+              // return res.status(200).json(data);
+                res.status(200).json({
+                  status: 'Branch Created',
+                  walletStatus: result.toString()
+                });
+              });
+              
             });
 
         }
@@ -1913,8 +1964,9 @@ router.post('/createBankRules', (req, res) => {
     name,
     trans_type,
     active,
+    trans_from,
+    trans_to,
     ranges,
-
     token
   } = req.body;
   Bank.findOne({
@@ -1933,6 +1985,8 @@ router.post('/createBankRules', (req, res) => {
           data.name = name;
           data.trans_type = trans_type;
           data.active = active;
+          data.trans_from = trans_from;
+          data.trans_to = trans_to;
           data.status = 1;
           data.ranges = JSON.stringify(ranges);
           data.editedRanges = JSON.stringify(ranges);
@@ -2044,6 +2098,8 @@ router.post('/editBankBankRule', (req, res) => {
     name,
     trans_type,
     active,
+    trans_from,
+    trans_to,
     ranges,
     token,
     rule_id
@@ -2063,6 +2119,8 @@ router.post('/editBankBankRule', (req, res) => {
             name: name,
             trans_type: trans_type,
             active: active,
+            trans_from: trans_from,
+            trans_to: trans_to,
             ranges: JSON.stringify(ranges)
           }, (err) => {
             if (err) return res.status(400).json({
