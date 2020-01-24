@@ -713,7 +713,7 @@ router.post('/getDashStats', function (req, res) {
   const {
     token
   } = req.body;
-  
+
   Infra.findOne({
     token,
     status:1
@@ -3361,8 +3361,7 @@ router.post('/bankActivate', function (req, res) {
     token
   } = req.body;
   Bank.findOne({
-    token,
-status:1
+    token
   }, function (err, bank) {
     if (err) {
       res.status(500)
@@ -3404,13 +3403,12 @@ router.post('/bankSetupUpdate', function (req, res) {
     token
   } = req.body;
   Bank.findOne({
-    token,
-status:1
+    token
   }, function (err, bank) {
     if (err || bank == null) {
       res.status(500)
         .json({
-          error: 'Internal error please try again'
+          error: err.toString()
         });
     } else if (!bank) {
       res.status(401)
@@ -4311,6 +4309,19 @@ router.get('/clearDb', function (req, res) {
   if (type == 'all' || type == 'document') {
     Document.remove({}, function (err, c) {});
   }
+  if (type == 'all' || type == 'bankfee') {
+    BankFee.remove({}, function (err, c) {});
+  }
+  if (type == 'all' || type == 'branch') {
+    Branch.remove({}, function (err, c) {});
+  }
+  if (type == 'all' || type == 'cashier') {
+    Cashier.remove({}, function (err, c) {});
+  }
+  if (type == 'all' || type == 'bankuser') {
+    BankUser.remove({}, function (err, c) {});
+  }
+
 
   res.status(200).json({
     status: 'success'
@@ -4321,7 +4332,7 @@ router.get('/clearDb', function (req, res) {
 router.post('/fileUpload', function (req, res) {
   const token = req.query.token;
   const from =req.query.from;
-  
+
   let table = Infra;
   if(from && from =='bank'){
     table = Bank;
