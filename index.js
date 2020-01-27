@@ -231,6 +231,40 @@ async function walletTransfer(arr) {
   return err.toString();
 }
 
+async function sendMoney(token, type, amt, fee) {
+  var err = [];
+  await Promise.all(arr.map(async (url) => {
+    var options = {
+      uri: 'http://'+config.blockChainIP+':8000/transferBtwEWallets',
+      method: 'POST',
+      json: {
+        "wallet_id1": url.from.toString(),
+        "wallet_id2": url.to.toString(),
+        "amount": url.amount.toString(),
+        "remarks": url.note.toString()
+      }
+    };
+    let res = await doRequest(options);
+    if (res.Error) {
+      err.push(res.Reason);
+    } else {
+      if (url.email1 && url.email1 != '') {
+        sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
+      }
+      if (url.email2 && url.email2 != '') {
+        sendMail("<p>You have received " + url.amount + " from the wallet " + url.from + "</p>", "Payment Received", url.email2);
+      }
+      if (url.mobile1 && url.mobile1 != '') {
+        sendSMS("You have sent " + url.amount + " to the wallet " + url.to, url.mobile1);
+      }
+      if (url.mobile2 && url.mobile2 != '') {
+        sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
+      }
+    }
+  }));
+  return err.toString();
+}
+
 
 
 
@@ -4366,6 +4400,7 @@ router.post('/checkCashierFee', function (req, res) {
             error: "Unauthorized"
           });
       } else {
+
         Branch.findOne({
           "_id" : f.branch_id
         }, function (err, f2) {
@@ -4384,49 +4419,54 @@ router.post('/checkCashierFee', function (req, res) {
                     error: "Not Found"
                   });
               } else {
-            const branchOpWallet = f2.bcode+"_operational@"+bankName;
-            let gt = Number(amount)-1;
-            let lt = Number(amount)+1;
+            const branchOpWallet = f2.bcode+"_operational@"+f3.name;
+            oamount = Number(amount);
+
         getTransactionCount(branchOpWallet).then(function (count) {
           count = Number(count)+1;
-          BankFee.findOne({
-           bank_id: ba._id,
-           trans_from: { $gt : gt},
-           trans_to: { $lt : lt},
-           trans_type: "Sending Non Wallet to Non Wallet ",
+          const find = {
+           bank_id: f3._id,
+           trans_type: "Sending Non Wallet to Non Wallet",
            status: 1,
            active: 'Active'
-          }, function (err, fe) {
-  
-       if (!fe || fe == null) {
-        res.status(402).json({
-          status: "No revenue rule found"
+          };
+          console.log(find);
+          BankFee.findOne(find, function (err, fe) {
+       if (err || fe == null) {
+        res.status(200).json({
+          fee: "(No revenue rule found)"
         });
        } else {
+        if(amount >= fe.trans_from && amount <= fe.trans_to){
          var ranges = JSON.parse(fe.ranges);
          var found = 0, fee = 0; 
+
          if(ranges.length > 0){
          ranges.map(function(v) {
           if(found == 1){
           }else{
            if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
-             var temp = amount * Number(v.percentage) / 100;
+             var temp = oamount * Number(v.percentage) / 100;
              fee = temp + Number(v.fixed_amount);
              ;
             found = 1;
            }
           }
          });
-
          if(found == 1){
           res.status(200).json({
             fee: fee
           });
          }else{
           res.status(200).json({
-            fee: "No revenue rule found"
+            fee: "(No revenue rule found)"
           });
          }
+       }
+       }else{
+        res.status(200).json({
+            fee: "(No revenue rule found)"
+          });
        }
 
       //  rechargeNow([data]).then(function (result) {
@@ -4603,9 +4643,225 @@ router.post('/cashierSendMoney', function (req, res) {
                   error: err.toString()
                 });
 
-                res.status(200).json({
-                  status: req.body
+                  Branch.findOne({
+                    "_id" : f.branch_id
+                  }, function (err, f2) {
+                    if (err || f2 == null) {
+                      res.status(402)
+                        .json({
+                          error: "Branch Not Found"
+                        });
+                    } else {
+                      Bank.findOne({
+                        "_id" : f.bank_id
+                      }, function (err, f3) {
+                        if (err || f3 == null) {
+                          res.status(402)
+                            .json({
+                              error: "Bank Not Found"
+                            });
+                        } else {
+                           Infra.findOne({
+                        "_id" : f3.user_id
+                      }, function (err, f4) {
+                        if (err || f4== null) {
+                          res.status(402)
+                            .json({
+                              error: "Infra Not Found"
+                            });
+                        } else {
+                      const branchOpWallet = f2.bcode+"_operational@"+f3.name;
+                      const bankEsWallet = "escrow@"+f3.name;
+                      const bankOpWallet = "operational@"+f3.name;
+                      const infraOpWallet = "infra_operational@"+f3.name;
+
+
+                      const amount = receiverIdentificationAmount;
+                      oamount = Number(amount);
+
+                  getTransactionCount(branchOpWallet).then(function (count) {
+                    count = Number(count)+1;
+                    const find = {
+                     bank_id: f3._id,
+                     trans_type: "Sending Non Wallet to Non Wallet",
+                     status: 1,
+                     active: 'Active'
+                    };
+                    BankFee.findOne(find, function (err, fe) {
+                 if (err || fe == null) {
+                  res.status(200).json({
+                    fee: "(No revenue rule found)"
+                  });
+                 } else {
+                  if(amount >= fe.trans_from && amount <= fe.trans_to){
+                   var ranges = JSON.parse(fe.ranges);
+                   var found = 0, fee = 0; 
+
+                   if(ranges.length > 0){
+                   ranges.map(function(v) {
+                    if(found == 1){
+                    }else{
+                     if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
+                       var temp = oamount * Number(v.percentage) / 100;
+                       fee = temp + Number(v.fixed_amount);
+                       ;
+                      found = 1;
+                     }
+                    }
+                   });
+                   if(found == 1){
+
+                    let trans1 = {};
+                    trans1.from = branchOpWallet;
+                    trans1.to =  bankEsWallet;
+                    trans1.amount = oamount;
+                    trans1.note = "Cashier Send Money";
+                    trans1.email1 =  f2.email;
+                    trans1.email2 = f3.email;
+                    trans1.mobile1 = f2.mobile;
+                    trans1.mobile2 = f3.mobile;
+
+                    let trans2 = {};
+                    trans2.from = branchOpWallet;
+                    trans2.to =  bankOpWallet;
+                    trans2.amount = fee;
+                    trans2.note = "Cashier Send Money Fee";
+                    trans2.email1 =  f2.email;
+                    trans2.email2 = f3.email;
+                    trans2.mobile1 = f2.mobile;
+                    trans2.mobile2 = f3.mobile;
+
+                    getTransactionCount(bankOpWallet).then(function (count) {
+                    count = Number(count)+1;
+                    const find = {
+                     bank_id: f3._id,
+                     trans_type: "Sending Non Wallet to Non Wallet",
+                     status: 1,
+                     active: 'Active'
+                    };
+                    Fee.findOne(find, function (err, fe) {
+                   if (err || fe == null) {
+                    res.status(200).json({
+                      fee: "(No revenue rule found)"
+                    });
+                   } else {
+                  
+                   var ranges = JSON.parse(fe.ranges);
+                   var found = 0, amt = 0; 
+
+                   if(ranges.length > 0){
+                   ranges.map(function(v) {
+                    if(found == 1){
+                    }else{
+                     if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
+                       var temp = fee * Number(v.percentage) / 100;
+                       amt = temp + Number(v.fixed_amount);
+                       ;
+                      found = 1;
+                     }
+                    }
+                   });
+                 }
+
+                 let trans3 = {};
+                    trans3.from = bankOpWallet;
+                    trans3.to =  infraOpWallet;
+                    trans3.amount = amt;
+                    trans3.note = "Cashier Send Money Infra Fee";
+                    trans3.email1 =  f3.email;
+                    trans3.email2 = f4.email;
+                    trans3.mobile1 = f3.mobile;
+                    trans3.mobile2 = f4.mobile;
+
+                 if(found == 1){
+                  walletTransfer([trans1, trans2, trans3]).then(function (result) {
+                    if(result.length <= 0){
+                      res.status(200).json({
+                        status: "success"
+                      });
+                    }else{
+                      res.status(402).json({
+                        status: result.toString()
+                      });
+                    }
+                    
+                    });
+                 }
+     
+             }
+           });
+                    });
+
+                    
+                   
+                   }else{
+                    res.status(200).json({
+                      fee: "(No revenue rule found)"
+                    });
+                   }
+                 }
+                 }else{
+                  res.status(200).json({
+                      fee: "(No revenue rule found)"
+                    });
+                 }
+
+                //  rechargeNow([data]).then(function (result) {
+            
+                //   let data2 = {};
+                //   data2.amount = fee.toString();
+                //   data2.from = "testuser@"+bank;
+                //   data2.to = "operational@" + bank;
+                //   data2.note = "commission";
+                //   data2.email2 = bank_email;
+                //   data2.mobile2 = bank_mobile;
+            
+                //   let data3 = {};
+                //   data3.amount = fee3.toString();
+                //   data3.from = "operational@" + bank;
+                //   data3.to = "infra_operational@" + bank;
+                //   data3.note = "operational commission";
+                //   data3.email1 = bank_email;
+                //   data3.email2 = infra_email;
+                //   data3.mobile1 = bank_mobile;
+                //   data3.mobile2 = infra_mobile;
+            
+                //   // ;
+                //   // ;
+                //   // ;
+                //   // transferNow([data, data2, data3]).then(function(result) {
+            
+                //   // });
+                //   transferThis(data2, data3).then(function (result) {
+                //     ;
+                //     });
+                //     res.status(200).json({
+                //      status: result + " Transfer initiated and will be notified via email and sms"
+                //    });
+            
+                //   });
+                 }
+            
+            
+            
                 });
+            
+                 });
+                 
+                }
+                
+              });
+                  }
+                
+              });
+                  
+                }
+              });
+
+                // res.status(200).json({
+                //   status: req.body
+                // });
+
               });
 
         //   }
