@@ -1147,6 +1147,7 @@ router.post('/addCashier', (req, res) => {
     max_trans_count,
     token
   } = req.body;
+  
   Bank.findOne({
     token,
 status:1
@@ -3401,6 +3402,7 @@ router.post('/bankLogin', function (req, res) {
           name: bank.name,
           initial_setup: bank.initial_setup,
           username: bank.username,
+          mobile: bank.mobile,
           status: bank.status,
           contract: bank.contract,
           logo: bank.logo,
