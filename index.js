@@ -3609,7 +3609,7 @@ router.post('/branchSetupUpdate', function (req, res) {
     password,
     token
   } = req.body;
-  branch.findOne({
+  Branch.findOne({
     token,
 status:1
   }, function (err, bank) {
@@ -5151,6 +5151,103 @@ status:1
 
 });
 
+router.post('/getHistory', function (req, res) {
+  const {
+    from,
+    token,
+    where
+  } = req.body;
+  const pageClass = getTypeClass(from);
+  pageClass.findOne({
+    token,
+status:1
+  }, function (err, f) {
+    if (err || f == null) {
+      res.status(401)
+        .json({
+          error: "Unauthorized"
+        });
+    } else {
+      if(from == 'cashier'){
+           CashierSend.find(where, function (err, b) {
+            var res1 = b;
+            console.log(res);
+                 CashierClaim.find(where, function (err, b) {
+                  var res2 = b;
+                  const result = {};
+let key;
+
+for (key in res1) {
+  if(res1.hasOwnProperty(key)){
+    result[key] = res1[key];
+  }
+}
+
+for (key in res2) {
+  if(res2.hasOwnProperty(key)){
+    result[key] = res2[key];
+  }
+}
+          res.status(200).json({
+            status: 'success',
+            history: result
+
+        });
+
+      });
+
+      });
+
+            
+      }
+   
+    }
+  });
+
+});
+
+router.post('/getHistoryTotal', function (req, res) {
+  const {
+    from,
+    token,
+    where
+  } = req.body;
+  const pageClass = getTypeClass(from);
+  pageClass.findOne({
+    token,
+status:1
+  }, function (err, f) {
+    if (err || f == null) {
+      res.status(401)
+        .json({
+          error: "Unauthorized"
+        });
+    } else {
+      if(from == 'cashier'){
+           CashierSend.countDocuments({}, function (err, c) {
+            var res1 = c;
+            console.log(res1);
+                 CashierClaim.countDocuments({}, function (err, c) {
+                  var res2 = c;
+             var result = res1+res2;
+          res.status(200).json({
+            status: 'success',
+            history: result
+
+        });
+
+      });
+
+      });
+
+            
+      }
+   
+    }
+  });
+
+});
+
 router.post('/getBankHistory', function (req, res) {
   const {
     from,
@@ -5181,6 +5278,43 @@ status:1
         });
 
       // });
+    }
+  });
+
+});
+
+router.post('/getBranchHistory', function (req, res) {
+  const {
+    from,
+    token
+  } = req.body;
+
+  Branch.findOne({
+    token,
+status:1
+  }, function (err, b) {
+    if (err || b == null) {
+      res.status(401)
+        .json({
+          error: "Unauthorized"
+        });
+    } else {
+
+   
+
+      Bank.findOne({
+        "_id": b.bank_id
+      }, function (err, b2) {
+        const wallet = b.bcode+"_"+from + "@" + b2.name;
+        console.log(wallet);
+        getStatement(wallet).then(function (result) {
+          res.status(200).json({
+            status: 'success',
+            history: result
+          });
+        });
+
+      });
     }
   });
 
