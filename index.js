@@ -210,6 +210,7 @@ async function walletTransfer(arr) {
         "remarks": url.note.toString()
       }
     };
+    console.log(options);
     let res = await doRequest(options);
     if (res.Error) {
       err.push(res.Reason);
@@ -4689,9 +4690,10 @@ router.post('/cashierSendMoney', function (req, res) {
                     };
                     BankFee.findOne(find, function (err, fe) {
                  if (err || fe == null) {
-                  res.status(200).json({
-                    fee: "(No revenue rule found)"
-                  });
+                 res.status(402)
+                            .json({
+                              error: "Revenue Rule Not Found"
+                            });
                  } else {
                   if(amount >= fe.trans_from && amount <= fe.trans_to){
                    var ranges = JSON.parse(fe.ranges);
@@ -4730,6 +4732,9 @@ router.post('/cashierSendMoney', function (req, res) {
                     trans2.email2 = f3.email;
                     trans2.mobile1 = f2.mobile;
                     trans2.mobile2 = f3.mobile;
+                    getBalance(branchOpWallet).then(function (bal) {
+                      
+                      if(Number(bal)+Number(f2.credit_limit) >= oamount+fee ){ 
 
                     getTransactionCount(bankOpWallet).then(function (count) {
                     count = Number(count)+1;
@@ -4741,9 +4746,10 @@ router.post('/cashierSendMoney', function (req, res) {
                     };
                     Fee.findOne(find, function (err, fe) {
                    if (err || fe == null) {
-                    res.status(200).json({
-                      fee: "(No revenue rule found)"
-                    });
+                   res.status(200)
+                            .json({
+                              error: "Revenue Rule Not Found"
+                            });
                    } else {
                   
                    var ranges = JSON.parse(fe.ranges);
@@ -4776,12 +4782,21 @@ router.post('/cashierSendMoney', function (req, res) {
                  if(found == 1){
                   walletTransfer([trans1, trans2, trans3]).then(function (result) {
                     if(result.length <= 0){
-                      res.status(200).json({
+               
+                      CashierSend.findByIdAndUpdate(d._id, {
+                        status: 1
+                      }, (err) => {
+                        if (err) return res.status(200).json({
+                          error: err
+                        });
+                               res.status(200).json({
                         status: "success"
                       });
+                        });
+
                     }else{
-                      res.status(402).json({
-                        status: result.toString()
+                      res.status(200).json({
+                        error: result.toString()
                       });
                     }
                     
@@ -4791,19 +4806,23 @@ router.post('/cashierSendMoney', function (req, res) {
              }
            });
                     });
+                  }
+                  });
 
                     
                    
                    }else{
-                    res.status(200).json({
-                      fee: "(No revenue rule found)"
-                    });
+                    res.status(200)
+                            .json({
+                              error: "Revenue Rule Not Found"
+                            });
                    }
                  }
                  }else{
-                  res.status(200).json({
-                      fee: "(No revenue rule found)"
-                    });
+                res.status(200)
+                            .json({
+                              error: "Revenue Rule Not Found"
+                            });
                  }
 
                 //  rechargeNow([data]).then(function (result) {
@@ -4979,15 +4998,79 @@ router.post('/cashierClaimMoney', function (req, res) {
               data.cashier_id = f._id;
               data.amount = otpd.amount;
               data.fee = otpd.fee;
-              
+                const oamount = otpd.amount;
               data.save((err, d) => {
                 if (err) return res.json({
                   error: err.toString()
                 });
 
-                res.status(200).json({
-                  status: req.body
-                });
+                   Branch.findOne({
+                    "_id" : f.branch_id
+                  }, function (err, f2) {
+                    if (err || f2 == null) {
+                      res.status(200)
+                        .json({
+                          error: "Branch Not Found"
+                        });
+                    } else {
+                      Bank.findOne({
+                        "_id" : f.bank_id
+                      }, function (err, f3) {
+                        if (err || f3 == null) {
+                          res.status(200)
+                            .json({
+                              error: "Bank Not Found"
+                            });
+                        } else {
+                           Infra.findOne({
+                        "_id" : f3.user_id
+                      }, function (err, f4) {
+                        if (err || f4== null) {
+                          res.status(200)
+                            .json({
+                              error: "Infra Not Found"
+                            });
+                        } else {
+                      const branchOpWallet = f2.bcode+"_operational@"+f3.name;
+                      const bankEsWallet = "escrow@"+f3.name;
+                        let trans1 = {};
+                    trans1.from = bankEsWallet;
+                    trans1.to =  branchOpWallet;
+                    trans1.amount = oamount;
+                    trans1.note = "Cashier claim Money";
+                    trans1.email1 =  f3.email;
+                    trans1.email2 = f2.email;
+                    trans1.mobile1 = f3.mobile;
+                    trans1.mobile2 = f2.mobile;
+                       walletTransfer([trans1]).then(function (result) {
+                    if(result.length <= 0){
+                      
+                      CashierClaim.findByIdAndUpdate(d._id, {
+                        status: 1
+                      }, (err) => {
+                        if (err) return res.status(200).json({
+                          error: err.toString()
+                        });
+                          res.status(200).json({
+                        status: "success"
+                      });
+                        });
+
+                    }else{
+                      res.status(200).json({
+                        error: result.toString()
+                      });
+                    }
+                    
+                    });
+                  }
+                  });
+                    }
+                  });
+                    }
+                  });
+
+               
               });
 
           }
