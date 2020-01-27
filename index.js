@@ -23,6 +23,8 @@ const Branch = require('./models/Branch');
 const BankUser = require('./models/BankUser');
 const Cashier = require('./models/Cashier');
 const BankFee = require('./models/BankFee');
+const CashierSend = require('./models/CashierSend');
+const CashierClaim = require('./models/CashierClaim');
 
 const API_PORT = 3001;
 const mainFee = config.mainFee;
@@ -117,7 +119,7 @@ function sendSMS(content, mobile) {
 }
 
 function sendMail(content, subject, email) {
-  console.log(content);
+  ;
   let info = transporter.sendMail({
     from: '"E-Wallet" <no-reply@ewallet.com>', // sender address
     to: email, // list of receivers
@@ -195,6 +197,40 @@ async function createWallet(arr, bank = '', infra = '') {
   return err.toString();
 }
 
+async function walletTransfer(arr) {
+  var err = [];
+  await Promise.all(arr.map(async (url) => {
+    var options = {
+      uri: 'http://'+config.blockChainIP+':8000/transferBtwEWallets',
+      method: 'POST',
+      json: {
+        "wallet_id1": url.from.toString(),
+        "wallet_id2": url.to.toString(),
+        "amount": url.amount.toString(),
+        "remarks": url.note.toString()
+      }
+    };
+    let res = await doRequest(options);
+    if (res.Error) {
+      err.push(res.Reason);
+    } else {
+      if (url.email1 && url.email1 != '') {
+        sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
+      }
+      if (url.email2 && url.email2 != '') {
+        sendMail("<p>You have received " + url.amount + " from the wallet " + url.from + "</p>", "Payment Received", url.email2);
+      }
+      if (url.mobile1 && url.mobile1 != '') {
+        sendSMS("You have sent " + url.amount + " to the wallet " + url.to, url.mobile1);
+      }
+      if (url.mobile2 && url.mobile2 != '') {
+        sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
+      }
+    }
+  }));
+  return err.toString();
+}
+
 
 
 
@@ -210,7 +246,7 @@ async function rechargeNow(arr) {
         "remarks": "recharge"
       }
     };
-    console.log(options);
+    ;
     let res = await doRequest(options);
     if (res != true) {
       err.push(res.Reason);
@@ -268,8 +304,8 @@ async function transferThis(t1, t2 = false, t3 = false) {
     };
 
     res = await doRequest(options);
-    console.log("output 2: ");
-    console.log(res);
+    ;
+    ;
     if (res != true) {
       err.push(res.Reason);
     }else{
@@ -301,8 +337,8 @@ async function transferThis(t1, t2 = false, t3 = false) {
         };
 
         res = await doRequest(options);
-        console.log("output 3: ");
-        console.log(res);
+        ;
+        ;
         if (res != true) {
           err.push(res.Reason);
         }
@@ -690,12 +726,12 @@ router.get('/getBankOperationalBalance', function (req, res) {
   const {
     bank
   } = req.query;
-  console.log("token"+bank);
+  ;
   Bank.findOne({
     token: bank,
     status:1
   }, function (err, ba) {
-    console.log(ba);
+    ;
     if (err || ba == null) {
       res.status(401)
         .json({
@@ -771,7 +807,7 @@ router.post('/getDashStats', function (req, res) {
     } else {
 
       const user_id = user._id;
-      // console.log(user_id);
+      // ;
       // if (user.isAdmin) {
         Bank.countDocuments({
         }, function (err, bank) {
@@ -1025,7 +1061,7 @@ router.post('/addBranchCashier', (req, res) => {
     max_trans_count,
     token
   } = req.body;
-console.log(token);
+;
   branch.findOne({
     token,
 status:1
@@ -1319,7 +1355,7 @@ router.post('/editBankUser', (req, res) => {
         if (err) return res.status(400).json({
           error: err
         });
-        console.log(d);
+        ;
         return res.status(200).json({
           success: true
         });
@@ -1618,7 +1654,7 @@ status:1
 
 
       var _id = profile_id;
-      console.log(_id);
+      ;
       var c = {
         create_bank,
         edit_bank,
@@ -1635,7 +1671,7 @@ status:1
         if (err) return res.status(400).json({
           error: err
         });
-        console.log(d);
+        ;
         return res.status(200).json({
           success: true
         });
@@ -1677,7 +1713,7 @@ status:1
       data.password = password;
       data.profile_id = profile_id;
       data.logo = logo;
-      console.log(data);
+      ;
       data.save((err, ) => {
         if (err) return res.json({
           error: "Email / Username/ Mobile already exist!"
@@ -1721,7 +1757,7 @@ status:1
 
 
       var _id = user_id;
-      console.log(_id);
+      ;
       Infra.findOneAndUpdate({
         "_id": _id
       }, {
@@ -1736,7 +1772,7 @@ status:1
         if (err) return res.status(400).json({
           error: err
         });
-        console.log(d);
+        ;
         return res.status(200).json({
           success: true
         });
@@ -1771,7 +1807,7 @@ router.get('/infraTopup', (req, res) => {
 
       let fee = (amount * mainFee / 100);
       var temp = fee * defaultFee / 100;
-       let fee3 = temp + defaultAmt;
+      let fee3 = temp + defaultAmt;
 
       data.amount = (amount - fee).toString();
       data.from = "recharge";
@@ -1785,7 +1821,7 @@ router.get('/infraTopup', (req, res) => {
          trans_type: "Wallet to Wallet",
          status: 1,
          active: 'Active'
-   }, function (err, fe) {
+        }, function (err, fe) {
 
      if (!fe || fe == null) {
       res.status(200).json({
@@ -1800,7 +1836,7 @@ router.get('/infraTopup', (req, res) => {
          if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
            var temp = fee * Number(v.percentage) / 100;
            fee3 = temp + Number(v.fixed_amount);
-           console.log(fee3);
+           ;
          }
 
        });
@@ -1825,14 +1861,14 @@ router.get('/infraTopup', (req, res) => {
       data3.mobile1 = bank_mobile;
       data3.mobile2 = infra_mobile;
 
-      // console.log(data);
-      // console.log(data2);
-      // console.log(data3);
+      // ;
+      // ;
+      // ;
       // transferNow([data, data2, data3]).then(function(result) {
 
       // });
       transferThis(data2, data3).then(function (result) {
-        console.log(result);
+        ;
         });
         res.status(200).json({
          status: result + " Transfer initiated and will be notified via email and sms"
@@ -1874,7 +1910,7 @@ router.get('/infraTopup', (req, res) => {
 
       //   // });
       //   transferThis(data2, data3).then(function (result) {
-      //     console.log(result);
+      //     ;
       //   });
 
       //   res.status(200).json({
@@ -1886,6 +1922,42 @@ router.get('/infraTopup', (req, res) => {
 
   });
 });
+
+router.get('/rechargeWallet', (req, res) => {
+  const {
+    wallet_id,
+    amount
+  } = req.query;
+
+      let data = {};
+      data.amount = amount.toString();
+      data.from = "recharge";
+      data.to = (wallet_id).toString();
+  
+      
+     rechargeNow([data]).then(function (result) {
+        res.status(200).json({
+         status: result.toString()
+        });
+    });
+
+});
+
+router.get('/showBalance', (req, res) => {
+  const {
+    wallet_id
+  } = req.query;
+
+  
+getBalance(wallet_id).then(function (result) {
+  res.status(200).json({
+    status: 'success',
+    balance: result
+  });
+});
+
+});
+
 
 router.post('/createRules', (req, res) => {
   let data = new Fee();
@@ -2551,7 +2623,7 @@ status:1
 //       Document.find({
 //         bank_id
 //       }, function (err, rules) {
-//         console.log(rules);
+//         ;
 //         if (err) {
 //           res.status(404)
 //             .json({
@@ -2957,14 +3029,18 @@ router.post('/getOne', function (req, res) {
           error: "Unauthorized"
         });
     } else {
-
+      if(page == type){
+        res.status(200)
+              .json({
+                row: t1
+              });
+      }else{
       let where = {};
       if(type == 'bank' ){
         where = {_id : page_id};
       }else{
         where = {_id : page_id};
-      }
-      console.log(where);
+      };
           pageClass.findOne(where, function (err, data) {
           if (err) {
             res.status(404)
@@ -2978,6 +3054,7 @@ router.post('/getOne', function (req, res) {
               });
           }
         });
+      }
 
     }
   });
@@ -3180,7 +3257,7 @@ status:1
         });
     } else {
       let upd = {};
-      console.log(password);
+      ;
       if(password == '' || password == undefined || password == null){
         upd = {
           name: name,
@@ -3224,7 +3301,7 @@ router.post('/setupUpdate', function (req, res) {
 
   data.name = "Infra Admin";
   data.username = username;
-  console.log(username);
+  ;
   data.password = password;
   data.mobile = mobile;
   data.email = email;
@@ -3277,7 +3354,7 @@ router.post('/bankLogin', function (req, res) {
         });
     } else {
       let token = makeid(10);
-      console.log(token);
+      ;
       Bank.findByIdAndUpdate(bank._id, {
         token: token
       }, (err) => {
@@ -3808,8 +3885,8 @@ status:1
 
       } else {
         Bank.find({ $or:[ {'name':name}, {'email':email}, {'mobile':mobile}, {'bcode':bcode} ]}, function (err, bank) {
-          console.log(err);
-          console.log(bank);
+          ;
+          ;
           if(bank == null || bank == undefined || bank.length == 0){
             data.mobile = user.mobile;
 
@@ -3908,7 +3985,7 @@ router.post('/sendOTP', function (req, res) {
       data.otp = makeotp(6);
       data.page = page;
       data.mobile = mobile;
-      console.log(data);
+      ;
       data.save((err, ot) => {
         if (err) return res.json({
           error: err.toString()
@@ -4158,7 +4235,7 @@ router.post('/transferMoney', function (req, res) {
             //     if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
             //       var temp = fee * Number(v.percentage) / 100;
             //       fee3 = temp + Number(v.fixed_amount);
-            //       console.log(fee3);
+            //       ;
             //     }
 
             //   });
@@ -4202,14 +4279,14 @@ router.post('/transferMoney', function (req, res) {
             // data3.mobile1 = bank_mobile;
             // data3.mobile2 = infra_mobile;
 
-            // console.log(data);
-            // console.log(data2);
-            // console.log(data3);
+            // ;
+            // ;
+            // ;
             // transferNow([data, data2, data3]).then(function(result) {
 
             // });
             transferThis(data).then(function (result) {
-              console.log(result);
+              ;
               });
               res.status(200).json({
                 status: 'success'
@@ -4260,8 +4337,6 @@ router.post('/checkFee', function (req, res) {
         res.status(200).json({
           fee: fee
         });
-
-
       }
     });
   } else {
@@ -4274,7 +4349,433 @@ router.post('/checkFee', function (req, res) {
 
 });
 
+router.post('/checkCashierFee', function (req, res) {
+  const {
+    amount,
+    token,
+    bankName
+  } = req.body;
 
+    Cashier.findOne({
+      token,
+      status: 1
+    }, function (err, f) {
+      if (err || f == null) {
+        res.status(401)
+          .json({
+            error: "Unauthorized"
+          });
+      } else {
+        Branch.findOne({
+          "_id" : f.branch_id
+        }, function (err, f2) {
+          if (err || f2 == null) {
+            res.status(402)
+              .json({
+                error: "Not Found"
+              });
+          } else {
+            Bank.findOne({
+              "_id" : f.bank_id
+            }, function (err, f3) {
+              if (err || f3 == null) {
+                res.status(402)
+                  .json({
+                    error: "Not Found"
+                  });
+              } else {
+            const branchOpWallet = f2.bcode+"_operational@"+bankName;
+            let gt = Number(amount)-1;
+            let lt = Number(amount)+1;
+        getTransactionCount(branchOpWallet).then(function (count) {
+          count = Number(count)+1;
+          BankFee.findOne({
+           bank_id: ba._id,
+           trans_from: { $gt : gt},
+           trans_to: { $lt : lt},
+           trans_type: "Sending Non Wallet to Non Wallet ",
+           status: 1,
+           active: 'Active'
+          }, function (err, fe) {
+  
+       if (!fe || fe == null) {
+        res.status(402).json({
+          status: "No revenue rule found"
+        });
+       } else {
+         var ranges = JSON.parse(fe.ranges);
+         var found = 0, fee = 0; 
+         if(ranges.length > 0){
+         ranges.map(function(v) {
+          if(found == 1){
+          }else{
+           if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
+             var temp = amount * Number(v.percentage) / 100;
+             fee = temp + Number(v.fixed_amount);
+             ;
+            found = 1;
+           }
+          }
+         });
+
+         if(found == 1){
+          res.status(200).json({
+            fee: fee
+          });
+         }else{
+          res.status(200).json({
+            fee: "No revenue rule found"
+          });
+         }
+       }
+
+      //  rechargeNow([data]).then(function (result) {
+  
+      //   let data2 = {};
+      //   data2.amount = fee.toString();
+      //   data2.from = "testuser@"+bank;
+      //   data2.to = "operational@" + bank;
+      //   data2.note = "commission";
+      //   data2.email2 = bank_email;
+      //   data2.mobile2 = bank_mobile;
+  
+      //   let data3 = {};
+      //   data3.amount = fee3.toString();
+      //   data3.from = "operational@" + bank;
+      //   data3.to = "infra_operational@" + bank;
+      //   data3.note = "operational commission";
+      //   data3.email1 = bank_email;
+      //   data3.email2 = infra_email;
+      //   data3.mobile1 = bank_mobile;
+      //   data3.mobile2 = infra_mobile;
+  
+      //   // ;
+      //   // ;
+      //   // ;
+      //   // transferNow([data, data2, data3]).then(function(result) {
+  
+      //   // });
+      //   transferThis(data2, data3).then(function (result) {
+      //     ;
+      //     });
+      //     res.status(200).json({
+      //      status: result + " Transfer initiated and will be notified via email and sms"
+      //    });
+  
+      //   });
+       }
+  
+  
+  
+      });
+  
+       });
+       
+      }
+      
+    });
+    
+        
+      }
+    });
+  }
+});
+});
+
+router.post('/cashierSendMoney', function (req, res) {
+  const {
+    otpId,
+    token,
+    otp,
+    givenname,
+    familyname,
+    note,
+    senderIdentificationCountry,
+    senderIdentificationType,
+    senderIdentificationNumber,
+    senderIdentificationValidTill,
+    address1,
+    state,
+    zip,
+    ccode,
+    country,
+    email,
+    mobile,
+    withoutID,
+    requireOTP,
+    receiverMobile,
+    receiverccode,
+    receiverGivenName,
+    receiverFamilyName,
+    receiverCountry,
+    receiverEmail,
+    receiverIdentificationCountry,
+    receiverIdentificationType,
+    receiverIdentificationNumber,
+    receiverIdentificationValidTill,
+    receiverIdentificationAmount
+  } = req.body;
+
+    Cashier.findOne({
+      token,
+      status: 1
+    }, function (err, f) {
+      if (err || f == null) {
+        res.status(401)
+          .json({
+            error: "Unauthorized"
+          });
+      } else {
+        // OTP.findOne({
+        //   "_id": otpId,
+        //   otp: otp
+        // }, function (err, otpd) {
+        //   if (err || otpd == null) {
+        //     res.status(402)
+        //       .json({
+        //         error: "OTP Missmatch"
+        //       });
+        //   } else {
+              let data = new CashierSend();
+              let temp = {
+                ccode: ccode,
+                mobile: mobile,
+                givenname: givenname,
+                familyname: familyname,
+                address1: address1,
+                state: state,
+                zip: zip,
+                country: country,
+                email: email,
+                note: note
+              };
+              data.sender_info = JSON.stringify(temp);
+              temp = {
+                country: senderIdentificationCountry,
+                type: senderIdentificationType,
+                number: senderIdentificationNumber,
+                valid: senderIdentificationValidTill
+              };
+              data.sender_id = JSON.stringify(temp);
+              temp = {
+                mobile: receiverMobile,
+                ccode: receiverccode,
+                givenname: receiverGivenName,
+                familyname: receiverFamilyName,
+                country: receiverCountry,
+                email: receiverEmail
+              };
+              data.receiver_info = JSON.stringify(temp);
+              temp = {
+                country: receiverIdentificationCountry,
+                type: receiverIdentificationType,
+                number: receiverIdentificationNumber,
+                valid: receiverIdentificationValidTill
+              };
+              data.receiver_id = JSON.stringify(temp);
+              data.amount = receiverIdentificationAmount;
+              data.fee = 10;
+              data.cashier_id = f._id;
+              data.transaction_code = makeid(8);
+              let content = "Your Transaction Code is "+data.transaction_code;
+              if(receiverMobile && receiverMobile != null){
+                sendSMS(content, receiverMobile);
+              }
+              if(receiverEmail && receiverEmail != null){
+                sendMail(content, "Transaction Code", receiverEmail);
+              }
+              data.without_id = withoutID ? 1 : 0;
+              if(requireOTP){
+                data.require_otp = 1;
+                data.otp = makeotp(6);
+                content = data.otp+" - Send this OTP to the Receiver";
+                if(mobile && mobile != null){
+                  sendSMS(content, mobile);
+                }
+                if(email && email != null){
+                  sendMail(content, "Transaction OTP", email);
+                }
+
+              }
+
+              data.save((err, d) => {
+                if (err) return res.json({
+                  error: err.toString()
+                });
+
+                res.status(200).json({
+                  status: req.body
+                });
+              });
+
+        //   }
+        // });
+       
+      }
+    });
+});
+
+router.post('/cashierVerifyClaim', function (req, res) {
+  const {
+    otpId,
+    token,
+    otp
+  } = req.body;
+
+    Cashier.findOne({
+      token,
+      status: 1
+    }, function (err, f) {
+      if (err || f == null) {
+        res.status(401)
+          .json({
+            error: "Unauthorized"
+          });
+      } else {
+        OTP.findOne({
+          "_id": otpId,
+          otp: otp
+        }, function (err, otpd) {
+          if (err || otpd == null) {
+            res.status(402)
+              .json({
+                error: "OTP Missmatch"
+              });
+          } else {
+            res.status(200)
+            .json({
+              status: "success"
+            });
+          }
+        });
+       
+      }
+    });
+});
+
+router.post('/cashierVerifyOTPClaim', function (req, res) {
+  const {
+    transferCode,
+    token,
+    otp
+  } = req.body;
+
+    Cashier.findOne({
+      token,
+      status: 1
+    }, function (err, f) {
+      if (err || f == null) {
+        res.status(401)
+          .json({
+            error: "Unauthorized"
+          });
+      } else {
+        CashierSend.findOne({
+          "transaction_code": transferCode,
+          otp: otp
+        }, function (err, otpd) {
+          if (err || otpd == null) {
+            res.status(402)
+              .json({
+                error: "OTP Missmatch"
+              });
+          } else {
+            res.status(200)
+            .json({
+              status: "success"
+            });
+          }
+        });
+       
+      }
+    });
+});
+
+router.post('/cashierClaimMoney', function (req, res) {
+  const {
+    token,
+    transferCode,
+    proof
+  } = req.body;
+
+    Cashier.findOne({
+      token,
+      status: 1
+    }, function (err, f) {
+      if (err || f == null) {
+        res.status(401)
+          .json({
+            error: "Unauthorized"
+          });
+      } else {
+        CashierSend.findOne({
+          "transaction_code": transferCode
+        }, function (err, otpd) {
+          if (err || otpd == null) {
+            res.status(402)
+              .json({
+                error: "Transaction Not Found"
+              });
+          } else {
+              let data = new CashierClaim();
+              data.transaction_code = transferCode;
+              data.proof = proof;
+              data.cashier_id = f._id;
+              data.amount = otpd.amount;
+              data.fee = otpd.fee;
+              
+              data.save((err, d) => {
+                if (err) return res.json({
+                  error: err.toString()
+                });
+
+                res.status(200).json({
+                  status: req.body
+                });
+              });
+
+          }
+        });
+       
+      }
+    });
+});
+
+router.post('/getClaimMoney', function (req, res) {
+  const {
+    transferCode,
+    token
+  } = req.body;
+
+  Cashier.findOne({
+    token,
+    status:1
+  }, function (err, f) {
+    if (err || f == null) {
+      res.status(401)
+        .json({
+          error: "Unauthorized"
+        });
+    } else {
+      CashierSend.findOne({
+        transaction_code: transferCode
+      }, function (err, cs) {
+        if (err || f == null) {
+          res.status(402)
+            .json({
+              error: "Record Not Found"
+            });
+        } else {
+          res.status(200)
+          .json({
+            row : cs
+          });
+        }
+      });
+    }
+  });
+
+});
 router.post('/getInfraHistory', function (req, res) {
   const {
     from,
@@ -4469,7 +4970,7 @@ router.post('/ipfsUpload', function (req, res) {
   form.parse(req, function (err, fields, files) {
     var fn = files.file.name.split('.').pop();
     fn = fn.toLowerCase();
-    console.log(fn);
+    ;
     if(fn != "pdf"){
       res.status(200).json({
         error: "Only PDF files are accepted"
@@ -4506,4 +5007,4 @@ router.post('/ipfsUpload', function (req, res) {
 
 
 app.use('/api', router);
-app.listen(API_PORT, () => console.log(`LISTENING ON PORT ${API_PORT}`));
+app.listen(API_PORT, () => console.log("Backend Started"));
