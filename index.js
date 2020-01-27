@@ -2406,6 +2406,7 @@ router.post('/getBranchByName', function (req, res) {
               obj['name'] = bank.name;
               obj['mobile'] = bank.mobile;
               obj['_id'] = bank._id;
+              obj['bcode'] = ba.bcode;
 
           res.status(200)
             .json({
@@ -5192,6 +5193,49 @@ for (key in res2) {
           res.status(200).json({
             status: 'success',
             history: result
+
+        });
+
+      });
+
+      });
+
+            
+      }
+   
+    }
+  });
+
+});
+
+router.post('/getCashierHistory', function (req, res) {
+  const {
+    from,
+    token,
+    where
+  } = req.body;
+  const pageClass = getTypeClass(from);
+  pageClass.findOne({
+    token,
+status:1
+  }, function (err, f) {
+    if (err || f == null) {
+      res.status(401)
+        .json({
+          error: "Unauthorized"
+        });
+    } else {
+      if(from == 'cashier'){
+           CashierSend.find(where, function (err, b) {
+            var res1 = b;
+      
+                 CashierClaim.find(where, function (err, b) {
+                  var res2 = b;
+
+          res.status(200).json({
+            status: 'success',
+            history1: res1,
+            history2: res2
 
         });
 
