@@ -310,6 +310,7 @@ async function transferThis(t1, t2 = false, t3 = false) {
   };
 
   let res = await doRequest(options);
+  console.log("one: "+res);
   if (res != true) {
     err.push(res.Reason);
   }else{
@@ -339,8 +340,7 @@ async function transferThis(t1, t2 = false, t3 = false) {
     };
 
     res = await doRequest(options);
-    ;
-    ;
+    console.log("two: "+res);
     if (res != true) {
       err.push(res.Reason);
     }else{
@@ -372,8 +372,7 @@ async function transferThis(t1, t2 = false, t3 = false) {
         };
 
         res = await doRequest(options);
-        ;
-        ;
+console.log("three: "+res);
         if (res != true) {
           err.push(res.Reason);
         }
@@ -4734,6 +4733,7 @@ router.post('/cashierSendMoney', function (req, res) {
                     trans2.email2 = f3.email;
                     trans2.mobile1 = f2.mobile;
                     trans2.mobile2 = f3.mobile;
+
                     getBalance(branchOpWallet).then(function (bal) {
                       
                       if(Number(bal)+Number(f2.credit_limit) >= oamount+fee ){ 
@@ -4782,9 +4782,9 @@ router.post('/cashierSendMoney', function (req, res) {
                     trans3.mobile2 = f4.mobile;
 
                  if(found == 1){
-                  walletTransfer([trans1, trans2, trans3]).then(function (result) {
+                  transferThis(trans1, trans2, trans3).then(function (result) {
+                  console.log("Result: "+result);
                     if(result.length <= 0){
-               
                       CashierSend.findByIdAndUpdate(d._id, {
                         status: 1
                       }, (err) => {
@@ -5044,9 +5044,8 @@ router.post('/cashierClaimMoney', function (req, res) {
                     trans1.email2 = f2.email;
                     trans1.mobile1 = f3.mobile;
                     trans1.mobile2 = f2.mobile;
-                       walletTransfer([trans1]).then(function (result) {
-                    if(result.length <= 0){
-                      
+                       transferThis(trans1).then(function (result) {
+                    if(result.length <= 0){                      
                       CashierClaim.findByIdAndUpdate(d._id, {
                         status: 1
                       }, (err) => {
@@ -5354,6 +5353,14 @@ router.get('/clearDb', function (req, res) {
   }
   if (type == 'all' || type == 'bankuser') {
     BankUser.remove({}, function (err, c) {});
+  }
+
+  if (type == 'all' || type == 'cashiersend') {
+    CashierSend.remove({}, function (err, c) {});
+  }
+
+  if (type == 'all' || type == 'cashierclaim') {
+    CashierClaim.remove({}, function (err, c) {});
   }
 
 
