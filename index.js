@@ -1993,6 +1993,33 @@ getBalance(wallet_id).then(function (result) {
 
 });
 
+router.get('/getBalance', (req, res) => {
+  const {
+    token,
+    wallet_id,
+    type
+  } = req.query;
+const typeClass = getTypeClass(type);
+  typeClass.findOne({
+        token,
+        status: 1
+      }, function (err, bank) {
+        if(err || bank == null){
+          res.status(401).json({
+            error: 'Unauthorized'
+          });
+        }else{
+        getBalance(wallet_id).then(function (result) {
+          res.status(200).json({
+            status: 'success',
+            balance: result
+          });
+        });
+}
+});
+
+});
+
 
 router.post('/createRules', (req, res) => {
   let data = new Fee();
