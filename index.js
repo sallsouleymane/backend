@@ -1063,7 +1063,7 @@ router.post('/addBranch', (req, res) => {
             let bankName = bank.name;
             data.save((err, d) => {
               if (err) return res.json({
-                error: "Duplicate entry!"
+                error: err.toString()
               });
               createWallet([bcode+'_operational@' + bank.name,  bcode+'_master@' + bank.name]).then(function (result) {
                 let content = "<p>Your bracnch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/branch/"+bankName+"'>http://"+config.mainIP+"/branch/"+bankName+"</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
@@ -3096,6 +3096,65 @@ router.post('/getOne', function (req, res) {
   });
 });
 
+
+router.post('/getCashierTransLimit', function (req, res) {
+  const {
+    token
+  } = req.body;
+
+  Cashier.findOne({
+    token,
+    status: 1
+  }, function (err, t1) {
+    if (err || t1 == null) {
+      res.status(401)
+        .json({
+          error: "Unauthorized"
+        });
+    } else {
+      console.log(t1._id );
+      CashierSend.find({
+        cashier_id: t1._id
+      }, function (err, data) {
+     
+
+            if (err) {
+              res.status(404)
+                .json({
+                  error: err
+                });
+            } else {
+                 var d1 = 0;
+        data.map(function(b) {
+          d1+=Number(b.amount);
+        });
+        CashierClaim.find({
+        cashier_id : t1._id
+      }, function (err, data2) {
+        
+            if (err) {
+              res.status(404)
+                .json({
+                  error: err
+                });
+            } else {
+               var d2 = 0;
+        data2.map(function(b) {
+          d2+=Number(b.amount);
+        });
+              data = Number(t1.max_trans_amt) - (d1+d2);
+              res.status(200)
+                .json({
+                  limit: data
+                });
+            }
+          });
+          }
+        });
+    }
+  });
+});
+
 router.post('/getCashier', function (req, res) {
   const {
     token
@@ -4973,7 +5032,8 @@ router.post('/cashierClaimMoney', function (req, res) {
   const {
     token,
     transferCode,
-    proof
+    proof,
+    givenname
   } = req.body;
 
     Cashier.findOne({
@@ -5001,7 +5061,9 @@ router.post('/cashierClaimMoney', function (req, res) {
               data.cashier_id = f._id;
               data.amount = otpd.amount;
               data.fee = otpd.fee;
-                const oamount = otpd.amount;
+              data.sender_name = givenname;
+
+              const oamount = otpd.amount;
               data.save((err, d) => {
                 if (err) return res.json({
                   error: err.toString()
