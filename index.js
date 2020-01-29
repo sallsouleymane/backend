@@ -5587,10 +5587,15 @@ router.post('/getClaimMoney', function (req, res) {
           error: "Unauthorized"
         });
     } else {
+       CashierClaim.findOne({
+        transaction_code: transferCode,
+        status: 1
+      }, function (err, cs) {
+        if(err || cs == null){
       CashierSend.findOne({
         transaction_code: transferCode
       }, function (err, cs) {
-        if (err || f == null) {
+        if (err || cs == null) {
           res.status(402)
             .json({
               error: "Record Not Found"
@@ -5602,6 +5607,12 @@ router.post('/getClaimMoney', function (req, res) {
           });
         }
       });
+    }else{
+      res.status(200).json({
+        error: "This transaction was already claimed"
+      });
+    }
+  });
     }
   });
 
