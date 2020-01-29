@@ -4984,6 +4984,7 @@ router.post('/cashierSendMoney', function (req, res) {
     country,
     email,
     mobile,
+    livefee,
     withoutID,
     requireOTP,
     receiverMobile,
@@ -5057,7 +5058,7 @@ router.post('/cashierSendMoney', function (req, res) {
               };
               data.receiver_id = JSON.stringify(temp);
               data.amount = receiverIdentificationAmount;
-              data.fee = 10;
+              data.fee = livefee;
               data.cashier_id = f._id;
               data.transaction_code = makeid(8);
               data.master_code = new Date().getTime();
@@ -5229,7 +5230,8 @@ router.post('/cashierSendMoney', function (req, res) {
                   console.log("Result: "+result);
                     if(result.length <= 0){
                       CashierSend.findByIdAndUpdate(d._id, {
-                        status: 1
+                        status: 1,
+                        fee: fee
                       }, (err) => {
                         if (err) return res.status(200).json({
                           error: err
