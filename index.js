@@ -5247,7 +5247,7 @@ router.post('/cashierSendMoney', function (req, res) {
                             })
                           }else{
                             var amt = Number(c.amount)+Number(oamount)+Number(fee);
-                            CashierLedger.findByIdUpdate(c._id, {amount: amt}, function (err, c) {
+                            CashierLedger.findByIdAndUpdate(c._id, {amount: amt}, function (err, c) {
 
                             })
                           }
@@ -5534,7 +5534,7 @@ router.post('/cashierClaimMoney', function (req, res) {
                             })
                           }else{
                             var amt = Number(c.amount)+Number(oamount);
-                            CashierLedger.findByIdUpdate(c._id, {amount: amt}, function (err, c) {
+                            CashierLedger.findByIdAndUpdate(c._id, {amount: amt}, function (err, c) {
 
                             })
                           }
