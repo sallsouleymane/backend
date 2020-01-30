@@ -86,6 +86,9 @@ function getTypeClass(key){
     case 'bankfee':
       return BankFee;
       break;
+    case 'cashierledger':
+      return CashierLedger;
+      break;
     default:
       return null;
       break;
@@ -1072,9 +1075,10 @@ router.post('/getClosingBalance', function (req, res) {
           cashier_id: user._id, trans_type: "CB"
         }, function (err, c) {
           if (err || c == null) {
-            cb = 0;
+            cb = 0, da = null;
           }else{
             cb = c.amount;
+            da = c.created_at;
           }
              CashierLedger.findOne({
               created_at: { $gte: new Date(start), $lte: new Date(end) },
@@ -1101,7 +1105,8 @@ router.post('/getClosingBalance', function (req, res) {
               res.status(200)
               .json({
                 balance1: cb,
-                balance2: diff
+                balance2: diff,
+                lastdate: da
               });
 
             });
