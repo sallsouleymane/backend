@@ -6802,59 +6802,59 @@ router.get('/clearDb', function (req, res) {
   const type = req.query.type;
 
   if (type == 'all' || type == 'infra') {
-    Infra.remove({}, function (err, c) {});
+    db.dropCollection('infras', function (err, c) {});
   }
   if (type == 'all' || type == 'otp') {
-    OTP.remove({}, function (err, c) {});
+    db.dropCollection('otps', function (err, c) {});
   }
   if (type == 'all' || type == 'bank') {
-    Bank.remove({}, function (err, c) {});
+    db.dropCollection('banks', function (err, c) {});
   }
   if (type == 'all' || type == 'profile') {
-    Profile.remove({}, function (err, c) {});
+    db.dropCollection('profiles', function (err, c) {});
   }
   if (type == 'all' || type == 'fee') {
-    Fee.remove({}, function (err, c) {});
+    db.dropCollection('fees',function (err, c) {});
   }
   if (type == 'all' || type == 'document') {
-    Document.remove({}, function (err, c) {});
+    db.dropCollection('documents', function (err, c) {});
   }
   if (type == 'all' || type == 'bankfee') {
-    BankFee.remove({}, function (err, c) {});
+    db.dropCollection('bankfees', function (err, c) {});
   }
   if (type == 'all' || type == 'branch') {
-    Branch.remove({}, function (err, c) {});
+    db.dropCollection('branches', function (err, c) {});
   }
   if (type == 'all' || type == 'cashier') {
-    Cashier.remove({}, function (err, c) {});
+    db.dropCollection('cashiers', function (err, c) {});
   }
 
   if (type == 'all' || type == 'bankuser') {
-    BankUser.remove({}, function (err, c) {});
+    db.dropCollection('bankusers', function (err, c) {});
   }
 
   if (type == 'all' || type == 'cashiersend') {
-    CashierSend.remove({}, function (err, c) {});
+    db.dropCollection('cashiersends', function (err, c) {});
   }
 
   if (type == 'all' || type == 'cashierclaim') {
-    CashierClaim.remove({}, function (err, c) {});
+    db.dropCollection('cashierclaims', function (err, c) {});
   }
   
   if (type == 'all' || type == 'cashierledger') {
-    CashierLedger.remove({}, function (err, c) {});
+    db.dropCollection('cashierledgers', function (err, c) {});
   }
 
   if (type == 'all' || type == 'branchsend') {
-    BranchSend.remove({}, function (err, c) {});
+    db.dropCollection('branchsends', function (err, c) {});
   }
 
   if (type == 'all' || type == 'branchclaim') {
-    BranchClaim.remove({}, function (err, c) {});
+    db.dropCollection('branchclaims',function (err, c) {});
   }
 
   if (type == 'all' || type == 'branchledger') {
-    BranchLedger.remove({}, function (err, c) {});
+    db.dropCollection('branchledgers',function (err, c) {});
   }
 
   res.status(200).json({
