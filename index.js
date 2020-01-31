@@ -6828,6 +6828,7 @@ router.get('/clearDb', function (req, res) {
   if (type == 'all' || type == 'cashier') {
     Cashier.remove({}, function (err, c) {});
   }
+
   if (type == 'all' || type == 'bankuser') {
     BankUser.remove({}, function (err, c) {});
   }
@@ -6839,7 +6840,22 @@ router.get('/clearDb', function (req, res) {
   if (type == 'all' || type == 'cashierclaim') {
     CashierClaim.remove({}, function (err, c) {});
   }
+  
+  if (type == 'all' || type == 'cashierledger') {
+    CashierLedger.remove({}, function (err, c) {});
+  }
 
+  if (type == 'all' || type == 'branchsend') {
+    BranchSend.remove({}, function (err, c) {});
+  }
+
+  if (type == 'all' || type == 'branchclaim') {
+    BranchClaim.remove({}, function (err, c) {});
+  }
+
+  if (type == 'all' || type == 'branchledger') {
+    BranchLedger.remove({}, function (err, c) {});
+  }
 
   res.status(200).json({
     status: 'success'
