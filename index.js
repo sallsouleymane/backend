@@ -323,9 +323,9 @@ async function transferThis(t1, t2 = false, t3 = false) {
   };
 
   let res = await doRequest(options);
-  console.log("one: "+res);
-  if (res.status == 1) {
-    err.push(res.Reason);
+  console.log("one: "+res.toString());
+  if (res.status == 0) {
+    err.push(res.message);
   }else{
     if (url.email1 && url.email1 != '') {
       sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
@@ -357,9 +357,9 @@ async function transferThis(t1, t2 = false, t3 = false) {
     };
 
     res = await doRequest(options);
-    console.log("two: "+res);
-    if (res.status == 1) {
-      err.push(res.Reason);
+    console.log("two: "+res.toString());
+    if (res.status == 0) {
+      err.push(res.message);
     }else{
       if (url.email1 && url.email1 != '') {
         sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
@@ -393,9 +393,9 @@ async function transferThis(t1, t2 = false, t3 = false) {
         };
 
         res = await doRequest(options);
-console.log("three: "+res);
-        if (res.status == 1) {
-          err.push(res.Reason);
+        console.log("three: "+res.toString());
+        if (res.status == 0) {
+          err.push(res.message);
         }
 
         if (url.email1 && url.email1 != '') {
@@ -998,9 +998,10 @@ router.post('/getCashierDashStats', function (req, res) {
         }, function (err, cb) {
             if(cb > 0){
               CashierLedger.findOne({cashier_id: user._id, trans_type: "CB"}).sort({created_at: -1}).exec(function(err, post) {
- CashierLedger.findOne({
+                CashierLedger.findOne({
                     created_at: { $gte: new Date(start), $lte: new Date(end) },
-                    cashier_id: user._id, trans_type: "CR"
+                    cashier_id: user._id, trans_type: "CR",
+                    status : 1
                   },(e, post2) => {
 
                     let received = 0, fee =0;
@@ -1012,7 +1013,8 @@ router.post('/getCashierDashStats', function (req, res) {
                     }
                     CashierLedger.findOne({
                       cashier_id: user._id, trans_type: "DR",
-                    created_at: { $gte: new Date(start), $lte: new Date(end) }
+                    created_at: { $gte: new Date(start), $lte: new Date(end) },
+                    status: 1
                   },(e, post3) => {
 
                     let paid = 0;
@@ -1022,6 +1024,7 @@ router.post('/getCashierDashStats', function (req, res) {
                           paid = 0;
                         }
                     }
+                    console.log(received);
                       res.status(200).json({
                         openingBalance: post.amount,
                         cashPaid:  paid == null ? 0 : paid,
@@ -1047,7 +1050,8 @@ router.post('/getCashierDashStats', function (req, res) {
 
                   CashierLedger.findOne({
                     created_at: { $gte: new Date(start), $lte: new Date(end) },
-                    cashier_id: user._id, trans_type: "CR"
+                    cashier_id: user._id, trans_type: "CR",
+                    status : 1
                   },(e, post2) => {
 
                     let received = 0, fee =0;
@@ -1059,16 +1063,17 @@ router.post('/getCashierDashStats', function (req, res) {
                     }
                     CashierLedger.findOne({
                       cashier_id: user._id, trans_type: "DR",
-                    created_at: { $gte: new Date(start), $lte: new Date(end) }
-                  },(e, post3) => {
+                      created_at: { $gte: new Date(start), $lte: new Date(end) },
+                      status: 1
+                    },(e, post3) => {
 
-                    let paid = 0;
-                      if(post3 != null && post3 != ''){
-                        paid = Number(post3.amount);
-                        if(paid == null || paid == ''){
-                          paid = 0;
-                        }
-                    }
+                      let paid = 0;
+                        if(post3 != null && post3 != ''){
+                          paid = Number(post3.amount);
+                          if(paid == null || paid == ''){
+                            paid = 0;
+                          }
+                      }
                       res.status(200).json({
                         openingBalance: post.amount,
                         cashPaid:  paid == null ? 0 : paid,
@@ -1192,7 +1197,8 @@ router.post('/getClosingBalance', function (req, res) {
           }
              CashierLedger.findOne({
               created_at: { $gte: new Date(start), $lte: new Date(end) },
-              cashier_id: user._id, trans_type: "DR"
+              cashier_id: user._id, trans_type: "DR",
+              status: 1
             }, function (err, c1) {
                 if (err || c1 == null) {
                 dr = 0;
@@ -1201,7 +1207,8 @@ router.post('/getClosingBalance', function (req, res) {
               }
               CashierLedger.findOne({
               created_at: { $gte: new Date(start), $lte: new Date(end) },
-              cashier_id: user._id, trans_type: "CR"
+              cashier_id: user._id, trans_type: "CR",
+              status : 1
             }, function (err, c2) {
               if (err || c2 == null) {
                 cr = 0;
@@ -3582,39 +3589,29 @@ router.post('/getCashierTransLimit', function (req, res) {
       CashierLedger.findOne({
         cashier_id: t1._id,
         created_at: {$gte: new Date(start), $lte: new Date(end)},
-        trans_type: "DR"
+        trans_type: "CR",
+        status : 1
       }, function (err, data) {
 
-console.log("dr"+data);
-            if (err || data == null || data == "") {
-              res.status(200)
-                .json({
-                  limit: t1.max_trans_amt
-                });
-            } else {
-                 var d1 = Number(data.amount);
+                 
                 CashierLedger.findOne({
                 cashier_id : t1._id,
                 created_at: {$gte: new Date(start), $lte: new Date(end)},
-                trans_type : "CR"
+                trans_type : "DR",
+                status : 1
               }, function (err, data2) {
 
-            if (err) {
-              res.status(404)
-                .json({
-                  error: err
-                });
-            } else {
-               var d2 = Number(data2.amount);
+                var d1 = (data && data.amount != undefined  && data.amount != null && data.amount != '') ? Number(data.amount) : 0;
+               var d2 =  (data2 && data2.amount != undefined && data2.amount != null && data2.amount != '') ? Number(data2.amount) : 0;
 
               let limit = Number(t1.max_trans_amt) - (d1+d2);
               res.status(200)
                 .json({
                   limit: limit
                 });
-            }
+            
           });
-          }
+          
         });
     }
   });
