@@ -325,7 +325,12 @@ async function transferThis(t1, t2 = false, t3 = false) {
   let res = await doRequest(options);
   console.log("one: "+res.toString());
   if (res.status == 0) {
-    err.push(res.message);
+    if(res.message){
+      err.push(res.message);  
+    }else{
+      err.push("Blockchain connection error");
+    }
+    
   }else{
     if (url.email1 && url.email1 != '') {
       sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
@@ -359,7 +364,11 @@ async function transferThis(t1, t2 = false, t3 = false) {
     res = await doRequest(options);
     console.log("two: "+res.toString());
     if (res.status == 0) {
-      err.push(res.message);
+      if(res.message){
+      err.push(res.message);  
+    }else{
+      err.push("Blockchain connection error");
+    }
     }else{
       if (url.email1 && url.email1 != '') {
         sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
@@ -395,8 +404,12 @@ async function transferThis(t1, t2 = false, t3 = false) {
         res = await doRequest(options);
         console.log("three: "+res.toString());
         if (res.status == 0) {
-          err.push(res.message);
-        }
+          if(res.message){
+            err.push(res.message);  
+          }else{
+            err.push("Blockchain connection error");
+          }
+        }else{
 
         if (url.email1 && url.email1 != '') {
           sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
@@ -410,6 +423,7 @@ async function transferThis(t1, t2 = false, t3 = false) {
         if (url.mobile2 && url.mobile2 != '') {
           sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
         }
+      }
     }
 
 
