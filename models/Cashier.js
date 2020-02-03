@@ -16,7 +16,11 @@ const CashierSchema = new mongoose.Schema({
   modified_at: { type: Date, default: null },
   initial_setup: { type: Boolean, default: false},
   status: {type: Number, required:true, default:1},
-  opening_balance: { type: Boolean, required: false , default: false},
+  opening_balance: { type: Number, required: false , default: 0},
+  cash_in_hand: { type: Number, required: false , default: 0},
+  cash_received: { type: Number, required: false , default: 0},
+  cash_paid: { type: Number, required: false , default: 0},
+  closing_balance: { type: Number, required: false , default: 0},
   token: {type: String, required:false, default:null}
 });
 module.exports = mongoose.model('Cashier', CashierSchema);

@@ -17,6 +17,7 @@ const BranchSchema = new mongoose.Schema({
   created_at: { type: Date, default: Date.now },
   modified_at: { type: Date, default: null },
   initial_setup: { type: Boolean, default: false},
+  total_cashiers: {type: Number, required: false, default: 0},
   status: {type: Number, required:true, default:1},
   token: {type: String, required:false, default:null}
 });

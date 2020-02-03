@@ -770,8 +770,19 @@ router.get('/getWalletBalance', function (req, res) {
     bank,
     type,
     page,
-    token
+    token,
+    wallet_id
   } = req.query;
+
+  if(wallet_id != null && wallet_id != undefined && wallet_id != ''){
+    getBalance(wallet_id).then(function (result) {
+        res.status(200).json({
+          status: 'success',
+          balance: result
+        });
+      });
+  }else{
+
   const typeClass = getTypeClass(type);
   typeClass.findOne({
     token,
@@ -808,6 +819,7 @@ router.get('/getWalletBalance', function (req, res) {
   });
   }
   });
+}
 });
 
 router.get('/getBankOperationalBalance', function (req, res) {
@@ -1382,7 +1394,7 @@ router.post('/addBranch', (req, res) => {
 
             data.name = name;
             data.bcode = bcode;
-            if(credit_limit == '' || credit_limit == null){
+            if(credit_limit != '' && credit_limit != null && credit_limit != undefined){
               data.credit_limit = credit_limit;
             }
             data.username = username;
@@ -1473,6 +1485,7 @@ router.post('/addCashier', (req, res) => {
   const {
     name,
     branch_id,
+    credit_limit,
     bcode,
     working_from,
     working_to,
@@ -1495,6 +1508,7 @@ status:1
 
             data.name = name;
             data.bcode = bcode;
+            data.credit_limit = credit_limit;
             data.working_from = working_from;
             data.working_to = working_to;
             data.per_trans_amt = per_trans_amt;
@@ -1507,11 +1521,9 @@ status:1
               if (err) return res.json({
                 error: err.toString()
               });
-
-              // let content = "<p>You are added as Cashier in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/cashier/"+bankName+"'>http://"+config.mainIP+"/cashier/"+bankName+"</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
-              // sendMail(content, "Bank Account Created", email);
-              // let content2 = "You are added as Cashier in E-Wallet application Login URL: http://"+config.mainIP+"/cashier/"+bankName+" Your username: " + data.username + " Your password: " + data.password;
-              // sendSMS(content2, mobile);
+                Branch.findByIdAndUpdate(branch_id,  {$inc : {'total_cashiers' : 1}}, function(e, v){
+                  console.log(v);
+                });
               return res.status(200).json(data);
             });
 
@@ -1904,7 +1916,8 @@ Branch.findOne({
                 error: err.toString()
               });
                 Cashier.findByIdAndUpdate(cashier_id, {
-                  opening_balance: true
+                  opening_balance: total,
+                  cash_in_hand: total,
                 }, (err, d) => {
                   return res.status(200).json(true);
                 });
@@ -3466,10 +3479,13 @@ status:1
                 error: err
               });
           } else {
-            res.status(200)
+
+            
+              res.status(200)
               .json({
                 branches: branch
               });
+            
           }
         });
 
@@ -4279,7 +4295,7 @@ status:1
         .json({
           error: 'Internal error please try again'
         });
-    } else if (!bank || user == null) {
+    } else if (!bank || bank == null) {
       res.status(401)
         .json({
           error: 'Incorrect username or password'
