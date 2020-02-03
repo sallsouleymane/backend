@@ -1003,123 +1003,129 @@ router.post('/getCashierDashStats', function (req, res) {
       });
     } else {
 
+      res.status(200).json({
+              openingBalance: user.opening_balance,
+              cashPaid: user.cash_paid,
+              cashReceived: user.cash_received,
+              feeGenerated: user.fee_generated
+            });
 
-
-        CashierLedger.countDocuments({
-          cashier_id: user._id,
-          trans_type: "OB"
-        }, function (err, ob) {
-          if (err || ob == null || ob <= 0) {
-            res.status(200)
-              .json({
-                openingBalance: 0,
-                cashPaid: 0,
-                cashReceived: 0,
-                feeGenerated: 0
-              });
-          } else {
-            CashierLedger.countDocuments({
-          cashier_id: user._id,
-          trans_type: "CB"
-        }, function (err, cb) {
-            if(cb > 0){
-              CashierLedger.findOne({cashier_id: user._id, trans_type: "CB"}).sort({created_at: -1}).exec(function(err, post) {
-                CashierLedger.findOne({
-                    created_at: { $gte: new Date(start), $lte: new Date(end) },
-                    cashier_id: user._id, trans_type: "CR",
-                    status : 1
-                  },(e, post2) => {
-
-                    let received = 0, fee =0;
-                    if(post2 != null){
-                      let fe = JSON.parse(post2.transaction_details);
-                      console.log(fe);
-                        received = Number(post2.amount);
-                        fee = Number(fe.fee);
-                    }
-                    CashierLedger.findOne({
-                      cashier_id: user._id, trans_type: "DR",
-                    created_at: { $gte: new Date(start), $lte: new Date(end) },
-                    status: 1
-                  },(e, post3) => {
-
-                    let paid = 0;
-                      if(post3 != null && post3 != ''){
-                        paid = Number(post3.amount);
-                        if(paid == null || paid == ''){
-                          paid = 0;
-                        }
-                    }
-                    console.log(received);
-                      res.status(200).json({
-                        openingBalance: post.amount,
-                        cashPaid:  paid == null ? 0 : paid,
-                        cashReceived: received == null ? 0 : received ,
-                        feeGenerated: fee
-                      });
-
-                      });
-                  });
-
-              });
-            }else{
-
-                CashierLedger.findOne({cashier_id: user._id, trans_type: "OB"}).sort({created_at: -1}).exec(function(err, post) {
-                  if(err || post == null){
-                    res.status(200).json({
-                        openingBalance: 0,
-                        cashPaid: 0,
-                        cashReceived: 0,
-                        feeGenerated: 0
-                      });
-                  }else{
-
-                  CashierLedger.findOne({
-                    created_at: { $gte: new Date(start), $lte: new Date(end) },
-                    cashier_id: user._id, trans_type: "CR",
-                    status : 1
-                  },(e, post2) => {
-
-                    let received = 0, fee =0;
-                    if(post2 != null){
-                      let fe = JSON.parse(post2.transaction_details);
-                      console.log(fe);
-                        received = Number(post2.amount);
-                        fee = Number(fe.fee);
-                    }
-                    CashierLedger.findOne({
-                      cashier_id: user._id, trans_type: "DR",
-                      created_at: { $gte: new Date(start), $lte: new Date(end) },
-                      status: 1
-                    },(e, post3) => {
-
-                      let paid = 0;
-                        if(post3 != null && post3 != ''){
-                          paid = Number(post3.amount);
-                          if(paid == null || paid == ''){
-                            paid = 0;
-                          }
-                      }
-                      res.status(200).json({
-                        openingBalance: post.amount,
-                        cashPaid:  paid == null ? 0 : paid,
-                        cashReceived: received == null ? 0 : received ,
-                        feeGenerated: fee
-                      });
-
-                      });
-                  });
-
-                }
-                });
-            }
-          });
-        }
-
-        });
+        // CashierLedger.countDocuments({
+        //   cashier_id: user._id,
+        //   trans_type: "OB"
+        // }, function (err, ob) {
+        //   if (err || ob == null || ob <= 0) {
+        //     res.status(200)
+        //       .json({
+        //         openingBalance: 0,
+        //         cashPaid: 0,
+        //         cashReceived: 0,
+        //         feeGenerated: 0
+        //       });
+        //   } else {
+        //     CashierLedger.countDocuments({
+        //   cashier_id: user._id,
+        //   trans_type: "CB"
+        //     }, function (err, cb) {
+        //     if(cb > 0){
+        //       CashierLedger.findOne({cashier_id: user._id, trans_type: "CB"}).sort({created_at: -1}).exec(function(err, post) {
+        //         CashierLedger.findOne({
+        //             created_at: { $gte: new Date(start), $lte: new Date(end) },
+        //             cashier_id: user._id, trans_type: "CR",
+        //             status : 1
+        //           },(e, post2) => {
+        //
+        //             let received = 0, fee =0;
+        //             if(post2 != null){
+        //               let fe = JSON.parse(post2.transaction_details);
+        //               console.log(fe);
+        //                 received = Number(post2.amount);
+        //                 fee = Number(fe.fee);
+        //             }
+        //             CashierLedger.findOne({
+        //               cashier_id: user._id, trans_type: "DR",
+        //             created_at: { $gte: new Date(start), $lte: new Date(end) },
+        //             status: 1
+        //           },(e, post3) => {
+        //
+        //             let paid = 0;
+        //               if(post3 != null && post3 != ''){
+        //                 paid = Number(post3.amount);
+        //                 if(paid == null || paid == ''){
+        //                   paid = 0;
+        //                 }
+        //             }
+        //             console.log(received);
+        //               res.status(200).json({
+        //                 openingBalance: post.amount,
+        //                 cashPaid:  paid == null ? 0 : paid,
+        //                 cashReceived: received == null ? 0 : received ,
+        //                 feeGenerated: fee
+        //               });
+        //
+        //               });
+        //           });
+        //
+        //       });
+        //     }else{
+        //
+        //         CashierLedger.findOne({cashier_id: user._id, trans_type: "OB"}).sort({created_at: -1}).exec(function(err, post) {
+        //           if(err || post == null){
+        //             res.status(200).json({
+        //                 openingBalance: 0,
+        //                 cashPaid: 0,
+        //                 cashReceived: 0,
+        //                 feeGenerated: 0
+        //               });
+        //           }else{
+        //
+        //           CashierLedger.findOne({
+        //             created_at: { $gte: new Date(start), $lte: new Date(end) },
+        //             cashier_id: user._id, trans_type: "CR",
+        //             status : 1
+        //           },(e, post2) => {
+        //
+        //             let received = 0, fee =0;
+        //             if(post2 != null){
+        //               let fe = JSON.parse(post2.transaction_details);
+        //               console.log(fe);
+        //                 received = Number(post2.amount);
+        //                 fee = Number(fe.fee);
+        //             }
+        //             CashierLedger.findOne({
+        //               cashier_id: user._id, trans_type: "DR",
+        //               created_at: { $gte: new Date(start), $lte: new Date(end) },
+        //               status: 1
+        //             },(e, post3) => {
+        //
+        //               let paid = 0;
+        //                 if(post3 != null && post3 != ''){
+        //                   paid = Number(post3.amount);
+        //                   if(paid == null || paid == ''){
+        //                     paid = 0;
+        //                   }
+        //               }
+        //               res.status(200).json({
+        //                 openingBalance: post.amount,
+        //                 cashPaid:  paid == null ? 0 : paid,
+        //                 cashReceived: received == null ? 0 : received ,
+        //                 feeGenerated: fee
+        //               });
+        //
+        //               });
+        //           });
+        //
+        //         }
+        //         });
+        //     }
+        //   });
+        // }
+        //
+        // });
     }
   });
 });
+
 
 router.post('/getBranchDashStats', function (req, res) {
 
@@ -1211,51 +1217,26 @@ router.post('/getClosingBalance', function (req, res) {
 
 
       let cb = 0, cr= 0, dr =0;
-        CashierLedger.findOne({
-          created_at: { $gte: new Date(start), $lte: new Date(end) },
-          cashier_id: user._id, trans_type: "CB"
-        }, function (err, c) {
-          if (err || c == null) {
-            cb = 0, da = null;
-          }else{
-            cb = c.amount;
-            da = c.created_at;
-          }
-             CashierLedger.findOne({
-              created_at: { $gte: new Date(start), $lte: new Date(end) },
-              cashier_id: user._id, trans_type: "DR",
-              status: 1
-            }, function (err, c1) {
-                if (err || c1 == null) {
-                dr = 0;
-              }else{
-                dr = c1.amount;
-              }
-              CashierLedger.findOne({
-              created_at: { $gte: new Date(start), $lte: new Date(end) },
-              cashier_id: user._id, trans_type: "CR",
-              status : 1
-            }, function (err, c2) {
-              if (err || c2 == null) {
-                cr = 0;
-              } else {
-                cr = c2.amount;
-              }
-              console.log(cr);
-              console.log(dr);
-              console.log(cb);
-              var diff = Number(cb) - (Number(cr) - Number(dr));
+        // CashierLedger.findOne({
+        //   created_at: { $gte: new Date(start), $lte: new Date(end) },
+        //   cashier_id: user._id, trans_type: "CB"
+        // }, function (err, c) {
+          var c = user;
+
+            cb = c.closing_balance;
+            da = c.closing_time;
+                  var diff = Number(cb) -((user.opening_balance+user.cash_received) - user.cash_paid);
               res.status(200)
               .json({
                 balance1: cb,
                 balance2: diff,
                 lastdate: da
               });
+          
+      
 
-            });
 
-            });
-         });
+         // });
       }
 
     });
@@ -1967,6 +1948,11 @@ Cashier.findOne({
               if (err) return res.status(200).json({
                 error: err.toString()
               });
+
+                Cashier.findByIdAndUpdate(otpd.id, {
+                  closing_balance: total,
+                  closing_time: new Date()
+                }, function(e,v){});
 
                   return res.status(200).json(true);
 
@@ -3594,6 +3580,7 @@ router.post('/getOne', function (req, res) {
 
 
 router.post('/getCashierTransLimit', function (req, res) {
+
   var today = new Date();
   today = today.toISOString();
   var s = today.split("T");
@@ -3614,35 +3601,39 @@ router.post('/getCashierTransLimit', function (req, res) {
           error: "Unauthorized"
         });
     } else {
-      console.log(t1._id );
+       res.status(200)
+                .json({
+                  limit: Number(t1.max_trans_amt) - (Number(t1.cash_received) + Number(t1.cash_paid))
+                });
+      // console.log(t1._id );
 
-      CashierLedger.findOne({
-        cashier_id: t1._id,
-        created_at: {$gte: new Date(start), $lte: new Date(end)},
-        trans_type: "CR",
-        status : 1
-      }, function (err, data) {
+      // CashierLedger.findOne({
+      //   cashier_id: t1._id,
+      //   created_at: {$gte: new Date(start), $lte: new Date(end)},
+      //   trans_type: "CR",
+      //   status : 1
+      // }, function (err, data) {
 
                  
-                CashierLedger.findOne({
-                cashier_id : t1._id,
-                created_at: {$gte: new Date(start), $lte: new Date(end)},
-                trans_type : "DR",
-                status : 1
-              }, function (err, data2) {
+      //           CashierLedger.findOne({
+      //           cashier_id : t1._id,
+      //           created_at: {$gte: new Date(start), $lte: new Date(end)},
+      //           trans_type : "DR",
+      //           status : 1
+      //         }, function (err, data2) {
 
-                var d1 = (data && data.amount != undefined  && data.amount != null && data.amount != '') ? Number(data.amount) : 0;
-               var d2 =  (data2 && data2.amount != undefined && data2.amount != null && data2.amount != '') ? Number(data2.amount) : 0;
+      //           var d1 = (data && data.amount != undefined  && data.amount != null && data.amount != '') ? Number(data.amount) : 0;
+      //          var d2 =  (data2 && data2.amount != undefined && data2.amount != null && data2.amount != '') ? Number(data2.amount) : 0;
 
-              let limit = Number(t1.max_trans_amt) - (d1+d2);
-              res.status(200)
-                .json({
-                  limit: limit
-                });
+      //         let limit = Number(t1.max_trans_amt) - (d1+d2);
+      //         res.status(200)
+      //           .json({
+      //             limit: limit
+      //           });
             
-          });
+      //     });
           
-        });
+      //   });
     }
   });
 });
@@ -4075,6 +4066,13 @@ router.post('/branchLogin', function (req, res) {
 
 
 router.post('/cashierLogin', function (req, res) {
+    var today = new Date();
+  today = today.toISOString();
+  var s = today.split("T");
+  var start = s[0]+"T00:00:00.000Z";
+  var date = new Date(start); // some mock date
+  start = date.getTime();
+  
   const {
     username,
     password
@@ -4104,10 +4102,40 @@ router.post('/cashierLogin', function (req, res) {
       Cashier.findOne({
         "bank_user_id" : bank._id
       }, function (err, ba) {
+        if(err || ba == null){
+          res.status(401)
+        .json({
+          error: 'Incorrect username or password'
+        });
+      }else{
+
         let token = makeid(10);
-        Cashier.findByIdAndUpdate(ba._id, {
+        var upd = {
           token: token
-        }, (err) => {
+        };
+
+        if( ba.closing_time != null){
+          var ct = new Date(ba.closing_time);
+          ct = ct.getTime();
+          console.log(ct);
+          console.log(start);
+          if(ct < start) {
+          upd={
+            token: token,
+            opening_balance: ba.closing_balance,
+            cash_received: 0,
+            fee_generated:0,
+            cash_paid: 0,
+            closing_balance: 0,
+            closing_time: null
+          }
+        }
+        }
+        
+
+        console.log(upd);
+
+        Cashier.findByIdAndUpdate(ba._id, upd , (err) => {
           if (err) return res.status(400).json({
             error: err
           });
@@ -4122,6 +4150,10 @@ router.post('/cashierLogin', function (req, res) {
             id: bank._id
           });
         });
+
+    
+
+      }
       });
 
 
@@ -5395,7 +5427,7 @@ router.post('/cashierSendMoney', function (req, res) {
                     trans1.mobile1 = f2.mobile;
                     trans1.mobile2 = f3.mobile;
                     trans1.master_code = master_code;
-                    trans1.child_code = child_code;
+                    trans1.child_code = child_code+"1";
 
                     let trans2 = {};
                     trans2.from = branchOpWallet;
@@ -5409,7 +5441,7 @@ router.post('/cashierSendMoney', function (req, res) {
                     trans2.master_code = master_code;
                     now = new Date().getTime();
                     child_code = mns+""+mnr+""+now;
-                    trans2.child_code = child_code;
+                    trans2.child_code = child_code+"2";
 
                     getBalance(branchOpWallet).then(function (bal) {
 
@@ -5461,7 +5493,7 @@ router.post('/cashierSendMoney', function (req, res) {
                     mns = f3.mobile.slice(-2);
                     mnr = f4.mobile.slice(-2);
                     now = new Date().getTime();
-                    child_code = mns+""+mnr+""+now;
+                    child_code = mns+""+mnr+""+now+"3";
                     trans3.child_code = child_code;
 
                  if(found == 1){
@@ -5475,6 +5507,12 @@ router.post('/cashierSendMoney', function (req, res) {
                         if (err) return res.status(200).json({
                           error: err
                         });
+                        Cashier.findByIdAndUpdate(f._id, {
+                          cash_received: Number(f.cash_received) + Number(oamount)+Number(fee),
+                          fee_generated: Number(fee),
+                          total_trans: Number(f.total_trans) + 1
+                        }, function(e, v){});
+
                         CashierLedger.findOne({ cashier_id: f._id, trans_type: "CR", created_at: {$gte: new Date(start), $lte: new Date(end)}}, function (err, c) {
                           if(err || c == null){
                             let data = new CashierLedger();
@@ -6150,7 +6188,7 @@ router.post('/cashierClaimMoney', function (req, res) {
               var child_code = mns+""+mnr+""+now;
               var master_code = otpd.master_code;
               data.master_code = master_code;
-              data.child_code = child_code;
+              data.child_code = child_code+"1";
 
               const oamount = otpd.amount;
               data.save((err, d) => {
@@ -6181,7 +6219,10 @@ router.post('/cashierClaimMoney', function (req, res) {
                         if (err) return res.status(200).json({
                           error: err.toString()
                         });
-
+                          Cashier.findByIdAndUpdate(f._id, {
+                          cash_paid: Number(f.cash_paid) + Number(oamount),
+                          total_trans: Number(f.total_trans) + 1
+                        }, function(e, v){});
                           CashierLedger.findOne({ cashier_id: f._id, trans_type: "DR", created_at: {$gte: new Date(start), $lte: new Date(end)}}, function (err, c) {
                           if(err || c == null){
 

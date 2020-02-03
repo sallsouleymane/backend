@@ -20,7 +20,10 @@ const CashierSchema = new mongoose.Schema({
   cash_in_hand: { type: Number, required: false , default: 0},
   cash_received: { type: Number, required: false , default: 0},
   cash_paid: { type: Number, required: false , default: 0},
+  fee_generated: { type: Number, required: false , default: 0},
   closing_balance: { type: Number, required: false , default: 0},
+  closing_time: { type: Date, required: false , default: null},
+  total_trans: { type: Number, required: false , default: 0},
   token: {type: String, required:false, default:null}
 });
 module.exports = mongoose.model('Cashier', CashierSchema);
