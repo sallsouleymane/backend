@@ -29,6 +29,7 @@ const CashierLedger = require('./models/CashierLedger');
 const BranchSend = require('./models/BranchSend');
 const BranchClaim = require('./models/BranchClaim');
 const BranchLedger = require('./models/BranchLedger');
+const CurrencyModel = require("./models/Currency")
 
 const API_PORT = 3001;
 const mainFee = config.mainFee;
@@ -7046,6 +7047,37 @@ router.post('/ipfsUpload', function (req, res) {
 
   });
 });
+
+
+router.post('/save-currency', async (req, res) => {
+
+  try {
+    const input = req.body;
+    const currencyData = await CurrencyModel.find({});
+    if(currencyData.length == 0) {
+     await CurrencyModel(input).save()
+    }else {
+      await CurrencyModel.update({_id: currencyData[0]._id}, {$set: input});
+    }
+    res.status(200).json({message : "saved", input})
+  }catch(err) {
+    res.status(500).json({error: err.message})
+  }
+
+
+})
+
+router.get("/get-currency", async (req, res) => {
+  try {
+    const data = await CurrencyModel.find({});
+    res.status(200).json(data);
+  }catch(err) {
+    res.status(500).json({error: err.message})
+  }
+})
+
+
+
 /* General APIs End */
 
 
