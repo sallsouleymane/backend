@@ -104,13 +104,15 @@ function makeid(length) {
 }
 
 function makeotp(length) {
-  var result = '';
-  var characters = '0123456789';
-  var charactersLength = characters.length;
-  for (var i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
+  // var result = '';
+  // var characters = '0123456789';
+  // var charactersLength = characters.length;
+  // for (var i = 0; i < length; i++) {
+  //   result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  // }
+  // return result;
+
+  return "111111";
 }
 
 function sendSMS(content, mobile) {
@@ -2468,7 +2470,7 @@ router.post('/createRules', (req, res) => {
     token
   } = req.body;
   Infra.findOne({
-    token,
+    // token,
 status:1
   }, function (err, user) {
     if (err || user == null) {
@@ -2612,7 +2614,7 @@ router.post('/editRule', (req, res) => {
 
   } = req.body;
   Infra.findOne({
-    token,
+    // token,
 status:1
   }, function (err, user) {
     if (err || user == null) {
@@ -3083,7 +3085,7 @@ router.post('/getRule', function (req, res) {
     rule_id
   } = req.body;
   Infra.findOne({
-    token,
+    // token,
 status:1
   }, function (err, user) {
     if (err || user == null) {
@@ -3322,7 +3324,7 @@ router.post('/approveFee', function (req, res) {
     id
   } = req.body;
   Bank.findOne({
-    token,
+    // token,
 status:1
   }, function (err, user) {
     if (err || user == null) {
@@ -3362,7 +3364,7 @@ router.post('/declineFee', function (req, res) {
     id
   } = req.body;
   Bank.findOne({
-    token,
+    // token,
 status:1
   }, function (err, user) {
     if (err || user == null) {
