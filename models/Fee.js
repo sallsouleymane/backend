@@ -10,6 +10,15 @@ const FeeSchema = new mongoose.Schema({
   user_id: { type: String, required: true },
   token: {type: String, required:false, default:null},
   status: { type: Number, required: true, default: 0 },
-  edit_status: { type: Number, required: true, default: 0 }
+  edit_status: { type: Number, required: true, default: 0 },
+
+  bankFeeId: {type : mongoose.Schema.Types.ObjectId, ref: "BankFee"},
+
+  standardRevenueSharingRule: {
+   type : Object
+  },
+  branchWithSpecificRevenue : {
+    type : Object
+  }
 });
 module.exports = mongoose.model('Fee', FeeSchema);

@@ -2459,7 +2459,7 @@ const typeClass = getTypeClass(type);
 });
 
 
-router.post('/createRules', (req, res) => {
+router.post('/createRules', (req, res) => { //fee
   let data = new Fee();
   const {
     name,
@@ -2467,7 +2467,8 @@ router.post('/createRules', (req, res) => {
     active,
     ranges,
     bank_id,
-    token
+    token,
+    selectedBankFeeId
   } = req.body;
   Infra.findOne({
     // token,
@@ -2495,6 +2496,7 @@ status:1
           data.trans_type = trans_type;
           data.active = active;
           data.ranges = JSON.stringify(ranges);
+          data.bankFeeId = selectedBankFeeId;
           var edited = {
             name: name,
             trans_type: trans_type,
@@ -2610,7 +2612,8 @@ router.post('/editRule', (req, res) => {
     ranges,
     token,
     bank_id,
-    rule_id
+    rule_id,
+    selectedBankFeeId
 
   } = req.body;
   Infra.findOne({
@@ -3443,6 +3446,32 @@ status:1
     }
   });
 });
+
+
+
+router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
+
+  try {
+
+    const {standardRevenueSharingRule, branchWithSpecificRevenue} = req.body;
+    const {id}  = req.params;
+
+    await Fee.update({_id : id}, {
+      $set : {
+        standardRevenueSharingRule,
+        branchWithSpecificRevenue
+      }
+    })
+
+    res.send({code : 1})
+
+
+  }catch(err) {
+    res.send({code : 0, message: err.message})
+  }
+
+})
+
 
 router.post('/getBranches', function (req, res) {
 
@@ -5127,6 +5156,20 @@ router.post('/checkCashierFee', function (req, res) {
 });
 });
 
+router.get("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
+  try {
+
+    const fee = await Fee.find({bankFeeId : req.params.bankFeeId});
+    if (fee.length == 0) throw {message: "no data"}
+
+
+    res.send({code :1, fee : fee[0]})
+
+  }catch(err) {
+    res.status(200).send({code : 0, message: err.message})
+  }
+})
+
 router.post('/checkBranchFee', function (req, res) {
   const {
     amount,
@@ -5352,6 +5395,13 @@ router.post('/cashierSendMoney', function (req, res) {
               data.master_code = master_code;
               data.child_code = child_code;
 
+
+
+
+
+
+
+              //send transaction sms after actual transaction
               let content = "Your Transaction Code is "+data.transaction_code;
               if(receiverMobile && receiverMobile != null){
                 sendSMS(content, receiverMobile);
@@ -5359,6 +5409,11 @@ router.post('/cashierSendMoney', function (req, res) {
               if(receiverEmail && receiverEmail != null){
                 sendMail(content, "Transaction Code", receiverEmail);
               }
+
+
+
+
+
               data.without_id = withoutID ? 1 : 0;
               if(requireOTP){
                 data.require_otp = 1;
@@ -5386,6 +5441,17 @@ router.post('/cashierSendMoney', function (req, res) {
 
                       const amount = receiverIdentificationAmount;
                       oamount = Number(amount);
+
+
+
+
+
+
+
+
+
+
+
 
                   getTransactionCount(branchOpWallet).then(function (count) {
                     count = Number(count)+1;
@@ -5418,6 +5484,19 @@ router.post('/cashierSendMoney', function (req, res) {
                      }
                     }
                    });
+
+
+
+
+
+
+
+
+
+
+
+
+
                    if(found == 1){
 
                     let trans1 = {};
@@ -5450,6 +5529,11 @@ router.post('/cashierSendMoney', function (req, res) {
 
                       if(Number(bal)+Number(f2.credit_limit) >= oamount+fee ){
 
+
+
+
+
+
                     getTransactionCount(bankOpWallet).then(function (count) {
                     count = Number(count)+1;
                     const find = {
@@ -5469,9 +5553,11 @@ router.post('/cashierSendMoney', function (req, res) {
                    var ranges = JSON.parse(fe.ranges);
                    var found = 0, amt = 0;
 
+
                    if(ranges.length > 0){
                    ranges.map(function(v) {
                     if(found == 1){
+
                     }else{
                      if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
                        var temp = fee * Number(v.percentage) / 100;
@@ -5482,6 +5568,13 @@ router.post('/cashierSendMoney', function (req, res) {
                     }
                    });
                  }
+
+
+
+
+
+
+
 
                  let trans3 = {};
                     trans3.from = bankOpWallet;
