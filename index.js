@@ -5472,14 +5472,7 @@ router.post('/cashierSendMoney', function (req, res) {
 
 
               //send transaction sms after actual transaction
-              let content = "Your Transaction Code is "+data.transaction_code;
-              if(receiverMobile && receiverMobile != null){
-                sendSMS(content, receiverMobile);
-              }
-              if(receiverEmail && receiverEmail != null){
-                sendMail(content, "Transaction Code", receiverEmail);
-              }
-
+              
 
 
 
@@ -5712,6 +5705,16 @@ router.post('/cashierSendMoney', function (req, res) {
                   transferThis(trans1, trans2, trans3, trans4).then(function (result) {
                   console.log("Result: "+result);
                     if(result.length <= 0){
+
+                      let content = "Your Transaction Code is "+data.transaction_code;
+                      if(receiverMobile && receiverMobile != null){
+                        sendSMS(content, receiverMobile);
+                      }
+                      if(receiverEmail && receiverEmail != null){
+                        sendMail(content, "Transaction Code", receiverEmail);
+                      }
+        
+
                       CashierSend.findByIdAndUpdate(d._id, {
                         status: 1,
                         fee: fee
