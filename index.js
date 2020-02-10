@@ -5660,12 +5660,40 @@ router.post('/cashierSendMoney', function (req, res) {
 
 
 //Code by Hatim 
+
+
+                  //what i need
+                  //branchId
+                  //feeId
+
+                  
+                  const { standardRevenueSharingRule, branchWithSpecificRevenue } = fe;
+                  let feeObject;
+                  let sendFee = 0;
+
+                  if(branchWithSpecificRevenue) {
+
+                    feeObject = branchWithSpecificRevenue.filter(bwsf => bwsf.branchId == f2.bcode)[0];
+
+
+                  }else {
+                    feeObject = standardRevenueSharingRule;
+                  }
+
+                  if(feeObject) {
+                    const {send} = feeObject;
+                    sendFee = (send * fee / 100)
+                  }
+
+                  
+
+
                     let trans4 = {};
                     trans4.from = bankOpWallet;
                     trans4.to =  branchOpWallet;
                     //cacluat the revene here and replace with fee below. 
-                    
-                    trans4.amount = 1 ;
+                    trans4.amount = Number(sendFee).toFixed(2);
+                    // trans4.amount = 1 ;
                     trans4.note = "Bank Send Revenue Branch for Sending money";
                     trans4.email1 =  f2.email;
                     trans4.email2 = f3.email;
@@ -5678,6 +5706,9 @@ router.post('/cashierSendMoney', function (req, res) {
 //End
 
                  if(found == 1){
+
+
+
                   transferThis(trans1, trans2, trans3, trans4).then(function (result) {
                   console.log("Result: "+result);
                     if(result.length <= 0){
@@ -5724,6 +5755,10 @@ router.post('/cashierSendMoney', function (req, res) {
                         error: result.toString()
                       });
                     }
+
+
+
+
 
                     });
                  }
@@ -6397,68 +6432,179 @@ router.post('/cashierClaimMoney', function (req, res) {
 
 //Code by hatim
 
-const bankOpWallet = "operational@"+f3.name;
-let trans2 = {};
-trans2.from = bankOpWallet;
-trans2.to =  branchOpWallet;
-//Replace the amount with the Claim Revenue bellow
-trans2.amount = 1;
-trans2.note = "Revenue for claim Money";
-trans2.email1 =  f2.email;
-trans2.email2 = f3.email;
-trans2.mobile1 = f2.mobile;
-trans2.mobile2 = f3.mobile;
-trans2.master_code = master_code;
-trans1.child_code =data.child_code + "2";
+//req
+//branchId
+//feeId
+//bankFee
 
 
-//End of hatim Code
+let amount = oamount;
+
+
+getTransactionCount(branchOpWallet).then(function (count) {
+  count = Number(count)+1;
+  const find = {
+   bank_id:  f.bank_id,
+   trans_type: "Non Wallet to Non Wallet",
+   status: 1,
+   active: 'Active'
+  };
+  BankFee.findOne(find, function (err, fe) {
+if (err || fe == null) {
+res.status(402)
+          .json({
+            error: "Revenue Rule Not Found"
+          });
+} else {
+if(amount >= fe.trans_from && amount <= fe.trans_to){
+ var ranges = JSON.parse(fe.ranges);
+ var found = 0, fee = 0;
+
+ if(ranges.length > 0){
+ ranges.map(function(v) {
+  if(found == 1){
+  }else{
+   if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
+     var temp = oamount * Number(v.percentage) / 100;
+     fee = temp + Number(v.fixed_amount);
+     
+    found = 1;
+   }
+  }
+ });
 
 
 
 
-                       transferThis(trans1, trans2).then(function (result) {
-                    if(result.length <= 0){
-                      CashierClaim.findByIdAndUpdate(d._id, {
-                        status: 1
-                      }, (err) => {
-                        if (err) return res.status(200).json({
-                          error: err.toString()
-                        });
-                          Cashier.findByIdAndUpdate(f._id, {
-                          cash_paid: Number(f.cash_paid) + Number(oamount),
-                          total_trans: Number(f.total_trans) + 1
-                        }, function(e, v){});
-                          CashierLedger.findOne({ cashier_id: f._id, trans_type: "DR", created_at: {$gte: new Date(start), $lte: new Date(end)}}, function (err, c) {
-                          if(err || c == null){
+ Fee.findOne(sendFeeOptions).then(d => {
 
-                            let data = new CashierLedger();
-                            data.amount = Number(oamount);
-                            data.trans_type = "DR";
-                            data.cashier_id = f._id;
-                            data.save(function (err, c) {
 
-                            })
-                          }else{
-                            var amt = Number(c.amount)+Number(oamount);
-                            CashierLedger.findByIdAndUpdate(c._id, {amount: amt}, function (err, c) {
 
-                            })
-                          }
-                        });
 
-                          res.status(200).json({
-                        status: "success"
-                      });
-                        });
 
-                    }else{
-                      res.status(200).json({
-                        error: result.toString()
-                      });
-                    }
+  const { standardRevenueSharingRule, branchWithSpecificRevenue } = d;
+  let feeObject;
+  let claimFee = 0;
 
-                    });
+  if(branchWithSpecificRevenue) {
+
+    feeObject = branchWithSpecificRevenue.filter(bwsf => bwsf.branchId == f2.bcode)[0];
+
+
+  }else {
+    feeObject = standardRevenueSharingRule;
+  }
+
+  if(feeObject) {
+    const {claim} = feeObject;
+    claimFee = (claim * fee / 100)
+  }
+
+
+
+  const bankOpWallet = "operational@"+f3.name;
+  let trans2 = {};
+  trans2.from = bankOpWallet;
+  trans2.to =  branchOpWallet;
+  //Replace the amount with the Claim Revenue below
+  trans2.amount = claimFee;
+  trans2.note = "Revenue for claim Money";
+  trans2.email1 =  f2.email;
+  trans2.email2 = f3.email;
+  trans2.mobile1 = f2.mobile;
+  trans2.mobile2 = f3.mobile;
+  trans2.master_code = master_code;
+  trans1.child_code =data.child_code + "2";
+  
+  
+  //End of hatim Code
+
+
+
+
+
+
+
+
+  transferThis(trans1, trans2).then(function (result) {
+    if(result.length <= 0){
+      CashierClaim.findByIdAndUpdate(d._id, {
+        status: 1
+      }, (err) => {
+        if (err) return res.status(200).json({
+          error: err.toString()
+        });
+          Cashier.findByIdAndUpdate(f._id, {
+          cash_paid: Number(f.cash_paid) + Number(oamount),
+          total_trans: Number(f.total_trans) + 1
+        }, function(e, v){});
+          CashierLedger.findOne({ cashier_id: f._id, trans_type: "DR", created_at: {$gte: new Date(start), $lte: new Date(end)}}, function (err, c) {
+          if(err || c == null){
+
+            let data = new CashierLedger();
+            data.amount = Number(oamount);
+            data.trans_type = "DR";
+            data.cashier_id = f._id;
+            data.save(function (err, c) {
+
+            })
+          }else{
+            var amt = Number(c.amount)+Number(oamount);
+            CashierLedger.findByIdAndUpdate(c._id, {amount: amt}, function (err, c) {
+
+            })
+          }
+        });
+
+          res.status(200).json({
+        status: "success"
+      });
+        });
+
+    }else{
+      res.status(200).json({
+        error: result.toString()
+      });
+    }
+
+    });
+
+
+
+
+
+
+
+
+
+
+})
+
+
+
+
+
+
+
+}
+}
+}
+  })
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+         
 
 
 
