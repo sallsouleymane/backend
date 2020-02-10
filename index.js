@@ -2857,6 +2857,24 @@ router.post('/getBankByName', function (req, res) {
 
 
 });
+
+router.post("/get-branch-details-by-id/:id", async (req, res) => {
+  try {
+    const branchId = req.params.id;
+    const {bank_id} = req.body;
+    const branch = await Branch.find({bank_id, bcode: branchId});
+    if(branch.length == 0) throw {message: "Branch not found"};
+
+    res.send({code : 1, branch})
+
+  }catch(err) {
+    res.send({code : 0, message: err.message})
+  }
+})
+
+
+
+
 router.post('/getBranchByName', function (req, res) {
   //res.send("hi");
   const {
@@ -5568,12 +5586,6 @@ router.post('/cashierSendMoney', function (req, res) {
                     }
                    });
                  }
-
-
-
-
-
-
 
 
                  let trans3 = {};
