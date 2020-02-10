@@ -5981,7 +5981,7 @@ router.post('/branchSendMoney', function (req, res) {
                     let trans2 = {};
                     trans2.from = branchOpWallet;
                     trans2.to =  bankOpWallet;
-                    trans2.amount = 1;
+                    trans2.amount = fee;
                     trans2.note = "Branch Send Money Fee";
                     trans2.email1 =  f2.email;
                     trans2.email2 = f3.email;
@@ -6402,7 +6402,7 @@ let trans2 = {};
 trans2.from = bankOpWallet;
 trans2.to =  branchOpWallet;
 //Replace the amount with the Claim Revenue bellow
-trans2.amount = oamount;
+trans2.amount = 1;
 trans2.note = "Revenue for claim Money";
 trans2.email1 =  f2.email;
 trans2.email2 = f3.email;
