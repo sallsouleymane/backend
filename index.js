@@ -304,7 +304,7 @@ async function rechargeNow(arr) {
 }
 
 
-async function transferThis(t1, t2 = false, t3 = false) {
+async function transferThis(t1, t2 = false, t3 = false, t4 = false) {
   var err = [];
 
   var url = t1;
@@ -426,6 +426,57 @@ async function transferThis(t1, t2 = false, t3 = false) {
         if (url.mobile2 && url.mobile2 != '') {
           sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
         }
+
+
+
+        //Code By Hatim
+        if (t4) {
+          url = t4;
+          mc = url.master_code ? url.master_code : new Date().getTime();
+          cc = url.child_code ? url.child_code : new Date().getTime();
+          options = {
+            uri: 'http://'+config.blockChainIP+':8000/transferBtwEWallets',
+            method: 'POST',
+            json: {
+              "wallet_id1": url.from.toString(),
+              "wallet_id2": url.to.toString(),
+              "amount": url.amount.toString(),
+              "master_id": mc.toString(),
+              "child_id": cc.toString(),
+              "remarks": url.note.toString()
+            }
+          };
+  
+          res = await doRequest(options);
+          console.log("three: "+res.toString());
+          if (res.status == 0) {
+            if(res.message){
+              err.push(res.message);  
+            }else{
+              err.push("Blockchain connection error");
+            }
+          }else{
+  
+          if (url.email1 && url.email1 != '') {
+            sendMail("<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>", "Payment Sent", url.email1);
+          }
+          if (url.email2 && url.email2 != '') {
+            sendMail("<p>You have received " + url.amount + " from the wallet " + url.from + "</p>", "Payment Received", url.email2);
+          }
+          if (url.mobile1 && url.mobile1 != '') {
+            sendSMS("You have sent " + url.amount + " to the wallet " + url.to, url.mobile1);
+          }
+          if (url.mobile2 && url.mobile2 != '') {
+            sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
+          }
+        }
+
+        //End by hatim
+
+
+
+
+
       }
     }
 
@@ -5592,8 +5643,29 @@ router.post('/cashierSendMoney', function (req, res) {
                     child_code = mns+""+mnr+""+now+"3";
                     trans3.child_code = child_code;
 
+
+
+
+//Code by Hatim 
+                    let trans4 = {};
+                    trans4.from = bankOpWallet;
+                    trans4.to =  branchOpWallet;
+                    //cacluat the revene here and replace with fee below. 
+                    
+                    trans4.amount = fee ;
+                    trans4.note = "Bank Send Revenue Branch for Sending money";
+                    trans4.email1 =  f2.email;
+                    trans4.email2 = f3.email;
+                    trans4.mobile1 = f2.mobile;
+                    trans4.mobile2 = f3.mobile;
+                    trans4.master_code = master_code;
+                    now = new Date().getTime();
+                    child_code = mns+""+mnr+""+now;
+                    trans4.child_code = child_code+"4";
+//End
+
                  if(found == 1){
-                  transferThis(trans1, trans2, trans3).then(function (result) {
+                  transferThis(trans1, trans2, trans3, trans4).then(function (result) {
                   console.log("Result: "+result);
                     if(result.length <= 0){
                       CashierSend.findByIdAndUpdate(d._id, {
@@ -6296,7 +6368,7 @@ router.post('/cashierClaimMoney', function (req, res) {
 
                       const branchOpWallet = f2.bcode+"_operational@"+f3.name;
                       const bankEsWallet = "escrow@"+f3.name;
-                        let trans1 = {};
+                    let trans1 = {};
                     trans1.from = bankEsWallet;
                     trans1.to =  branchOpWallet;
                     trans1.amount = oamount;
@@ -6307,7 +6379,32 @@ router.post('/cashierClaimMoney', function (req, res) {
                     trans1.mobile2 = f2.mobile;
                     trans1.master_code = master_code;
                     trans1.child_code =child_code;
-                       transferThis(trans1).then(function (result) {
+
+
+
+//Code by hatim
+
+const bankOpWallet = "operational@"+f3.name;
+let trans2 = {};
+trans2.from = bankOpWallet;
+trans2.to =  branchOpWallet;
+//Replace the amount with the Claim Revenue bellow
+trans2.amount = oamount;
+trans2.note = "Revenue for claim Money";
+trans2.email1 =  f2.email;
+trans2.email2 = f3.email;
+trans2.mobile1 = f2.mobile;
+trans2.mobile2 = f3.mobile;
+trans2.master_code = master_code;
+trans1.child_code =data.child_code + "2";
+
+
+//End of hatim Code
+
+
+
+
+                       transferThis(trans1, trans2).then(function (result) {
                     if(result.length <= 0){
                       CashierClaim.findByIdAndUpdate(d._id, {
                         status: 1
