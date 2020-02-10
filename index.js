@@ -470,6 +470,7 @@ async function transferThis(t1, t2 = false, t3 = false, t4 = false) {
             sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
           }
         }
+      }
 
         //End by hatim
 
@@ -5664,7 +5665,7 @@ router.post('/cashierSendMoney', function (req, res) {
                     trans4.to =  branchOpWallet;
                     //cacluat the revene here and replace with fee below. 
                     
-                    trans4.amount = fee ;
+                    trans4.amount = 1 ;
                     trans4.note = "Bank Send Revenue Branch for Sending money";
                     trans4.email1 =  f2.email;
                     trans4.email2 = f3.email;
@@ -5980,7 +5981,7 @@ router.post('/branchSendMoney', function (req, res) {
                     let trans2 = {};
                     trans2.from = branchOpWallet;
                     trans2.to =  bankOpWallet;
-                    trans2.amount = fee;
+                    trans2.amount = 1;
                     trans2.note = "Branch Send Money Fee";
                     trans2.email1 =  f2.email;
                     trans2.email2 = f3.email;
