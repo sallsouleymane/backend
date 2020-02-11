@@ -6534,7 +6534,7 @@ if(amount >= fe.trans_from && amount <= fe.trans_to){
 
   if(feeObject) {
     const {claim} = feeObject;
-    sendFee = (claim * fee / 100)
+    claimFee = (claim * fee / 100)
   }
 
 
