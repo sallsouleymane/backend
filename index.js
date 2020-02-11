@@ -2511,6 +2511,7 @@ const typeClass = getTypeClass(type);
 });
 
 
+
 router.post('/createRules', (req, res) => { //fee
   let data = new Fee();
   const {
@@ -5626,15 +5627,18 @@ router.post('/cashierSendMoney', function (req, res) {
 
                    if(ranges.length > 0){
                    ranges.map(function(v) {
+                     console.log(v);
                     if(found == 1){
 
                     }else{
-                     if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
+                    //  if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
+                      if(true){
                        var temp = fee * Number(v.percentage) / 100;
                        amt = temp + Number(v.fixed_amount);
                        ;
                       found = 1;
                      }
+                    
                     }
                    });
                  }
@@ -5676,7 +5680,9 @@ router.post('/cashierSendMoney', function (req, res) {
                     feeObject = branchWithSpecificRevenue.filter(bwsf => bwsf.branchId == f2.bcode)[0];
 
 
-                  }else {
+                  }
+                  
+                  if(!feeObject) {
                     feeObject = standardRevenueSharingRule;
                   }
 
@@ -5704,6 +5710,7 @@ router.post('/cashierSendMoney', function (req, res) {
                     child_code = mns+""+mnr+""+now;
                     trans4.child_code = child_code+"4";
 //End
+console.log(found, sendFee, feeObject, standardRevenueSharingRule, branchWithSpecificRevenue, f2.bcode);
 
                  if(found == 1){
 
