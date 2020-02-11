@@ -6419,7 +6419,7 @@ router.post('/cashierClaimMoney', function (req, res) {
               data.child_code = child_code+"1";
 
               const oamount = otpd.amount;
-              data.save((err, d) => {
+              data.save((err, cashierClaimObj) => {
                 if (err) return res.json({
                   error: err.toString()
                 });
@@ -6573,7 +6573,7 @@ if(amount >= fe.trans_from && amount <= fe.trans_to){
 
   transferThis(trans1, trans2).then(function (result) {
     if(result.length <= 0){
-      CashierClaim.findByIdAndUpdate(d._id, {
+      CashierClaim.findByIdAndUpdate(cashierClaimObj._id, {
         status: 1
       }, (err) => {
         if (err) return res.status(200).json({
