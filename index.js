@@ -6485,11 +6485,34 @@ if(amount >= fe.trans_from && amount <= fe.trans_to){
   }
  });
 
-
+ const sendFeeOptions = {
+  bankFeeId : fe._id
+ }
 
 
  Fee.findOne(sendFeeOptions).then(d => {
 
+
+
+
+
+  // const { standardRevenueSharingRule, branchWithSpecificRevenue } = d;
+  // let feeObject;
+  // let claimFee = 0;
+
+  // if(branchWithSpecificRevenue) {
+
+  //   feeObject = branchWithSpecificRevenue.filter(bwsf => bwsf.branchId == f2.bcode)[0];
+
+
+  // }else {
+  //   feeObject = standardRevenueSharingRule;
+  // }
+
+  // if(feeObject) {
+  //   const {claim} = feeObject;
+  //   claimFee = (claim * fee / 100)
+  // }
 
 
 
@@ -6503,14 +6526,24 @@ if(amount >= fe.trans_from && amount <= fe.trans_to){
     feeObject = branchWithSpecificRevenue.filter(bwsf => bwsf.branchId == f2.bcode)[0];
 
 
-  }else {
+  }
+  
+  if(!feeObject) {
     feeObject = standardRevenueSharingRule;
   }
 
   if(feeObject) {
     const {claim} = feeObject;
-    claimFee = (claim * fee / 100)
+    sendFee = (claim * fee / 100)
   }
+
+
+
+
+
+
+
+
 
 
 
