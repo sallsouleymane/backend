@@ -6581,7 +6581,9 @@ if(amount >= fe.trans_from && amount <= fe.trans_to){
         });
           Cashier.findByIdAndUpdate(f._id, {
           cash_paid: Number(f.cash_paid) + Number(oamount),
-          fee_generated: Number(fee_generated) + Number(claimFee),
+
+          fee_generated: Number(f.fee_generated) + Number(claimFee),
+
           total_trans: Number(f.total_trans) + 1
         }, function(e, v){});
           CashierLedger.findOne({ cashier_id: f._id, trans_type: "DR", created_at: {$gte: new Date(start), $lte: new Date(end)}}, function (err, c) {
