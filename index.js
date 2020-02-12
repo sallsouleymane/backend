@@ -5733,7 +5733,9 @@ console.log(found, sendFee, feeObject, standardRevenueSharingRule, branchWithSpe
                         });
                         Cashier.findByIdAndUpdate(f._id, {
                           cash_received: Number(f.cash_received) + Number(oamount)+Number(fee),
-                          fee_generated: Number(sendFee) + Number(fee),
+
+                          fee_generated: Number(sendFee) + Number(f.fee_generated),
+                          
                           total_trans: Number(f.total_trans) + 1
                         }, function(e, v){});
 
