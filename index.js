@@ -2350,7 +2350,7 @@ router.get('/infraTopup', (req, res) => {
 
      if (!fe || fe == null) {
       res.status(200).json({
-        status: "No revenue rule found, transaction Failed!"
+        status: "Transaction cannot be done at this time"
       });
      } else {
        var ranges = JSON.parse(fe.ranges);
@@ -5173,7 +5173,7 @@ router.post('/checkCashierFee', function (req, res) {
           BankFee.findOne(find, function (err, fe) {
        if (err || fe == null) {
         res.status(200).json({
-          fee: "(No revenue rule found)"
+          fee: "(Transaction cannot be done at this time)"
         });
        } else {
         if(amount >= fe.trans_from && amount <= fe.trans_to){
@@ -5198,13 +5198,13 @@ router.post('/checkCashierFee', function (req, res) {
           });
          }else{
           res.status(200).json({
-            fee: "(No revenue rule found)"
+            fee: "(Transaction cannot be done at this time)"
           });
          }
        }
        }else{
         res.status(200).json({
-            fee: "(No revenue rule found)"
+            fee: "(Transaction cannot be done at this time)"
           });
        }
 
@@ -5284,7 +5284,7 @@ router.post('/checkBranchFee', function (req, res) {
           BankFee.findOne(find, function (err, fe) {
        if (err || fe == null) {
         res.status(200).json({
-          fee: "(No revenue rule found)"
+          fee: "(Transaction cannot be done at this time)"
         });
        } else {
         if(amount >= fe.trans_from && amount <= fe.trans_to){
@@ -5309,13 +5309,13 @@ router.post('/checkBranchFee', function (req, res) {
           });
          }else{
           res.status(200).json({
-            fee: "(No revenue rule found) "
+            fee: "(Transaction cannot be done at this time) "
           });
          }
        }
        }else{
         res.status(200).json({
-            fee: "(No revenue rule found)"
+            fee: "(Transaction cannot be done at this time)"
           });
        }
 
@@ -5733,7 +5733,7 @@ console.log(found, sendFee, feeObject, standardRevenueSharingRule, branchWithSpe
                         });
                         Cashier.findByIdAndUpdate(f._id, {
                           cash_received: Number(f.cash_received) + Number(oamount)+Number(fee),
-                          fee_generated: Number(fee),
+                          fee_generated: Number(sendFee) + Number(fee),
                           total_trans: Number(f.total_trans) + 1
                         }, function(e, v){});
 
@@ -6581,6 +6581,7 @@ if(amount >= fe.trans_from && amount <= fe.trans_to){
         });
           Cashier.findByIdAndUpdate(f._id, {
           cash_paid: Number(f.cash_paid) + Number(oamount),
+          fee_generated: Number(fee_generated) + Number(claimFee),
           total_trans: Number(f.total_trans) + 1
         }, function(e, v){});
           CashierLedger.findOne({ cashier_id: f._id, trans_type: "DR", created_at: {$gte: new Date(start), $lte: new Date(end)}}, function (err, c) {
