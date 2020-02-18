@@ -1060,9 +1060,11 @@ router.post('/getCashierDashStats', function (req, res) {
 
       res.status(200).json({
               openingBalance: user.opening_balance,
+              closingBalance: user.closing_balance,
               cashPaid: user.cash_paid,
               cashReceived: user.cash_received,
-              feeGenerated: user.fee_generated
+              feeGenerated: user.fee_generated,
+              closingTime: user.closing_time
             });
 
         // CashierLedger.countDocuments({
@@ -1283,6 +1285,7 @@ router.post('/getClosingBalance', function (req, res) {
                   var diff = Number(cb) -((user.opening_balance+user.cash_received) - user.cash_paid);
               res.status(200)
               .json({
+                cashInHand: Number(c.opening_balance)+Number(c.cash_received)-Number(c.cash_paid),
                 balance1: cb,
                 balance2: diff,
                 lastdate: da
@@ -1963,6 +1966,53 @@ Branch.findOne({
 
 });
 
+router.post('/openCashierBalance', (req, res) => {
+
+  const {
+    token
+  } = req.body;
+Cashier.findOne({
+    token,
+    status: 1
+  }, function (err, ba) {
+    if (err || ba == null) {
+      res.status(401)
+        .json({
+          error: "Unauthorized"
+        });
+    } else {
+            if( ba.closing_time != null){
+          // var ct = new Date(ba.closing_time);
+          // ct = ct.getTime();
+          // console.log(ct);
+          // console.log(start);
+          // if(ct < start) {
+          upd={
+            opening_balance: ba.closing_balance,
+            cash_received: 0,
+            fee_generated:0,
+            cash_paid: 0,
+            closing_balance: 0,
+            closing_time: null
+          }
+
+                  Cashier.findByIdAndUpdate(ba._id, upd , (err) => {
+          if (err) return res.status(400).json({
+            error: err
+          });
+          res.status(200).json({
+            status:true
+          });
+        });
+
+        //}
+        }
+
+          }
+        });
+
+});
+
 router.post('/addClosingBalance', (req, res) => {
 
   const {
@@ -1973,7 +2023,8 @@ router.post('/addClosingBalance', (req, res) => {
     denom1000,
     denom2000,
     total,
-    token
+    token,
+    note
   } = req.body;
 Cashier.findOne({
     token,
@@ -1995,7 +2046,8 @@ Cashier.findOne({
             denom50,
             denom100,
             denom1000,
-            denom2000
+            denom2000,
+            note
           };
           data.transaction_details = JSON.stringify(td);
 
@@ -3706,7 +3758,8 @@ router.post('/getCashierTransLimit', function (req, res) {
     } else {
        res.status(200)
                 .json({
-                  limit: Number(t1.max_trans_amt) - (Number(t1.cash_received) + Number(t1.cash_paid))
+                  limit: Number(t1.max_trans_amt) - (Number(t1.cash_received) + Number(t1.cash_paid)),
+                  closingTime: t1.closing_time
                 });
       // console.log(t1._id );
 
@@ -4217,23 +4270,23 @@ router.post('/cashierLogin', function (req, res) {
           token: token
         };
 
-        if( ba.closing_time != null){
-          var ct = new Date(ba.closing_time);
-          ct = ct.getTime();
-          console.log(ct);
-          console.log(start);
-          if(ct < start) {
-          upd={
-            token: token,
-            opening_balance: ba.closing_balance,
-            cash_received: 0,
-            fee_generated:0,
-            cash_paid: 0,
-            closing_balance: 0,
-            closing_time: null
-          }
-        }
-        }
+        // if( ba.closing_time != null){
+        //   var ct = new Date(ba.closing_time);
+        //   ct = ct.getTime();
+        //   console.log(ct);
+        //   console.log(start);
+        //   if(ct < start) {
+        //   upd={
+        //     token: token,
+        //     opening_balance: ba.closing_balance,
+        //     cash_received: 0,
+        //     fee_generated:0,
+        //     cash_paid: 0,
+        //     closing_balance: 0,
+        //     closing_time: null
+        //   }
+        // }
+        // }
         
 
         console.log(upd);
