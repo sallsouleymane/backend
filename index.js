@@ -1064,7 +1064,8 @@ router.post('/getCashierDashStats', function (req, res) {
               cashPaid: user.cash_paid,
               cashReceived: user.cash_received,
               feeGenerated: user.fee_generated,
-              closingTime: user.closing_time
+              closingTime: user.closing_time,
+              transactionStarted: user.transaction_started
             });
 
         // CashierLedger.countDocuments({
@@ -1288,7 +1289,8 @@ router.post('/getClosingBalance', function (req, res) {
                 cashInHand: Number(c.opening_balance)+Number(c.cash_received)-Number(c.cash_paid),
                 balance1: cb,
                 balance2: diff,
-                lastdate: da
+                lastdate: da,
+                transactionStarted: c.transaction_started
               });
           
       
@@ -1981,20 +1983,23 @@ Cashier.findOne({
           error: "Unauthorized"
         });
     } else {
-            if( ba.closing_time != null){
+            // if( ba.closing_time != null){
           // var ct = new Date(ba.closing_time);
           // ct = ct.getTime();
           // console.log(ct);
           // console.log(start);
           // if(ct < start) {
+            var bal = (Number(ba.closing_balance) > 0) ? ba.closing_balance : ba.opening_balance;
           upd={
-            opening_balance: ba.closing_balance,
+            opening_balance: bal,
             cash_received: 0,
             fee_generated:0,
             cash_paid: 0,
             closing_balance: 0,
-            closing_time: null
+            closing_time: null,
+            transaction_started: true
           }
+          console.log(upd);
 
                   Cashier.findByIdAndUpdate(ba._id, upd , (err) => {
           if (err) return res.status(400).json({
@@ -2006,7 +2011,7 @@ Cashier.findOne({
         });
 
         //}
-        }
+        // }
 
           }
         });
@@ -3759,7 +3764,8 @@ router.post('/getCashierTransLimit', function (req, res) {
        res.status(200)
                 .json({
                   limit: Number(t1.max_trans_amt) - (Number(t1.cash_received) + Number(t1.cash_paid)),
-                  closingTime: t1.closing_time
+                  closingTime: t1.closing_time,
+                  transactionStarted: t1.transaction_started
                 });
       // console.log(t1._id );
 
@@ -4262,6 +4268,11 @@ router.post('/cashierLogin', function (req, res) {
           res.status(401)
         .json({
           error: 'Incorrect username or password'
+        });
+      }else if(ba.closing_time != null){
+          res.status(401)
+        .json({
+          error: 'You are closed for the day, Please contact the manager'
         });
       }else{
 
