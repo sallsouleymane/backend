@@ -4234,6 +4234,11 @@ router.post('/cashierLogin', function (req, res) {
   var start = s[0]+"T00:00:00.000Z";
   var date = new Date(start); // some mock date
   start = date.getTime();
+
+
+  var thisday =new Date();
+thisday.setHours(0, 0, 0, 0);
+thisday = thisday.getTime();
   
   const {
     username,
@@ -4264,12 +4269,16 @@ router.post('/cashierLogin', function (req, res) {
       Cashier.findOne({
         "bank_user_id" : bank._id
       }, function (err, ba) {
+        var closingTime  = new Date(ba.closing_time);
+        closingTime.setHours(0, 0, 0, 0);
+        closingTime = closingTime.getTime();
+
         if(err || ba == null){
           res.status(401)
         .json({
           error: 'Incorrect username or password'
         });
-      }else if(ba.closing_time != null){
+      }else if(ba.closing_time != null &&  closingTime >= thisday){
           res.status(401)
         .json({
           error: 'You are closed for the day, Please contact the manager'
