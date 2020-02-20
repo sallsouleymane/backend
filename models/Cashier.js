@@ -21,10 +21,13 @@ const CashierSchema = new mongoose.Schema({
   cash_received: { type: Number, required: false , default: 0},
   cash_paid: { type: Number, required: false , default: 0},
   fee_generated: { type: Number, required: false , default: 0},
+  cash_transferred: { type: Number, required: false , default: 0},
+  cash_accepted: { type: Number, required: false , default: 0},
   closing_balance: { type: Number, required: false , default: 0},
   closing_time: { type: Date, required: false , default: null},
   transaction_started: { type: Boolean, default: false},
   total_trans: { type: Number, required: false , default: 0},
-  token: {type: String, required:false, default:null}
+  token: {type: String, required:false, default:null},
+  central:{type: Boolean, required:false, default:false}
 });
 module.exports = mongoose.model('Cashier', CashierSchema);

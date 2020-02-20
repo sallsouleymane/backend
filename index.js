@@ -26,10 +26,12 @@ const BankFee = require('./models/BankFee');
 const CashierSend = require('./models/CashierSend');
 const CashierClaim = require('./models/CashierClaim');
 const CashierLedger = require('./models/CashierLedger');
+const CashierTransfer = require('./models/CashierTransfer');
 const BranchSend = require('./models/BranchSend');
 const BranchClaim = require('./models/BranchClaim');
 const BranchLedger = require('./models/BranchLedger');
 const CurrencyModel = require("./models/Currency")
+
 
 const API_PORT = 3001;
 const mainFee = config.mainFee;
@@ -116,16 +118,16 @@ function makeotp(length) {
 }
 
 function sendSMS(content, mobile) {
-  let url = "http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=EWALET&route=1&number=" + mobile + "&message=" + content;
-  request(url, {
-    json: true
-  }, (err, res, body) => {
-    if (err) {
-      return err;
-    }
-    return body;
-  });
-   return '';
+  // let url = "http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=EWALET&route=1&number=" + mobile + "&message=" + content;
+  // request(url, {
+  //   json: true
+  // }, (err, res, body) => {
+  //   if (err) {
+  //     return err;
+  //   }
+  //   return body;
+  // });
+  //  return '';
 }
 
 function sendMail(content, subject, email) {
@@ -1063,9 +1065,11 @@ router.post('/getCashierDashStats', function (req, res) {
               closingBalance: user.closing_balance,
               cashPaid: user.cash_paid,
               cashReceived: user.cash_received,
+              cashInHand:user.cash_in_hand,
               feeGenerated: user.fee_generated,
               closingTime: user.closing_time,
-              transactionStarted: user.transaction_started
+              transactionStarted: user.transaction_started,
+              branchId: user.branch_id
             });
 
         // CashierLedger.countDocuments({
@@ -1252,6 +1256,71 @@ console.log({ $gte: new Date(start), $lte: new Date(end) });
         });
 });
 
+router.post('/getCashierIncomingTransfer', function (req, res) {
+
+  const {
+    token
+  } = req.body;
+  Cashier.findOne({
+    token,
+    status: 1
+  }, function (err, user) {
+    if (err || user == null) {
+      res.status(401)
+      .json({
+        error: "Unauthorized"
+      });
+    } else {
+
+                CashierTransfer.find({
+                    receiver_id: user._id, status: 0
+                  },(e, data) => {
+                    res.status(200).json({
+                        result: data
+                      });
+                  });
+      
+      }
+
+        });
+});
+
+router.post('/cashierAcceptIncoming', function (req, res) {
+
+  const {
+    token,
+    item
+  } = req.body;
+  Cashier.findOne({
+    token,
+    status: 1
+  }, function (err, user) {
+    if (err || user == null) {
+      res.status(401)
+      .json({
+        error: "Unauthorized"
+      });
+    } else {
+          let cashInHand = Number(user.cash_in_hand) + Number(item.amount);
+                CashierTransfer.findByIdAndUpdate(item._id, {
+                    status: 1
+                  },(e, data) => {
+
+                    Cashier.findByIdAndUpdate(user._id, {
+                    cash_in_hand: cashInHand
+                  },(e, data) => {
+
+                    res.status(200).json({
+                        success: true
+                      });
+                  });
+                });
+      
+      }
+
+        });
+});
+
 router.post('/getClosingBalance', function (req, res) {
   var today = new Date();
   today = today.toISOString();
@@ -1283,10 +1352,10 @@ router.post('/getClosingBalance', function (req, res) {
 
             cb = c.closing_balance;
             da = c.closing_time;
-                  var diff = Number(cb) -((user.opening_balance+user.cash_received) - user.cash_paid);
+                  var diff = Number(cb) -Number(user.cash_in_hand);
               res.status(200)
               .json({
-                cashInHand: Number(c.opening_balance)+Number(c.cash_received)-Number(c.cash_paid),
+                cashInHand: user.cash_in_hand,
                 balance1: cb,
                 balance2: diff,
                 lastdate: da,
@@ -1412,6 +1481,7 @@ router.post('/addBranch', (req, res) => {
     bcode,
     username,
     credit_limit,
+    cash_in_hand,
     address1,
     state,
     zip,
@@ -1437,6 +1507,9 @@ router.post('/addBranch', (req, res) => {
             data.bcode = bcode;
             if(credit_limit != '' && credit_limit != null && credit_limit != undefined){
               data.credit_limit = credit_limit;
+            }
+            if(cash_in_hand != '' && cash_in_hand != null && cash_in_hand != undefined){
+              data.cash_in_hand = cash_in_hand;
             }
             data.username = username;
             data.address1 = address1;
@@ -1533,12 +1606,13 @@ router.post('/addCashier', (req, res) => {
     per_trans_amt,
     max_trans_amt,
     max_trans_count,
-    token
+    token,
+    cashier_length
   } = req.body;
 
   Bank.findOne({
     token,
-status:1
+  status:1
   }, function (err, bank) {
     if (err || bank == null) {
       res.status(401)
@@ -1557,15 +1631,46 @@ status:1
             data.max_trans_count = max_trans_count;
             data.bank_id = bank._id;
             data.branch_id= branch_id;
+            if(cashier_length == 0){
+              data.central = true;
+            }
 
             data.save((err, d) => {
               if (err) return res.json({
                 error: err.toString()
               });
-                Branch.findByIdAndUpdate(branch_id,  {$inc : {'total_cashiers' : 1}}, function(e, v){
-                  console.log(v);
-                });
-              return res.status(200).json(data);
+                  
+                  if(cashier_length == 0){
+                    Branch.findOne({
+                      _id: branch_id
+                    }, function (err, branch) {
+                     let data = new CashierLedger();
+                      data.amount = branch.cash_in_hand;
+                      data.cashier_id = d._id;
+                      data.trans_type = 'OB';
+                      let td = {};
+                      data.transaction_details = JSON.stringify(td);
+
+                        data.save((err) => {
+                          if (err) return res.status(200).json({
+                            error: err.toString()
+                          });
+                            Cashier.findByIdAndUpdate(d._id, {
+                              opening_balance: branch.cash_in_hand,
+                              cash_in_hand: branch.cash_in_hand,
+                            }, (err, d) => {
+                              Branch.findByIdAndUpdate(branch_id,  {$inc : {'total_cashiers' : 1}, cash_in_hand: 0}, function(e, v){
+                              return res.status(200).json(data);
+                              });
+                            });
+                        });
+                      });
+                  }else{
+                    Branch.findByIdAndUpdate(branch_id,  {$inc : {'total_cashiers' : 1}}, function(e, v){
+                    return res.status(200).json(data);
+                    });
+                  }
+              
             });
 
         }
@@ -5806,7 +5911,7 @@ console.log(found, sendFee, feeObject, standardRevenueSharingRule, branchWithSpe
                         });
                         Cashier.findByIdAndUpdate(f._id, {
                           cash_received: Number(f.cash_received) + Number(oamount)+Number(fee),
-
+                          cash_in_hand: Number(f.cash_in_hand) + Number(oamount)+Number(fee),
                           fee_generated: Number(sendFee) + Number(f.fee_generated),
                           
                           total_trans: Number(f.total_trans) + 1
@@ -5897,6 +6002,113 @@ console.log(found, sendFee, feeObject, standardRevenueSharingRule, branchWithSpe
 
       }
     });
+});
+
+
+router.post('/cashierTransferMoney', function (req, res) {
+
+  var today = new Date();
+  today = today.toISOString();
+  var s = today.split("T");
+  var start = s[0]+"T00:00:00.000Z";
+  var end = s[0]+"T23:59:59.999Z";
+  var now = new Date().getTime();
+
+  const {
+    otpId,
+    token,
+    otp,
+    amount,
+    receiver_id,
+    receiver_name
+  } = req.body;
+
+  // const transactionCode = makeid(8);
+
+    Cashier.findOne({
+      token,
+      status: 1
+    }, function (err, f) {
+      if (err || f == null) {
+        res.status(401)
+          .json({
+            error: "Unauthorized"
+          });
+      } else {
+          OTP.findOne({
+          "_id": otpId,
+          otp: otp
+        }, function (err, otpd) {
+          if (err || otpd == null) {
+            res.status(402)
+              .json({
+                error: "OTP Missmatch"
+              });
+          } else {
+        let data = new CashierTransfer();
+        data.amount = amount;
+        data.sender_id = f._id;
+        data.receiver_id = receiver_id;
+        data.sender_name = f.name;
+        data.receiver_name = receiver_name;
+        let cashInHand = Number(f.cash_in_hand);
+        cashInHand = cashInHand - Number(amount);
+          data.save((err) => {  
+            if (err) return res.status(200).json({
+              error: err.toString()
+            });
+
+              Cashier.findByIdAndUpdate(f._id, {cash_in_hand: cashInHand, cash_transferred: amount}, function(e, d){
+                if (e) return res.status(200).json({
+                  error: e.toString()
+                });
+                res.status(200).json({
+                  status: 'success'
+                });
+              });
+
+              
+          });
+
+        }
+      });
+       }
+     }); //branch
+
+});
+
+router.post('/getCashierTransfers', function (req, res) {
+  const {
+    token
+  } = req.body;
+
+  Cashier.findOne({
+    token,
+status:1
+  }, function (err, f) {
+    if (err || f == null) {
+      res.status(401)
+        .json({
+          error: "Unauthorized"
+        });
+    } else {
+      
+           CashierTransfer.find({$or: [{sender_id: f._id}, {receiver_id: f._id}]}).exec(function (err, b) {
+
+
+          res.status(200).json({
+            status: 'success',
+            history: b
+        });
+
+
+      });
+
+
+
+    }
+  });
+
 });
 
 router.post('/branchSendMoney', function (req, res) {
@@ -6656,7 +6868,7 @@ if(amount >= fe.trans_from && amount <= fe.trans_to){
         });
           Cashier.findByIdAndUpdate(f._id, {
           cash_paid: Number(f.cash_paid) + Number(oamount),
-
+          cash_in_hand: Number(f.cash_in_hand) - Number(oamount),
           fee_generated: Number(f.fee_generated) + Number(claimFee),
 
           total_trans: Number(f.total_trans) + 1
