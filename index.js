@@ -2126,12 +2126,7 @@ Cashier.findOne({
 router.post('/addClosingBalance', (req, res) => {
 
   const {
-    denom10,
-    denom20,
-    denom50,
-    denom100,
-    denom1000,
-    denom2000,
+denomination,
     total,
     token,
     note
@@ -2151,12 +2146,7 @@ Cashier.findOne({
           data.cashier_id = otpd._id;
           data.trans_type = 'CB';
           let td = {
-            denom10,
-            denom20,
-            denom50,
-            denom100,
-            denom1000,
-            denom2000,
+            denomination,
             note
           };
           data.transaction_details = JSON.stringify(td);
