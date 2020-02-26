@@ -118,15 +118,15 @@ function makeotp(length) {
 }
 
 function sendSMS(content, mobile) {
-  let url = "http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=EWALET&route=1&number=" + mobile + "&message=" + content;
-  request(url, {
-    json: true
-  }, (err, res, body) => {
-    if (err) {
-      return err;
-    }
-    return body;
-  });
+  // let url = "http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=EWALET&route=1&number=" + mobile + "&message=" + content;
+  // request(url, {
+  //   json: true
+  // }, (err, res, body) => {
+  //   if (err) {
+  //     return err;
+  //   }
+  //   return body;
+  // });
    return '';
 }
 
@@ -1069,7 +1069,8 @@ router.post('/getCashierDashStats', function (req, res) {
               feeGenerated: user.fee_generated,
               closingTime: user.closing_time,
               transactionStarted: user.transaction_started,
-              branchId: user.branch_id
+              branchId: user.branch_id,
+              isClosed: user.is_closed
             });
 
         // CashierLedger.countDocuments({
@@ -1240,12 +1241,28 @@ console.log({ $gte: new Date(start), $lte: new Date(end) });
                     if(post4 == null || !post4){
                       post4 = 0;
                     }
-                
+
+                     Cashier.aggregate([ {
+   $group: {
+      _id: null,
+      "total": {
+         $sum: "$cash_in_hand"
+      }
+   }
+} ] ,(e, post5) => {
+  let cin = 0;
+  if(post5 != undefined && post5 != null && post5.length > 0){
+    cin = post5[0].total;
+  }
+
                       res.status(200).json({
                         totalCashier: post4,
                         cashPaid:  paid == null ? 0 : paid,
-                        cashReceived: received == null ? 0 : received 
+                        cashReceived: received == null ? 0 : received ,
+                        cashInHand: cin
                       });
+
+                        });
 
                       });
                       });
@@ -1359,7 +1376,8 @@ router.post('/getClosingBalance', function (req, res) {
                 balance1: cb,
                 balance2: diff,
                 lastdate: da,
-                transactionStarted: c.transaction_started
+                transactionStarted: c.transaction_started,
+                isClosed: c.is_closed
               });
           
       
@@ -1489,7 +1507,9 @@ router.post('/addBranch', (req, res) => {
     ccode,
     mobile,
     email,
-    token
+    token,
+    working_from,
+    working_to
   } = req.body;
 
   Bank.findOne({
@@ -1521,7 +1541,10 @@ router.post('/addBranch', (req, res) => {
             data.email = email;
             data.bank_id = bank._id;
             data.password = makeid(10);
+            data.working_from = working_from;
+            data.working_to = working_to;
             let bankName = bank.name;
+
             data.save((err, d) => {
               if (err) return res.json({
                 error: err.toString()
@@ -1695,7 +1718,9 @@ router.post('/editBank', (req, res) => {
     logo,
     contract,
     otp_id,
-    otp
+    otp,
+    working_from,
+    working_to
   } = req.body;
 
   Infra.findOne({
@@ -1945,7 +1970,9 @@ router.post('/editBranch', (req, res) => {
     ccode,
     mobile,
     email,
-    token
+    token,
+    working_from,
+    working_to
   } = req.body;
 
   Bank.findOne({
@@ -1971,7 +1998,9 @@ status:1
               bcode: bcode,
               country: country,
               mobile: mobile,
-              email: email
+              email: email,
+              working_from: working_from,
+              working_to: working_to
             }, (err) => {
               if (err) return res.status(400).json({
                 error: err
@@ -2102,7 +2131,8 @@ Cashier.findOne({
             cash_paid: 0,
             closing_balance: 0,
             closing_time: null,
-            transaction_started: true
+            transaction_started: true,
+            is_closed:false
           }
           console.log(upd);
 
@@ -2158,7 +2188,8 @@ Cashier.findOne({
 
                 Cashier.findByIdAndUpdate(otpd.id, {
                   closing_balance: total,
-                  closing_time: new Date()
+                  closing_time: new Date(),
+                  is_closed: true
                 }, function(e,v){});
 
                   return res.status(200).json(true);
@@ -2186,7 +2217,9 @@ router.post('/editBankBank', (req, res) => {
     logo,
     contract,
     otp_id,
-    otp
+    otp,
+    working_from,
+    working_to
   } = req.body;
 
   // const user_id = user._id;
@@ -2221,6 +2254,8 @@ router.post('/editBankBank', (req, res) => {
           country: country,
           email: email,
           logo: logo,
+          working_from: working_from,
+          working_to: working_to,
           contract: contract
         }, (err) => {
           if (err) return res.status(400).json({
@@ -3860,7 +3895,8 @@ router.post('/getCashierTransLimit', function (req, res) {
                 .json({
                   limit: Number(t1.max_trans_amt) - (Number(t1.cash_received) + Number(t1.cash_paid)),
                   closingTime: t1.closing_time,
-                  transactionStarted: t1.transaction_started
+                  transactionStarted: t1.transaction_started,
+                  isClosed: t1.is_closed
                 });
       // console.log(t1._id );
 
@@ -4373,12 +4409,14 @@ thisday = thisday.getTime();
         .json({
           error: 'Incorrect username or password'
         });
-      }else if(ba.closing_time != null &&  closingTime >= thisday){
-          res.status(401)
-        .json({
-          error: 'You are closed for the day, Please contact the manager'
-        });
-      }else{
+      }
+      // else if(ba.closing_time != null &&  closingTime >= thisday){
+      //     res.status(401)
+      //   .json({
+      //     error: 'You are closed for the day, Please contact the manager'
+      //   });
+      // }
+      else{
 
         let token = makeid(10);
         var upd = {
@@ -6059,6 +6097,56 @@ router.post('/cashierTransferMoney', function (req, res) {
 
               
           });
+
+        }
+      });
+       }
+     }); //branch
+
+});
+
+router.post('/cashierCancelTransfer', function (req, res) {
+
+  const {
+    otpId,
+    token,
+    otp,
+    transfer_id
+  } = req.body;
+
+  // const transactionCode = makeid(8);
+
+    Cashier.findOne({
+      token,
+      status: 1
+    }, function (err, f) {
+      if (err || f == null) {
+        res.status(401)
+          .json({
+            error: "Unauthorized"
+          });
+      } else {
+          OTP.findOne({
+          "_id": otpId,
+          otp: otp
+        }, function (err, otpd) {
+          if (err || otpd == null) {
+            res.status(402)
+              .json({
+                error: "OTP Missmatch"
+              });
+          } else {
+                CashierTransfer.findByIdAndUpdate(transfer_id, {
+                        status: -1
+                      }, (err) => {
+                        if (err) return res.status(200).json({
+                          error: err
+                        });
+                          res.status(200)
+              .json({
+                success: "true"
+              });
+                      });
 
         }
       });

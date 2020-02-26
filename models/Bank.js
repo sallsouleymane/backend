@@ -20,6 +20,8 @@ const BankSchema = new mongoose.Schema({
   initial_setup: { type: Boolean, default: false },
   status: {type: Number, required:true, default:0},
   token: {type: String, required:false, default:null},
-  total_trans: {type: Number, required: false, default: 0}
+  total_trans: {type: Number, required: false, default: 0},
+  working_from: { type: String, required: false, default: 0 },
+  working_to: { type: String, required: false, default: 0 },
 });
 module.exports = mongoose.model('Bank', BankSchema);

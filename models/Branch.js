@@ -20,6 +20,8 @@ const BranchSchema = new mongoose.Schema({
   initial_setup: { type: Boolean, default: false},
   total_cashiers: {type: Number, required: false, default: 0},
   status: {type: Number, required:true, default:1},
-  token: {type: String, required:false, default:null}
+  token: {type: String, required:false, default:null},
+  working_from: { type: String, required: false, default: 0 },
+  working_to: { type: String, required: false, default: 0 },
 });
 module.exports = mongoose.model('Branch', BranchSchema);
