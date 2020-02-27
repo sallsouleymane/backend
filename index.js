@@ -2186,7 +2186,7 @@ Cashier.findOne({
                 error: err.toString()
               });
 
-                Cashier.findByIdAndUpdate(otpd.id, {
+                Cashier.findByIdAndUpdate(otpd._id, {
                   closing_balance: total,
                   closing_time: new Date(),
                   is_closed: true
