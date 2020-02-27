@@ -1318,12 +1318,22 @@ router.post('/cashierAcceptIncoming', function (req, res) {
         error: "Unauthorized"
       });
     } else {
-          let cashInHand = Number(user.cash_in_hand) + Number(item.amount);
+      Cashier.findOne({
+    "_id" : item.receiver_id
+  }, function (err, u) {
+    if (err || u == null) {
+      res.status(401)
+      .json({
+        error: "Unauthorized"
+      });
+    } else {
+          let cashInHand = Number(u.cash_in_hand) + Number(item.amount);
                 CashierTransfer.findByIdAndUpdate(item._id, {
                     status: 1
                   },(e, data) => {
 
-                    Cashier.findByIdAndUpdate(user._id, {
+
+                    Cashier.findByIdAndUpdate(item.receiver_id, {
                     cash_in_hand: cashInHand
                   },(e, data) => {
 
@@ -1336,7 +1346,10 @@ router.post('/cashierAcceptIncoming', function (req, res) {
       }
 
         });
+    }
 });
+
+  });
 
 router.post('/getClosingBalance', function (req, res) {
   var today = new Date();
@@ -6136,17 +6149,45 @@ router.post('/cashierCancelTransfer', function (req, res) {
                 error: "OTP Missmatch"
               });
           } else {
-                CashierTransfer.findByIdAndUpdate(transfer_id, {
-                        status: -1
-                      }, (err) => {
-                        if (err) return res.status(200).json({
-                          error: err
-                        });
-                          res.status(200)
-              .json({
-                success: "true"
-              });
+             Cashier.findOne({
+    "_id" : item.sender_id
+  }, function (err, u) {
+    if (err || u == null) {
+      res.status(401)
+      .json({
+        error: "Unauthorized"
+      });
+    } else {
+              //   CashierTransfer.findByIdAndUpdate(transfer_id, {
+              //           status: -1
+              //         }, (err) => {
+              //           if (err) return res.status(200).json({
+              //             error: err
+              //           });
+              //             res.status(200)
+              // .json({
+              //   success: "true"
+              // });
+              //         });
+
+                   let cashInHand = Number(u.cash_in_hand) + Number(item.amount);
+                CashierTransfer.findByIdAndUpdate(item._id, {
+                    status: -1
+                  },(e, data) => {
+
+
+                    Cashier.findByIdAndUpdate(item.sender_id, {
+                    cash_in_hand: cashInHand
+                  },(e, data) => {
+
+                    res.status(200).json({
+                        success: true
                       });
+                  });
+                });
+
+              }
+            })
 
         }
       });
