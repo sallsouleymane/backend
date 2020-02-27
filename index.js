@@ -6149,6 +6149,15 @@ router.post('/cashierCancelTransfer', function (req, res) {
                 error: "OTP Missmatch"
               });
           } else {
+                CashierTransfer.findOne({
+    "_id" : transfer_id
+  }, function (err, item) {
+    if (err || item == null) {
+      res.status(401)
+      .json({
+        error: "Unauthorized"
+      });
+    } else {
              Cashier.findOne({
     "_id" : item.sender_id
   }, function (err, u) {
@@ -6188,6 +6197,8 @@ router.post('/cashierCancelTransfer', function (req, res) {
 
               }
             })
+           }
+         });
 
         }
       });
