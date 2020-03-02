@@ -3904,9 +3904,11 @@ router.post('/getCashierTransLimit', function (req, res) {
           error: "Unauthorized"
         });
     } else {
+      let limit =  Number(t1.max_trans_amt) - (Number(t1.cash_received) + Number(t1.cash_paid));
+      limit = (limit < 0) ? 0 : limit;
        res.status(200)
                 .json({
-                  limit: Number(t1.max_trans_amt) - (Number(t1.cash_received) + Number(t1.cash_paid)),
+                  limit:limit,
                   closingTime: t1.closing_time,
                   transactionStarted: t1.transaction_started,
                   isClosed: t1.is_closed
