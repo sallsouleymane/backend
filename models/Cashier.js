@@ -28,6 +28,7 @@ const CashierSchema = new mongoose.Schema({
   is_closed:{type: Boolean, required:false, default:true},
   transaction_started: { type: Boolean, default: false},
   total_trans: { type: Number, required: false , default: 0},
+  pending_trans: { type: Number, required: false , default: 0},
   token: {type: String, required:false, default:null},
   central:{type: Boolean, required:false, default:false}
 });

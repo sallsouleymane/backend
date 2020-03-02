@@ -24,6 +24,7 @@ const BankUser = require('./models/BankUser');
 const Cashier = require('./models/Cashier');
 const BankFee = require('./models/BankFee');
 const CashierSend = require('./models/CashierSend');
+const CashierPending = require('./models/CashierPending');
 const CashierClaim = require('./models/CashierClaim');
 const CashierLedger = require('./models/CashierLedger');
 const CashierTransfer = require('./models/CashierTransfer');
@@ -88,6 +89,9 @@ function getTypeClass(key){
       break;
     case 'cashierledger':
       return CashierLedger;
+      break;
+    case 'cashierpending':
+      return CashierPending;
       break;
     default:
       return null;
@@ -5558,6 +5562,8 @@ router.post('/checkBranchFee', function (req, res) {
 
 });
 
+
+
 router.post('/cashierSendMoney', function (req, res) {
 
   var today = new Date();
@@ -6042,6 +6048,121 @@ console.log(found, sendFee, feeObject, standardRevenueSharingRule, branchWithSpe
              }
            }); //branch
 
+
+      }
+    });
+});
+
+router.post('/cashierSendMoneyPending', function (req, res) {
+
+  const {
+    otpId,
+    token,
+    otp,
+    givenname,
+    familyname,
+    note,
+    senderIdentificationCountry,
+    senderIdentificationType,
+    senderIdentificationNumber,
+    senderIdentificationValidTill,
+    address1,
+    state,
+    zip,
+    ccode,
+    country,
+    email,
+    mobile,
+    livefee,
+    withoutID,
+    requireOTP,
+    receiverMobile,
+    receiverccode,
+    receiverGivenName,
+    receiverFamilyName,
+    receiverCountry,
+    receiverEmail,
+    receiverIdentificationCountry,
+    receiverIdentificationType,
+    receiverIdentificationNumber,
+    receiverIdentificationValidTill,
+    receiverIdentificationAmount
+  } = req.body;
+
+
+    Cashier.findOne({
+      token,
+      status: 1
+    }, function (err, f) {
+      if (err || f == null) {
+        res.status(401)
+          .json({
+            error: "Unauthorized"
+          });
+      } else {
+        
+              let data = new CashierPending();
+              let temp = {
+                givenname,
+                familyname,
+                note,
+                senderIdentificationCountry,
+                senderIdentificationType,
+                senderIdentificationNumber,
+                senderIdentificationValidTill,
+                address1,
+                state,
+                zip,
+                ccode,
+                country,
+                email,
+                mobile,
+                livefee,
+                withoutID,
+                requireOTP,
+                receiverMobile,
+                receiverccode,
+                receiverGivenName,
+                receiverFamilyName,
+                receiverCountry,
+                receiverEmail,
+                receiverIdentificationCountry,
+                receiverIdentificationType,
+                receiverIdentificationNumber,
+                receiverIdentificationValidTill,
+                receiverIdentificationAmount
+              };
+              data.sender_name = givenname+" "+familyname;
+              data.receiver_name = receiverGivenName+ " " +receiverFamilyName;
+              data.amount = receiverIdentificationAmount;
+              data.transaction_details = JSON.stringify(temp);
+              data.cashier_id = f._id;
+
+              let pending = Number(f.pending_trans) +1;
+          
+              data.save((err, d) => {
+                if (err) return res.json({
+                  error: err.toString()
+                });
+
+                  Cashier.findByIdAndUpdate(f._id, {pending_trans: pending}, function(e, d){
+                    if(e && d == null){
+                      res.status(200).json({
+                      error: e.toString()
+                    });
+                    }else{
+                      res.status(200).json({
+                      status: 'success'
+                    });
+                    }
+                     
+                  });
+
+               
+
+              }); //save
+
+           
 
       }
     });
@@ -6641,6 +6762,52 @@ router.post('/cashierVerifyClaim', function (req, res) {
       }
     });
 });
+
+router.post('/updateCashierTransferStatus', function (req, res) {
+  const {
+    transfer_id,
+    cashier_id,
+    token,
+    status
+  } = req.body;
+
+    Branch.findOne({
+      token,
+      status: 1
+    }, function (err, f) {
+      if (err || f == null) {
+        res.status(401)
+          .json({
+            error: "Unauthorized"
+          });
+      } else {
+
+        CashierPending.findByIdAndUpdate(transfer_id, {status: status}, function(err, d){
+          if(err || d == null){
+        res.status(200)
+          .json({
+            error: err.toString()
+          });
+          }else{
+            Cashier.findOne({"_id": cashier_id}, function(err, da){
+              let pending = Number(da.pending_trans)-1;
+              Cashier.findByIdAndUpdate(cashier_id, {pending_trans: pending}, function(err, d){
+                   res.status(200)
+          .json({
+            success: "true"
+          });
+            })
+            });
+
+              
+
+          }
+
+        })
+      }
+    })
+
+  });
 
 router.post('/branchVerifyClaim', function (req, res) {
   const {
@@ -7456,11 +7623,14 @@ status:1
                  CashierClaim.find(where, function (err, b) {
                   var res2 = b;
 
-          res.status(200).json({
-            status: 'success',
-            history1: res1,
-            history2: res2
-
+                         CashierPending.find(where, function (err, b) {
+                  var res3 = b;
+                  res.status(200).json({
+                    status: 'success',
+                    history1: res1,
+                    history2: res2,
+                    history3: res3
+                  });
         });
 
       });
