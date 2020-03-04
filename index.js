@@ -3915,6 +3915,7 @@ router.post('/getCashierTransLimit', function (req, res) {
                   limit:limit,
                   closingTime: t1.closing_time,
                   transactionStarted: t1.transaction_started,
+                  cashInHand: t1.cash_in_hand,
                   isClosed: t1.is_closed
                 });
       // console.log(t1._id );
@@ -5398,38 +5399,38 @@ router.post('/checkCashierFee', function (req, res) {
           BankFee.findOne(find, function (err, fe) {
        if (err || fe == null) {
         res.status(200).json({
-          fee: "(Transaction cannot be done at this time)"
+          fee: "(Transaction cannot be done at this time)1"
         });
        } else {
-        if(amount >= fe.trans_from && amount <= fe.trans_to){
+        if(Number(amount) >= Number(fe.trans_from)  && Number(amount)  <= Number(fe.trans_to) ){
          var ranges = JSON.parse(fe.ranges);
          var found = 0, fee = 0;
 
          if(ranges.length > 0){
          ranges.map(function(v) {
-          if(found == 1){
-          }else{
-           if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
-             var temp = oamount * Number(v.percentage) / 100;
-             fee = temp + Number(v.fixed_amount);
-             ;
-            found = 1;
-           }
-          }
-         });
+                    if(found == 1){
+                    }else{
+                     if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
+                       var temp = oamount * Number(v.percentage) / 100;
+                       fee = temp + Number(v.fixed_amount);
+                       ;
+                      found = 1;
+                     }
+                    }
+                   });
          if(found == 1){
           res.status(200).json({
             fee: fee
           });
          }else{
           res.status(200).json({
-            fee: "(Transaction cannot be done at this time)"
+            fee: "(Transaction cannot be done at this time)2"
           });
          }
        }
        }else{
         res.status(200).json({
-            fee: "(Transaction cannot be done at this time)"
+            fee: "(Transaction cannot be done at this time) "
           });
        }
 
@@ -5761,7 +5762,7 @@ router.post('/cashierSendMoney', function (req, res) {
                               error: "Revenue Rule Not Found"
                             });
                  } else {
-                  if(amount >= fe.trans_from && amount <= fe.trans_to){
+                  if(Number(amount)  >= Number(fe.trans_from)  && Number(amount)  <= Number(fe.trans_to) ){
                    var ranges = JSON.parse(fe.ranges);
                    var found = 0, fee = 0;
 
