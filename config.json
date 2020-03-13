@@ -1,28 +1,3 @@
-//for local
-// {
-//     "dbHost" : "127.0.0.1",
-//     "dbPort" : "27017",
-//     "dbName" : "ewallet",
-//     "mainFee" : 10,
-//     "defaultFee" : 0,
-//     "defaultAmt" : 0,
-//     "blockChainIP" : "34.68.116.5",
-//     "mainIP" : "35.226.109.150"
-// }
-
-//for server
-//{
-//    "dbHost" : "127.0.0.1",
-//    "dbPort" : "27017",
-//    "dbName" : "ewallet",
-//    "mainFee" : 10,
-//    "defaultFee" : 0,
-//    "defaultAmt" : 0,
-//    "blockChainIP" : "34.68.116.5",
-//    "mainIP" : "35.226.109.150"
-//}
-
-//Production config k8s
 {
     "dbHost" : "127.0.0.1",
     "dbPort" : "27017",
