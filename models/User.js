@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema({
   address: {type: String, required: false},
   token: { type: String, required: false },
   otp: { type: String, required: false,  default: null},
+  documents: {type:String, required: false, default: null},
   status: {type:Number, required: true, default: 0}
 });
 module.exports = mongoose.model('User', UserSchema);

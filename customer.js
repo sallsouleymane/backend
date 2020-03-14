@@ -858,8 +858,7 @@ router.post('/userLogin', (req, res) => {
 
       User.findOne({
         mobile: mobileNumber,
-        password: password,
-        status: 1
+        password: password
       }, function (err, b2) {
         if(err || b2 == null){
           res.status(200).json({
@@ -882,6 +881,7 @@ router.post('/userLogin', (req, res) => {
               }
               res.status(200).json({
                 status: b2.status,
+                name: b2.name,
                 mobile: b2.mobile,
                 token: token
               });  
@@ -961,7 +961,38 @@ router.get('/getBanks', (req, res) => {
 
   });
 
+router.post('/saveUserDocuments', (req, res) => {
+  const {
+    mobile,
+    documents
+  } = req.body;
 
+      User.findOne({
+        mobile:mobile
+      }, function (err, b) {
+        if(err || b == null){
+          res.status(401).json({
+            error: 'Unauthorized'
+          });
+        }else{
+          let doc = JSON.stringify(documents);
+
+          User.findByIdAndUpdate(b._id, {documents: doc, status: 2}, function(e, b){
+            if(e || b == null){
+              res.status(200).json({
+                error: e.toString()
+              });
+            }else{
+              res.status(200).json({
+                status: 'success'
+              });  
+            }
+          });
+
+        }
+      });
+
+  });
 /* General APIs End */
 
 
