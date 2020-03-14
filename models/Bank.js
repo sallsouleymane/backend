@@ -23,5 +23,6 @@ const BankSchema = new mongoose.Schema({
   total_trans: {type: Number, required: false, default: 0},
   working_from: { type: String, required: false, default: 0 },
   working_to: { type: String, required: false, default: 0 },
+  theme: {type: String, required:false, default:null}
 });
 module.exports = mongoose.model('Bank', BankSchema);

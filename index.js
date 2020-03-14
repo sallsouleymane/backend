@@ -135,14 +135,22 @@ function sendSMS(content, mobile) {
 }
 
 function sendMail(content, subject, email) {
-  ;
-  let info = transporter.sendMail({
+let info = '';
+  try {
+    info = transporter.sendMail({
     from: '"E-Wallet" <no-reply@ewallet.com>', // sender address
     to: email, // list of receivers
     subject: subject, // Subject line
     text: "", // plain text body
     html: content // html body
   });
+}
+catch(error) {
+  info = error;
+  // expected output: ReferenceError: nonExistentFunction is not defined
+  // Note - error messages will vary depending on browser
+}
+
   return info;
 }
 
@@ -4311,7 +4319,8 @@ router.post('/bankLogin', function (req, res) {
           status: bank.status,
           contract: bank.contract,
           logo: bank.logo,
-          id: bank._id
+          id: bank._id,
+          theme: bank.theme
         });
       });
 
@@ -8066,7 +8075,7 @@ router.get("/get-currency", async (req, res) => {
 })
 
 
-
+//newly added
 router.post('/userSignup', (req, res) => {
   let data = new User();
   const {
@@ -8167,6 +8176,51 @@ router.post('/userLogin', (req, res) => {
             
           });
           
+        }
+      });
+
+  });
+
+router.post('/bankThemeUpdate', (req, res) => {
+  const {
+    type,
+    color,
+    token
+  } = req.body;
+
+      Bank.findOne({
+        token:token,
+        status: 1
+      }, function (err, b) {
+        if(err || b == null){
+          res.status(401).json({
+            error: 'Unauthorized'
+          });
+        }else{
+          // let token = makeid(10);
+          
+          let theme = b.theme;
+          if(theme && theme !=''){
+            theme = JSON.parse(theme);
+          }else{
+            theme = {};
+          }
+          theme[type] = color;
+          theme = JSON.stringify(theme);
+
+          Bank.findByIdAndUpdate(b._id, {theme: theme}, function(e, b){
+            if(e || b == null){
+              res.status(200).json({
+                error: e.toString()
+              });
+            }else{
+              res.status(200).json({
+                status: 'success'
+              });  
+            }
+            
+          });
+
         }
       });
 
