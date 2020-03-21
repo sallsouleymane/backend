@@ -1870,9 +1870,9 @@ router.post('/addBankUser', (req, res) => {
         if (err) return res.json({
           error: 'User ID / Email / Mobile already exists'
         });
-        let content = "<p>Your have been added as a Bank User in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/bankuser'>http://"+config.mainIP+"/</a></p><p><p>Your username: " + username + "</p><p>Your password: " + password + "</p>";
+        let content = "<p>Your have been added as a Bank User in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/cashier/yourBranchName'>http://"+config.mainIP+"/</a></p><p><p>Your username: " + username + "</p><p>Your password: " + password + "</p>";
         sendMail(content, "Bank User Account Created", email);
-        let content2 = "Your have been added as Bank User in E-Wallet application Login URL: http://"+config.mainIP+"/bankuser Your username: " + username + " Your password: " + password;
+        let content2 = "Your have been added as Bank User in E-Wallet application Login URL: http://"+config.mainIP+"/cashier/yourBranchName Your username: " + username + " Your password: " + password;
         sendSMS(content2, mobile);
         return res.status(200).json({
           success: "True"
