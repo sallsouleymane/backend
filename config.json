@@ -1,10 +1,10 @@
 {
-    "dbHost" : "127.0.0.1",
-    "dbPort" : "27017",
-    "dbName" : "ewallet",
-    "mainFee" : 10,
-    "defaultFee" : 0,
-    "defaultAmt" : 0,
+  "dbHost": "127.0.0.1",
+  "dbPort": "27017",
+  "dbName": "ewallet",
+  "mainFee": 10,
+  "defaultFee": 0,
+  "defaultAmt": 0,
   "blockChainIP": "35.239.63.105",
-    "mainIP" : "91d90ac373dc.sn.mynetname.net:2019"
+  "mainIP": "91d90ac373dc.sn.mynetname.net:2019"
 }

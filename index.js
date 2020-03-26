@@ -200,10 +200,10 @@ async function createWallet(arr, bank = '', infra = '') {
 //         sendMail("<p>You have received " + url.amount + " from the wallet " + url.from + "</p>", "Payment Received", url.email2);
 //       }
 //       if (url.mobile1 && url.mobile1 != '') {
-//         sendSMS("You have sent " + url.amount + " to the wallet " + url.to, url.mobile1);
+//         sendSMS.js("You have sent " + url.amount + " to the wallet " + url.to, url.mobile1);
 //       }
 //       if (url.mobile2 && url.mobile2 != '') {
-//         sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
+//         sendSMS.js("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
 //       }
 //     }
 //   }));
@@ -1466,7 +1466,7 @@ status:1
               // let content = "<p>You are added as Cashier in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/cashier/"+bankName+"'>http://"+config.mainIP+"/cashier/"+bankName+"</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
               // sendMail(content, "Bank Account Created", email);
               // let content2 = "You are added as Cashier in E-Wallet application Login URL: http://"+config.mainIP+"/cashier/"+bankName+" Your username: " + data.username + " Your password: " + data.password;
-              // sendSMS(content2, mobile);
+			  // sendSMS.js(content2, mobile);
               return res.status(200).json(data);
             });
 

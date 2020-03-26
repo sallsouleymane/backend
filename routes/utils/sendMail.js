@@ -1,9 +1,7 @@
 const nodemailer = require('nodemailer')
 module.exports = (content, subject, email) => {
   let transporter = nodemailer.createTransport({
-	host: 'smtp.gmail.com',
-	port: 587,
-	secure: false, // true for 465, false for other ports
+	host: 'smtp.gmail.com', port: 587, secure: false, // true for 465, false for other ports
 	auth: {
 	  user: 'beyond.ewallet@gmail.com', // generated ethereal user
 	  pass: 'beyondWallet2019' // generated ethereal password

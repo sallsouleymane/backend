@@ -7,13 +7,9 @@ const sendMail = require('./utils/sendMail')
 router.post('/userSignup', (req, res) => {
   let data = new User()
   const {
-	name,
-	mobileNumber,
-	email,
-	address,
-	password,
+	name, mobileNumber, email, address, password,
   } = req.body
-  
+
   data.name = name
   data.mobile = mobileNumber
   data.email = email
@@ -21,12 +17,12 @@ router.post('/userSignup', (req, res) => {
   data.password = password
   let otp = makeotp(6)
   data.otp = otp
-  
+
   data.save((err, d) => {
 	if (err) return res.status(200).json({
 	  error: err.toString()
 	})
-	
+
 	let content = '<p>Your OTP to verify your mobile number is ' + otp + '</p>'
 	sendMail(content, 'OTP', email)
 	let content2 = 'Your OTP to verify your mobile number is ' + otp
@@ -40,14 +36,11 @@ router.post('/userSignup', (req, res) => {
 
 router.post('/userLogin', (req, res) => {
   const {
-	mobileNumber,
-	password,
+	mobileNumber, password,
   } = req.body
-  
+
   User.findOne({
-	mobile: mobileNumber,
-	password: password,
-	status: 1
+	mobile: mobileNumber, password: password, status: 1
   }, function (err, b2) {
 	if (err || b2 == null) {
 	  res.status(200).json({
@@ -64,16 +57,15 @@ router.post('/userLogin', (req, res) => {
 		}
 		else {
 		  res.status(200).json({
-			status: 'success',
-			token: token
+			status: 'success', token: token
 		  })
 		}
-		
+
 	  })
-	  
+
 	}
   })
-  
+
 })
 
 module.exports = router
