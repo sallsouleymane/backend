@@ -1,7 +1,14 @@
 const request = require('request');
-const mongoose = require('mongoose');
 const express = require('express');
 const config = require('./config.json');
+const db = require('./dbConfig')
+//utils
+const makeid = require('./routes/utils/idGenerator')
+const sendSMS = require('./routes/utils/sendSMS')
+const sendMail = require('./routes/utils/sendMail')
+//routes 
+const userRouter = require('./routes/Users')
+const infraRouter = require('./routes/Infra')
 
 var formidable = require('formidable');
 var path = require('path');
@@ -45,19 +52,6 @@ app.use(cookieParser());
 app.use(express.static('public'));
 const router = express.Router();
 
-const dbRoute = 'mongodb://'+config.dbHost+':'+config.dbPort+'/'+config.dbName;
-mongoose.set('useNewUrlParser', true);
-mongoose.set('useFindAndModify', false);
-mongoose.set('useCreateIndex', true);
-mongoose.set('useUnifiedTopology', true);
-mongoose.connect(dbRoute, {
-  useNewUrlParser: true
-});
-
-let db = mongoose.connection;
-db.once('open', () => console.log('connected to the database'));
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-
 app.use(logger('dev'));
 app.use(bodyParser.json({
   limit: '50mb'
@@ -66,6 +60,9 @@ app.use(bodyParser.urlencoded({
   limit: '50mb',
   extended: true
 }));
+app.use('/userSignup', userRouter)
+app.use('/userLogin', userRouter)
+app.use('/api/login', infraRouter)
 
 function getTypeClass(key){
   switch (key) {
@@ -99,16 +96,6 @@ function getTypeClass(key){
   }
 }
 
-function makeid(length) {
-  var result = '';
-  var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  var charactersLength = characters.length;
-  for (var i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
-}
-
 function makeotp(length) {
   // var result = '';
   // var characters = '0123456789';
@@ -119,31 +106,6 @@ function makeotp(length) {
   // return result;
 
   return "111111";
-}
-
-function sendSMS(content, mobile) {
-  let url = "http://136.243.19.2/http-api.php?username=ewallet&password=bw@2019&senderid=EWALET&route=1&number=" + mobile + "&message=" + content;
-  request(url, {
-    json: true
-  }, (err, res, body) => {
-    if (err) {
-      return err;
-    }
-    return body;
-  });
-   return '';
-}
-
-function sendMail(content, subject, email) {
-  ;
-  let info = transporter.sendMail({
-    from: '"E-Wallet" <no-reply@ewallet.com>', // sender address
-    to: email, // list of receivers
-    subject: subject, // Subject line
-    text: "", // plain text body
-    html: content // html body
-  });
-  return info;
 }
 
 function doRequest(options) {
@@ -578,131 +540,9 @@ async function getTransactionCount(arr) {
 
 }
 
-let transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: "beyond.ewallet@gmail.com", // generated ethereal user
-    pass: "beyondWallet2019" // generated ethereal password
-  }
-});
-
 router.get('/testGet', function (req, res) {
   return res.status(200).json({
     status: 'Internal error please try again'
-  });
-});
-
-
-/* Infra APIs start  */
-router.post('/login', function (req, res) {
-  const {
-    username,
-    password
-  } = req.body;
-
-  Infra.findOne({
-    username: { $regex : new RegExp(username, "i") },
-    password
-  }, function (err, user) {
-    if (err) {
-      res.status(500)
-        .json({
-          error: 'Internal error please try again'
-        });
-    } else if (!user || user == null) {
-      res.status(401)
-        .json({
-          error: 'Incorrect username or password'
-        });
-    } else {
-      let token = makeid(10);
-      Infra.findByIdAndUpdate(user._id, {
-        token: token
-      }, (err) => {
-        if (err) return res.status(400).json({
-          error: err
-        });
-
-        if (user.profile_id && user.profile_id != '') {
-          Profile.findOne({
-            "_id": user.profile_id
-          }, function (err, profile) {
-
-            var p = JSON.parse(profile.permissions);
-            res.status(200).json({
-              token: token,
-              permissions: profile.permissions,
-              name: user.name,
-              isAdmin: user.isAdmin,
-              initial_setup: user.initial_setup,
-            });
-          })
-        } else {
-          if (user.isAdmin) {
-            res.status(200).json({
-              token: token,
-              permissions: 'all',
-              name: user.name,
-              isAdmin: user.isAdmin,
-              initial_setup: user.initial_setup,
-            });
-          } else {
-            res.status(200).json({
-              token: token,
-              permissions: '',
-              name: user.name,
-              isAdmin: user.isAdmin,
-              initial_setup: user.initial_setup,
-            });
-          }
-
-        }
-
-      });
-
-
-
-      // Issue token
-      //  const payload = { username };
-      //  const token = jwt.sign(payload, secret, {
-      //    expiresIn: '1h'
-      //  });
-      //  res.cookie('token', token, { httpOnly: true })
-      //    .sendStatus(200);
-
-      //  user.isCorrectPassword(password, function(err, same) {
-
-      //       if (err) {
-      //         res.status(500)
-      //           .json({
-      //             error: 'Internal error please try again'
-      //         });
-      //       } else if (!same) {
-      //         res.status(401)
-      //           .json({
-      //             error: 'Incorrect email or password 3'
-      //         });
-      //       } else {
-      //         res.status(200)
-      //         .json({
-      //           error: 'Isdf'
-      // });
-      //         // Issue token
-      //         // const payload = { email };
-      //         // const token = jwt.sign(payload, secret, {
-      //         //   expiresIn: '1h'
-      //         // });
-      //         // res.cookie('token', token, { httpOnly: true })
-      //         //   .sendStatus(200);
-      //         res.status(200)
-      //         .json({
-      //           success: 'Success'
-      //       });
-      //    }
-      //});
-    }
   });
 });
 
@@ -8065,44 +7905,6 @@ router.get("/get-currency", async (req, res) => {
   }
 })
 
-
-
-router.post('/userSignup', (req, res) => {
-  let data = new User();
-  const {
-    name,
-    mobileNumber,
-    email,
-    address,
-    password,
-  } = req.body;
-
-data.name = name;
-data.mobile = mobileNumber;
-data.email = email;
-data.address = address;
-data.password = password;
-let otp = makeotp(6);
-data.otp = otp;
-
- data.save((err, d) => {
-    if (err) return res.status(200).json({
-      error: err.toString()
-    });
-   
-    let content = "<p>Your OTP to verify your mobile number is "+otp+"</p>";
-    sendMail(content, "OTP", email);
-    let content2 = "Your OTP to verify your mobile number is "+otp;
-    sendSMS(content2, mobileNumber);
-    // return res.status(200).json(data);
-      res.status(200).json({
-        status: "success"
-      });
-
-   });
-
-  });
-
 router.post('/userVerify', (req, res) => {
   const {
     mobileNumber,
@@ -8135,46 +7937,6 @@ router.post('/userVerify', (req, res) => {
       });
 
   });
-
-router.post('/userLogin', (req, res) => {
-  const {
-    mobileNumber,
-    password,
-  } = req.body;
-
-      User.findOne({
-        mobile: mobileNumber,
-        password: password,
-        status: 1
-      }, function (err, b2) {
-        if(err || b2 == null){
-          res.status(200).json({
-            error: 'User account not found'
-          });
-        }else{
-          let token = makeid(10);
-          User.findByIdAndUpdate(b2._id, {token: token}, function(e, b){
-            if(e || b == null){
-              res.status(200).json({
-                error: e.toString()
-              });
-            }else{
-              res.status(200).json({
-                status: 'success',
-                token: token
-              });  
-            }
-            
-          });
-          
-        }
-      });
-
-  });
-
-
-/* General APIs End */
-
 
 app.use('/api', router);
 app.listen(API_PORT, () => console.log("Backend Started"));
