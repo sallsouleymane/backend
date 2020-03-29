@@ -1,7 +1,7 @@
 const doRequest = require('../routes/utils/doRequest')
 const config = require('../config.json')
 
-async function createWallet (arr, bank = '', infra = '') {
+module.exports = async (arr, bank = '', infra = '') => {
   let err = []
   await Promise.all(arr.map(async (url) => {
 	let options = {
@@ -36,5 +36,3 @@ async function createWallet (arr, bank = '', infra = '') {
   }))
   return err.toString()
 }
-
-module.exports.createWallet = createWallet()

@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const Bank = require('../models/Bank')
 const makeid = require('./utils/idGenerator')
-const wallet = require('../services/Wallet')
+const createWallet = require('../services/Wallet')
 const Branch = require('../models/Branch')
 const getBalance = require('./utils/getBalance')
 const getTypeClass = require('./utils/getTypeClass')
@@ -118,8 +118,7 @@ router.post('/bankActivate', function (req, res) {
 		if (err) return res.status(400).json({
 		  error: err
 		})
-		
-		wallet.createWallet(['testuser@' + bank.name, 'operational@' + bank.name, 'escrow@' + bank.name, 'master@' + bank.name, 'infra_operational@' + bank.name, 'infra_master@' + bank.name], bank._id, bank.user_id).then(function (result) {
+		createWallet(['testuser@' + bank.name, 'operational@' + bank.name, 'escrow@' + bank.name, 'master@' + bank.name, 'infra_operational@' + bank.name, 'infra_master@' + bank.name], bank._id, bank.user_id).then(function (result) {
 		  res.status(200).json({
 			status: 'activated',
 			walletStatus: result
