@@ -6,9 +6,14 @@ const db = require('./dbConfig')
 const makeid = require('./routes/utils/idGenerator')
 const sendSMS = require('./routes/utils/sendSMS')
 const sendMail = require('./routes/utils/sendMail')
+const doRequest = require('./routes/utils/doRequest')
+const getBalance = require('./routes/utils/getBalance')
+const getTypeClass = require('./routes/utils/getTypeClass')
 //routes 
 const userRouter = require('./routes/Users')
 const infraRouter = require('./routes/Infra')
+const bankRouter = require('./routes/Bank')
+const uploadRouter = require('./routes/Upload')
 
 var formidable = require('formidable');
 var path = require('path');
@@ -60,41 +65,39 @@ app.use(bodyParser.urlencoded({
   limit: '50mb',
   extended: true
 }));
-app.use('/userSignup', userRouter)
-app.use('/userLogin', userRouter)
-app.use('/api/login', infraRouter)
 
-function getTypeClass(key){
-  switch (key) {
-    case 'cashier':
-      return Cashier;
-      break;
-    case 'bank':
-      return Bank;
-      break;
-    case 'infra':
-      return Infra;
-      break;
-    case 'branch':
-      return Branch;
-      break;
-    case 'bankuser':
-      return BankUser;
-      break;
-    case 'bankfee':
-      return BankFee;
-      break;
-    case 'cashierledger':
-      return CashierLedger;
-      break;
-    case 'cashierpending':
-      return CashierPending;
-      break;
-    default:
-      return null;
-      break;
-  }
-}
+
+// function getTypeClass(key){
+//   switch (key) {
+//     case 'cashier':
+//       return Cashier;
+//       break;
+//     case 'bank':
+//       return Bank;
+//       break;
+//     case 'infra':
+//       return Infra;
+//       break;
+//     case 'branch':
+//       return Branch;
+//       break;
+//     case 'bankuser':
+//       return BankUser;
+//       break;
+//     case 'bankfee':
+//       return BankFee;
+//       break;
+//     case 'cashierledger':
+//       return CashierLedger;
+//       break;
+//     case 'cashierpending':
+//       return CashierPending;
+//       break;
+//     default:
+//       return null;
+//       break;
+//   }
+// }
 
 function makeotp(length) {
   // var result = '';
@@ -108,7 +111,7 @@ function makeotp(length) {
   return "111111";
 }
 
-function doRequest(options) {
+/*function doRequest(options) {
   return new Promise(function (resolve, reject) {
     request(options, function (error, res, body) {
       if (!error && res.statusCode == 200) {
@@ -123,9 +126,9 @@ function doRequest(options) {
   //     resolve(options);
   //   }, 2000);
   // });
-}
+}*/
 
-async function fileUpload(path) {
+/*async function fileUpload(path) {
   const options = {
     method: "POST",
     uri: 'http://'+config.blockChainIP+':5001/api/v0/add',
@@ -138,9 +141,9 @@ async function fileUpload(path) {
   };
   let res = await doRequest(options);
   return res;
-}
+}*/
 
-async function createWallet(arr, bank = '', infra = '') {
+/*async function createWallet(arr, bank = '', infra = '') {
   var err = [];
   await Promise.all(arr.map(async (url) => {
     var options = {
@@ -173,7 +176,7 @@ async function createWallet(arr, bank = '', infra = '') {
 
   }));
   return err.toString();
-}
+}*/
 
 // async function walletTransfer(arr) {
 //   var err = [];
@@ -500,7 +503,7 @@ async function getChildStatements(arr) {
 }
 
 
-async function getBalance(arr) {
+/*async function getBalance(arr) {
 
   var options = {
     uri: 'http://'+config.blockChainIP+':8000/showEWalletBalance',
@@ -518,7 +521,7 @@ async function getBalance(arr) {
     return 0;
   }
 
-}
+}*/
 
 async function getTransactionCount(arr) {
 
@@ -607,7 +610,7 @@ router.post('/getPermission', function (req, res) {
   });
 });
 
-router.get('/checkInfra', function (req, res) {
+/*router.get('/checkInfra', function (req, res) {
 
   Infra.countDocuments({}, function (err, c) {
     if (err || c == null) {
@@ -625,7 +628,7 @@ router.get('/checkInfra', function (req, res) {
     }
   });
 
-});
+});*/
 
 router.get('/getInfraOperationalBalance', function (req, res) {
   const {
@@ -723,7 +726,7 @@ router.get('/getWalletBalance', function (req, res) {
 }
 });
 
-router.get('/getBankOperationalBalance', function (req, res) {
+/*router.get('/getBankOperationalBalance', function (req, res) {
   const {
     bank
   } = req.query;
@@ -750,7 +753,7 @@ router.get('/getBankOperationalBalance', function (req, res) {
 
     }
   });
-});
+});*/
 
 router.get('/getInfraMasterBalance', function (req, res) {
   const {
@@ -847,7 +850,7 @@ router.post('/getDashStats', function (req, res) {
   });
 });
 
-router.post('/getBankDashStats', function (req, res) {
+/*router.post('/getBankDashStats', function (req, res) {
   const {
     token
   } = req.body;
@@ -880,7 +883,7 @@ router.post('/getBankDashStats', function (req, res) {
         });
     }
   });
-});
+});*/
 
 router.post('/getCashierDashStats', function (req, res) {
 
@@ -1247,7 +1250,7 @@ router.post('/getClosingBalance', function (req, res) {
   });
 
 
-router.post('/addBank', (req, res) => {
+/*router.post('/addBank', (req, res) => {
   let data = new Bank();
   const {
     name,
@@ -1347,7 +1350,7 @@ status:1
     }
 
   });
-});
+});*/
 
 router.post('/addBranch', (req, res) => {
   let data = new Branch();
@@ -2527,7 +2530,7 @@ getBalance(wallet_id).then(function (result) {
 
 });
 
-router.get('/getBalance', (req, res) => {
+/*router.get('/getBalance', (req, res) => {
   const {
     token,
     wallet_id,
@@ -2552,7 +2555,7 @@ const typeClass = getTypeClass(type);
 }
 });
 
-});
+});*/
 
 
 
@@ -3588,7 +3591,7 @@ router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
 })
 
 
-router.post('/getBranches', function (req, res) {
+/*router.post('/getBranches', function (req, res) {
 
   const {
     token
@@ -3624,7 +3627,7 @@ status:1
 
     }
   });
-});
+});*/
 
 router.post('/getAll', function (req, res) {
   const {
@@ -4070,7 +4073,7 @@ status:1
   });
 });
 
-router.post('/setupUpdate', function (req, res) {
+/*router.post('/setupUpdate', function (req, res) {
   let data = new Infra();
   const {
     username,
@@ -4103,7 +4106,7 @@ router.post('/setupUpdate', function (req, res) {
       });
   });
 
-});
+});*/
 /* Infra APIs end  */
 
 
@@ -4330,7 +4333,7 @@ thisday = thisday.getTime();
   });
 });
 
-router.post('/bankActivate', function (req, res) {
+/*router.post('/bankActivate', function (req, res) {
   const {
     token
   } = req.body;
@@ -4368,9 +4371,9 @@ router.post('/bankActivate', function (req, res) {
 
     }
   });
-});
+});*/
 
-router.post('/bankSetupUpdate', function (req, res) {
+/*router.post('/bankSetupUpdate', function (req, res) {
   const {
     username,
     password,
@@ -4405,7 +4408,7 @@ router.post('/bankSetupUpdate', function (req, res) {
       });
     }
   });
-});
+});*/
 
 router.post('/branchSetupUpdate', function (req, res) {
   const {
@@ -7761,7 +7764,7 @@ router.get('/clearDb', function (req, res) {
 
 });
 
-router.post('/fileUpload', function (req, res) {
+/*router.post('/fileUpload', function (req, res) {
   const token = req.query.token;
   const from =req.query.from;
 
@@ -7833,49 +7836,49 @@ router.post('/fileUpload', function (req, res) {
       });
     }
   });
-});
+});*/
 
-router.post('/ipfsUpload', function (req, res) {
-  const token = req.query.token;
-
-  var form = new formidable.IncomingForm();
-
-  form.parse(req, function (err, fields, files) {
-    var fn = files.file.name.split('.').pop();
-    fn = fn.toLowerCase();
-    ;
-    if(fn != "pdf"){
-      res.status(200).json({
-        error: "Only PDF files are accepted"
-      });
-    }else{
-
-    var oldpath = files.file.path;
-    fileUpload(oldpath).then(function (result) {
-      var out;
-      if (result) {
-        result = JSON.parse(result);
-        if(!result.Hash || result.Hash == undefined){
-          res.status(200).json({
-            error: "File Upload Error"
-          });
-        }else{
-          res.status(200).json({
-            name: result.Hash
-          });
-        }
-
-      }else{
-        res.status(200).json({
-          error: "File Upload Error"
-        });
-      }
-
-    });
-  }
-
-  });
-});
+// router.post('/ipfsUpload', function (req, res) {
+//   const token = req.query.token;
+//
+//   var form = new formidable.IncomingForm();
+//
+//   form.parse(req, function (err, fields, files) {
+//     var fn = files.file.name.split('.').pop();
+//     fn = fn.toLowerCase();
+//     ;
+//     if(fn != "pdf"){
+//       res.status(200).json({
+//         error: "Only PDF files are accepted"
+//       });
+//     }else{
+//
+//     var oldpath = files.file.path;
+//     fileUpload(oldpath).then(function (result) {
+//       var out;
+//       if (result) {
+//         result = JSON.parse(result);
+//         if(!result.Hash || result.Hash == undefined){
+//           res.status(200).json({
+//             error: "File Upload Error"
+//           });
+//         }else{
+//           res.status(200).json({
+//             name: result.Hash
+//           });
+//         }
+//
+//       }else{
+//         res.status(200).json({
+//           error: "File Upload Error"
+//         });
+//       }
+//
+//     });
+//   }
+//
+//   });
+// });
 
 
 router.post('/save-currency', async (req, res) => {
@@ -7939,4 +7942,8 @@ router.post('/userVerify', (req, res) => {
   });
 
 app.use('/api', router);
+app.use('/api', userRouter)
+app.use('/api', bankRouter)
+app.use('/api', infraRouter)
+app.use('/api',	uploadRouter)
 app.listen(API_PORT, () => console.log("Backend Started"));
