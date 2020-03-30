@@ -1,5 +1,5 @@
 {
-  "dbHost": "127.0.0.1",
+  "dbHost": "beyondewallet-mongodb-clusterip",
   "dbPort": "27017",
   "dbName": "ewallet",
   "mainFee": 10,
