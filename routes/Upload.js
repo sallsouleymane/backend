@@ -6,6 +6,7 @@ const IncomingForm = require('formidable').IncomingForm
 const fs = require('fs-extra')
 const config = require('../config')
 const doRequest = require('./utils/doRequest')
+const path = require('path')
 
 router.post('/fileUpload', function (req, res) {
   const token = req.query.token
@@ -27,7 +28,7 @@ router.post('/fileUpload', function (req, res) {
 	else {
 	  
 	  let form = new IncomingForm()
-	  const dir = __dirname.replace('/routes', '') + '/public/uploads/' + user._id
+	  const dir = path.resolve('./public/uploads/' + user._id)
 	  form.parse(req, function (err, fields, files) {
 		
 		let fn = files.file.name.split('.').pop()
