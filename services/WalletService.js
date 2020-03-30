@@ -1,7 +1,7 @@
 const doRequest = require('../routes/utils/doRequest')
 const config = require('../config.json')
 
-module.exports = async (arr, bank = '', infra = '') => {
+module.exports.createWallet = async (arr, bank = '', infra = '') => {
   let err = []
   await Promise.all(arr.map(async (url) => {
 	let options = {
@@ -19,20 +19,27 @@ module.exports = async (arr, bank = '', infra = '') => {
 	  err.push(res.message)
 	}
 	else {
-	  // let data = {};
-	  // let temp = url.split("@");
-	  // data.address = url;
-	  // data.type = temp[0];
-	  // data.infra_id = infra;
-	  // data.bank_id = bank;
-	  // data.balance = 0;
-	  // data.save((e, ) => {
-	  //   if (e) {
-	  //     err.push("failed to create " + url);
-	  //   }
-	  // });
 	}
 	
   }))
   return err.toString()
+}
+
+module.exports.getStatement = async (arr) => {
+  
+  let options = {
+	uri: 'http://' + config.blockChainIP + ':8000/getEWalletStatement',
+	method: 'GET',
+	json: {
+	  'wallet_id': arr.toString()
+	}
+  }
+  
+  let res = await doRequest(options)
+  if (res.status && res.status === 1) {
+	return res.data
+  }
+  else {
+	return []
+  }
 }

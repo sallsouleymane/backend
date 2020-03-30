@@ -9,7 +9,9 @@ const sendMail = require('./routes/utils/sendMail')
 const doRequest = require('./routes/utils/doRequest')
 const getBalance = require('./routes/utils/getBalance')
 const getTypeClass = require('./routes/utils/getTypeClass')
-//routes 
+//services
+const { createWallet, getStatement } = require('./services/WalletService')
+//routes
 const userRouter = require('./routes/Users')
 const infraRouter = require('./routes/Infra')
 const bankRouter = require('./routes/Bank')
@@ -67,38 +69,6 @@ app.use(bodyParser.urlencoded({
 }));
 
 
-// function getTypeClass(key){
-//   switch (key) {
-//     case 'cashier':
-//       return Cashier;
-//       break;
-//     case 'bank':
-//       return Bank;
-//       break;
-//     case 'infra':
-//       return Infra;
-//       break;
-//     case 'branch':
-//       return Branch;
-//       break;
-//     case 'bankuser':
-//       return BankUser;
-//       break;
-//     case 'bankfee':
-//       return BankFee;
-//       break;
-//     case 'cashierledger':
-//       return CashierLedger;
-//       break;
-//     case 'cashierpending':
-//       return CashierPending;
-//       break;
-//     default:
-//       return null;
-//       break;
-//   }
-// }
-
 function makeotp(length) {
   // var result = '';
   // var characters = '0123456789';
@@ -110,73 +80,6 @@ function makeotp(length) {
 
   return "111111";
 }
-
-/*function doRequest(options) {
-  return new Promise(function (resolve, reject) {
-    request(options, function (error, res, body) {
-      if (!error && res.statusCode == 200) {
-        resolve(body);
-      } else {
-        reject(error);
-      }
-    });
-  });
-  // return new Promise(resolve => {
-  //   setTimeout(() => {
-  //     resolve(options);
-  //   }, 2000);
-  // });
-}*/
-
-/*async function fileUpload(path) {
-  const options = {
-    method: "POST",
-    uri: 'http://'+config.blockChainIP+':5001/api/v0/add',
-    headers: {
-      "Content-Type": "multipart/form-data"
-    },
-    formData: {
-      "file": fs.createReadStream(path)
-    }
-  };
-  let res = await doRequest(options);
-  return res;
-}*/
-
-/*async function createWallet(arr, bank = '', infra = '') {
-  var err = [];
-  await Promise.all(arr.map(async (url) => {
-    var options = {
-      uri: 'http://'+config.blockChainIP+':8000/createEWallet',
-      method: 'POST',
-      json: {
-        "wallet_id": url,
-        "type": "test",
-        "remarks": ""
-      }
-    };
-    let res = await doRequest(options);
-
-    if (res.status == 0) {
-      err.push(res.message);
-    } else {
-      // let data = {};
-      // let temp = url.split("@");
-      // data.address = url;
-      // data.type = temp[0];
-      // data.infra_id = infra;
-      // data.bank_id = bank;
-      // data.balance = 0;
-      // data.save((e, ) => {
-      //   if (e) {
-      //     err.push("failed to create " + url);
-      //   }
-      // });
-    }
-
-  }));
-  return err.toString();
-}*/
 
 // async function walletTransfer(arr) {
 //   var err = [];
@@ -464,24 +367,6 @@ async function transferThis(t1, t2 = false, t3 = false, t4 = false) {
   return err.toString();
 }
 
-async function getStatement(arr) {
-
-  var options = {
-    uri: 'http://'+config.blockChainIP+':8000/getEWalletStatement',
-    method: 'GET',
-    json: {
-      "wallet_id": arr.toString()
-    }
-  };
-
-  let res = await doRequest(options);
-  if (res.status && res.status == 1) {
-    return res.data;
-  } else {
-    return [];
-  }
-
-}
 
 async function getChildStatements(arr) {
 
@@ -501,27 +386,6 @@ async function getChildStatements(arr) {
   }
 
 }
-
-
-/*async function getBalance(arr) {
-
-  var options = {
-    uri: 'http://'+config.blockChainIP+':8000/showEWalletBalance',
-    method: 'GET',
-    json: {
-      "wallet_id": arr.toString()
-    }
-  };
-
-  let res = await doRequest(options);
-
-  if (res.status && res.status == 1) {
-    return res.data.balance;
-  } else {
-    return 0;
-  }
-
-}*/
 
 async function getTransactionCount(arr) {
 
@@ -610,65 +474,6 @@ router.post('/getPermission', function (req, res) {
   });
 });
 
-/*router.get('/checkInfra', function (req, res) {
-
-  Infra.countDocuments({}, function (err, c) {
-    if (err || c == null) {
-      res.status(401)
-        .json({
-          error: "Unauthorized"
-        });
-    } else {
-
-      res.status(200)
-        .json({
-          infras: c
-        });
-
-    }
-  });
-
-});*/
-
-router.get('/getInfraOperationalBalance', function (req, res) {
-  const {
-    bank,
-    token
-  } = req.query;
-  Infra.findOne({
-    token,
-    status:1
-  }, function(e, b){
-  if(e || b == null){
-    res.status(401)
-      .json({
-        error: "Unauthorized"
-      });
-  }else{
-  Bank.findOne({
-    "_id": bank
-  }, function (err, ba) {
-    if (err || ba == null) {
-      res.status(404)
-        .json({
-          error: "Not found"
-        });
-    } else {
-      const wallet_id = "infra_operational@" + ba.name;
-
-      getBalance(wallet_id).then(function (result) {
-        res.status(200).json({
-          status: 'success',
-          balance: result
-        });
-      });
-
-    }
-  });
-  }
-  });
-});
-
 router.get('/getWalletBalance', function (req, res) {
   const {
     bank,
@@ -724,74 +529,6 @@ router.get('/getWalletBalance', function (req, res) {
   }
   });
 }
-});
-
-/*router.get('/getBankOperationalBalance', function (req, res) {
-  const {
-    bank
-  } = req.query;
-  ;
-  Bank.findOne({
-    token: bank,
-    status:1
-  }, function (err, ba) {
-    ;
-    if (err || ba == null) {
-      res.status(401)
-        .json({
-          error: "Unauthorized"
-        });
-    } else {
-      const wallet_id = "operational@" + ba.name;
-
-      getBalance(wallet_id).then(function (result) {
-        res.status(200).json({
-          status: 'success',
-          balance: result
-        });
-      });
-
-    }
-  });
-});*/
-
-router.get('/getInfraMasterBalance', function (req, res) {
-  const {
-    bank,
-    token
-  } = req.query;
-  Infra.findOne({
-    token,
-    status:1
-  }, function(e, b){
-    if(e || b == null){
-      res.status(401).json({
-        error: "Unauthorized"
-      });
-    }else{
-  Bank.findOne({
-    "_id": bank
-  }, function (err, ba) {
-    if (err) {
-      res.status(401)
-        .json({
-          error: "Unauthorized"
-        });
-    } else {
-      const wallet_id = "infra_master@" + ba.name;
-
-      getBalance(wallet_id).then(function (result) {
-        res.status(200).json({
-          status: 'success',
-          balance: result
-        });
-      });
-    }
-  });
-}
-
-});
-
 });
 
 router.post('/getDashStats', function (req, res) {
@@ -850,40 +587,6 @@ router.post('/getDashStats', function (req, res) {
   });
 });
 
-/*router.post('/getBankDashStats', function (req, res) {
-  const {
-    token
-  } = req.body;
-  Bank.findOne({
-    token,
-    status: 1
-  }, function (err, user) {
-    if (err || user == null) {
-      res.status(401)
-      .json({
-        error: "Unauthorized"
-      });
-    } else {
-
-      const user_id = user._id;
-        Branch.countDocuments({
-          bank_id: user_id
-        }, function (err, branch) {
-          if (err) {
-            res.status(402)
-              .json({
-                error: err
-              });
-          } else {
-            res.status(200)
-              .json({
-                totalBranches: branch
-              });
-          }
-        });
-    }
-  });
-});*/
 
 router.post('/getCashierDashStats', function (req, res) {
 
@@ -1250,108 +953,6 @@ router.post('/getClosingBalance', function (req, res) {
   });
 
 
-/*router.post('/addBank', (req, res) => {
-  let data = new Bank();
-  const {
-    name,
-    bcode,
-    address1,
-    state,
-    zip,
-    country,
-    ccode,
-    mobile,
-    email,
-    token,
-    logo,
-    contract,
-    otp_id,
-    otp
-  } = req.body;
-  Infra.findOne({
-    token,
-status:1
-  }, function (err, user) {
-    if (err || user == null) {
-      res.status(401)
-        .json({
-          error: "Unauthorized"
-        });
-    } else {
-      // const user_id = user._id;
-      OTP.findOne({
-        "_id": otp_id,
-        otp: otp
-      }, function (err, otpd) {
-        if (err) {
-          res.status(401)
-            .json({
-              error: err
-            });
-        } else {
-          if (!otpd) {
-            res.status(401)
-              .json({
-                error: 'OTP Missmatch'
-              });
-          }else{
-          if (otpd.otp == otp) {
-
-            if (name == '' || address1 == '' || state == '' || mobile == '' || email == '') {
-              return res.status(402)
-                .json({
-                  error: 'Please provide valid inputs'
-                });
-            }
-
-            data.name = name;
-            data.bcode = bcode;
-            data.address1 = address1;
-            data.state = state;
-            data.country = country;
-            data.zip = zip;
-            data.ccode = ccode;
-            data.mobile = mobile;
-            data.username = mobile;
-            data.email = email;
-            data.user_id = user._id;
-            data.logo = logo;
-            data.contract = contract;
-            data.password = makeid(10);
-
-            data.save((err, d) => {
-              if (err) return res.json({
-                error: "Duplicate entry!"
-              });
-
-              let data2 = new Document();
-              data2.bank_id = d._id;
-              data2.contract = contract;
-              data2.save((err, ) => {
-
-              });
-
-              let content = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/bank'>http://"+config.mainIP+"/bank</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
-              sendMail(content, "Bank Account Created", email);
-              let content2 = "Your bank is added in E-Wallet application Login URL: http://"+config.mainIP+"/bank Your username: " + data.username + " Your password: " + data.password;
-              sendSMS(content2, mobile);
-
-              return res.status(200).json(data);
-            });
-          } else {
-            res.status(200)
-              .json({
-                error: 'OTP Missmatch'
-              });
-          }
-        }
-        }
-      });
-    }
-
-  });
-});*/
-
 router.post('/addBranch', (req, res) => {
   let data = new Branch();
   const {
@@ -1560,319 +1161,6 @@ router.post('/addCashier', (req, res) => {
       });
 });
 
-
-router.post('/editBank', (req, res) => {
-  let data = new Bank();
-  const {
-    bank_id,
-    name,
-    bcode,
-    address1,
-    state,
-    zip,
-    country,
-    ccode,
-    mobile,
-    email,
-    token,
-    logo,
-    contract,
-    otp_id,
-    otp,
-    working_from,
-    working_to
-  } = req.body;
-
-  Infra.findOne({
-    token,
-status:1
-  }, function (err, user) {
-    if (err || user == null) {
-      res.status(401)
-        .json({
-          error: "Unauthorized"
-        });
-    } else {
-      // const user_id = user._id;
-      OTP.findOne({
-        _id: otp_id,
-        otp: otp
-      }, function (err, otpd) {
-        if (err || !otpd) {
-          res.status(401)
-            .json({
-              error: err
-            });
-        } else {
-          if (otpd.otp == otp) {
-
-            if (name == '' || address1 == '' || state == '' || mobile == '' || email == '') {
-              return res.status(402)
-                .json({
-                  error: 'Please provide valid inputs'
-                });
-            }
-
-            data.name = name;
-            data.address1 = address1;
-            data.state = state;
-            data.country = country;
-            data.bcode = bcode;
-            data.zip = zip;
-            data.ccode = ccode;
-            data.mobile = mobile;
-            data.username = mobile;
-            data.email = email;
-            data.user_id = user._id;
-            data.logo = logo;
-            data.contract = contract;
-            data.password = makeid(10);
-            Bank.findByIdAndUpdate(bank_id, {
-              name: name,
-              address1: address1,
-              state: state,
-              zip: zip,
-              ccode: ccode,
-              bcode: bcode,
-              country: country,
-              mobile: mobile,
-              email: email,
-              logo: logo,
-              contract: contract
-            }, (err) => {
-              if (err) return res.status(400).json({
-                error: err
-              });
-
-              let data2 = new Document();
-              data2.bank_id = bank_id;
-              data2.contract = contract;
-              data2.save((err, ) => {
-
-              });
-              return res.status(200).json(data);
-            });
-            // data.save((err, ) => {
-            //   if (err) return res.json({
-            //     error: "Duplicate entry!"
-            //   });
-
-            // let content = "<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/bank'>http://"+config.mainIP+"/bank</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
-            // sendMail(content, "Bank Account Created", email);
-
-            //return res.status(200).json(data);
-            //});
-          } else {
-            res.status(200)
-              .json({
-                error: 'OTP Missmatch'
-              });
-          }
-        }
-      });
-    }
-
-  });
-});
-
-router.post('/addBankUser', (req, res) => {
-  let data = new BankUser();
-  const {
-    name,
-    email,
-    ccode,
-    mobile,
-    username,
-    password,
-    branch_id,
-    logo,
-    token
-  } = req.body;
-  Bank.findOne({
-    token,
-    status:1
-  }, function (err, user) {
-    if (err || user == null) {
-      res.status(401)
-        .json({
-          error: "Unauthorized"
-        });
-    } else {
-
-      data.name = name;
-      data.email = email;
-      data.mobile = mobile;
-      data.username = username;
-      data.password = password;
-      data.branch_id = branch_id;
-      data.bank_id = user._id;
-      data.ccode = ccode;
-      data.logo = logo;
-
-      data.save((err, ) => {
-        if (err) return res.json({
-          error: 'User ID / Email / Mobile already exists'
-        });
-        let content = "<p>Your have been added as a Bank User in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/cashier/yourBranchName'>http://"+config.mainIP+"/</a></p><p><p>Your username: " + username + "</p><p>Your password: " + password + "</p>";
-        sendMail(content, "Bank User Account Created", email);
-        let content2 = "Your have been added as Bank User in E-Wallet application Login URL: http://"+config.mainIP+"/cashier/yourBranchName Your username: " + username + " Your password: " + password;
-        sendSMS(content2, mobile);
-        return res.status(200).json({
-          success: "True"
-        });
-      });
-
-    }
-
-  });
-});
-
-router.post('/editBankUser', (req, res) => {
-  const {
-    name,
-    email,
-    ccode,
-    mobile,
-    username,
-    password,
-    branch_id,
-    logo,
-    user_id,
-    token
-  } = req.body;
-  Bank.findOne({
-    token,
-  }, function (err, user) {
-    if (err || user == null) {
-      res.status(401)
-        .json({
-          error: "Unauthorized"
-        });
-    } else {
-
-
-      var _id = user_id;
-
-      BankUser.findOneAndUpdate({
-        "_id": _id
-      }, {
-        name: name,
-        email: email,
-        ccode: ccode,
-        mobile: mobile,
-        username: username,
-        password: password,
-        branch_id: branch_id,
-        logo: logo
-      }, (err, d) => {
-        if (err) return res.status(400).json({
-          error: err
-        });
-        ;
-        return res.status(200).json({
-          success: true
-        });
-      });
-
-    }
-
-  });
-});
-
-router.post('/getBankUsers', function (req, res) {
-  //res.send("hi");
-  const {
-    token
-  } = req.body;
-  Bank.findOne({
-    token,
-status:1
-  }, function (err, user) {
-    if (err || user == null) {
-      res.status(401)
-        .json({
-          error: "Unauthorized"
-        });
-    } else {
-      const user_id = user._id;
-      BankUser.find({
-        bank_id : user_id
-      }, function (err, bank) {
-        if (err) {
-          res.status(404)
-            .json({
-              error: err
-            });
-        } else {
-          res.status(200)
-            .json({
-              users: bank
-            });
-        }
-      });
-
-    }
-  });
-});
-
-router.post('/editBranch', (req, res) => {
-  let data = new Branch();
-  const {
-    branch_id,
-    name,
-    username,
-    credit_limit,
-    bcode,
-    address1,
-    state,
-    zip,
-    country,
-    ccode,
-    mobile,
-    email,
-    token,
-    working_from,
-    working_to
-  } = req.body;
-
-  Bank.findOne({
-    token,
-status:1
-  }, function (err, user) {
-    if (err || user == null) {
-      res.status(401)
-        .json({
-          error: "Unauthorized"
-        });
-    } else {
-
-
-            Branch.findByIdAndUpdate(branch_id, {
-              name: name,
-              credit_limit: credit_limit,
-              username: username,
-              address1: address1,
-              state: state,
-              zip: zip,
-              ccode: ccode,
-              bcode: bcode,
-              country: country,
-              mobile: mobile,
-              email: email,
-              working_from: working_from,
-              working_to: working_to
-            }, (err) => {
-              if (err) return res.status(400).json({
-                error: err
-              });
-
-              return res.status(200).json(data);
-            });
-
-    }
-
-  });
-});
 
 router.post('/editCashier', (req, res) => {
 
@@ -2529,35 +1817,6 @@ getBalance(wallet_id).then(function (result) {
 });
 
 });
-
-/*router.get('/getBalance', (req, res) => {
-  const {
-    token,
-    wallet_id,
-    type
-  } = req.query;
-const typeClass = getTypeClass(type);
-  typeClass.findOne({
-        token,
-        status: 1
-      }, function (err, bank) {
-        if(err || bank == null){
-          res.status(401).json({
-            error: 'Unauthorized'
-          });
-        }else{
-        getBalance(wallet_id).then(function (result) {
-          res.status(200).json({
-            status: 'success',
-            balance: result
-          });
-        });
-}
-});
-
-});*/
-
-
 
 router.post('/createRules', (req, res) => { //fee
   let data = new Fee();
@@ -3311,41 +2570,6 @@ status:1
 
 });
 
-router.post('/branchStatus', function (req, res) {
-  //res.send("hi");
-  const {
-    token,
-    status,
-    branch_id
-  } = req.body;
-
-  Bank.findOne({
-    token,
-status:1
-  }, function (err, user) {
-    if (err || user == null) {
-      res.status(401)
-        .json({
-          error: "Unauthorized"
-        });
-    } else {
-
-      Branch.findByIdAndUpdate(branch_id, {
-        status: status
-      }, (err) => {
-        if (err) return res.status(400).json({
-          error: err
-        });
-        res.status(200).json({
-          status: true
-        });
-      });
-
-    }
-  });
-
-});
-
 router.post('/updateStatus', function (req, res) {
   //res.send("hi");
   const {
@@ -3590,145 +2814,6 @@ router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
 
 })
 
-
-/*router.post('/getBranches', function (req, res) {
-
-  const {
-    token
-  } = req.body;
-  Bank.findOne({
-    token,
-status:1
-  }, function (err, bank) {
-    if (err || bank == null) {
-      res.status(401)
-        .json({
-          error: "Unauthorized"
-        });
-    } else {
-      const bank_id = bank._id;
-      // if (user.isAdmin) {
-        Branch.find({bank_id : bank_id}, function (err, branch) {
-          if (err) {
-            res.status(404)
-              .json({
-                error: err
-              });
-          } else {
-
-            
-              res.status(200)
-              .json({
-                branches: branch
-              });
-            
-          }
-        });
-
-    }
-  });
-});*/
-
-router.post('/getAll', function (req, res) {
-  const {
-    page,
-    type,
-    where,
-    token
-  } = req.body;
-
-  const pageClass = getTypeClass(page);
-  const typeClass = getTypeClass(type);
-
-  typeClass.findOne({
-    token,
-    status : 1
-  }, function (err, t1) {
-    if (err || t1 == null) {
-      res.status(401)
-        .json({
-          error: "Unauthorized"
-        });
-    } else {
-      const type_id = t1._id;
-
-       let whereData = where;
-      if(where == undefined  || where == null || where == ''){
-        if(type == 'bank'){
-           whereData = {bank_id : type_id};
-        }
-      }
-        pageClass.find(whereData, function (err, data) {
-          if (err) {
-            res.status(404)
-              .json({
-                error: err
-              });
-          } else {
-            res.status(200)
-              .json({
-                rows: data
-              });
-          }
-        });
-
-    }
-  });
-});
-
-router.post('/getOne', function (req, res) {
-  const {
-    page,
-    type,
-    page_id,
-    token
-  } = req.body;
-
-  const pageClass = getTypeClass(page);
-  const typeClass = getTypeClass(type);
-
-  typeClass.findOne({
-    token,
-    status: 1
-  }, function (err, t1) {
-    if (err || t1 == null) {
-      res.status(401)
-        .json({
-          error: "Unauthorized"
-        });
-    } else {
-      if(page == type){
-        res.status(200)
-              .json({
-                row: t1
-              });
-      }else{
-      let where = {};
-      if(type == 'bank' ){
-        where = {_id : page_id};
-      }else{
-        where = {_id : page_id};
-      };
-          pageClass.findOne(where, function (err, data) {
-          if (err) {
-            res.status(404)
-              .json({
-                error: err
-              });
-          } else {
-            res.status(200)
-              .json({
-                row: data
-              });
-          }
-        });
-      }
-
-    }
-  });
-});
-
-
 router.post('/getCashierTransLimit', function (req, res) {
 
   var today = new Date();
@@ -3770,7 +2855,7 @@ router.post('/getCashierTransLimit', function (req, res) {
       //   status : 1
       // }, function (err, data) {
 
-                 
+      
       //           CashierLedger.findOne({
       //           cashier_id : t1._id,
       //           created_at: {$gte: new Date(start), $lte: new Date(end)},
@@ -3786,9 +2871,9 @@ router.post('/getCashierTransLimit', function (req, res) {
       //           .json({
       //             limit: limit
       //           });
-            
+      
       //     });
-          
+      
       //   });
     }
   });
@@ -4073,42 +3158,7 @@ status:1
   });
 });
 
-/*router.post('/setupUpdate', function (req, res) {
-  let data = new Infra();
-  const {
-    username,
-    password,
-    email,
-    mobile,
-    ccode
-  } = req.body;
-
-  data.name = "Infra Admin";
-  data.username = username;
-  ;
-  data.password = password;
-  data.mobile = mobile;
-  data.email = email;
-  data.ccode = ccode;
-  data.isAdmin = true;
-
-  data.save((err, ) => {
-    if (err) return res.json({
-      error: err.toString()
-    });
-    let content = "<p>Your Infra account is activated in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"'>http://"+config.mainIP+"</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
-    let result = sendMail(content, "Infra Account Activated", data.email);
-    let content2 = "Your Infra account is activated in E-Wallet application. Login URL: http://"+config.mainIP+" Your username: " + data.username + " Your password: " + data.password;
-    sendSMS(content2, mobile);
-    res.status(200)
-      .json({
-        success: true
-      });
-  });
-
-});*/
 /* Infra APIs end  */
-
 
 /* Bank APIs start */
 router.post('/bankLogin', function (req, res) {
@@ -4332,83 +3382,6 @@ thisday = thisday.getTime();
     }
   });
 });
-
-/*router.post('/bankActivate', function (req, res) {
-  const {
-    token
-  } = req.body;
-  Bank.findOne({
-    token
-  }, function (err, bank) {
-    if (err) {
-      res.status(500)
-        .json({
-          error: 'Internal error please try again'
-        });
-    } else if (!bank || bank == null) {
-      res.status(401)
-        .json({
-          error: 'Account not found'
-        });
-    } else {
-      Bank.findByIdAndUpdate(bank._id, {
-        status: 1
-      }, (err) => {
-        if (err) return res.status(400).json({
-          error: err
-        });
-
-        createWallet(['testuser@' + bank.name, 'operational@' + bank.name, 'escrow@' + bank.name, 'master@' + bank.name, 'infra_operational@' + bank.name, 'infra_master@' + bank.name], bank._id, bank.user_id).then(function (result) {
-          res.status(200).json({
-            status: 'activated',
-            walletStatus: result
-          });
-        });
-
-
-
-      });
-
-    }
-  });
-});*/
-
-/*router.post('/bankSetupUpdate', function (req, res) {
-  const {
-    username,
-    password,
-    token
-  } = req.body;
-  Bank.findOne({
-    token
-  }, function (err, bank) {
-    if (err || bank == null) {
-      res.status(500)
-        .json({
-          error: err.toString()
-        });
-    } else if (!bank) {
-      res.status(401)
-        .json({
-          error: 'Incorrect username or password'
-        });
-    } else {
-      Bank.findByIdAndUpdate(bank._id, {
-        username: username,
-        password: password,
-        initial_setup: true
-      }, (err) => {
-        if (err) return res.status(400).json({
-          error: err
-        });
-        res.status(200)
-          .json({
-            success: 'Updated successfully'
-          });
-      });
-    }
-  });
-});*/
 
 router.post('/branchSetupUpdate', function (req, res) {
   const {
@@ -5729,7 +4702,7 @@ router.post('/cashierSendMoney', function (req, res) {
 
 
 
-//Code by Hatim 
+//Code by Hatim
 
 
                   //what i need
@@ -5763,7 +4736,7 @@ router.post('/cashierSendMoney', function (req, res) {
                     let trans4 = {};
                     trans4.from = bankOpWallet;
                     trans4.to =  branchOpWallet;
-                    //cacluat the revene here and replace with fee below. 
+                    //cacluat the revene here and replace with fee below.
                     trans4.amount = Number(sendFee).toFixed(2);
                     // trans4.amount = 1 ;
                     trans4.note = "Bank Send Revenue Branch for Sending money";
@@ -5999,7 +4972,7 @@ router.post('/cashierSendMoneyPending', function (req, res) {
                       status: 'success'
                     });
                     }
-                     
+                    
                   });
 
                
@@ -6061,7 +5034,7 @@ router.post('/cashierTransferMoney', function (req, res) {
         data.receiver_name = receiver_name;
         let cashInHand = Number(f.cash_in_hand);
         cashInHand = cashInHand - Number(amount);
-          data.save((err) => {  
+          data.save((err) => {
             if (err) return res.status(200).json({
               error: err.toString()
             });
@@ -6643,7 +5616,7 @@ router.post('/updateCashierTransferStatus', function (req, res) {
             })
             });
 
-              
+            
 
           }
 
@@ -7101,13 +6074,13 @@ if(amount >= fe.trans_from && amount <= fe.trans_to){
 });
 
 router.post('/branchClaimMoney', function (req, res) {
-
-  var today = new Date();
-  today = today.toISOString();
-  var s = today.split("T");
-  var start = s[0]+"T00:00:00.000Z";
-  var end = s[0]+"T23:59:59.999Z";
-
+  
+  var today = new Date()
+  today = today.toISOString()
+  var s = today.split('T')
+  var start = s[0] + 'T00:00:00.000Z'
+  var end = s[0] + 'T23:59:59.999Z'
+  
   const {
     token,
     transferCode,
@@ -7352,42 +6325,6 @@ router.post('/getBranchClaimMoney', function (req, res) {
 
 });
 
-router.post('/getInfraHistory', function (req, res) {
-  const {
-    from,
-    bank_id,
-    token
-  } = req.body;
-
-  Infra.findOne({
-    token,
-status:1
-  }, function (err, f) {
-    if (err || f == null) {
-      res.status(401)
-        .json({
-          error: "Unauthorized"
-        });
-    } else {
-
-      Bank.findOne({
-        "_id": bank_id,
-      }, function (err, b) {
-        const wallet = "infra_" + from + "@" + b.name;
-
-        getStatement(wallet).then(function (result) {
-          res.status(200).json({
-            status: 'success',
-            history: result
-          });
-        });
-
-      });
-    }
-  });
-
-});
-
 router.post('/getHistory', function (req, res) {
   const {
     from,
@@ -7627,40 +6564,6 @@ status:1
 
 });
 
-router.post('/getBankHistory', function (req, res) {
-  const {
-    from,
-    token
-  } = req.body;
-
-  Bank.findOne({
-    token,
-status:1
-  }, function (err, b) {
-    if (err || b == null) {
-      res.status(401)
-        .json({
-          error: "Unauthorized"
-        });
-    } else {
-
-      // Bank.findOne({
-      //   "_id": f._id,
-      // }, function (err, b) {
-        const wallet = from + "@" + b.name;
-
-        getStatement(wallet).then(function (result) {
-          res.status(200).json({
-            status: 'success',
-            history: result
-          });
-        });
-
-      // });
-    }
-  });
-
-});
 
 router.post('/getBranchHistory', function (req, res) {
   const {
@@ -7759,127 +6662,10 @@ router.get('/clearDb', function (req, res) {
   }
 
   res.status(200).json({
-    status: 'success'
-  });
-
-});
-
-/*router.post('/fileUpload', function (req, res) {
-  const token = req.query.token;
-  const from =req.query.from;
-
-  let table = Infra;
-  if(from && from =='bank'){
-    table = Bank;
-  }
-  table.findOne({
-    token,
-    status : 1
-  }, function (err, user) {
-    if (err || user == null) {
-      res.status(401)
-        .json({
-          error: "Unauthorized"
-        });
-    } else {
-
-      var form = new formidable.IncomingForm();
-      const dir = __dirname + '/public/uploads/' + user._id;
-      form.parse(req, function (err, fields, files) {
-
-        var fn = files.file.name.split('.').pop();
-    fn = fn.toLowerCase();
-
-    if(fn != "jpeg" && fn != "png" && fn != "jpg" ){
-      res.status(200).json({
-        error: "Only JPG / PNG files are accepted"
-      });
-    }else{
-
-        if (!fs.existsSync(dir)) {
-          fs.mkdirSync(dir);
-        }
-
-        var oldpath = files.file.path;
-        var newpath = dir + "/" + files.file.name;
-        var savepath = user._id + "/" + files.file.name;
-
-        fs.readFile(oldpath, function (err, data) {
-          if (err) res.status(402);
-
-          fs.writeFile(newpath, data, function (err) {
-            if (err) {
-              res.status(402).json({
-              error: 'File upload error'
-            });
-          }else{
-            res.status(200)
-              .json({
-                name: savepath
-              });
-            }
-          });
-
-          fs.unlink(oldpath, function (err) {});
-        });
-        // fs.renameSync(oldpath, newpath, function (err) {
-        //   if (err) {
-        //     res.status(402);
-        //   }else{
-        //     res.status(200)
-        //     .json({
-        //       name: newpath
-        //     });
-        //   }
-        // });
-      }
-      });
-    }
-  });
-});*/
-
-// router.post('/ipfsUpload', function (req, res) {
-//   const token = req.query.token;
-//
-//   var form = new formidable.IncomingForm();
-//
-//   form.parse(req, function (err, fields, files) {
-//     var fn = files.file.name.split('.').pop();
-//     fn = fn.toLowerCase();
-//     ;
-//     if(fn != "pdf"){
-//       res.status(200).json({
-//         error: "Only PDF files are accepted"
-//       });
-//     }else{
-//
-//     var oldpath = files.file.path;
-//     fileUpload(oldpath).then(function (result) {
-//       var out;
-//       if (result) {
-//         result = JSON.parse(result);
-//         if(!result.Hash || result.Hash == undefined){
-//           res.status(200).json({
-//             error: "File Upload Error"
-//           });
-//         }else{
-//           res.status(200).json({
-//             name: result.Hash
-//           });
-//         }
-//
-//       }else{
-//         res.status(200).json({
-//           error: "File Upload Error"
-//         });
-//       }
-//
-//     });
-//   }
-//
-//   });
-// });
-
+	status: 'success'
+  })
+  
+})
 
 router.post('/save-currency', async (req, res) => {
 

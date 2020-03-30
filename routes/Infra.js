@@ -8,7 +8,9 @@ const sendSMS = require('./utils/sendSMS')
 const sendMail = require('./utils/sendMail')
 const config = require('../config.json')
 const OTP = require('../models/OTP')
-const Document = require('../models/Document');
+const Document = require('../models/Document')
+const { getStatement } = require('../services/WalletService')
+const getBalance = require('./utils/getBalance')
 
 router.post('/login', function (req, res) {
   const {
@@ -250,6 +252,222 @@ router.post('/addBank', (req, res) => {
 	}
 	
   })
+})
+
+router.post('/editBank', (req, res) => {
+  let data = new Bank()
+  const {
+	bank_id,
+	name,
+	bcode,
+	address1,
+	state,
+	zip,
+	country,
+	ccode,
+	mobile,
+	email,
+	token,
+	logo,
+	contract,
+	otp_id,
+	otp
+  } = req.body
+  
+  Infra.findOne({
+	token,
+	status: 1
+  }, function (err, user) {
+	if (err || user == null) {
+	  res.status(401).json({
+		error: 'Unauthorized'
+	  })
+	}
+	else {
+	  // const user_id = user._id;
+	  OTP.findOne({
+		_id: otp_id,
+		otp: otp
+	  }, function (err, otpd) {
+		if (err || !otpd) {
+		  res.status(401).json({
+			error: err
+		  })
+		}
+		else {
+		  if (otpd.otp === otp) {
+			
+			if (name === '' || address1 === '' || state === '' || mobile === '' || email === '') {
+			  return res.status(402).json({
+				error: 'Please provide valid inputs'
+			  })
+			}
+			
+			data.name = name
+			data.address1 = address1
+			data.state = state
+			data.country = country
+			data.bcode = bcode
+			data.zip = zip
+			data.ccode = ccode
+			data.mobile = mobile
+			data.username = mobile
+			data.email = email
+			data.user_id = user._id
+			data.logo = logo
+			data.contract = contract
+			data.password = makeid(10)
+			Bank.findByIdAndUpdate(bank_id, {
+			  name: name,
+			  address1: address1,
+			  state: state,
+			  zip: zip,
+			  ccode: ccode,
+			  bcode: bcode,
+			  country: country,
+			  mobile: mobile,
+			  email: email,
+			  logo: logo,
+			  contract: contract
+			}, (err) => {
+			  if (err) return res.status(400).json({
+				error: err
+			  })
+			  
+			  let data2 = new Document()
+			  data2.bank_id = bank_id
+			  data2.contract = contract
+			  data2.save((err,) => {
+				
+			  })
+			  return res.status(200).json(data)
+			})
+		  }
+		  else {
+			res.status(200).json({
+			  error: 'OTP Missmatch'
+			})
+		  }
+		}
+	  })
+	}
+	
+  })
+})
+
+router.post('/getInfraHistory', function (req, res) {
+  const {
+	from,
+	bank_id,
+	token
+  } = req.body
+  
+  Infra.findOne({
+	token,
+	status: 1
+  }, function (err, f) {
+	if (err || f == null) {
+	  res.status(401).json({
+		error: 'Unauthorized'
+	  })
+	}
+	else {
+	  
+	  Bank.findOne({
+		'_id': bank_id,
+	  }, function (err, b) {
+		const wallet = 'infra_' + from + '@' + b.name
+		
+		getStatement(wallet).then(function (result) {
+		  res.status(200).json({
+			status: 'success',
+			history: result
+		  })
+		})
+		
+	  })
+	}
+  })
+  
+})
+
+router.get('/getInfraOperationalBalance', function (req, res) {
+  const {
+	bank,
+	token
+  } = req.query
+  Infra.findOne({
+	token,
+	status: 1
+  }, function (e, b) {
+	if (e || b == null) {
+	  res.status(401).json({
+		error: 'Unauthorized'
+	  })
+	}
+	else {
+	  Bank.findOne({
+		'_id': bank
+	  }, function (err, ba) {
+		if (err || ba == null) {
+		  res.status(404).json({
+			error: 'Not found'
+		  })
+		}
+		else {
+		  const wallet_id = 'infra_operational@' + ba.name
+		  
+		  getBalance(wallet_id).then(function (result) {
+			res.status(200).json({
+			  status: 'success',
+			  balance: result
+			})
+		  })
+		  
+		}
+	  })
+	}
+  })
+})
+
+router.get('/getInfraMasterBalance', function (req, res) {
+  const {
+	bank,
+	token
+  } = req.query
+  Infra.findOne({
+	token,
+	status: 1
+  }, function (e, b) {
+	if (e || b == null) {
+	  res.status(401).json({
+		error: 'Unauthorized'
+	  })
+	}
+	else {
+	  Bank.findOne({
+		'_id': bank
+	  }, function (err, ba) {
+		if (err) {
+		  res.status(401).json({
+			error: 'Unauthorized'
+		  })
+		}
+		else {
+		  const wallet_id = 'infra_master@' + ba.name
+		  
+		  getBalance(wallet_id).then(function (result) {
+			res.status(200).json({
+			  status: 'success',
+			  balance: result
+			})
+		  })
+		}
+	  })
+	}
+	
+  })
+  
 })
 
 module.exports = router

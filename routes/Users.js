@@ -4,12 +4,24 @@ const User = require('../models/User')
 const sendSMS = require('./utils/sendSMS')
 const sendMail = require('./utils/sendMail')
 
+function makeotp(length) {
+  // var result = '';
+  // var characters = '0123456789';
+  // var charactersLength = characters.length;
+  // for (var i = 0; i < length; i++) {
+  //   result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  // }
+  // return result;
+  
+  return "111111";
+}
+
 router.post('/userSignup', (req, res) => {
   let data = new User()
   const {
 	name, mobileNumber, email, address, password,
   } = req.body
-
+  
   data.name = name
   data.mobile = mobileNumber
   data.email = email
@@ -17,12 +29,12 @@ router.post('/userSignup', (req, res) => {
   data.password = password
   let otp = makeotp(6)
   data.otp = otp
-
-  data.save((err, d) => {
+  
+  data.save((err) => {
 	if (err) return res.status(200).json({
 	  error: err.toString()
 	})
-
+	
 	let content = '<p>Your OTP to verify your mobile number is ' + otp + '</p>'
 	sendMail(content, 'OTP', email)
 	let content2 = 'Your OTP to verify your mobile number is ' + otp
@@ -60,12 +72,9 @@ router.post('/userLogin', (req, res) => {
 			status: 'success', token: token
 		  })
 		}
-
 	  })
-
 	}
   })
-
 })
 
 module.exports = router
