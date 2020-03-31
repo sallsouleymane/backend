@@ -3,6 +3,7 @@ const router = express.Router()
 const User = require('../models/User')
 const sendSMS = require('./utils/sendSMS')
 const sendMail = require('./utils/sendMail')
+const makeid = require('./utils/idGenerator')
 
 function makeotp(length) {
   // var result = '';
