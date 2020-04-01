@@ -7,8 +7,10 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   address: {type: String, required: false},
   token: { type: String, required: false },
-  otp: { type: String, required: false,  default: null},
-  status: {type:Number, required: true, default: 0}
+  otp: { type: String, required: false,  default: null },
+  bank: { type: String, required: false, default: null },
+  docsHash: { type: Array, required: false, default: null },
+  status: {type: String, required: true, default: null}
 });
 module.exports = mongoose.model('User', UserSchema);
   

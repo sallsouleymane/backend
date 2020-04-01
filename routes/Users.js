@@ -117,7 +117,7 @@ router.post("/userSignup", (req, res) => {
 		user.address = address;
 		user.password = password;
 		user.otp = otp;
-		user.status = "1";
+		user.status = 2;
 
 		user.save(err => {
 			if (err)
@@ -134,35 +134,99 @@ router.post("/userSignup", (req, res) => {
 	});
 });
 
-router.post('/userLogin', (req, res) => {
-  const {
-	mobileNumber, password,
-  } = req.body
+router.post("/userLogin", (req, res) => {
+	const { mobileNumber, password } = req.body;
+	let token = makeid(10);
+	User.findOneAndUpdate(
+		{ mobile: mobileNumber, password: password },
+		{ $set: { token: token } },
+		function(err, user) {
+			if (err) {
+				console.log(err);
+				return res.status(200).json({
+					error: "Internal Error"
+				});
+			}
+			if (user == null) {
+				return res.status(200).json({
+					error: "User account not found. Please signup"
+				});
+			}
 
-  User.findOne({
-	mobile: mobileNumber, password: password, status: 1
-  }, function (err, b2) {
-	if (err || b2 == null) {
-	  res.status(200).json({
-		error: 'User account not found'
-	  })
-	}
-	else {
-	  let token = makeid(10)
-	  User.findByIdAndUpdate(b2._id, { token: token }, function (e, b) {
-		if (e || b == null) {
-		  res.status(200).json({
-			error: e.toString()
-		  })
+			res.status(200).json({
+				status: user.status,
+				token: token
+			});
 		}
-		else {
-		  res.status(200).json({
-			status: 'success', token: token
-		  })
-		}
-	  })
-	}
-  })
-})
+	);
+});
 
+router.post("/assignBankToUser", (req, res) => {
+	const { mobile, bank } = req.body;
+	User.findOneAndUpdate(
+		{ mobile: mobile },
+		{$set: {bank: bank}}, 
+		(err, user) => {
+		if (err) {
+			console.log(err);
+			return res.status(200).json({
+				error: "Internal Error"
+			});
+		}
+		if(user == null) {
+			return res.status(200).json({
+				error: "User not found"
+			});
+		}
+
+		res.status(200).json({
+			status: "success"
+		});
+	});
+});
+
+router.post("/saveUploadedUserDocsHash", (req, res) => {
+	const { mobile, hashes } = req.body;
+	User.findOneAndUpdate(
+		{ mobile: mobile },
+		{$set: {docsHash: hashes, status: 3}},
+		(err, result) => {
+		if (err) {
+			console.log(err);
+			return res.status(200).json({
+				error: "Internal Error"
+			});
+		}
+		if(result == null) {
+			return res.status(200).json({
+				error: "User not found"
+			});
+		}
+		res.status(200).json({
+			status: "success"
+		});
+	});
+});
+router.post("/skipUserDocsUpload", (req, res) => {
+	const { mobile } = req.body;
+	User.findOneAndUpdate(
+		{ mobile: mobile },
+		{$set: {status: 4}},
+		(err, result) => {
+		if (err) {
+			console.log(err);
+			return res.status(200).json({
+				error: "Internal Error"
+			});
+		}
+		if(result == null) {
+			return res.status(200).json({
+				error: "User not found"
+			});
+		}
+		res.status(200).json({
+			status: "success"
+		});
+	});
+});
 module.exports = router
