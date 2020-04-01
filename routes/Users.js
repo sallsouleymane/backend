@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const User = require('../models/User')
 const OTP = require('../models/OTP')
+const Bank = require('../models/Bank');
 const sendSMS = require('./utils/sendSMS')
 const sendMail = require('./utils/sendMail')
 const makeid = require('./utils/idGenerator')
@@ -229,4 +230,40 @@ router.post("/skipUserDocsUpload", (req, res) => {
 		});
 	});
 });
+
+router.post("/getBanksForUser", function(req, res) {
+	const { token } = req.body;
+	User.findOne(
+		{
+			token
+		},
+		function(err, user) {
+			if (err) {
+				console.log(err);
+				return res.status(200).json({
+					error: "Internal Error"
+				});
+			}
+			if (user == null) {
+				res.status(200).json({
+					error: "User not found"
+				});
+			} else {
+				Bank.find({}, function(err, bank) {
+					if (err) {
+						console.log(err);
+						return res.status(200).json({
+							error: "Internal Error"
+						});
+					} else {
+						res.status(200).json({
+							banks: bank
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
 module.exports = router
