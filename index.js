@@ -6694,39 +6694,6 @@ router.get("/get-currency", async (req, res) => {
   }
 })
 
-router.post('/userVerify', (req, res) => {
-  const {
-    mobileNumber,
-    password,
-  } = req.body;
-
-      User.findOne({
-        mobile: mobileNumber,
-        otp: password
-      }, function (err, b2) {
-        if(err || b2 == null){
-          res.status(200).json({
-            error: 'OTP Missmatch'
-          });
-        }else{
-          User.findByIdAndUpdate(b2._id, {status: 1}, function(e, b){
-            if(e || b == null){
-              res.status(200).json({
-                error: e.toString()
-              });
-            }else{
-              res.status(200).json({
-                status: 'success'
-              });  
-            }
-            
-          });
-          
-        }
-      });
-
-  });
-
 app.use('/api', router);
 app.use('/api', userRouter)
 app.use('/api', bankRouter)
