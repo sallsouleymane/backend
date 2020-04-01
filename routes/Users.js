@@ -256,11 +256,8 @@ router.post("/getBanksForUser", function(req, res) {
 							error: "Internal Error"
 						});
 					} else {
-					  	let approvedBanks = bank.filter(b => {
-					  	  return b.initial_setup === true;
-						})
 						res.status(200).json({
-							banks: approvedBanks
+							banks: bank
 						});
 					}
 				});
