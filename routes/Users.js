@@ -23,7 +23,7 @@ function makeotp(length) {
 	return "111111";
 }
 
-router.post("/user/userVerify", (req, res) => {
+router.post("/user/verify", (req, res) => {
 	const { mobileNumber, email } = req.body;
 
 	User.find(
@@ -92,7 +92,7 @@ router.post("/user/userVerify", (req, res) => {
 	);
 });
 
-router.post("/user/userSignup", (req, res) => {
+router.post("/user/signup", (req, res) => {
 	const { name, mobileNumber, email, address, password, otp } = req.body;
 	OTP.findOne({ page: "signup", mobile: mobileNumber, otp: otp, user_id: email }, function(
 		err,
@@ -139,7 +139,7 @@ router.post("/user/userSignup", (req, res) => {
 	});
 });
 
-router.post("/user/userLogin", (req, res) => {
+router.post("/user/login", (req, res) => {
 	const { mobileNumber, password } = req.body;
 	let token = makeid(10);
 	User.findOneAndUpdate(
@@ -166,7 +166,7 @@ router.post("/user/userLogin", (req, res) => {
 	);
 });
 
-router.post("/user/assignBankToUser", (req, res) => {
+router.post("/user/assignBank", (req, res) => {
 	const { token, bank } = req.body;
 	User.findOneAndUpdate({ token: token }, { $set: { bank: bank } }, (err, user) => {
 		if (err) {
@@ -187,7 +187,7 @@ router.post("/user/assignBankToUser", (req, res) => {
 	});
 });
 
-router.post("/user/saveUploadedUserDocsHash", (req, res) => {
+router.post("/user/saveUploadedDocsHash", (req, res) => {
 	const { token, hashes } = req.body;
 	User.findOneAndUpdate(
 		{ token: token },
@@ -210,7 +210,7 @@ router.post("/user/saveUploadedUserDocsHash", (req, res) => {
 		}
 	);
 });
-router.post("/user/skipUserDocsUpload", (req, res) => {
+router.post("/user/skipDocsUpload", (req, res) => {
 	const { token } = req.body;
 	User.findOneAndUpdate({ token: token }, { $set: { status: 4 } }, (err, result) => {
 		if (err) {
@@ -230,7 +230,7 @@ router.post("/user/skipUserDocsUpload", (req, res) => {
 	});
 });
 
-router.post("/user/getBanksForUser", function(req, res) {
+router.post("/user/getBanks", function(req, res) {
 	const { token } = req.body;
 	User.findOne(
 		{
