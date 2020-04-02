@@ -613,6 +613,7 @@ router.post("/getCashierTransLimit", function(req, res) {
 				let limit = Number(t1.max_trans_amt) - (Number(t1.cash_received) + Number(t1.cash_paid));
 				limit = limit < 0 ? 0 : limit;
 				res.status(200).json({
+<<<<<<< HEAD
 					limit: limit,
 					closingTime: t1.closing_time,
 					transactionStarted: t1.transaction_started,
@@ -1862,5 +1863,31 @@ router.post("/getClaimMoney", function(req, res) {
 		}
 	);
 });
+=======
+					error: "You are either not authorised or not logged in."
+				});
+			}
+			User.findOne(
+                { mobile },
+                function (err, user) {
+                    if (err) {
+                        console.log(err);
+                        return res.status(200).json({
+                            error: "Internal Error"
+                        });
+                    }
+                    if (cashier == null) {
+                        res.status(200).json({
+                            error: "You are either not authorised or not logged in."
+                        });
+                    }
+                    res.status(200).json({
+                        status: "success",
+                        data: user,
+                    });
+                })
+	})
+})
+>>>>>>> 333fa21e90af5c9bd90510a388f2d86e643fe51a
 
 module.exports = router;
