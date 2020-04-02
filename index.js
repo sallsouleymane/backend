@@ -16,6 +16,7 @@ const userRouter = require('./routes/Users')
 const infraRouter = require('./routes/Infra')
 const bankRouter = require('./routes/Bank')
 const uploadRouter = require('./routes/Upload')
+const cashierRouter = require('./routes/Cashier')
 
 var formidable = require('formidable');
 var path = require('path');
@@ -1818,6 +1819,8 @@ getBalance(wallet_id).then(function (result) {
 
 });
 
+//------- added from here in FeeRules.js --------//
+
 router.post('/createRules', (req, res) => { //fee
   let data = new Fee();
   const {
@@ -2152,6 +2155,8 @@ router.post('/editBankRule', (req, res) => {
 
   });
 });
+
+// ----end of FeeRules.js -------- //
 
 router.post('/getBank', function (req, res) {
   //res.send("hi");
@@ -2743,7 +2748,7 @@ router.post('/getBanks', function (req, res) {
   } = req.body;
   Infra.findOne({
     token,
-status:1
+status: 1,
   }, function (err, user) {
     if (err || user == null) {
       res.status(401)
@@ -2789,7 +2794,7 @@ status:1
   });
 });
 
-
+//----------added in FeeRules.js -----//
 
 router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
 
@@ -6699,4 +6704,5 @@ app.use('/api', userRouter)
 app.use('/api', bankRouter)
 app.use('/api', infraRouter)
 app.use('/api',	uploadRouter)
+app.use('/api',	cashierRouter)
 app.listen(API_PORT, () => console.log("Backend Started"));
