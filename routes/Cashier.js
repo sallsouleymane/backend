@@ -4,7 +4,7 @@ const User = require("../models/User");
 const Cashier = require("../models/Cashier");
 
 router.post("/getUser", function (req, res) {
-	const { token, userMobile } = req.body;
+	const { token, mobile } = req.body;
 	Cashier.findOne(
 		{ token },
 		function (err, cashier) {
