@@ -23,14 +23,14 @@ function makeotp(length) {
 	return "111111";
 }
 
-router.post("/userVerify", (req, res) => {
+router.post("/user/userVerify", (req, res) => {
 	const { mobileNumber, email } = req.body;
 
 	User.find(
 		{
 			$or: [{ mobile: mobileNumber }, { email: email }]
 		},
-		function (err, user) {
+		function(err, user) {
 			if (err) {
 				return res.status(200).json({
 					error: "Internal Error"
@@ -51,10 +51,10 @@ router.post("/userVerify", (req, res) => {
 				} else if (result.length == 0) {
 					let otpSchema = new OTP();
 
-					otpSchema.page = "signup"
-					otpSchema.mobile = mobileNumber
-					otpSchema.user_id = email
-					otpSchema.otp = otp
+					otpSchema.page = "signup";
+					otpSchema.mobile = mobileNumber;
+					otpSchema.user_id = email;
+					otpSchema.otp = otp;
 
 					otpSchema.save(err => {
 						if (err) {
@@ -72,7 +72,7 @@ router.post("/userVerify", (req, res) => {
 						});
 					});
 				} else {
-					OTP.update({ _id: result[0].id }, { $set: { otp: otp } }, function (err, _result) {
+					OTP.update({ _id: result[0].id }, { $set: { otp: otp } }, function(err, _result) {
 						if (err) {
 							return res.status(200).json({
 								error: "Internal Error"
@@ -92,9 +92,9 @@ router.post("/userVerify", (req, res) => {
 	);
 });
 
-router.post("/userSignup", (req, res) => {
+router.post("/user/userSignup", (req, res) => {
 	const { name, mobileNumber, email, address, password, otp } = req.body;
-	OTP.findOne({ page: "signup", mobile: mobileNumber, otp: otp, user_id: email }, function (
+	OTP.findOne({ page: "signup", mobile: mobileNumber, otp: otp, user_id: email }, function(
 		err,
 		result
 	) {
@@ -109,7 +109,7 @@ router.post("/userSignup", (req, res) => {
 				error: "OTP Mismatch"
 			});
 		}
-		OTP.deleteOne(result, function (err, obj) {
+		OTP.deleteOne(result, function(err, obj) {
 			if (err) {
 				console.log(err);
 				return res.status(200).json({
@@ -139,13 +139,13 @@ router.post("/userSignup", (req, res) => {
 	});
 });
 
-router.post("/userLogin", (req, res) => {
+router.post("/user/userLogin", (req, res) => {
 	const { mobileNumber, password } = req.body;
 	let token = makeid(10);
 	User.findOneAndUpdate(
 		{ mobile: mobileNumber, password: password },
 		{ $set: { token: token } },
-		function (err, user) {
+		function(err, user) {
 			if (err) {
 				console.log(err);
 				return res.status(200).json({
@@ -166,7 +166,7 @@ router.post("/userLogin", (req, res) => {
 	);
 });
 
-router.post("/assignBankToUser", (req, res) => {
+router.post("/user/assignBankToUser", (req, res) => {
 	const { token, bank } = req.body;
 	User.findOneAndUpdate({ token: token }, { $set: { bank: bank } }, (err, user) => {
 		if (err) {
@@ -187,7 +187,7 @@ router.post("/assignBankToUser", (req, res) => {
 	});
 });
 
-router.post("/saveUploadedUserDocsHash", (req, res) => {
+router.post("/user/saveUploadedUserDocsHash", (req, res) => {
 	const { token, hashes } = req.body;
 	User.findOneAndUpdate(
 		{ token: token },
@@ -210,7 +210,7 @@ router.post("/saveUploadedUserDocsHash", (req, res) => {
 		}
 	);
 });
-router.post("/skipUserDocsUpload", (req, res) => {
+router.post("/user/skipUserDocsUpload", (req, res) => {
 	const { token } = req.body;
 	User.findOneAndUpdate({ token: token }, { $set: { status: 4 } }, (err, result) => {
 		if (err) {
@@ -230,13 +230,13 @@ router.post("/skipUserDocsUpload", (req, res) => {
 	});
 });
 
-router.post("/getBanksForUser", function (req, res) {
+router.post("/user/getBanksForUser", function(req, res) {
 	const { token } = req.body;
 	User.findOne(
 		{
 			token
 		},
-		function (err, user) {
+		function(err, user) {
 			if (err) {
 				console.log(err);
 				return res.status(200).json({
@@ -248,7 +248,7 @@ router.post("/getBanksForUser", function (req, res) {
 					error: "User do not exist or not authorised. Please either signup or login again"
 				});
 			} else {
-				Bank.find({ initial_setup: { $eq: true } }, function (err, approvedBanks) {
+				Bank.find({ initial_setup: { $eq: true } }, function(err, approvedBanks) {
 					if (err) {
 						console.log(err);
 						return res.status(200).json({
@@ -264,7 +264,7 @@ router.post("/getBanksForUser", function (req, res) {
 	);
 });
 
-router.post("/checkToken", function(req, res) {
+router.post("/user/checkToken", function(req, res) {
 	const { token } = req.body;
 	User.findOne(
 		{
@@ -285,7 +285,7 @@ router.post("/checkToken", function(req, res) {
 	);
 });
 
-router.post("/logout", function(req, res) {
+router.post("/user/logout", function(req, res) {
 	const { token } = req.body;
 	User.findOne(
 		{

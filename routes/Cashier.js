@@ -8,11 +8,7 @@ const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
 
 //services
-const {
-	transferThis,
-	getTransactionCount,
-	getBalance
-} = require("../services/Blockchain.js");
+const { transferThis, getTransactionCount, getBalance } = require("../services/Blockchain.js");
 
 const Infra = require("../models/Infra");
 const Fee = require("../models/Fee");
@@ -30,7 +26,7 @@ const CashierLedger = require("../models/CashierLedger");
 const CashierTransfer = require("../models/CashierTransfer");
 const BranchSend = require("../models/BranchSend");
 
-router.post("/getUser", function(req, res) {
+router.post("/cashier/getUser", function(req, res) {
 	const { token, mobile } = req.body;
 	Cashier.findOne({ token }, function(err, cashier) {
 		if (err) {
@@ -64,8 +60,8 @@ router.post("/getUser", function(req, res) {
 	});
 });
 
-router.post("/approveUser", function(req, res) {
-	const { token, mobile } = req.body;
+router.post("/cashier/approveUser", function(req, res) {
+	const { token, mobile, userDetails } = req.body;
 	Cashier.findOne({ token }, function(err, cashier) {
 		if (err) {
 			console.log(err);
@@ -78,7 +74,7 @@ router.post("/approveUser", function(req, res) {
 				error: "You are either not authorised or not logged in."
 			});
 		}
-		User.findOneAndUpdate({ mobile }, { $set: { status: 1 } }, function(err, user) {
+		User.findOneAndUpdate({ mobile }, { $set: userDetails }, async function(err, user) {
 			if (err) {
 				console.log(err);
 				return res.status(200).json({
@@ -90,10 +86,34 @@ router.post("/approveUser", function(req, res) {
 					error: "User not found"
 				});
 			}
-			let wallet_id = mobile + "@" + bank;
-			blockchain.createWallet([wallet_id]);
+			let wallet_id = mobile + "@" + user.bank;
+            let result = await blockchain.createWallet([wallet_id]);
+            console.log(result)
+			let content =
+				"<p>Your application is approved</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+				config.mainIP +
+				"/user";
+			"'>http://" +
+				config.mainIP +
+				"/user" +
+				"</a></p><p><p>Your username: " +
+				mobile +
+				"</p><p>Your password: " +
+				user.password +
+				"</p>";
+			sendMail(content, "Approved Ewallet Account", email);
+			let content2 =
+				"Your application is approved Login URL: http://" +
+				config.mainIP +
+				"/user" +
+				" Your username: " +
+				mobile +
+				" Your password: " +
+				user.password;
+			sendSMS(content2, mobile);
 			res.status(200).json({
-				status: "success"
+				status: "success",
+				walletStatus: result.toString()
 			});
 		});
 	});
