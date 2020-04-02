@@ -6,6 +6,7 @@ const Cashier = require('../../models/Cashier')
 const BankFee = require('../../models/BankFee')
 const CashierPending = require('../../models/CashierPending')
 const CashierLedger = require('../../models/CashierLedger')
+const User = require('../../models/User')
 
 module.exports = (key) => {
   switch (key) {
@@ -33,6 +34,9 @@ module.exports = (key) => {
 	case 'cashierpending':
 	  return CashierPending
 	  break
+	case 'user':
+		return User
+		break
 	default:
 	  return null
 	  break

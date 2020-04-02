@@ -1,9 +1,12 @@
 const express = require("express");
 const router = express.Router();
+
+//models
 const User = require("../models/User");
 const OTP = require("../models/OTP");
 const Bank = require("../models/Bank");
-const Cashier = require("../models/Cashier");
+
+//utils
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
 const makeid = require("./utils/idGenerator");
@@ -174,7 +177,7 @@ router.post("/assignBankToUser", (req, res) => {
 		}
 		if (user == null) {
 			return res.status(200).json({
-				error: "User do not exist or not authorised. Please either signup or login again"
+				error: "You are either not authorised or not logged in."
 			});
 		}
 
@@ -198,7 +201,7 @@ router.post("/saveUploadedUserDocsHash", (req, res) => {
 			}
 			if (result == null) {
 				return res.status(200).json({
-					error: "User do not exist or not authorised. Please either signup or login again"
+					error: "You are either not authorised or not logged in."
 				});
 			}
 			res.status(200).json({
@@ -218,7 +221,7 @@ router.post("/skipUserDocsUpload", (req, res) => {
 		}
 		if (result == null) {
 			return res.status(200).json({
-				error: "User do not exist or not authorised. Please either signup or login again"
+				error: "You are either not authorised or not logged in."
 			});
 		}
 		res.status(200).json({
@@ -255,6 +258,48 @@ router.post("/getBanksForUser", function (req, res) {
 					res.status(200).json({
 						banks: approvedBanks
 					});
+				});
+			}
+		}
+	);
+});
+
+router.post("/checkToken", function(req, res) {
+	const { token } = req.body;
+	User.findOne(
+		{
+			token,
+			status: 1
+		},
+		function(err, user) {
+			if (err || user == null) {
+				res.status(401).json({
+					error: "Unauthorized"
+				});
+			} else {
+				res.status(200).json({
+					error: null
+				});
+			}
+		}
+	);
+});
+
+router.post("/logout", function(req, res) {
+	const { token } = req.body;
+	User.findOne(
+		{
+			token,
+			status: 1
+		},
+		function(err, user) {
+			if (err || user == null) {
+				res.status(401).json({
+					error: "Unauthorized"
+				});
+			} else {
+				res.status(200).json({
+					error: null
 				});
 			}
 		}
