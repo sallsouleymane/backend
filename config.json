@@ -1,10 +1,10 @@
 {
-    "dbHost" : "127.0.0.1",
+    "dbHost" : "beyondewallet-mongodb-clusterip",
     "dbPort" : "27017",
     "dbName" : "ewallet",
     "mainFee" : 10,
     "defaultFee" : 0,
     "defaultAmt" : 0,
-    "blockChainIP" : "34.68.116.5",
-    "mainIP" : "35.226.109.150"
+    "blockChainIP" : "beyondewallet-mongodb-clusterip",
+    "mainIP" : "91d90ac373dc.sn.mynetname.net:2020"
 }
