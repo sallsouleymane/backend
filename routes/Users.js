@@ -129,7 +129,7 @@ router.post("/user/signup", (req, res) => {
 
 router.post("/user/assignBank", (req, res) => {
 	const { token, bank } = req.body;
-	User.findOneAndUpdate({ token: token }, { $set: { bank: bank } }, (err, user) => {
+	User.findOneAndUpdate({ token: token, status: 2 }, { $set: { bank: bank } }, (err, user) => {
 		if (err) {
 			console.log(err);
 			return res.status(200).json({
@@ -151,8 +151,8 @@ router.post("/user/assignBank", (req, res) => {
 router.post("/user/saveUploadedDocsHash", (req, res) => {
 	const { token, hashes } = req.body;
 	User.findOneAndUpdate(
-		{ token: token },
-		{ $set: { docsHash: hashes, status: 3 } }, //Status 3: Waiting for cashier approval 
+		{ token: token, status: 2 },
+		{ $set: { docsHash: hashes, status: 3 } }, //Status 3: Waiting for cashier approval
 		(err, result) => {
 			if (err) {
 				console.log(err);
@@ -171,9 +171,11 @@ router.post("/user/saveUploadedDocsHash", (req, res) => {
 		}
 	);
 });
+
 router.post("/user/skipDocsUpload", (req, res) => {
 	const { token } = req.body;
-	User.findOneAndUpdate({ token: token }, { $set: { status: 4 } }, (err, result) => {   //status 4: Go to the nearest branch and get docs uploaded
+	User.findOneAndUpdate({ token: token, status: 2 }, { $set: { status: 4 } }, (err, result) => {
+		//status 4: Go to the nearest branch and get docs uploaded
 		if (err) {
 			console.log(err);
 			return res.status(200).json({
@@ -195,7 +197,8 @@ router.post("/user/getBanks", function(req, res) {
 	const { token } = req.body;
 	User.findOne(
 		{
-			token
+			token,
+			status: 2
 		},
 		function(err, user) {
 			if (err) {
@@ -229,17 +232,73 @@ router.post("/user/getTransactionHistory", function(req, res) {
 	const { token } = req.body;
 	User.findOne(
 		{
-			token
+			token,
+			status: 1
 		},
 		function(err, user) {
-			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized"
+			if (err) {
+				console.log(err);
+				return res.status(200).json({
+					error: "Internal Error"
+				});
+			}
+			if (user == null) {
+				res.status(200).json({
+					error: "You are either not authorised or not logged in."
 				});
 			} else {
+				const wallet = user.mobile + "@" + user.bank;
+				let result = await getStatement(wallet)
 				res.status(200).json({
-					error: null
+					status: "success",
+					history: result
 				});
+			}
+		}
+	);
+});
+
+router.post("/user/getContactList", function(req, res) {
+	const { token } = req.body;
+	User.findOne(
+		{
+			token,
+			status: 1
+		},
+		function(err, user) {
+			if (err) {
+				console.log(err);
+				return res.status(200).json({
+					error: "Internal Error"
+				});
+			}
+			if (user == null) {
+				res.status(200).json({
+					error: "You are either not authorised or not logged in."
+				});
+			} else {
+				User.find({ mobile: { $in: user.contactList }, status: 1 }, 'mobile name', (err, walletUsers) => {
+					if (err) {
+						console.log(err);
+						return res.status(200).json({
+							error: "Internal Error"
+						});
+					}
+					User.find({ mobile: { $in: user.contactList }, status: 0 }, ( err, nonWalletUsers ) => {
+						if (err) {
+							console.log(err);
+							return res.status(200).json({
+								error: "Internal Error"
+							});
+						}
+						res.status(200).json({
+							status: "success",
+							contacts: { wallet: walletUsers, non_wallet: nonWalletUsers }
+						});
+
+					})
+				})
+					
 			}
 		}
 	);

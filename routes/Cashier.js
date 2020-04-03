@@ -61,6 +61,39 @@ router.post("/cashier/getUser", function(req, res) {
 	});
 });
 
+router.post("/cashier/editUser", function(req, res) {
+	const { token, mobile, userDetails } = req.body;
+	Cashier.findOne({ token }, function(err, cashier) {
+		if (err) {
+			console.log(err);
+			return res.status(200).json({
+				error: "Internal Error"
+			});
+		}
+		if (cashier == null) {
+			res.status(200).json({
+				error: "You are either not authorised or not logged in."
+			});
+		}
+		User.findOneAndUpdate( { mobile }, { $set: userDetails }, function(err, user) {
+			if (err) {
+				console.log(err);
+				return res.status(200).json({
+					error: "Internal Error"
+				});
+			}
+			if (user == null) {
+				res.status(200).json({
+					error: "User not found"
+				});
+			}
+			res.status(200).json({
+				status: "success"
+			});
+		});
+	});
+});
+
 router.post("/cashier/activateUser", function(req, res) {
 	const { token, mobile } = req.body;
 	Cashier.findOne({ token }, function(err, cashier) {
@@ -75,7 +108,7 @@ router.post("/cashier/activateUser", function(req, res) {
 				error: "You are either not authorised or not logged in."
 			});
 		}
-		User.findOne({ mobile }, async function(err, user) {
+		User.findOneAndUpdate({ mobile }, { $set: { status: 1 }}, async function(err, user) {
 			if (err) {
 				console.log(err);
 				return res.status(200).json({
