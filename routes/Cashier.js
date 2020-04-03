@@ -26,6 +26,18 @@ const CashierLedger = require("../models/CashierLedger");
 const CashierTransfer = require("../models/CashierTransfer");
 const BranchSend = require("../models/BranchSend");
 
+function makeotp(length) {
+	// var result = '';
+	// var characters = '0123456789';
+	// var charactersLength = characters.length;
+	// for (var i = 0; i < length; i++) {
+	//   result += characters.charAt(Math.floor(Math.random() * charactersLength));
+	// }
+	// return result;
+
+	return "111111";
+}
+
 router.post("/cashier/getUser", function(req, res) {
 	const { token, mobile } = req.body;
 	Cashier.findOne({ token }, function(err, cashier) {
@@ -60,8 +72,8 @@ router.post("/cashier/getUser", function(req, res) {
 	});
 });
 
-router.post("/cashier/approveUser", function(req, res) {
-	const { token, mobile, userDetails } = req.body;
+router.post("/cashier/activateUser", function(req, res) {
+	const { token, mobile } = req.body;
 	Cashier.findOne({ token }, function(err, cashier) {
 		if (err) {
 			console.log(err);
@@ -74,7 +86,7 @@ router.post("/cashier/approveUser", function(req, res) {
 				error: "You are either not authorised or not logged in."
 			});
 		}
-		User.findOneAndUpdate({ mobile }, { $set: userDetails }, async function(err, user) {
+		User.findOne({ mobile }, async function(err, user) {
 			if (err) {
 				console.log(err);
 				return res.status(200).json({
@@ -87,10 +99,10 @@ router.post("/cashier/approveUser", function(req, res) {
 				});
 			}
 			let wallet_id = mobile + "@" + user.bank;
-            let result = await blockchain.createWallet([wallet_id]);
-            console.log(result)
+			let result = await blockchain.createWallet([wallet_id]);
+			console.log(result);
 			let content =
-				"<p>Your application is approved</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+				"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
 				config.mainIP +
 				"/user";
 			"'>http://" +
@@ -103,7 +115,7 @@ router.post("/cashier/approveUser", function(req, res) {
 				"</p>";
 			sendMail(content, "Approved Ewallet Account", email);
 			let content2 =
-				"Your application is approved Login URL: http://" +
+				"Your account is activated. Login URL: http://" +
 				config.mainIP +
 				"/user" +
 				" Your username: " +
