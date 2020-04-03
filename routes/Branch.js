@@ -2,21 +2,14 @@ const express = require("express");
 const router = express.Router();
 const config = require("../config.json");
 
-//utils
-const makeid = require("./utils/idGenerator");
-const sendSMS = require("./utils/sendSMS");
-const sendMail = require("./utils/sendMail");
-
 //services
 const {
 	getStatement,
 	transferThis,
 	getTransactionCount,
-	getBalance
 } = require("../services/Blockchain.js");
 
 const Infra = require("../models/Infra");
-const Fee = require("../models/Fee");
 const Bank = require("../models/Bank");
 const OTP = require("../models/OTP");
 const Branch = require("../models/Branch");

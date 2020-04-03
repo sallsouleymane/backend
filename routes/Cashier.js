@@ -6,6 +6,7 @@ const config = require("../config.json");
 const makeid = require("./utils/idGenerator");
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
+const makeotp = require("./utils/makeotp");
 
 //services
 const { transferThis, getTransactionCount, getBalance } = require("../services/Blockchain.js");
@@ -25,18 +26,6 @@ const CashierClaim = require("../models/CashierClaim");
 const CashierLedger = require("../models/CashierLedger");
 const CashierTransfer = require("../models/CashierTransfer");
 const BranchSend = require("../models/BranchSend");
-
-function makeotp(length) {
-	// var result = '';
-	// var characters = '0123456789';
-	// var charactersLength = characters.length;
-	// for (var i = 0; i < length; i++) {
-	//   result += characters.charAt(Math.floor(Math.random() * charactersLength));
-	// }
-	// return result;
-
-	return "111111";
-}
 
 router.post("/cashier/getUser", function(req, res) {
 	const { token, mobile } = req.body;

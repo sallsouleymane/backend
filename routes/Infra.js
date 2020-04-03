@@ -6,6 +6,7 @@ const config = require("../config.json");
 const makeid = require("./utils/idGenerator");
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
+const makeotp = require("./utils/makeotp");
 
 //services
 const {
@@ -27,18 +28,6 @@ const BankFee = require("../models/BankFee");
 const mainFee = config.mainFee;
 const defaultFee = config.defaultFee;
 const defaultAmt = config.defaultAmt;
-
-function makeotp(length) {
-	// var result = '';
-	// var characters = '0123456789';
-	// var charactersLength = characters.length;
-	// for (var i = 0; i < length; i++) {
-	//   result += characters.charAt(Math.floor(Math.random() * charactersLength));
-	// }
-	// return result;
-
-	return "111111";
-}
 
 router.post("/getDashStats", function(req, res) {
 	const { token } = req.body;

@@ -9,18 +9,7 @@ const Bank = require("../models/Bank");
 //utils
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
-
-function makeotp(length) {
-	// var result = '';
-	// var characters = '0123456789';
-	// var charactersLength = characters.length;
-	// for (var i = 0; i < length; i++) {
-	//   result += characters.charAt(Math.floor(Math.random() * charactersLength));
-	// }
-	// return result;
-
-	return "111111";
-}
+const makeotp = require("./utils/makeotp");
 
 router.post("/user/verify", (req, res) => {
 	const { mobileNumber, email } = req.body;

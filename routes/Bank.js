@@ -6,8 +6,8 @@ const config = require("../config.json");
 const makeid = require("./utils/idGenerator");
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
-const doRequest = require("./utils/doRequest");
 const getTypeClass = require("./utils/getTypeClass");
+const makeotp = require("./utils/makeotp");
 
 //services
 const { createWallet, getStatement, getBalance } = require("../services/Blockchain.js");
@@ -19,18 +19,6 @@ const BankUser = require("../models/BankUser");
 const Cashier = require("../models/Cashier");
 const BankFee = require("../models/BankFee");
 const CashierLedger = require("../models/CashierLedger");
-
-function makeotp(length) {
-	// var result = '';
-	// var characters = '0123456789';
-	// var charactersLength = characters.length;
-	// for (var i = 0; i < length; i++) {
-	//   result += characters.charAt(Math.floor(Math.random() * charactersLength));
-	// }
-	// return result;
-
-	return "111111";
-}
 
 router.post("/bankSetupUpdate", function(req, res) {
 	const { username, password, token } = req.body;
