@@ -30,6 +30,18 @@ const mainFee = config.mainFee;
 const defaultFee = config.defaultFee;
 const defaultAmt = config.defaultAmt;
 
+function makeotp(length) {
+	// var result = '';
+	// var characters = '0123456789';
+	// var charactersLength = characters.length;
+	// for (var i = 0; i < length; i++) {
+	//   result += characters.charAt(Math.floor(Math.random() * charactersLength));
+	// }
+	// return result;
+
+	return "111111";
+}
+
 router.post("/login", function(req, res) {
 	const { username, password } = req.body;
 	Infra.findOne(
