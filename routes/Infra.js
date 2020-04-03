@@ -6,8 +6,6 @@ const config = require("../config.json");
 const makeid = require("./utils/idGenerator");
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
-const doRequest = require("./utils/doRequest");
-const getTypeClass = require("./utils/getTypeClass");
 
 //services
 const {
@@ -41,75 +39,6 @@ function makeotp(length) {
 
 	return "111111";
 }
-
-router.post("/login", function(req, res) {
-	const { username, password } = req.body;
-	Infra.findOne(
-		{
-			username: { $regex: new RegExp(username, "i") },
-			password
-		},
-		function(err, user) {
-			if (err) {
-				res.status(500).json({
-					error: "Internal error please try again"
-				});
-			} else if (!user) {
-				res.status(401).json({
-					error: "Incorrect username or password"
-				});
-			} else {
-				let token = makeid(10);
-				Infra.findByIdAndUpdate(
-					user._id,
-					{
-						token: token
-					},
-					err => {
-						if (err)
-							return res.status(400).json({
-								error: err
-							});
-						if (user.profile_id && user.profile_id !== "") {
-							Profile.findOne(
-								{
-									_id: user.profile_id
-								},
-								function(err, profile) {
-									res.status(200).json({
-										token: token,
-										permissions: profile.permissions,
-										name: user.name,
-										isAdmin: user.isAdmin,
-										initial_setup: user.initial_setup
-									});
-								}
-							);
-						} else {
-							if (user.isAdmin) {
-								res.status(200).json({
-									token: token,
-									permissions: "all",
-									name: user.name,
-									isAdmin: user.isAdmin,
-									initial_setup: user.initial_setup
-								});
-							} else {
-								res.status(200).json({
-									token: token,
-									permissions: "",
-									name: user.name,
-									isAdmin: user.isAdmin,
-									initial_setup: user.initial_setup
-								});
-							}
-						}
-					}
-				);
-			}
-		}
-	);
-});
 
 router.post("/getDashStats", function(req, res) {
 	const { token } = req.body;

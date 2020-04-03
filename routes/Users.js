@@ -9,7 +9,6 @@ const Bank = require("../models/Bank");
 //utils
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
-const makeid = require("./utils/idGenerator");
 
 function makeotp(length) {
 	// var result = '';
@@ -139,33 +138,6 @@ router.post("/user/signup", (req, res) => {
 	});
 });
 
-router.post("/user/login", (req, res) => {
-	const { mobileNumber, password } = req.body;
-	let token = makeid(10);
-	User.findOneAndUpdate(
-		{ mobile: mobileNumber, password: password },
-		{ $set: { token: token } },
-		function(err, user) {
-			if (err) {
-				console.log(err);
-				return res.status(200).json({
-					error: "Internal Error"
-				});
-			}
-			if (user == null) {
-				return res.status(200).json({
-					error: "User account not found. Please signup"
-				});
-			}
-
-			res.status(200).json({
-				status: user.status,
-				token: token
-			});
-		}
-	);
-});
-
 router.post("/user/assignBank", (req, res) => {
 	const { token, bank } = req.body;
 	User.findOneAndUpdate({ token: token }, { $set: { bank: bank } }, (err, user) => {
@@ -191,7 +163,7 @@ router.post("/user/saveUploadedDocsHash", (req, res) => {
 	const { token, hashes } = req.body;
 	User.findOneAndUpdate(
 		{ token: token },
-		{ $set: { docsHash: hashes, status: 3 } },
+		{ $set: { docsHash: hashes, status: 3 } }, //Status 3: Waiting for cashier approval 
 		(err, result) => {
 			if (err) {
 				console.log(err);
@@ -212,7 +184,7 @@ router.post("/user/saveUploadedDocsHash", (req, res) => {
 });
 router.post("/user/skipDocsUpload", (req, res) => {
 	const { token } = req.body;
-	User.findOneAndUpdate({ token: token }, { $set: { status: 4 } }, (err, result) => {
+	User.findOneAndUpdate({ token: token }, { $set: { status: 4 } }, (err, result) => {   //status 4: Go to the nearest branch and get docs uploaded
 		if (err) {
 			console.log(err);
 			return res.status(200).json({
@@ -245,7 +217,7 @@ router.post("/user/getBanks", function(req, res) {
 			}
 			if (user == null) {
 				res.status(200).json({
-					error: "User do not exist or not authorised. Please either signup or login again"
+					error: "You are either not authorised or not logged in."
 				});
 			} else {
 				Bank.find({ initial_setup: { $eq: true } }, function(err, approvedBanks) {
@@ -264,33 +236,11 @@ router.post("/user/getBanks", function(req, res) {
 	);
 });
 
-router.post("/user/checkToken", function(req, res) {
+router.post("/user/getTransactionHistory", function(req, res) {
 	const { token } = req.body;
 	User.findOne(
 		{
-			token,
-			status: 1
-		},
-		function(err, user) {
-			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized"
-				});
-			} else {
-				res.status(200).json({
-					error: null
-				});
-			}
-		}
-	);
-});
-
-router.post("/user/logout", function(req, res) {
-	const { token } = req.body;
-	User.findOne(
-		{
-			token,
-			status: 1
+			token
 		},
 		function(err, user) {
 			if (err || user == null) {

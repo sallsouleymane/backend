@@ -12,12 +12,8 @@ const getTypeClass = require("./routes/utils/getTypeClass");
 
 //services
 const {
-	createWallet,
-	getStatement,
 	rechargeNow,
-	transferThis,
 	getChildStatements,
-	getTransactionCount,
 	getBalance
 } = require("./services/Blockchain.js");
 
@@ -29,6 +25,7 @@ const uploadRouter = require("./routes/Upload");
 const cashierRouter = require("./routes/Cashier");
 const branchRouter = require("./routes/Branch")
 const bankUserRouter = require("./routes/BankUser")
+const loginRouter = require("./routes/Login")
 
 var formidable = require("formidable");
 var path = require("path");
@@ -911,110 +908,6 @@ router.put("/updateCashier", function(req, res) {
 });
 
 
-router.post("/cashierLogin", function(req, res) {
-	var today = new Date();
-	today = today.toISOString();
-	var s = today.split("T");
-	var start = s[0] + "T00:00:00.000Z";
-	var date = new Date(start); // some mock date
-	start = date.getTime();
-
-	var thisday = new Date();
-	thisday.setHours(0, 0, 0, 0);
-	thisday = thisday.getTime();
-
-	const { username, password } = req.body;
-	BankUser.findOne(
-		{
-			username,
-			password
-		},
-		function(err, bank) {
-			if (err) {
-				res.status(500).json({
-					error: "Internal error please try again"
-				});
-			} else if (!bank || bank == null) {
-				res.status(401).json({
-					error: "Incorrect username or password"
-				});
-			} else if (bank.status == -1) {
-				res.status(401).json({
-					error: "Your account has been blocked, pls contact the admin!"
-				});
-			} else {
-				Cashier.findOne(
-					{
-						bank_user_id: bank._id
-					},
-					function(err, ba) {
-						var closingTime = new Date(ba.closing_time);
-						closingTime.setHours(0, 0, 0, 0);
-						closingTime = closingTime.getTime();
-
-						if (err || ba == null) {
-							res.status(401).json({
-								error: "Incorrect username or password"
-							});
-						}
-						// else if(ba.closing_time != null &&  closingTime >= thisday){
-						//     res.status(401)
-						//   .json({
-						//     error: 'You are closed for the day, Please contact the manager'
-						//   });
-						// }
-						else {
-							let token = makeid(10);
-							var upd = {
-								token: token
-							};
-
-							// if( ba.closing_time != null){
-							//   var ct = new Date(ba.closing_time);
-							//   ct = ct.getTime();
-							//   console.log(ct);
-							//   console.log(start);
-							//   if(ct < start) {
-							//   upd={
-							//     token: token,
-							//     opening_balance: ba.closing_balance,
-							//     cash_received: 0,
-							//     fee_generated:0,
-							//     cash_paid: 0,
-							//     closing_balance: 0,
-							//     closing_time: null
-							//   }
-							// }
-							// }
-
-							console.log(upd);
-
-							Cashier.findByIdAndUpdate(ba._id, upd, err => {
-								if (err)
-									return res.status(400).json({
-										error: err
-									});
-								res.status(200).json({
-									token: token,
-									name: ba.name,
-									username: bank.username,
-									status: ba.status,
-									email: bank.email,
-									mobile: bank.mobile,
-									cashier_id: ba._id,
-									id: bank._id
-								});
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
-
-
-
 router.post("/infraSetupUpdate", function(req, res) {
 	const { username, password, token } = req.body;
 	Infra.findOne(
@@ -1674,4 +1567,5 @@ app.use("/api", uploadRouter);
 app.use("/api", cashierRouter);
 app.use("/api", branchRouter);
 app.use("/api", bankUserRouter);
+app.use("/api", loginRouter);
 app.listen(API_PORT, () => console.log("Backend Started"));
