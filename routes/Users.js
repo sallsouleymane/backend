@@ -18,7 +18,7 @@ router.post("/user/verify", (req, res) => {
 		{
 			$or: [{ mobile: mobileNumber }, { email: email }]
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err) {
 				return res.status(200).json({
 					error: "Internal Error"
@@ -31,12 +31,13 @@ router.post("/user/verify", (req, res) => {
 			}
 			let otp = makeotp(6);
 
-			OTP.find({ page: "signup", mobile: mobileNumber, user_id: email }, (err, result) => {
+			OTP.findOneAndUpdate({ page: "signup", mobile: mobileNumber, user_id: email }, { $set: { otp: otp } }, (err, result) => {
 				if (err) {
 					return res.send(200).json({
 						error: "Internal Error"
 					});
-				} else if (result.length == 0) {
+				}
+				if (result == null) {
 					let otpSchema = new OTP();
 
 					otpSchema.page = "signup";
@@ -55,26 +56,18 @@ router.post("/user/verify", (req, res) => {
 						sendMail(mailContent, "OTP", email);
 						let SMSContent = "Your OTP to verify your mobile number is " + otp;
 						sendSMS(SMSContent, mobileNumber);
-						res.status(200).json({
-							status: "success"
-						});
-					});
-				} else {
-					OTP.update({ _id: result[0].id }, { $set: { otp: otp } }, function(err, _result) {
-						if (err) {
-							return res.status(200).json({
-								error: "Internal Error"
-							});
-						}
-						let mailContent = "<p>Your OTP to verify your mobile number is " + otp + "</p>";
-						sendMail(mailContent, "OTP", email);
-						let SMSContent = "Your OTP to verify your mobile number is " + otp;
-						sendSMS(SMSContent, mobileNumber);
-						res.status(200).json({
+						return res.status(200).json({
 							status: "success"
 						});
 					});
 				}
+				let mailContent = "<p>Your OTP to verify your mobile number is " + otp + "</p>";
+				sendMail(mailContent, "OTP", email);
+				let SMSContent = "Your OTP to verify your mobile number is " + otp;
+				sendSMS(SMSContent, mobileNumber);
+				res.status(200).json({
+					status: "success"
+				});
 			});
 		}
 	);
@@ -112,7 +105,6 @@ router.post("/user/signup", (req, res) => {
 		user.email = email;
 		user.address = address;
 		user.password = password;
-		user.otp = otp;
 		user.status = 2;
 
 		user.save(err => {
@@ -129,21 +121,46 @@ router.post("/user/signup", (req, res) => {
 
 router.post("/user/assignBank", (req, res) => {
 	const { token, bank } = req.body;
-	User.findOneAndUpdate({ token: token, status: 2 }, { $set: { bank: bank } }, (err, user) => {
+	User.findOne({ token: token, status: 2 }, (err, user) => {
 		if (err) {
 			console.log(err);
 			return res.status(200).json({
-				error: "Internal Error"
+				error: "Internal Error",
 			});
 		}
 		if (user == null) {
 			return res.status(200).json({
-				error: "You are either not authorised or not logged in."
+				error: "You are either not authorised or not logged in.",
 			});
 		}
-
-		res.status(200).json({
-			status: "success"
+		Bank.findOne({ name: bank }, (err, result) => {
+			if (err) {
+				console.log(err);
+				return res.status(200).json({
+					error: "Internal Error",
+				});
+			}
+			if (result == null) {
+				return res.status(200).json({
+					error: "This bank do not exist",
+				});
+			}
+			User.update({ token: token }, { $set: { bank: bank } }, (err, user) => {
+				if (err) {
+					console.log(err);
+					return res.status(200).json({
+						error: "Internal Error",
+					});
+				}
+				if (user == null) {
+					return res.status(200).json({
+						error: "You are either not authorised or not logged in.",
+					});
+				}
+				res.status(200).json({
+					status: "success",
+				});
+			});
 		});
 	});
 });
@@ -184,7 +201,7 @@ router.post("/user/skipDocsUpload", (req, res) => {
 		}
 		if (result == null) {
 			return res.status(200).json({
-				error: "You are either not authorised or not logged in."
+				error: "You can not perform this step. Either the docs are already uploaded or you are not authorised,login again and try."
 			});
 		}
 		res.status(200).json({
@@ -208,7 +225,7 @@ router.post("/user/getBanks", function(req, res) {
 				});
 			}
 			if (user == null) {
-				res.status(200).json({
+				return res.status(200).json({
 					error: "You are either not authorised or not logged in."
 				});
 			} else {
@@ -235,7 +252,7 @@ router.post("/user/getTransactionHistory", function(req, res) {
 			token,
 			status: 1
 		},
-		function(err, user) {
+		async function(err, user) {
 			if (err) {
 				console.log(err);
 				return res.status(200).json({
@@ -248,12 +265,11 @@ router.post("/user/getTransactionHistory", function(req, res) {
 				});
 			} else {
 				const wallet = user.mobile + "@" + user.bank;
-				getStatement(wallet).then((result) => {
+				let result = await getStatement(wallet)
 				res.status(200).json({
 					status: "success",
 					history: result
 				});
-			})
 			}
 		}
 	);
@@ -278,14 +294,14 @@ router.post("/user/getContactList", function(req, res) {
 					error: "You are either not authorised or not logged in."
 				});
 			} else {
-				User.find({ mobile: { $in: user.contactList }, status: 1 }, 'mobile name', (err, walletUsers) => {
+				User.find({ mobile: { $in: user.contact_list }, status: 1 }, 'mobile name', (err, walletUsers) => {
 					if (err) {
 						console.log(err);
 						return res.status(200).json({
 							error: "Internal Error"
 						});
 					}
-					User.find({ mobile: { $in: user.contactList }, status: 0 }, ( err, nonWalletUsers ) => {
+					User.find({ mobile: { $in: user.contact_list }, status: 0 }, ( err, nonWalletUsers ) => {
 						if (err) {
 							console.log(err);
 							return res.status(200).json({
@@ -300,62 +316,6 @@ router.post("/user/getContactList", function(req, res) {
 					})
 				})
 					
-			}
-		}
-	);
-});
-
-router.post("/user/sendMoneyToWallet", function(req, res) {
-	const { token } = req.body;
-	User.findOne(
-		{
-			token,
-			status: 1
-		},
-		function(err, user) {
-			if (err) {
-				console.log(err);
-				return res.status(200).json({
-					error: "Internal Error"
-				});
-			}
-			if (user == null) {
-				res.status(200).json({
-					error: "You are either not authorised or not logged in."
-				});
-			} else {
-				res.status(200).json({
-					status: "success",
-					contacts: { wallet: walletUsers, non_wallet: nonWalletUsers }
-				});
-			}
-		}
-	);
-});
-
-router.post("/user/sendMoneyToNonWallet", function(req, res) {
-	const { token } = req.body;
-	User.findOne(
-		{
-			token,
-			status: 1
-		},
-		function(err, user) {
-			if (err) {
-				console.log(err);
-				return res.status(200).json({
-					error: "Internal Error"
-				});
-			}
-			if (user == null) {
-				res.status(200).json({
-					error: "You are either not authorised or not logged in."
-				});
-			} else {
-				res.status(200).json({
-					status: "success",
-					contacts: { wallet: walletUsers, non_wallet: nonWalletUsers }
-				});
 			}
 		}
 	);
