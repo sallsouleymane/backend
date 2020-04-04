@@ -9,7 +9,7 @@ const sendMail = require("./utils/sendMail");
 const makeotp = require("./utils/makeotp");
 
 //services
-const { transferThis, getTransactionCount, getBalance } = require("../services/Blockchain.js");
+const blockchain = require("../services/Blockchain.js");
 
 const Infra = require("../models/Infra");
 const Fee = require("../models/Fee");
@@ -41,7 +41,7 @@ router.post("/cashier/getUser", function(req, res) {
 				error: "You are either not authorised or not logged in."
 			});
 		}
-		User.findOne({ mobile }, function(err, user) {
+		User.findOne({ mobile }, "-password -token", function(err, user) {
 			if (err) {
 				console.log(err);
 				return res.status(200).json({
@@ -61,9 +61,116 @@ router.post("/cashier/getUser", function(req, res) {
 	});
 });
 
+router.post("/cashier/createUser", function(req, res) {
+	const {
+		cashiertoken,
+		name,
+		last_name,
+		mobile,
+		email,
+		password,
+		address,
+		city,
+		state,
+		country,
+		id_type,
+		id_name,
+		valid_till,
+		id_number,
+		dob,
+		gender,
+		bank,
+		docsHash,
+	} = req.body;
+
+	var userDetails = {
+		name: name,
+		last_name: last_name,
+		mobile: mobile,
+		email: email,
+		password: password,
+		address: address,
+		city: city,
+		state: state,
+		country: country,
+		id_type: id_type,
+		id_name: id_name,
+		valid_till: valid_till,
+		id_number: id_number,
+		dob: dob,
+		gender: gender,
+		bank: bank,
+		docsHash: docsHash,
+		status: 3
+	};
+	Cashier.findOne({ cashiertoken }, function(err, cashier) {
+		if (err) {
+			console.log(err);
+			return res.status(200).json({
+				error: "Internal Error"
+			});
+		}
+		if (cashier == null) {
+			return res.status(200).json({
+				error: "You are either not authorised or not logged in."
+			});
+		}
+		User.create( userDetails, function(err) {
+			if (err) {
+				console.log(err);
+				return res.status(200).json({
+					error: "Internal Error"
+				});
+			}
+			res.status(200).json({
+				status: "success"
+			});
+		});
+	});
+});
+
 router.post("/cashier/editUser", function(req, res) {
-	const { token, mobile, userDetails } = req.body;
-	Cashier.findOne({ token }, function(err, cashier) {
+	const {
+		cashiertoken,
+		name,
+		last_name,
+		mobile,
+		email,
+		password,
+		address,
+		city,
+		state,
+		country,
+		id_type,
+		id_name,
+		valid_till,
+		id_number,
+		dob,
+		gender,
+		otp,
+		bank,
+		docsHash,
+	} = req.body;
+	var userDetails = {
+		name: name,
+		last_name: last_name,
+		mobile: mobile,
+		email: email,
+		password: password,
+		address: address,
+		city: city,
+		state: state,
+		country: country,
+		id_type: id_type,
+		id_name: id_name,
+		valid_till: valid_till,
+		id_number: id_number,
+		dob: dob,
+		gender: gender,
+		bank: bank,
+		docsHash: docsHash
+	};
+	Cashier.findOne({ cashiertoken }, function(err, cashier) {
 		if (err) {
 			console.log(err);
 			return res.status(200).json({
@@ -121,7 +228,7 @@ router.post("/cashier/activateUser", function(req, res) {
 				});
 			}
 			let wallet_id = mobile + "@" + user.bank;
-			blockchain.createWallet([wallet_id]).then( (result) => {
+			let result = await blockchain.createWallet([wallet_id])
 			console.log(result);
 			let content =
 				"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
@@ -135,7 +242,7 @@ router.post("/cashier/activateUser", function(req, res) {
 				"</p><p>Your password: " +
 				user.password +
 				"</p>";
-			sendMail(content, "Approved Ewallet Account", email);
+			sendMail(content, "Approved Ewallet Account", user.email);
 			let content2 =
 				"Your account is activated. Login URL: http://" +
 				config.mainIP +
@@ -148,7 +255,7 @@ router.post("/cashier/activateUser", function(req, res) {
 			res.status(200).json({
 				status: "success",
 				walletStatus: result.toString()
-			});
+			
 		});
 		});
 	});
