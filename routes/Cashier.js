@@ -121,7 +121,7 @@ router.post("/cashier/activateUser", function(req, res) {
 				});
 			}
 			let wallet_id = mobile + "@" + user.bank;
-			let result = await blockchain.createWallet([wallet_id]);
+			blockchain.createWallet([wallet_id]).then( (result) => {
 			console.log(result);
 			let content =
 				"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
@@ -149,6 +149,7 @@ router.post("/cashier/activateUser", function(req, res) {
 				status: "success",
 				walletStatus: result.toString()
 			});
+		});
 		});
 	});
 });

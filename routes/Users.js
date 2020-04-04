@@ -248,11 +248,12 @@ router.post("/user/getTransactionHistory", function(req, res) {
 				});
 			} else {
 				const wallet = user.mobile + "@" + user.bank;
-				let result = await getStatement(wallet)
+				getStatement(wallet).then((result) => {
 				res.status(200).json({
 					status: "success",
 					history: result
 				});
+			})
 			}
 		}
 	);
@@ -299,6 +300,62 @@ router.post("/user/getContactList", function(req, res) {
 					})
 				})
 					
+			}
+		}
+	);
+});
+
+router.post("/user/sendMoneyToWallet", function(req, res) {
+	const { token } = req.body;
+	User.findOne(
+		{
+			token,
+			status: 1
+		},
+		function(err, user) {
+			if (err) {
+				console.log(err);
+				return res.status(200).json({
+					error: "Internal Error"
+				});
+			}
+			if (user == null) {
+				res.status(200).json({
+					error: "You are either not authorised or not logged in."
+				});
+			} else {
+				res.status(200).json({
+					status: "success",
+					contacts: { wallet: walletUsers, non_wallet: nonWalletUsers }
+				});
+			}
+		}
+	);
+});
+
+router.post("/user/sendMoneyToNonWallet", function(req, res) {
+	const { token } = req.body;
+	User.findOne(
+		{
+			token,
+			status: 1
+		},
+		function(err, user) {
+			if (err) {
+				console.log(err);
+				return res.status(200).json({
+					error: "Internal Error"
+				});
+			}
+			if (user == null) {
+				res.status(200).json({
+					error: "You are either not authorised or not logged in."
+				});
+			} else {
+				res.status(200).json({
+					status: "success",
+					contacts: { wallet: walletUsers, non_wallet: nonWalletUsers }
+				});
 			}
 		}
 	);
