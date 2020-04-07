@@ -229,6 +229,7 @@ router.post("/cashier/activateUser", function(req, res) {
 			}
 			let wallet_id = mobile + "@" + user.bank;
 			let result = await blockchain.createWallet([wallet_id])
+			
 			console.log(result);
 			let content =
 				"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
@@ -884,7 +885,7 @@ router.post("/checkCashierFee", function(req, res) {
 										const branchOpWallet = f2.bcode + "_operational@" + f3.name;
 										oamount = Number(amount);
 
-										getTransactionCount(branchOpWallet).then(function(count) {
+										blockchain.getTransactionCount(branchOpWallet).then(function(count) {
 											count = Number(count) + 1;
 											const find = {
 												bank_id: f3._id,
@@ -1113,7 +1114,7 @@ router.post("/cashierSendMoney", function(req, res) {
 														const amount = receiverIdentificationAmount;
 														oamount = Number(amount);
 
-														getTransactionCount(branchOpWallet).then(function(count) {
+														blockchain.getTransactionCount(branchOpWallet).then(function(count) {
 															count = Number(count) + 1;
 															const find = {
 																bank_id: f3._id,
@@ -1177,12 +1178,12 @@ router.post("/cashierSendMoney", function(req, res) {
 																				child_code = mns + "" + mnr + "" + now;
 																				trans2.child_code = child_code + "2";
 
-																				getBalance(branchOpWallet).then(function(bal) {
+																				blockchain.getBalance(branchOpWallet).then(function(bal) {
 																					if (
 																						Number(bal) + Number(f2.credit_limit) >=
 																						oamount + fee
 																					) {
-																						getTransactionCount(bankOpWallet).then(function(count) {
+																						blockchain.getTransactionCount(bankOpWallet).then(function(count) {
 																							count = Number(count) + 1;
 																							const find = {
 																								bank_id: f3._id,
@@ -1287,7 +1288,7 @@ router.post("/cashierSendMoney", function(req, res) {
 																									);
 
 																									if (found == 1) {
-																										transferThis(
+																										blockchain.transferThis(
 																											trans1,
 																											trans2,
 																											trans3,
@@ -1790,7 +1791,7 @@ router.post("/cashierClaimMoney", function(req, res) {
 
 																	let amount = oamount;
 
-																	getTransactionCount(branchOpWallet).then(function(count) {
+																	blockchain.getTransactionCount(branchOpWallet).then(function(count) {
 																		count = Number(count) + 1;
 																		const find = {
 																			bank_id: f.bank_id,
@@ -1885,7 +1886,7 @@ router.post("/cashierClaimMoney", function(req, res) {
 
 																							//End of hatim Code
 
-																							transferThis(trans1, trans2).then(function(result) {
+																							blockchain.transferThis(trans1, trans2).then(function(result) {
 																								if (result.length <= 0) {
 																									CashierClaim.findByIdAndUpdate(
 																										cashierClaimObj._id,
