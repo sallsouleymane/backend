@@ -3,7 +3,7 @@ const Bank = require('../../models/Bank')
 const Branch = require('../../models/Branch')
 const BankUser = require('../../models/BankUser')
 const Cashier = require('../../models/Cashier')
-const BankFee = require('../../models/BankFee')
+const Fee = require('../../models/BankFee')
 const CashierPending = require('../../models/CashierPending')
 const CashierLedger = require('../../models/CashierLedger')
 const User = require('../../models/User')
@@ -26,7 +26,7 @@ module.exports = (key) => {
 	  return BankUser
 	  break
 	case 'bankfee':
-	  return BankFee
+	  return Fee
 	  break
 	case 'cashierledger':
 	  return CashierLedger

@@ -18,122 +18,105 @@ const Branch = require("../models/Branch");
 const BankUser = require("../models/BankUser");
 const Cashier = require("../models/Cashier");
 const BankFee = require("../models/BankFee");
+const Fee = require("../models/Fee");
 const CashierLedger = require("../models/CashierLedger");
 
-router.post("/bankSetupUpdate", function(req, res) {
-	const { username, password, token } = req.body;
-	Bank.findOne(
-		{
-			token
-		},
-		function(err, bank) {
-			if (err || bank == null) {
-				res.status(500).json({
-					error: err.toString()
-				});
-			} else if (!bank) {
-				res.status(401).json({
-					error: "Incorrect username or password"
-				});
-			} else {
-				Bank.findByIdAndUpdate(
-					bank._id,
-					{
-						username: username,
-						password: password,
-						initial_setup: true
-					},
-					err => {
-						if (err)
-							return res.status(400).json({
-								error: err
-							});
-						res.status(200).json({
-							success: "Updated successfully"
-						});
-					}
-				);
-			}
+router.get("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
+	try {
+		const { token} = req.body;
+		var result= await Bank.findOne({token: token});
+		if ( result == null ) {
+			throw { message: "Unauthorized"}
 		}
-	);
+		const fee = await Fee.findById(req.params.bankFeeId);
+		if (fee == null) throw { message: "No Fee Rule found" };
+
+		res.send({ code: 1, fee: fee.revenue_sharing_rule});
+	} catch (err) {
+		res.status(200).send({ code: 0, message: err.message });
+	}
 });
 
-router.post("/bankActivate", function(req, res) {
-	const { token } = req.body;
-	Bank.findOne(
-		{
-			token
-		},
-		function(err, bank) {
-			if (err) {
-				res.status(500).json({
-					error: "Internal error please try again"
-				});
-			} else if (!bank) {
-				res.status(401).json({
-					error: "Account not found"
-				});
-			} else {
-				Bank.findByIdAndUpdate(
-					bank._id,
-					{
-						status: 1
-					},
-					err => {
-						if (err)
-							return res.status(400).json({
-								error: err
-							});
-						createWallet(
-							[
-								"testuser@" + bank.name,
-								"operational@" + bank.name,
-								"escrow@" + bank.name,
-								"master@" + bank.name,
-								"infra_operational@" + bank.name,
-								"infra_master@" + bank.name
-							],
-							bank._id,
-							bank.user_id
-						).then(function(result) {
-							res.status(200).json({
-								status: "activated",
-								walletStatus: result
-							});
-						});
-					}
-				);
-			}
+router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
+	try {
+		const { token, revenue_sharing_rule } = req.body;
+		const { id } = req.params;
+		var result= await Bank.findOne({token: token});
+		if ( result == null ) {
+			throw { message: "Unauthorized"}
 		}
-	);
+		result = await Fee.updateOne(
+			{ _id: id },
+			{
+				$set: {
+				'revenue_sharing_rule.branch_share.claim': revenue_sharing_rule.branch_share.claim, 
+				'revenue_sharing_rule.branch_share.send': revenue_sharing_rule.branch_share.send,
+				'revenue_sharing_rule.specific_branch_share': revenue_sharing_rule.specific_branch_share
+			}
+			}
+		);
+		if ( result == null ) {
+			throw { message: "Not Found"}
+		}
+
+		res.send({ code: 1 });
+	} catch (err) {
+		res.send({ code: 0, message: err.message });
+	}
 });
 
-router.post("/getBankDashStats", function(req, res) {
-	const { token } = req.body;
+router.post("/bank/sendShareForApproval", function (req, res) {
+	const { token, trans_type, percentage, fixed } = req.body;
 	Bank.findOne(
 		{
 			token,
 			status: 1
 		},
-		function(err, user) {
-			if (err || user == null) {
+		function (err, bank) {
+			if (err) {
+				console.log(err);
+				res.status(500).json({
+					error: "Internal Server Error"
+				});
+			} else if (bank == null) {
 				res.status(401).json({
 					error: "Unauthorized"
 				});
 			} else {
-				const user_id = user._id;
-				Branch.countDocuments(
+				Fee.findOneAndUpdate(
 					{
-						bank_id: user_id
+						trans_type: trans_type,
+						bank_id: bank._id.toString()
 					},
-					function(err, branch) {
+					{
+						$set: {
+							status: 0,
+							'revenue_sharing_rule.infra_share.fixed': fixed, 
+							'revenue_sharing_rule.infra_share.percentage': percentage
+						}
+					},
+					function (err, fee) {
 						if (err) {
-							res.status(402).json({
-								error: err
+							console.log(err);
+							res.status(500).json({
+								error: "Internal Server Error"
+							});
+						} else if (fee == null) {
+							res.status(200).json({
+								error: "Rule not found"
 							});
 						} else {
+							let content =
+								"<p>Revenue sharing rule of infra is changed and sent for approval to infra.</p><p>&nbsp;</p><p>Fee Name: " +
+								fee.name +
+								"</p>";
+							sendMail(content, "Fee Rule Updated", bank.email);
+							let content2 =
+								"Revenue sharing rule of infra is changed and sent for approval to infra: " +
+								fee.name;
+							sendSMS(content2, bank.mobile);
 							res.status(200).json({
-								totalBranches: branch
+								success: true,
 							});
 						}
 					}
@@ -143,26 +126,149 @@ router.post("/getBankDashStats", function(req, res) {
 	);
 });
 
-router.get("/getBankOperationalBalance", function(req, res) {
+router.post("/bankSetupUpdate", function (req, res) {
+	const { username, password, token } = req.body;
+	Bank.findOne(
+		{
+			token,
+		},
+		function (err, bank) {
+			if (err || bank == null) {
+				res.status(500).json({
+					error: err.toString(),
+				});
+			} else if (!bank) {
+				res.status(401).json({
+					error: "Incorrect username or password",
+				});
+			} else {
+				Bank.findByIdAndUpdate(
+					bank._id,
+					{
+						username: username,
+						password: password,
+						initial_setup: true,
+					},
+					(err) => {
+						if (err)
+							return res.status(400).json({
+								error: err,
+							});
+						res.status(200).json({
+							success: "Updated successfully",
+						});
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/bankActivate", function (req, res) {
+	const { token } = req.body;
+	Bank.findOne(
+		{
+			token,
+		},
+		function (err, bank) {
+			if (err) {
+				res.status(500).json({
+					error: "Internal error please try again",
+				});
+			} else if (!bank) {
+				res.status(401).json({
+					error: "Account not found",
+				});
+			} else {
+				Bank.findByIdAndUpdate(
+					bank._id,
+					{
+						status: 1,
+					},
+					(err) => {
+						if (err)
+							return res.status(400).json({
+								error: err,
+							});
+						createWallet(
+							[
+								"testuser@" + bank.name,
+								"operational@" + bank.name,
+								"escrow@" + bank.name,
+								"master@" + bank.name,
+								"infra_operational@" + bank.name,
+								"infra_master@" + bank.name,
+							],
+							bank._id,
+							bank.user_id
+						).then(function (result) {
+							res.status(200).json({
+								status: "activated",
+								walletStatus: result,
+							});
+						});
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/getBankDashStats", function (req, res) {
+	const { token } = req.body;
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, user) {
+			if (err || user == null) {
+				res.status(401).json({
+					error: "Unauthorized",
+				});
+			} else {
+				const user_id = user._id;
+				Branch.countDocuments(
+					{
+						bank_id: user_id,
+					},
+					function (err, branch) {
+						if (err) {
+							res.status(402).json({
+								error: err,
+							});
+						} else {
+							res.status(200).json({
+								totalBranches: branch,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.get("/getBankOperationalBalance", function (req, res) {
 	const { bank } = req.query;
 
 	Bank.findOne(
 		{
 			token: bank,
-			status: 1
+			status: 1,
 		},
-		function(err, ba) {
+		function (err, ba) {
 			if (err || ba == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				const wallet_id = "operational@" + ba.name;
 
-				getBalance(wallet_id).then(function(result) {
+				getBalance(wallet_id).then(function (result) {
 					res.status(200).json({
 						status: "success",
-						balance: result
+						balance: result,
 					});
 				});
 			}
@@ -170,29 +276,29 @@ router.get("/getBankOperationalBalance", function(req, res) {
 	);
 });
 
-router.post("/getBranches", function(req, res) {
+router.post("/getBranches", function (req, res) {
 	const { token } = req.body;
 	Bank.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, bank) {
+		function (err, bank) {
 			if (err || bank == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				const bank_id = bank._id;
 				// if (user.isAdmin) {
-				Branch.find({ bank_id: bank_id }, function(err, branch) {
+				Branch.find({ bank_id: bank_id }, function (err, branch) {
 					if (err) {
 						res.status(404).json({
-							error: err
+							error: err,
 						});
 					} else {
 						res.status(200).json({
-							branches: branch
+							branches: branch,
 						});
 					}
 				});
@@ -201,33 +307,33 @@ router.post("/getBranches", function(req, res) {
 	);
 });
 
-router.post("/getBankUsers", function(req, res) {
+router.post("/getBankUsers", function (req, res) {
 	//res.send("hi");
 	const { token } = req.body;
 	Bank.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				const user_id = user._id;
 				BankUser.find(
 					{
-						bank_id: user_id
+						bank_id: user_id,
 					},
-					function(err, bank) {
+					function (err, bank) {
 						if (err) {
 							res.status(404).json({
-								error: err
+								error: err,
 							});
 						} else {
 							res.status(200).json({
-								users: bank
+								users: bank,
 							});
 						}
 					}
@@ -254,18 +360,18 @@ router.post("/addBranch", (req, res) => {
 		email,
 		token,
 		working_from,
-		working_to
+		working_to,
 	} = req.body;
 
 	Bank.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, bank) {
+		function (err, bank) {
 			if (err || bank == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				data.name = name;
@@ -290,13 +396,13 @@ router.post("/addBranch", (req, res) => {
 				data.working_to = working_to;
 				let bankName = bank.name;
 
-				data.save(err => {
+				data.save((err) => {
 					if (err)
 						return res.json({
-							error: err.toString()
+							error: err.toString(),
 						});
 					createWallet([bcode + "_operational@" + bank.name, bcode + "_master@" + bank.name]).then(
-						function(result) {
+						function (result) {
 							let content =
 								"<p>Your branch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
 								config.mainIP +
@@ -325,7 +431,7 @@ router.post("/addBranch", (req, res) => {
 							// return res.status(200).json(data);
 							res.status(200).json({
 								status: "Branch Created",
-								walletStatus: result.toString()
+								walletStatus: result.toString(),
 							});
 						}
 					);
@@ -352,18 +458,18 @@ router.post("/editBranch", (req, res) => {
 		email,
 		token,
 		working_from,
-		working_to
+		working_to,
 	} = req.body;
 
 	Bank.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				Branch.findByIdAndUpdate(
@@ -381,12 +487,12 @@ router.post("/editBranch", (req, res) => {
 						mobile: mobile,
 						email: email,
 						working_from: working_from,
-						working_to: working_to
+						working_to: working_to,
 					},
-					err => {
+					(err) => {
 						if (err)
 							return res.status(400).json({
-								error: err
+								error: err,
 							});
 
 						return res.status(200).json(data);
@@ -397,33 +503,33 @@ router.post("/editBranch", (req, res) => {
 	);
 });
 
-router.post("/branchStatus", function(req, res) {
+router.post("/branchStatus", function (req, res) {
 	//res.send("hi");
 	const { token, status, branch_id } = req.body;
 
 	Bank.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				Branch.findByIdAndUpdate(
 					branch_id,
 					{
-						status: status
+						status: status,
 					},
-					err => {
+					(err) => {
 						if (err)
 							return res.status(400).json({
-								error: err
+								error: err,
 							});
 						res.status(200).json({
-							status: true
+							status: true,
 						});
 					}
 				);
@@ -432,14 +538,14 @@ router.post("/branchStatus", function(req, res) {
 	);
 });
 
-router.get("/getWalletBalance", function(req, res) {
+router.get("/getWalletBalance", function (req, res) {
 	const { bank, type, page, token, wallet_id } = req.query;
 
 	if (wallet_id != null && wallet_id !== "") {
-		getBalance(wallet_id).then(function(result) {
+		getBalance(wallet_id).then(function (result) {
 			res.status(200).json({
 				status: "success",
-				balance: result
+				balance: result,
 			});
 		});
 	} else {
@@ -447,22 +553,22 @@ router.get("/getWalletBalance", function(req, res) {
 		typeClass.findOne(
 			{
 				token,
-				status: 1
+				status: 1,
 			},
-			function(e, b) {
+			function (e, b) {
 				if (e || b == null) {
 					res.status(401).json({
-						error: "Unauthorized"
+						error: "Unauthorized",
 					});
 				} else {
 					Bank.findOne(
 						{
-							name: bank
+							name: bank,
 						},
-						function(err, ba) {
+						function (err, ba) {
 							if (err || ba == null) {
 								res.status(404).json({
-									error: "Not found"
+									error: "Not found",
 								});
 							} else {
 								let wallet_id = page + "@" + ba.name;
@@ -470,10 +576,10 @@ router.get("/getWalletBalance", function(req, res) {
 									wallet_id = b.bcode + "_" + page + "@" + ba.name;
 								}
 
-								getBalance(wallet_id).then(function(result) {
+								getBalance(wallet_id).then(function (result) {
 									res.status(200).json({
 										status: "success",
-										balance: result
+										balance: result,
 									});
 								});
 							}
@@ -485,59 +591,18 @@ router.get("/getWalletBalance", function(req, res) {
 	}
 });
 
-router.post("/getAll", function(req, res) {
-	const { page, type, where, token } = req.body;
-
-	const pageClass = getTypeClass(page);
-	const typeClass = getTypeClass(type);
-
-	typeClass.findOne(
-		{
-			token,
-			status: 1
-		},
-		function(err, t1) {
-			if (err || t1 == null) {
-				res.status(401).json({
-					error: "Unauthorized"
-				});
-			} else {
-				const type_id = t1._id;
-
-				let whereData = where;
-				if (where === undefined || where === "") {
-					if (type === "bank") {
-						whereData = { bank_id: type_id };
-					}
-				}
-				pageClass.find(whereData, function(err, data) {
-					if (err) {
-						res.status(404).json({
-							error: err
-						});
-					} else {
-						res.status(200).json({
-							rows: data
-						});
-					}
-				});
-			}
-		}
-	);
-});
-
 router.post("/addBankUser", (req, res) => {
 	let data = new BankUser();
 	const { name, email, ccode, mobile, username, password, branch_id, logo, token } = req.body;
 	Bank.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				data.name = name;
@@ -550,10 +615,10 @@ router.post("/addBankUser", (req, res) => {
 				data.ccode = ccode;
 				data.logo = logo;
 
-				data.save(err => {
+				data.save((err) => {
 					if (err)
 						return res.json({
-							error: "User ID / Email / Mobile already exists"
+							error: "User ID / Email / Mobile already exists",
 						});
 					let content =
 						"<p>Your have been added as a Bank User in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
@@ -575,7 +640,7 @@ router.post("/addBankUser", (req, res) => {
 						password;
 					sendSMS(content2, mobile);
 					return res.status(200).json({
-						success: "True"
+						success: "True",
 					});
 				});
 			}
@@ -593,21 +658,21 @@ router.post("/editBankUser", (req, res) => {
 		branch_id,
 		logo,
 		user_id,
-		token
+		token,
 	} = req.body;
 	Bank.findOne(
 		{
-			token
+			token,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				BankUser.findOneAndUpdate(
 					{
-						_id: user_id
+						_id: user_id,
 					},
 					{
 						name: name,
@@ -617,16 +682,16 @@ router.post("/editBankUser", (req, res) => {
 						username: username,
 						password: password,
 						branch_id: branch_id,
-						logo: logo
+						logo: logo,
 					},
-					err => {
+					(err) => {
 						if (err)
 							return res.status(400).json({
-								error: err
+								error: err,
 							});
 
 						return res.status(200).json({
-							success: true
+							success: true,
 						});
 					}
 				);
@@ -635,25 +700,25 @@ router.post("/editBankUser", (req, res) => {
 	);
 });
 
-router.post("/getBankHistory", function(req, res) {
+router.post("/getBankHistory", function (req, res) {
 	const { from, token } = req.body;
 
 	Bank.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, b) {
+		function (err, b) {
 			if (err || b == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				const wallet = from + "@" + b.name;
-				getStatement(wallet).then(function(result) {
+				getStatement(wallet).then(function (result) {
 					res.status(200).json({
 						status: "success",
-						history: result
+						history: result,
 					});
 				});
 				// });
@@ -679,18 +744,18 @@ router.post("/addBranch", (req, res) => {
 		email,
 		token,
 		working_from,
-		working_to
+		working_to,
 	} = req.body;
 
 	Bank.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, bank) {
+		function (err, bank) {
 			if (err || bank == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				data.name = name;
@@ -718,10 +783,10 @@ router.post("/addBranch", (req, res) => {
 				data.save((err, d) => {
 					if (err)
 						return res.json({
-							error: err.toString()
+							error: err.toString(),
 						});
 					createWallet([bcode + "_operational@" + bank.name, bcode + "_master@" + bank.name]).then(
-						function(result) {
+						function (result) {
 							let content =
 								"<p>Your bracnch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
 								config.mainIP +
@@ -750,7 +815,7 @@ router.post("/addBranch", (req, res) => {
 							// return res.status(200).json(data);
 							res.status(200).json({
 								status: "Branch Created",
-								walletStatus: result.toString()
+								walletStatus: result.toString(),
 							});
 						}
 					);
@@ -773,18 +838,18 @@ router.post("/addCashier", (req, res) => {
 		max_trans_amt,
 		max_trans_count,
 		token,
-		cashier_length
+		cashier_length,
 	} = req.body;
 
 	Bank.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, bank) {
+		function (err, bank) {
 			if (err || bank == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				data.name = name;
@@ -804,15 +869,15 @@ router.post("/addCashier", (req, res) => {
 				data.save((err, d) => {
 					if (err)
 						return res.json({
-							error: err.toString()
+							error: err.toString(),
 						});
 
 					if (cashier_length == 0) {
 						Branch.findOne(
 							{
-								_id: branch_id
+								_id: branch_id,
 							},
-							function(err, branch) {
+							function (err, branch) {
 								let data = new CashierLedger();
 								data.amount = branch.cash_in_hand;
 								data.cashier_id = d._id;
@@ -820,22 +885,22 @@ router.post("/addCashier", (req, res) => {
 								let td = {};
 								data.transaction_details = JSON.stringify(td);
 
-								data.save(err => {
+								data.save((err) => {
 									if (err)
 										return res.status(200).json({
-											error: err.toString()
+											error: err.toString(),
 										});
 									Cashier.findByIdAndUpdate(
 										d._id,
 										{
 											opening_balance: branch.cash_in_hand,
-											cash_in_hand: branch.cash_in_hand
+											cash_in_hand: branch.cash_in_hand,
 										},
 										(err, d) => {
 											Branch.findByIdAndUpdate(
 												branch_id,
 												{ $inc: { total_cashiers: 1 }, cash_in_hand: 0 },
-												function(e, v) {
+												function (e, v) {
 													return res.status(200).json(data);
 												}
 											);
@@ -845,7 +910,7 @@ router.post("/addCashier", (req, res) => {
 							}
 						);
 					} else {
-						Branch.findByIdAndUpdate(branch_id, { $inc: { total_cashiers: 1 } }, function(e, v) {
+						Branch.findByIdAndUpdate(branch_id, { $inc: { total_cashiers: 1 } }, function (e, v) {
 							return res.status(200).json(data);
 						});
 					}
@@ -856,59 +921,76 @@ router.post("/addCashier", (req, res) => {
 });
 
 router.post("/createBankRules", (req, res) => {
-	let data = new BankFee();
-	const { name, trans_type, active, trans_from, trans_to, ranges, token } = req.body;
+	let fee = new Fee();
+	const { name, trans_type, active, ranges, token } = req.body;
 	Bank.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, bank) {
-			if (err || bank == null) {
+		function (err, bank) {
+			if (err) {
+				console.log(err);
+				res.status(500).json({
+					error: "Internal Server Error",
+				});
+			} else if (bank == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				const bank_id = bank._id;
 
-				data.bank_id = bank_id;
-				data.name = name;
-				data.trans_type = trans_type;
-				data.active = active;
-				data.trans_from = trans_from;
-				data.trans_to = trans_to;
-				data.status = 1;
-				data.ranges = JSON.stringify(ranges);
-				data.editedRanges = JSON.stringify(ranges);
+				fee.bank_id = bank_id;
+				fee.name = name;
+				fee.trans_type = trans_type;
+				fee.active = active;
+				fee.status = 0;
+				ranges.forEach((range) => {
+					var { trans_from, trans_to, fixed_amount, percentage } = range;
+					fee.ranges.push({
+						trans_from: trans_from,
+						trans_to: trans_to,
+						fixed_amount: fixed_amount,
+						percentage: percentage,
+					});
+				});
 
-				BankFee.findOne(
+				Fee.findOne(
 					{
 						trans_type: trans_type,
-						bank_id: bank_id
+						bank_id: bank_id,
 					},
-					function(err, fee) {
-						if (fee == null) {
-							data.save(err => {
-								if (err)
-									return res.status(400).json({
-										error: err
+					function (err, result) {
+						if (err) {
+							console.log(err);
+							res.status(500).json({
+								error: "Internal Server Error",
+							});
+						} else if (result == null) {
+							fee.save((err) => {
+								if (err) {
+									console.log(err);
+									return res.status(500).json({
+										error: "Internal Server Error",
 									});
+								}
 								let content =
 									"<p>New fee rule has been added for users of your bank in E-Wallet application</p><p>&nbsp;</p><p>Fee Name: " +
 									name +
 									"</p>";
-								let result = sendMail(content, "New Rule Added", bank.email);
+								sendMail(content, "New Rule Added", bank.email);
 								let content2 =
 									"New fee rule has been added for users of your bank in E-Wallet application Fee Name: " +
 									name;
 								sendSMS(content2, bank.mobile);
 								res.status(200).json({
-									success: true
+									success: true,
 								});
 							});
 						} else {
 							res.status(400).json({
-								error: "This rule type already exists for this bank"
+								error: "This rule type already exists for this bank",
 							});
 						}
 					}
@@ -919,39 +1001,45 @@ router.post("/createBankRules", (req, res) => {
 });
 
 router.post("/editBankBankRule", (req, res) => {
-	const { name, trans_type, active, trans_from, trans_to, ranges, token, rule_id } = req.body;
+	const { name, trans_type, active, ranges, token, rule_id } = req.body;
 	Bank.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, bank) {
-			if (err || bank == null) {
+		function (err, bank) {
+			if (err) {
+				console.log(err);
+				res.status(500).json({
+					error: "Internal Server Error",
+				});
+			}
+			if ( bank == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
-				BankFee.findByIdAndUpdate(
+				Fee.findByIdAndUpdate(
 					rule_id,
 					{
 						name: name,
 						trans_type: trans_type,
 						active: active,
-						trans_from: trans_from,
-						trans_to: trans_to,
-						ranges: JSON.stringify(ranges)
+						ranges: ranges,
 					},
-					err => {
-						if (err)
-							return res.status(400).json({
-								error: err.toString()
-							});
+					(err) => {
+						if (err) {
+						console.log(err);
+						res.status(500).json({
+							error: "Internal Server Error",
+						});
+					}
 						let content = "<p>Rule " + name + " has been updated, check it out</p>";
 						let result = sendMail(content, "Rule Updated", bank.email);
 						let content2 = "Rule " + name + " has been updated, check it out";
 						sendSMS(content2, bank.mobile);
 						res.status(200).json({
-							status: true
+							status: true,
 						});
 					}
 				);
@@ -960,19 +1048,18 @@ router.post("/editBankBankRule", (req, res) => {
 	);
 });
 
-
-router.post("/generateBankOTP", function(req, res) {
+router.post("/generateBankOTP", function (req, res) {
 	let data = new OTP();
 	const { token, page, email, mobile, txt } = req.body;
 	Bank.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				data.user_id = user._id;
@@ -982,7 +1069,7 @@ router.post("/generateBankOTP", function(req, res) {
 				data.save((err, ot) => {
 					if (err)
 						return res.json({
-							error: err
+							error: err,
 						});
 
 					let content = txt + data.otp;
@@ -990,7 +1077,7 @@ router.post("/generateBankOTP", function(req, res) {
 					sendMail(content, "OTP", email);
 
 					res.status(200).json({
-						id: ot._id
+						id: ot._id,
 					});
 				});
 			}

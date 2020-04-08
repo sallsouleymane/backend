@@ -1,4 +1,6 @@
 const doRequest = require("../routes/utils/doRequest");
+const sendSMS = require("../routes/utils/sendSMS");
+const sendMail = require("../routes/utils/sendMail");
 const config = require("../config.json");
 
 module.exports.createWallet = async (arr, bank = "", infra = "") => {
@@ -304,8 +306,8 @@ module.exports.getTransactionCount = async arr => {
 
 	let res = await doRequest(options);
 
-	if (res.result && res.result == "success") {
-		return res.payload;
+	if ( res.status && res.status == 1) {
+		return res.data
 	} else {
 		return 0;
 	}

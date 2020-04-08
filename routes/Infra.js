@@ -999,16 +999,20 @@ router.post("/getRules", function(req, res) {
 			status: 1
 		},
 		function(err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				res.status(500).json({
+					error: "Internal Server Error",
+				});
+			}
+			if ( user == null) {
 				res.status(401).json({
 					error: "Unauthorized"
 				});
 			} else {
-				const user_id = user._id;
-				// if (user.isAdmin) {
 				Fee.find(
 					{
-						bank_id
+						bank_id,
 					},
 					function(err, rules) {
 						if (err) {
@@ -1022,27 +1026,8 @@ router.post("/getRules", function(req, res) {
 						}
 					}
 				);
-				// } else {
-				//   Fee.find({
-				//     user_id,
-				//     bank_id
-				//   }, function (err, rules) {
-				//     if (err) {
-				//       res.status(404)
-				//         .json({
-				//           error: err
-				//         });
-				//     } else {
-				//       res.status(200)
-				//         .json({
-				//           rules: rules
-				//         });
-				//     }
-				//   });
-				// }
 			}
-		}
-	);
+		});
 });
 
 router.post("/getRule", function(req, res) {
@@ -1566,6 +1551,47 @@ router.post("/checkFee", function(req, res) {
 			fee: null
 		});
 	}
+});
+
+router.post("/approveFee", function (req, res) {
+	const { token, id } = req.body;
+	Infra.findOne({ token: token }, function (err, infra) {
+		if (err) {
+			console.log(err);
+			res.status(500).json({
+				error: "Internal Server Error",
+			});
+		}
+		if (infra == null) {
+			res.status(401).json({
+				error: "Unauthorized",
+			});
+		}
+		Fee.findByIdAndUpdate(
+			{
+				_id: id,
+			},
+			{
+				$set: { status: 1 },
+			},
+			function (err, fee) {
+				if (err) {
+					console.log(err);
+					res.status(500).json({
+						error: "Internal Server Error"
+					});
+				}
+				if (fee == null) {
+					res.status(401).json({
+						error: "Unauthorized"
+					});
+				}
+				res.status(200).json({
+					success: "Updated successfully"
+				});
+			}
+		);
+	});
 });
 
 module.exports = router;
