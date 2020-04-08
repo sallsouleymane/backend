@@ -318,7 +318,8 @@ router.post("/user/login", (req, res) => {
 			}
 
 			res.status(200).json({
-				status: user.status,
+				status: "success",
+				user: user,
 				token: token
 			});
 		}
