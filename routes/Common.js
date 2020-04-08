@@ -734,8 +734,7 @@ router.post("/declineFee", function(req, res) {
 				Fee.findByIdAndUpdate(
 					id,
 					{
-						status: 2,
-						edit_status: 2
+						status: 0
 					},
 					err => {
 						if (err)
