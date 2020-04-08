@@ -757,139 +757,139 @@ router.post("/editInfraUser", (req, res) => {
 	);
 });
 
-router.get("/infraTopup", (req, res) => {
-	const { amount, bank } = req.query;
-	Infra.findOne(
-		{
-			name: "Infra Admin"
-		},
-		function(err, infra) {
-			const infra_email = infra.email;
-			const infra_mobile = infra.mobile;
+// router.get("/infraTopup", (req, res) => {
+// 	const { amount, bank } = req.query;
+// 	Infra.findOne(
+// 		{
+// 			name: "Infra Admin"
+// 		},
+// 		function(err, infra) {
+// 			const infra_email = infra.email;
+// 			const infra_mobile = infra.mobile;
 
-			if (err) return res.status(401);
-			Bank.findOne(
-				{
-					name: bank
-				},
-				function(err, ba) {
-					const bank_email = ba.email;
-					const bank_mobile = ba.mobile;
-					if (err) return res.status(401);
+// 			if (err) return res.status(401);
+// 			Bank.findOne(
+// 				{
+// 					name: bank
+// 				},
+// 				function(err, ba) {
+// 					const bank_email = ba.email;
+// 					const bank_mobile = ba.mobile;
+// 					if (err) return res.status(401);
 
-					let data = {};
+// 					let data = {};
 
-					let fee = (amount * mainFee) / 100;
-					var temp = (fee * defaultFee) / 100;
-					let fee3 = temp + defaultAmt;
+// 					let fee = (amount * mainFee) / 100;
+// 					var temp = (fee * defaultFee) / 100;
+// 					let fee3 = temp + defaultAmt;
 
-					data.amount = (amount - fee).toString();
-					data.from = "recharge";
-					data.to = ("testuser@" + ba.name).toString();
-					const bank = ba.name;
+// 					data.amount = (amount - fee).toString();
+// 					data.from = "recharge";
+// 					data.to = ("testuser@" + ba.name).toString();
+// 					const bank = ba.name;
 
-					getTransactionCount(data.to).then(function(count) {
-						count = Number(count) + 1;
-						Fee.findOne(
-							{
-								bank_id: ba._id,
-								trans_type: "Wallet to Wallet",
-								status: 1,
-								active: "Active"
-							},
-							function(err, fe) {
-								if (!fe || fe == null) {
-									res.status(200).json({
-										status: "Transaction cannot be done at this time"
-									});
-								} else {
-									var ranges = JSON.parse(fe.ranges);
-									if (ranges.length > 0) {
-										ranges.map(function(v) {
-											if (
-												Number(count) >= Number(v.trans_from) &&
-												Number(count) <= Number(v.trans_to)
-											) {
-												var temp = (fee * Number(v.percentage)) / 100;
-												fee3 = temp + Number(v.fixed_amount);
-											}
-										});
-									}
-									rechargeNow([data]).then(function(result) {
-										let data2 = {};
-										data2.amount = fee.toString();
-										data2.from = "testuser@" + bank;
-										data2.to = "operational@" + bank;
-										data2.note = "commission";
-										data2.email2 = bank_email;
-										data2.mobile2 = bank_mobile;
+// 					getTransactionCount(data.to).then(function(count) {
+// 						count = Number(count) + 1;
+// 						Fee.findOne(
+// 							{
+// 								bank_id: ba._id,
+// 								trans_type: "Wallet to Wallet",
+// 								status: 1,
+// 								active: 1
+// 							},
+// 							function(err, fe) {
+// 								if (!fe || fe == null) {
+// 									res.status(200).json({
+// 										status: "Transaction cannot be done at this time"
+// 									});
+// 								} else {
+// 									var ranges = JSON.parse(fe.ranges);
+// 									if (ranges.length > 0) {
+// 										ranges.map(function(v) {
+// 											if (
+// 												Number(count) >= Number(v.trans_from) &&
+// 												Number(count) <= Number(v.trans_to)
+// 											) {
+// 												var temp = (fee * Number(v.percentage)) / 100;
+// 												fee3 = temp + Number(v.fixed_amount);
+// 											}
+// 										});
+// 									}
+// 									rechargeNow([data]).then(function(result) {
+// 										let data2 = {};
+// 										data2.amount = fee.toString();
+// 										data2.from = "testuser@" + bank;
+// 										data2.to = "operational@" + bank;
+// 										data2.note = "commission";
+// 										data2.email2 = bank_email;
+// 										data2.mobile2 = bank_mobile;
 
-										let data3 = {};
-										data3.amount = fee3.toString();
-										data3.from = "operational@" + bank;
-										data3.to = "infra_operational@" + bank;
-										data3.note = "operational commission";
-										data3.email1 = bank_email;
-										data3.email2 = infra_email;
-										data3.mobile1 = bank_mobile;
-										data3.mobile2 = infra_mobile;
+// 										let data3 = {};
+// 										data3.amount = fee3.toString();
+// 										data3.from = "operational@" + bank;
+// 										data3.to = "infra_operational@" + bank;
+// 										data3.note = "operational commission";
+// 										data3.email1 = bank_email;
+// 										data3.email2 = infra_email;
+// 										data3.mobile1 = bank_mobile;
+// 										data3.mobile2 = infra_mobile;
 
-										// ;
-										// ;
-										// ;
-										// transferNow([data, data2, data3]).then(function(result) {
+// 										// ;
+// 										// ;
+// 										// ;
+// 										// transferNow([data, data2, data3]).then(function(result) {
 
-										// });
-										transferThis(data2, data3).then(function(result) {});
-										res.status(200).json({
-											status: result + " Transfer initiated and will be notified via email and sms"
-										});
-									});
-								}
+// 										// });
+// 										transferThis(data2, data3).then(function(result) {});
+// 										res.status(200).json({
+// 											status: result + " Transfer initiated and will be notified via email and sms"
+// 										});
+// 									});
+// 								}
 
-								// res.status(200).json({
-								//   status: fee3
-								// });
-							}
-						);
-					});
+// 								// res.status(200).json({
+// 								//   status: fee3
+// 								// });
+// 							}
+// 						);
+// 					});
 
-					// rechargeNow([data]).then(function (result) {
+// 					// rechargeNow([data]).then(function (result) {
 
-					//   let data2 = {};
-					//   data2.amount = fee.toString();
-					//   data2.from = "testuser@" + ba.name;
-					//   data2.to = "operational@" + ba.name;
-					//   data2.note = "recharge commission";
-					//   data2.email2 = bank_email;
-					//   data2.mobile2 = bank_mobile;
+// 					//   let data2 = {};
+// 					//   data2.amount = fee.toString();
+// 					//   data2.from = "testuser@" + ba.name;
+// 					//   data2.to = "operational@" + ba.name;
+// 					//   data2.note = "recharge commission";
+// 					//   data2.email2 = bank_email;
+// 					//   data2.mobile2 = bank_mobile;
 
-					//   let data3 = {};
-					//   data3.amount = fee3.toString();
-					//   data3.from = "operational@" + ba.name;
-					//   data3.to = "infra_operational@" + ba.name;
-					//   data3.note = "commission";
-					//   data3.email1 = bank_email;
-					//   data3.email2 = infra_email;
-					//   data3.mobile1 = bank_mobile;
-					//   data3.mobile2 = infra_mobile;
+// 					//   let data3 = {};
+// 					//   data3.amount = fee3.toString();
+// 					//   data3.from = "operational@" + ba.name;
+// 					//   data3.to = "infra_operational@" + ba.name;
+// 					//   data3.note = "commission";
+// 					//   data3.email1 = bank_email;
+// 					//   data3.email2 = infra_email;
+// 					//   data3.mobile1 = bank_mobile;
+// 					//   data3.mobile2 = infra_mobile;
 
-					//   // transferNow([data2, data3]).then(function(result) {
+// 					//   // transferNow([data2, data3]).then(function(result) {
 
-					//   // });
-					//   transferThis(data2, data3).then(function (result) {
-					//     ;
-					//   });
+// 					//   // });
+// 					//   transferThis(data2, data3).then(function (result) {
+// 					//     ;
+// 					//   });
 
-					//   res.status(200).json({
-					//     status: result + " Transfer initiated and will be notified via email and sms"
-					//   });
-					// });
-				}
-			);
-		}
-	);
-});
+// 					//   res.status(200).json({
+// 					//     status: result + " Transfer initiated and will be notified via email and sms"
+// 					//   });
+// 					// });
+// 				}
+// 			);
+// 		}
+// 	);
+// });
 
 router.post("/editBankRule", (req, res) => {
 	const { name, trans_type, trans_from, trans_to, active, ranges, token, rule_id } = req.body;
