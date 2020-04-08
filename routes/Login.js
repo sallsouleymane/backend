@@ -189,106 +189,54 @@ router.post("/branchLogin", function(req, res) {
 	);
 });
 
-router.post("/cashierLogin", function(req, res) {
-	var today = new Date();
-	today = today.toISOString();
-	var s = today.split("T");
-	var start = s[0] + "T00:00:00.000Z";
-	var date = new Date(start); // some mock date
-	start = date.getTime();
-
-	var thisday = new Date();
-	thisday.setHours(0, 0, 0, 0);
-	thisday = thisday.getTime();
-
+router.post("/cashierLogin", function (req, res) {
 	const { username, password } = req.body;
 	BankUser.findOne(
 		{
 			username,
-			password
+			password,
 		},
-		function(err, bank) {
+		function (err, bank) {
 			if (err) {
 				res.status(500).json({
-					error: "Internal error please try again"
+					error: "Internal error please try again",
 				});
-			} else if (!bank || bank == null) {
+			} else if (bank == null) {
 				res.status(401).json({
-					error: "Incorrect username or password"
+					error: "Incorrect username or password",
 				});
 			} else if (bank.status == -1) {
 				res.status(401).json({
-					error: "Your account has been blocked, pls contact the admin!"
+					error: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
-				Cashier.findOne(
+				let token = makeid(10);
+				Cashier.findOneAndUpdate(
 					{
-						bank_user_id: bank._id
+						bank_user_id: bank._id,
 					},
-					function(err, ba) {
-
-                        if ( err ) {
-                            console.log(err);
-                            return res.status(401).json({
-								error: "Internal error"
-							});
-                        }
-						if ( ba == null) {
+					{ $set: { token, token } },
+					function (err, cashier) {
+						if (err) {
+							console.log(err);
 							return res.status(401).json({
-								error: "This user is not assigned as a cashier."
+								error: "Internal error",
+							});
+						}
+						if (cashier == null) {
+							return res.status(401).json({
+								error: "This user is not assigned as a cashier.",
 							});
 						} else {
-							let token = makeid(10);
-							var upd = {
-								token: token
-							};
-
-							var closingTime = new Date(ba.closing_time);
-							closingTime.setHours(0, 0, 0, 0);
-							closingTime = closingTime.getTime();
-
-							// else if(ba.closing_time != null &&  closingTime >= thisday){
-							//     res.status(401)
-							//   .json({
-							//     error: 'You are closed for the day, Please contact the manager'
-							//   });
-							// }
-
-							// if( ba.closing_time != null){
-							//   var ct = new Date(ba.closing_time);
-							//   ct = ct.getTime();
-							//   console.log(ct);
-							//   console.log(start);
-							//   if(ct < start) {
-							//   upd={
-							//     token: token,
-							//     opening_balance: ba.closing_balance,
-							//     cash_received: 0,
-							//     fee_generated:0,
-							//     cash_paid: 0,
-							//     closing_balance: 0,
-							//     closing_time: null
-							//   }
-							// }
-							// }
-
-							console.log(upd);
-
-							Cashier.findByIdAndUpdate(ba._id, upd, err => {
-								if (err)
-									return res.status(400).json({
-										error: err
-									});
-								res.status(200).json({
-									token: token,
-									name: ba.name,
-									username: bank.username,
-									status: ba.status,
-									email: bank.email,
-									mobile: bank.mobile,
-									cashier_id: ba._id,
-									id: bank._id
-								});
+							res.status(200).json({
+								token: token,
+								name: cashier.name,
+								username: bank.username,
+								status: cashier.status,
+								email: bank.email,
+								mobile: bank.mobile,
+								cashier_id: cashier._id,
+								id: bank._id,
 							});
 						}
 					}
@@ -318,7 +266,8 @@ router.post("/user/login", (req, res) => {
 			}
 
 			res.status(200).json({
-				status: user.status,
+				status: "success",
+				user: user,
 				token: token
 			});
 		}
