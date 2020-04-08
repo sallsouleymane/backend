@@ -330,84 +330,58 @@ router.post("/branchSetupUpdate", function(req, res) {
 	);
 });
 
-router.post("/checkBranchFee", function(req, res) {
+router.post("/checkBranchFee", function (req, res) {
 	const { amount, token, bankName } = req.body;
 
 	Branch.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, f2) {
+		function (err, f2) {
 			if (err || f2 == null) {
 				res.status(402).json({
-					error: "Not Found"
+					error: "Not Found",
 				});
 			} else {
 				Bank.findOne(
 					{
-						_id: f2.bank_id
+						_id: f2.bank_id,
 					},
-					function(err, f3) {
+					function (err, f3) {
 						if (err || f3 == null) {
 							res.status(402).json({
-								error: "Not Found"
+								error: "Not Found",
 							});
 						} else {
-							const branchOpWallet = f2.bcode + "_operational@" + f3.name;
 							var oamount = Number(amount);
 
-							getTransactionCount(branchOpWallet).then(function(count) {
-								count = Number(count) + 1;
-								const find = {
-									bank_id: f3._id,
-									trans_type: "Non Wallet to Non Wallet",
-									status: 1,
-									active: "Active"
-								};
-								console.log(find);
-								BankFee.findOne(find, function(err, fe) {
-									if (err || fe == null) {
-										res.status(200).json({
-											fee: "(Transaction cannot be done at this time)"
-										});
-									} else {
-										if (amount >= fe.trans_from && amount <= fe.trans_to) {
-											var ranges = JSON.parse(fe.ranges);
-											var found = 0,
-												fee = 0;
+							const find = {
+								bank_id: f3._id,
+								trans_type: "Non Wallet to Non Wallet",
+								status: 1,
+								active: "Active",
+							};
+							console.log(find);
+							Fee.findOne(find, function (err, fe) {
+								if (err || fe == null) {
+									res.status(200).json({
+										fee: "(Transaction cannot be done at this time)",
+									});
+								} else {
+									let fee = 0;
 
-											if (ranges.length > 0) {
-												ranges.map(function(v) {
-													if (found == 1) {
-													} else {
-														if (
-															Number(count) >= Number(v.trans_from) &&
-															Number(count) <= Number(v.trans_to)
-														) {
-															var temp = (oamount * Number(v.percentage)) / 100;
-															fee = temp + Number(v.fixed_amount);
-															found = 1;
-														}
-													}
-												});
-												if (found == 1) {
-													res.status(200).json({
-														fee: fee
-													});
-												} else {
-													res.status(200).json({
-														fee: "(Transaction cannot be done at this time) "
-													});
-												}
-											}
-										} else {
-											res.status(200).json({
-												fee: "(Transaction cannot be done at this time)"
-											});
+									fe.ranges.map((range) => {
+										if (oamount >= range.trans_from && oamount <= range.trans_to) {
+											temp = (oamount * range.percentage) / 100;
+											fee = temp + range.fixed_amount;
 										}
-									}
-								});
+
+										res.status(200).json({
+											fee: fee,
+										});
+									});
+								}
 							});
 						}
 					}

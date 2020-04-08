@@ -168,8 +168,8 @@ router.post("/user/assignBank", (req, res) => {
 router.post("/user/saveUploadedDocsHash", (req, res) => {
 	const { token, hashes } = req.body;
 	User.findOneAndUpdate(
-		{ token: token, status: 2 },
-		{ $set: { docsHash: hashes, status: 3 } }, //Status 3: Waiting for cashier approval
+		{ token: token, status: 1 },
+		{ $set: { docs_hash: hashes, status: 3 } }, //Status 3: Waiting for cashier approval
 		(err, result) => {
 			if (err) {
 				console.log(err);
@@ -319,6 +319,33 @@ router.post("/user/getContactList", function(req, res) {
 			}
 		}
 	);
+});
+
+router.post("/user/sendMoneyToWallet", function(req, res) {
+	const { token, mobile } = req.body;
+	User.findOne(
+		{
+			token,
+			status: 1
+		},
+		function(err, user) {
+			if (err) {
+				console.log(err);
+				return res.status(200).json({
+					error: "Internal Error"
+				});
+			}
+			if (user == null) {
+				res.status(401).json({
+					error: "Unauthorised."
+				});
+			} else {
+				res.status(200).json({
+					status: "success"
+				})
+
+			}
+	})
 });
 
 module.exports = router;

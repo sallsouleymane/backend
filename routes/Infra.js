@@ -44,8 +44,6 @@ router.post("/getDashStats", function(req, res) {
 				});
 			} else {
 				const user_id = user._id;
-				// ;
-				// if (user.isAdmin) {
 				Bank.countDocuments({}, function(err, bank) {
 					if (err) {
 						res.status(402).json({
@@ -57,23 +55,37 @@ router.post("/getDashStats", function(req, res) {
 						});
 					}
 				});
-				// } else {
-				//   Bank.countDocuments({
-				//     "user_id": user_id
-				//   }, function (err, bank) {
-				//     if (err) {
-				//       res.status(402)
-				//         .json({
-				//           error: err
-				//         });
-				//     } else {
-				//       res.status(200)
-				//         .json({
-				//           totalBanks: bank
-				//         });
-				//     }
-				//   });
-				// }
+			}
+		}
+	);
+});
+
+router.post("/infraSetupUpdate", function (req, res) {
+	const { username, password, token } = req.body;
+	Infra.findOneAndUpdate(
+		{
+			token,
+			status: 1,
+		},
+		{
+			$set: {
+				username: username,
+				password: password,
+			},
+		},
+		function (err, infra) {
+			if (err) {
+				res.status(500).json({
+					error: "Internal error please try again",
+				});
+			} else if ( infra == null) {
+				res.status(401).json({
+					error: "Incorrect username or password",
+				});
+			} else {
+				res.status(200).json({
+					success: "Updated successfully",
+				});
 			}
 		}
 	);
@@ -891,69 +903,69 @@ router.post("/editInfraUser", (req, res) => {
 // 	);
 // });
 
-router.post("/editBankRule", (req, res) => {
-	const { name, trans_type, trans_from, trans_to, active, ranges, token, rule_id } = req.body;
-	Infra.findOne(
-		{
-			token,
-			status: 1
-		},
-		function(err, user) {
-			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized"
-				});
-			} else {
-				Bank.findOne(
-					{
-						_id: bank_id
-					},
-					function(err, bank) {
-						if (err) {
-							res.status(401).json({
-								error: err
-							});
-						} else {
-							// Fee.findOne({
-							//   "trans_type": trans_type,
-							//   "bank_id" : bank_id
-							// }, function (err, fee) {
+// router.post("/editBankRule", (req, res) => {
+// 	const { name, trans_type, trans_from, trans_to, active, ranges, token, rule_id } = req.body;
+// 	Infra.findOne(
+// 		{
+// 			token,
+// 			status: 1
+// 		},
+// 		function(err, user) {
+// 			if (err || user == null) {
+// 				res.status(401).json({
+// 					error: "Unauthorized"
+// 				});
+// 			} else {
+// 				Bank.findOne(
+// 					{
+// 						_id: bank_id
+// 					},
+// 					function(err, bank) {
+// 						if (err) {
+// 							res.status(401).json({
+// 								error: err
+// 							});
+// 						} else {
+// 							// Fee.findOne({
+// 							//   "trans_type": trans_type,
+// 							//   "bank_id" : bank_id
+// 							// }, function (err, fee) {
 
-							// });
-							var edited = {
-								name: name,
-								trans_type: trans_type,
-								active: active,
-								trans_from: trans_from,
-								trans_to: trans_to,
-								ranges: JSON.stringify(ranges)
-							};
-							BankFee.findByIdAndUpdate(
-								{
-									_id: rule_id
-								},
-								edited,
-								err => {
-									if (err)
-										return res.status(400).json({
-											error: err
-										});
-									let content = "<p>Rule " + name + " has been updated, check it out</p>";
-									let result = sendMail(content, "Rule Updated", bank.email);
-									let content2 = "Rule " + name + " has been updated, check it out";
-									sendSMS(content2, bank.mobile);
-									res.status(200).json({
-										status: true
-									});
-								}
-							);
-						}
-					}
-				);
-			}
-		}
-	);
-});
+// 							// });
+// 							var edited = {
+// 								name: name,
+// 								trans_type: trans_type,
+// 								active: active,
+// 								trans_from: trans_from,
+// 								trans_to: trans_to,
+// 								ranges: JSON.stringify(ranges)
+// 							};
+// 							BankFee.findByIdAndUpdate(
+// 								{
+// 									_id: rule_id
+// 								},
+// 								edited,
+// 								err => {
+// 									if (err)
+// 										return res.status(400).json({
+// 											error: err
+// 										});
+// 									let content = "<p>Rule " + name + " has been updated, check it out</p>";
+// 									let result = sendMail(content, "Rule Updated", bank.email);
+// 									let content2 = "Rule " + name + " has been updated, check it out";
+// 									sendSMS(content2, bank.mobile);
+// 									res.status(200).json({
+// 										status: true
+// 									});
+// 								}
+// 							);
+// 						}
+// 					}
+// 				);
+// 			}
+// 		}
+// 	);
+// });
 
 router.post("/getBank", function(req, res) {
 	//res.send("hi");
@@ -1030,82 +1042,8 @@ router.post("/getRules", function(req, res) {
 		});
 });
 
-router.post("/getRule", function(req, res) {
-	//res.send("hi");
-	const { token, rule_id } = req.body;
-	Infra.findOne(
-		{
-			// token,
-			status: 1
-		},
-		function(err, user) {
-			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized"
-				});
-			} else {
-				const user_id = user._id;
-
-				Fee.findOne(
-					{
-						_id: rule_id
-					},
-					function(err, rules) {
-						if (err) {
-							res.status(404).json({
-								error: err
-							});
-						} else {
-							res.status(200).json({
-								rules: rules
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
-
-// router.post('/getDocs', function (req, res) {
-//   //res.send("hi");
-//   const {
-//     token,
-//     bank_id
-//   } = req.body;
-//   Infra.findOne({
-//     token
-//   }, function (err, user) {
-//     if (err) {
-//       res.status(401)
-//         .json({
-//           error: err
-//         });
-//     } else {
-//       const user_id = user._id;
-//       Document.find({
-//         bank_id
-//       }, function (err, rules) {
-//         ;
-//         if (err) {
-//           res.status(404)
-//             .json({
-//               error: err
-//             });
-//         } else {
-//           res.status(200)
-//             .json({
-//               docs: rules
-//             });
-//         }
-//       });
-
-//     }
-//   });
-// });
-
 router.post("/bankStatus", function(req, res) {
-	//res.send("hi");
+	
 	const { token, status, bank_id } = req.body;
 
 	Infra.findOne(
@@ -1166,23 +1104,6 @@ router.post("/getBanks", function(req, res) {
 						});
 					}
 				});
-				// } else {
-				//   Bank.find({
-				//     user_id
-				//   }, function (err, bank) {
-				//     if (err) {
-				//       res.status(404)
-				//         .json({
-				//           error: err
-				//         });
-				//     } else {
-				//       res.status(200)
-				//         .json({
-				//           banks: bank
-				//         });
-				//     }
-				//   });
-				// }
 			}
 		}
 	);
@@ -1423,49 +1344,8 @@ router.post("/transferMoney", function(req, res) {
 							name: bank
 						},
 						function(err, b) {
-							const bank_email = b.email;
-							const bank_mobile = b.mobile;
-							var total_trans = b.total_trans ? b.total_trans : 0;
-							var temp = (amount * mainFee) / 100;
-							var fee = temp;
 							//var oamount = amount - fee;
 							var oamount = amount;
-
-							var fee3 = 0;
-
-							//    getTransactionCount(from).then(function (count) {
-							//      count = Number(count)+1;
-							//      Fee.findOne({
-							//       bank_id: b._id,
-							//       trans_type: "Wallet to Wallet",
-							//       status: 1
-							// }, function (err, fe) {
-
-							// if (!fe || fe == null) {
-							//   var temp = fee * defaultFee / 100;
-							//   fee3 = temp + defaultAmt;
-							// } else {
-							//   var ranges = JSON.parse(fe.ranges);
-							//   if(ranges.length > 0){
-
-							//   ranges.map(function(v) {
-
-							//     if(Number(count) >= Number(v.trans_from) && Number(count) <= Number(v.trans_to)){
-							//       var temp = fee * Number(v.percentage) / 100;
-							//       fee3 = temp + Number(v.fixed_amount);
-							//       ;
-							//     }
-
-							//   });
-							// }else{
-							//   var temp = fee * defaultFee / 100;
-							//   fee3 = temp + defaultAmt;
-							// }
-							// }
-
-							// res.status(200).json({
-							//   status: fee3
-							// });
 
 							let data = {};
 							data.amount = oamount.toString();
@@ -1477,40 +1357,11 @@ router.post("/transferMoney", function(req, res) {
 							data.mobile1 = infra_mobile;
 							data.mobile2 = infra_mobile;
 
-							// let data2 = {};
-							// data2.amount = fee.toString();
-							// data2.from = from;
-							// data2.to = "operational@" + bank;
-							// data2.note = "commission";
-							// data2.email1 = infra_email;
-							// data2.email2 = bank_email;
-							// data2.mobile1 = infra_mobile;
-							// data2.mobile2 = bank_mobile;
-
-							// let data3 = {};
-							// data3.amount = fee3.toString();
-							// data3.from = "operational@" + bank;
-							// data3.to = "infra_operational@" + bank;
-							// data3.note = "operational commission";
-							// data3.email1 = bank_email;
-							// data3.email2 = infra_email;
-							// data3.mobile1 = bank_mobile;
-							// data3.mobile2 = infra_mobile;
-
-							// ;
-							// ;
-							// ;
-							// transferNow([data, data2, data3]).then(function(result) {
-
-							// });
 							transferThis(data).then(function(result) {});
 							res.status(200).json({
 								status: "success"
 							});
 
-							// });
-
-							// });
 						}
 					);
 				}

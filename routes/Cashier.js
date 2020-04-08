@@ -771,7 +771,7 @@ router.post("/checkCashierFee", function (req, res) {
 						bank_id: bank._id,
 						trans_type: "Non Wallet to Non Wallet",
 						status: 1,
-						active: 1,
+						active: "Active",
 					};
 					Fee.findOne(find, function (err, fe) {
 						if (err) {
@@ -971,7 +971,7 @@ router.post("/cashierSendMoney", function (req, res) {
 															bank_id: f3._id,
 															trans_type: "Non Wallet to Non Wallet",
 															status: 1,
-															active: 1,
+															active: "Active",
 														};
 														Fee.findOne(find, function (err, fe) {
 															if (err || fe == null) {
@@ -1561,7 +1561,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 																		bank_id: f.bank_id,
 																		trans_type: "Non Wallet to Non Wallet",
 																		status: 1,
-																		active: 1,
+																		active: "Active",
 																	};
 																	Fee.findOne(find, function (err, fe) {
 																		if (err || fe == null) {

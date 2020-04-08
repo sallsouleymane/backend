@@ -827,44 +827,6 @@ router.put("/updateCashier", function(req, res) {
 });
 
 
-router.post("/infraSetupUpdate", function(req, res) {
-	const { username, password, token } = req.body;
-	Infra.findOne(
-		{
-			token,
-			status: 1
-		},
-		function(err, bank) {
-			if (err) {
-				res.status(500).json({
-					error: "Internal error please try again"
-				});
-			} else if (!bank || bank == null) {
-				res.status(401).json({
-					error: "Incorrect username or password"
-				});
-			} else {
-				Infra.findByIdAndUpdate(
-					bank._id,
-					{
-						username: username,
-						password: password
-					},
-					err => {
-						if (err)
-							return res.status(400).json({
-								error: err
-							});
-						res.status(200).json({
-							success: "Updated successfully"
-						});
-					}
-				);
-			}
-		}
-	);
-});
-
 router.post("/bankForgotPassword", function(req, res) {
 	//res.send("hi");
 	let data = new OTP();
@@ -1182,6 +1144,42 @@ router.post("/InfraVrifyOTP", function(req, res) {
 	);
 });
 
+router.post("/getRule", function(req, res) {
+	const { token, rule_id } = req.body;
+	Infra.findOne(
+		{
+			// token,
+			status: 1
+		},
+		function(err, user) {
+			if (err || user == null) {
+				res.status(401).json({
+					error: "Unauthorized"
+				});
+			} else {
+				const user_id = user._id;
+
+				Fee.findOne(
+					{
+						_id: rule_id
+					},
+					function(err, rule) {
+						if (err) {
+							res.status(404).json({
+								error: err
+							});
+						} else {
+							res.status(200).json({
+								rules: rule
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/getHistory", function(req, res) {
 	const { from, token, where } = req.body;
 	const pageClass = getTypeClass(from);
@@ -1302,16 +1300,6 @@ router.post("/getBranchTransHistory", function(req, res) {
 
 router.post("/getTransHistory", function(req, res) {
 	const { master_code } = req.body;
-	//   Cashier.findOne({
-	//     token,
-	// status:1
-	//   }, function (err, f) {
-	//     if (err || f == null) {
-	//       res.status(401)
-	//         .json({
-	//           error: "Unauthorized"
-	//         });
-	//     } else {
 
 	getChildStatements(master_code).then(function(result) {
 		res.status(200).json({
@@ -1319,31 +1307,6 @@ router.post("/getTransHistory", function(req, res) {
 			result: result
 		});
 	});
-
-	//      CashierSend.find({transaction_code: transCode}, function (err, b) {
-	//        console.log(b.master_code);
-	//       var res1 = b;
-
-	//         var mc = b[0].master_code;
-
-	//            CashierClaim.find({transaction_code: transCode}, function (err, b) {
-	//             var res2 = b;
-
-	//     res.status(200).json({
-	//       status: 'success',
-	//       history1: res1,
-	//       history2: res2,
-	//       master_code: mc
-
-	//   });
-
-	// });
-
-	// });
-
-	//     }
-
-	// });
 });
 
 router.post("/getHistoryTotal", function(req, res) {
