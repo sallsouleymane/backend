@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const secret = "jwt_secret_key_for_ewallet_of_32bit_string";
 
 //utils
 const makeid = require("./utils/idGenerator");
@@ -19,7 +20,7 @@ function jwtsign(username, password){
 			username: username,
 			password, password
 		},
-		"jwt_Secret_Key_for_PHR_Of_32Bit_String",
+		secret,
 		{
 			expiresIn: "6800000"
 		}
