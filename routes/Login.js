@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 
 //utils
 const makeid = require("./utils/idGenerator");
@@ -11,6 +12,20 @@ const Profile = require("../models/Profile");
 const Branch = require("../models/Branch");
 const BankUser = require("../models/BankUser");
 const Cashier = require("../models/Cashier");
+
+function jwtsign(username, password){
+	var token = jwt.sign(
+		{
+			username: username,
+			password, password
+		},
+		"jwt_Secret_Key_for_PHR_Of_32Bit_String",
+		{
+			expiresIn: "6800000"
+		}
+	);
+	return token
+}
 
 router.post("/login", function(req, res) {
 	const { username, password } = req.body;
@@ -247,26 +262,26 @@ router.post("/cashierLogin", function (req, res) {
 });
 
 router.post("/user/login", (req, res) => {
-	const { mobileNumber, password } = req.body;
-	let token = makeid(10);
-	User.findOneAndUpdate(
-		{ mobile: mobileNumber, password: password },
-		{ $set: { token: token } },
+	const { username, password } = req.body;
+	User.findOne(
+		{ username, password },
 		function(err, user) {
 			if (err) {
 				console.log(err);
 				return res.status(200).json({
+					status: 0,
 					error: "Internal Error"
 				});
 			}
 			if (user == null) {
 				return res.status(200).json({
+					status: 0,
 					error: "User account not found. Please signup"
 				});
 			}
-
+			const token = jwtsign(username, password)
 			res.status(200).json({
-				status: "success",
+				status: 1,
 				user: user,
 				token: token
 			});

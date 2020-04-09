@@ -88,6 +88,7 @@ router.post("/cashier/createUser", function(req, res) {
 		last_name: last_name,
 		mobile: mobile,
 		email: email,
+		username: mobile,
 		password: password,
 		address: address,
 		city: city,
@@ -147,7 +148,6 @@ router.post("/cashier/editUser", function(req, res) {
 		id_number,
 		dob,
 		gender,
-		otp,
 		bank,
 		docsHash,
 	} = req.body;
@@ -156,6 +156,7 @@ router.post("/cashier/editUser", function(req, res) {
 		last_name: last_name,
 		mobile: mobile,
 		email: email,
+		username: mobile,
 		password: password,
 		address: address,
 		city: city,

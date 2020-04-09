@@ -1,11 +1,12 @@
 const jwt = require('jsonwebtoken');
-const secret = 'mysecretsshhh';
+const secret = "jwt_secret_key_for_ewallet_of_32bit_string";
 
-const withAuth = function(req, res, next) {
+module.exports = function(req, res, next) {
+  console.log(req.headers['Authorization'])
   const token = 
       req.body.token ||
       req.query.token ||
-      req.headers['x-access-token'] ||
+      req.headers.authorization ||
       req.cookies.token;
 
   if (!token) {
@@ -15,11 +16,10 @@ const withAuth = function(req, res, next) {
       if (err) {
         res.status(401).send('Unauthorized: Invalid token');
       } else {
-        req.email = decoded.email;
+        req.username = decoded.username;
+        req.password = decoded.password;
         next();
       }
     });
   }
 }
-
-module.exports = withAuth;
