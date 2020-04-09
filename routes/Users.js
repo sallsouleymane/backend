@@ -5,6 +5,7 @@ const jwtTokenAuth = require("./middleware")
 
 //models
 const User = require("../models/User");
+const NWUser = require("../models/NonWalletUsers");
 const OTP = require("../models/OTP");
 const Bank = require("../models/Bank");
 const Infra = require("../models/Infra");
@@ -14,7 +15,9 @@ const UserLedger = require("../models/UserLedger");
 //utils
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
+const makeid = require("./utils/makeotp");
 const makeotp = require("./utils/makeotp");
+const blockchain = require("../services/Blockchain");
 
 router.post("/user/verify", (req, res) => {
 	const { mobile, email } = req.body;
@@ -321,7 +324,7 @@ router.get("/user/getContactList", jwtTokenAuth, function(req, res) {
 					error: "You are either not authorised or not logged in."
 				});
 			} else {
-				User.find({ mobile: { $in: user.contact_list }, status: 1 }, 'mobile name', (err, walletUsers) => {
+				User.find({ mobile: { $in: user.contact_list } }, 'mobile name', (err, walletUsers) => {
 					if (err) {
 						console.log(err);
 						return res.status(200).json({
@@ -329,7 +332,7 @@ router.get("/user/getContactList", jwtTokenAuth, function(req, res) {
 							error: "Internal Error"
 						});
 					}
-					User.find({ mobile: { $in: user.contact_list }, status: 0 }, ( err, nonWalletUsers ) => {
+					NWUser.find({ mobile: { $in: user.contact_list } }, ( err, nonWalletUsers ) => {
 						if (err) {
 							console.log(err);
 							return res.status(200).json({
@@ -351,7 +354,6 @@ router.get("/user/getContactList", jwtTokenAuth, function(req, res) {
 });
 
 router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
-
 	var now = new Date().getTime();
 	const username = req.username;
 
@@ -361,13 +363,15 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 		{
 			username,
 			status: 1,
+			$ne
 		},
 		{
-			$set: {
-				"contact_list.$": receiverMobile,
+			$addToSet: {
+				contact_list: receiverMobile,
 			},
 		},
 		function (err, sender) {
+			console.log(err);
 			if (err || sender == null) {
 				res.status(401).json({
 					status: 0,
@@ -387,22 +391,30 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 						} else {
 							Bank.findOne(
 								{
-									_id: sender.bank_id,
+									name: sender.bank,
 								},
-								function (err, bank) {
+								async function (err, bank) {
 									if (err || bank == null) {
 										res.status(402).json({
 											status: 0,
 											error: "Bank Not Found",
 										});
 									} else {
+										const senderWallet = sender.mobile + "@" + bank.name;
+										var bal = await blockchain.getBalance(senderWallet);
+										if (Number(bal) < sending_amount) {
+											return res.status(200).json({
+												status: 0,
+												error: "Not enough balance. Recharge Your wallet.",
+											});
+										}
 										Infra.findOne(
 											{
 												_id: bank.user_id,
 											},
 											function (err, infra) {
 												if (err || infra == null) {
-													res.status(402).json({
+													return res.status(402).json({
 														status: 0,
 														error: "Infra Not Found",
 													});
@@ -415,32 +427,30 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 													};
 													Fee.findOne(find, function (err, fe) {
 														if (err || fe == null) {
-															res.status(402).json({
+															return res.status(402).json({
 																status: 0,
 																error: "Revenue Rule Not Found",
 															});
 														} else {
 															var fee = 0;
 															var temp;
+															oamount = Number(sending_amount);
 															fe.ranges.map((range) => {
-																if (amount >= range.trans_from && amount <= range.trans_to) {
-																	temp = (amount * range.percentage) / 100;
+																if (oamount >= range.trans_from && oamount <= range.trans_to) {
+																	temp = (oamount * range.percentage) / 100;
 																	fee = temp + range.fixed_amount;
 																	let data = new UserLedger();
 
-																	data.sender_mobile = mobile;
+																	data.sender_mobile = sender.mobile;
 																	data.note = note;
-
-																	data.receiver_mobile = mobile;
-
-																	data.amount = sending_amount;
+																	data.receiver_mobile = receiverMobile;
+																	data.amount = oamount;
 																	data.fee = fee;
 																	const transactionCode = makeid(8);
 																	data.transaction_code = transactionCode;
-
 																	var mns = sender.mobile.slice(-2);
 																	var mnr = receiver.mobile.slice(-2);
-																	var master_code = mns + mnr + now;
+																	var master_code = child_code = mns + mnr + now;
 																	data.master_code = master_code;
 
 																	//send transaction sms after actual transaction
@@ -451,20 +461,16 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																				error: err.toString(),
 																			});
 
-																		const senderWallet = sender.mobile + "@" + bank.name;
-																		const receiverWallet = receiverMobile + "@" + bank.name;
+																		const bankEsWallet = receiverMobile + "@" + bank.name;
 																		const bankOpWallet = "operational@" + bank.name;
 																		const infraOpWallet = "infra_operational@" + bank.name;
-
-																		oamount = Number(sending_amount);
-
 																		const { infra_share } = fe.revenue_sharing_rule;
 
 																		let trans1 = {};
 																		trans1.from = senderWallet;
-																		trans1.to = receiverWallet;
+																		trans1.to = bankEsWallet;
 																		trans1.amount = oamount;
-																		trans1.note = "User Send Money";
+																		trans1.note = "Transfer to " + receiver.name;
 																		trans1.email1 = sender.email;
 																		trans1.email2 = receiver.email;
 																		trans1.mobile1 = sender.mobile;
@@ -476,7 +482,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																		trans2.from = senderWallet;
 																		trans2.to = bankOpWallet;
 																		trans2.amount = fee;
-																		trans2.note = "User Send Money Fee";
+																		trans2.note = "Bank Fee";
 																		trans2.email1 = sender.email;
 																		trans2.email2 = bank.email;
 																		trans2.mobile1 = sender.mobile;
@@ -494,7 +500,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																		trans3.from = bankOpWallet;
 																		trans3.to = infraOpWallet;
 																		trans3.amount = infraShare;
-																		trans3.note = "Cashier Send Money Infra Fee";
+																		trans3.note = "Infra Fee";
 																		trans3.email1 = bank.email;
 																		trans3.email2 = infra.email;
 																		trans3.mobile1 = bank.mobile;
@@ -506,21 +512,6 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																		child_code = mns + "" + mnr + "" + now + "3";
 																		trans3.child_code = child_code;
 
-																		//Code by Hatim
-
-																		//what i need
-																		//branchId
-																		//feeId
-
-																		//End
-																		console.log(
-																			sendFee,
-																			feeObject,
-																			branch_share,
-																			specific_branch_share,
-																			f2.bcode
-																		);
-
 																		blockchain
 																			.transferThis(trans1, trans2, trans3)
 																			.then(function (result) {
@@ -531,8 +522,8 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																					if (receiverMobile && receiverMobile != null) {
 																						sendSMS(content, receiverMobile);
 																					}
-																					if (receiverEmail && receiverEmail != null) {
-																						sendMail(content, "Transaction Code", receiverEmail);
+																					if (receiver.email && receiver.email != null) {
+																						sendMail(content, "Transaction Code", receiver.email);
 																					}
 
 																					UserLedger.findByIdAndUpdate(
@@ -581,17 +572,16 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
-	
+
 	var now = new Date().getTime();
 
 	const username = req.username;
 
-	const { 
+	const {
 		note,
 		withoutID,
 		requireOTP,
 		receiverMobile,
-		receiverccode,
 		receiverGivenName,
 		receiverFamilyName,
 		receiverCountry,
@@ -607,233 +597,222 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		{
-			$set: {
-				"contact_list.$": receiverMobile,
+			$addToSet: {
+				contact_list: receiverMobile,
 			},
 		},
-		function (err, sender) {
+		async function (err, sender) {
 			if (err || sender == null) {
 				res.status(401).json({
 					status: 0,
 					error: "Unauthorized",
 				});
 			} else {
-				User.findOne(
-					{
-						mobile: receiverMobile,
-					},
-					async (err, receiver) => {
-						if (err) {
-							res.status(500).json({
-								status: 0,
-								error: "Internal Server Error",
-							});
-						}
-						if( receiver == null) {
-							receiver = {
-								name: receiverGivenName,
-								last_name: receiverFamilyName,
-								mobile: mobile,
-								email: email,
-								password: password,
-								address: address,
-								country: receiverCountry,
-								id_type: receiverIdentificationType,
-								valid_till: receiverIdentificationValidTill,
-								id_number: receiverIdentificationNumber
-							};
+				receiver = {
+					name: receiverGivenName,
+					last_name: receiverFamilyName,
+					mobile: receiverMobile,
+					email: receiverEmail,
+					country: receiverCountry,
+					id_type: receiverIdentificationType,
+					valid_till: receiverIdentificationValidTill,
+					id_number: receiverIdentificationNumber,
+					status: 0
+				};
 
-							await User.create( receiver, function(err) {})
-								
-							
-						}
-							Bank.findOne(
+				await NWUser.create(receiver, function (err) { })
+
+				
+				
+				Bank.findOne(
+					{
+						name: sender.bank,
+					},
+					async function (err, bank) {
+						if (err || bank == null) {
+							res.status(402).json({
+								status: 0,
+								error: "Bank Not Found",
+							});
+						} else {
+							const senderWallet = sender.mobile + "@" + bank.name;
+				var bal = await blockchain.getBalance(senderWallet);
+				if (Number(bal) < sending_amount) {
+					res.status(200).json({
+						status: 0,
+						error: "Not enough balance. Recharge Your wallet.",
+					});
+				}
+							Infra.findOne(
 								{
-									_id: sender.bank_id,
+									_id: bank.user_id,
 								},
-								function (err, bank) {
-									if (err || bank == null) {
+								function (err, infra) {
+									if (err || infra == null) {
 										res.status(402).json({
 											status: 0,
-											error: "Bank Not Found",
+											error: "Infra Not Found",
 										});
 									} else {
-										Infra.findOne(
-											{
-												_id: bank.user_id,
-											},
-											function (err, infra) {
-												if (err || infra == null) {
-													res.status(402).json({
-														status: 0,
-														error: "Infra Not Found",
-													});
-												} else {
-													const find = {
-														bank_id: bank._id,
-														trans_type: "Wallet to Non Wallet",
-														status: 1,
-														active: "Active",
-													};
-													Fee.findOne(find, function (err, fe) {
-														if (err || fe == null) {
-															res.status(402).json({
-																status: 0,
-																error: "Revenue Rule Not Found",
-															});
-														} else {
-															var fee = 0;
-															var temp;
-															fe.ranges.map((range) => {
-																if (amount >= range.trans_from && amount <= range.trans_to) {
-																	temp = (amount * range.percentage) / 100;
-																	fee = temp + range.fixed_amount;
-																	let data = new UserLedger();
+										const find = {
+											bank_id: bank._id,
+											trans_type: "Wallet to Non Wallet",
+											status: 1,
+											active: "Active",
+										};
+										Fee.findOne(find, function (err, fe) {
+											if (err || fe == null) {
+												res.status(402).json({
+													status: 0,
+													error: "Revenue Rule Not Found",
+												});
+											} else {
+												var fee = 0;
+												var temp;
 
-																	data.sender_mobile = mobile;
+												oamount = Number(sending_amount);
+												fe.ranges.map((range) => {
+													if (oamount >= range.trans_from && oamount <= range.trans_to) {
+														temp = (oamount * range.percentage) / 100;
+														fee = temp + range.fixed_amount;
 
-																	data.receiver_mobile = mobile;
-
-																	data.amount = sending_amount;
-																	data.fee = fee;
-																	const transactionCode = makeid(8);
+														let data = new UserLedger();
+														data.sender_mobile = sender.mobile;
+														data.note = note;
+														data.receiver_mobile = receiver.mobile;
+														data.amount = sending_amount;
+														data.fee = fee;
+														const transactionCode = makeid(8);
 																	data.transaction_code = transactionCode;
+														var mns = sender.mobile.slice(-2);
+														var mnr = receiver.mobile.slice(-2);
+														var master_code = child_code = mns + mnr + now;
+														data.master_code = master_code;
 
-																	var mns = sender.mobile.slice(-2);
-																	var mnr = receiver.mobile.slice(-2);
-																	var master_code = mns + mnr + now;
-																	data.master_code = master_code;
-
-																	//send transaction sms after actual transaction
-
-																	data.save((err, d) => {
-																		if (err)
-																			return res.json({
-																				error: err.toString(),
-																			});
-
-																		const senderWallet = sender.mobile + "@" + bank.name;
-																		const receiverWallet = receiverMobile + "@" + bank.name;
-																		const bankOpWallet = "operational@" + bank.name;
-																		const infraOpWallet = "infra_operational@" + bank.name;
-
-																		oamount = Number(sending_amount);
-
-																		const { infra_share } = fe.revenue_sharing_rule;
-
-																		let trans1 = {};
-																		trans1.from = senderWallet;
-																		trans1.to = receiverWallet;
-																		trans1.amount = oamount;
-																		trans1.note = "User Send Money";
-																		trans1.email1 = sender.email;
-																		trans1.email2 = receiver.email;
-																		trans1.mobile1 = sender.mobile;
-																		trans1.mobile2 = receiver.mobile;
-																		trans1.master_code = master_code;
-																		trans1.child_code = child_code + "1";
-
-																		let trans2 = {};
-																		trans2.from = senderWallet;
-																		trans2.to = bankOpWallet;
-																		trans2.amount = fee;
-																		trans2.note = "User Send Money Fee";
-																		trans2.email1 = sender.email;
-																		trans2.email2 = bank.email;
-																		trans2.mobile1 = sender.mobile;
-																		trans2.mobile2 = bank.mobile;
-																		trans2.master_code = master_code;
-																		now = new Date().getTime();
-																		child_code = mns + "" + mnr + "" + now;
-																		trans2.child_code = child_code + "2";
-
-																		var infraShare = 0;
-																		var temp = (fee * Number(infra_share.percentage)) / 100;
-																		var infraShare = temp + Number(infra_share.fixed);
-
-																		let trans3 = {};
-																		trans3.from = bankOpWallet;
-																		trans3.to = infraOpWallet;
-																		trans3.amount = infraShare;
-																		trans3.note = "Cashier Send Money Infra Fee";
-																		trans3.email1 = bank.email;
-																		trans3.email2 = infra.email;
-																		trans3.mobile1 = bank.mobile;
-																		trans3.mobile2 = infra.mobile;
-																		trans3.master_code = master_code;
-																		mns = bank.mobile.slice(-2);
-																		mnr = infra.mobile.slice(-2);
-																		now = new Date().getTime();
-																		child_code = mns + "" + mnr + "" + now + "3";
-																		trans3.child_code = child_code;
-
-																		//Code by Hatim
-
-																		//what i need
-																		//branchId
-																		//feeId
-
-																		//End
-																		console.log(
-																			sendFee,
-																			feeObject,
-																			branch_share,
-																			specific_branch_share,
-																			f2.bcode
-																		);
-
-																		blockchain
-																			.transferThis(trans1, trans2, trans3)
-																			.then(function (result) {
-																				console.log("Result: " + result);
-																				if (result.length <= 0) {
-																					let content =
-																						"Your Transaction Code is " + transactionCode;
-																					if (receiverMobile && receiverMobile != null) {
-																						sendSMS(content, receiverMobile);
-																					}
-																					if (receiverEmail && receiverEmail != null) {
-																						sendMail(content, "Transaction Code", receiverEmail);
-																					}
-
-																					UserLedger.findByIdAndUpdate(
-																						d._id,
-																						{
-																							status: 1,
-																							fee: fee,
-																						},
-																						(err) => {
-																							if (err)
-																								return res.status(200).json({
-																									status: 0,
-																									error: err,
-																								});
-
-																							res.status(200).json({
-																								status: 1,
-																							});
-																						}
-																					);
-																				} else {
-																					res.status(200).json({
-																						status: 0,
-																						error: result.toString(),
-																					});
-																				}
-																			});
-																	});
-																}
-															});
+														data.without_id = withoutID ? 1 : 0;
+														if (requireOTP) {
+															data.require_otp = 1;
+															data.otp = makeotp(6);
+															content = data.otp + " - Send this OTP to the Receiver";
+															if (sender.mobile && sender.mobile != null) {
+																sendSMS(content, sender.mobile);
+															}
+															if (sender.email && sender.email != null) {
+																sendMail(content, "Transaction OTP", receiver.email);
+															}
 														}
-														//infra
-													});
-												}
+
+														//send transaction sms after actual transaction
+
+														data.save((err, d) => {
+															if (err)
+																return res.json({
+																	error: err.toString(),
+																});
+
+															const bankEsWallet = "escrow@" + bank.name;
+															const bankOpWallet = "operational@" + bank.name;
+															const infraOpWallet = "infra_operational@" + bank.name;
+
+
+															const { infra_share } = fe.revenue_sharing_rule;
+
+															let trans1 = {};
+															trans1.from = senderWallet;
+															trans1.to = bankEsWallet;
+															trans1.amount = oamount;
+															trans1.note = "Transferred Money to " + receiverFamilyName;
+															trans1.email1 = sender.email;
+															trans1.email2 = receiver.email;
+															trans1.mobile1 = sender.mobile;
+															trans1.mobile2 = receiver.mobile;
+															trans1.master_code = master_code;
+															trans1.child_code = child_code + "1";
+
+															let trans2 = {};
+															trans2.from = senderWallet;
+															trans2.to = bankOpWallet;
+															trans2.amount = fee;
+															trans2.note = "Deducted Bank Fee";
+															trans2.email1 = sender.email;
+															trans2.email2 = bank.email;
+															trans2.mobile1 = sender.mobile;
+															trans2.mobile2 = bank.mobile;
+															trans2.master_code = master_code;
+															now = new Date().getTime();
+															child_code = mns + "" + mnr + "" + now;
+															trans2.child_code = child_code + "2";
+
+															var infraShare = 0;
+															var temp = (fee * Number(infra_share.percentage)) / 100;
+															var infraShare = temp + Number(infra_share.fixed);
+
+															let trans3 = {};
+															trans3.from = bankOpWallet;
+															trans3.to = infraOpWallet;
+															trans3.amount = infraShare;
+															trans3.note = "Deducted Infra Fee";
+															trans3.email1 = bank.email;
+															trans3.email2 = infra.email;
+															trans3.mobile1 = bank.mobile;
+															trans3.mobile2 = infra.mobile;
+															trans3.master_code = master_code;
+															mns = bank.mobile.slice(-2);
+															mnr = infra.mobile.slice(-2);
+															now = new Date().getTime();
+															child_code = mns + "" + mnr + "" + now + "3";
+															trans3.child_code = child_code;
+
+															
+															blockchain
+																.transferThis(trans1, trans2, trans3)
+																.then(function (result) {
+																	console.log("Result: " + result);
+																	if (result.length <= 0) {
+																		let content =
+																			"Your Transaction Code is " + transactionCode;
+																		if (receiverMobile && receiverMobile != null) {
+																			sendSMS(content, receiverMobile);
+																		}
+																		if (receiverEmail && receiverEmail != null) {
+																			sendMail(content, "Transaction Code", receiverEmail);
+																		}
+
+																		UserLedger.findByIdAndUpdate(
+																			d._id,
+																			{
+																				status: 1,
+																				fee: fee,
+																			},
+																			(err) => {
+																				if (err)
+																					return res.status(200).json({
+																						status: 0,
+																						error: err,
+																					});
+
+																				return res.status(200).json({
+																					status: 1,
+																				});
+																			}
+																		);
+																	} else {
+																		res.status(200).json({
+																			status: 0,
+																			error: result.toString(),
+																		});
+																	}
+																});
+														});
+													}
+												});
 											}
-										);
+											//infra
+										});
 									}
 								}
 							);
-						
+						}
 					}
 				); //branch
 			}

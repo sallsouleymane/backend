@@ -212,7 +212,7 @@ router.post("/cashier/activateUser", function(req, res) {
 			});
 		}
 		if (cashier == null) {
-			res.status(200).json({
+			return res.status(200).json({
 				error: "You are either not authorised or not logged in."
 			});
 		}
