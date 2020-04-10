@@ -19,6 +19,95 @@ const makeid = require("./utils/makeotp");
 const makeotp = require("./utils/makeotp");
 const blockchain = require("../services/Blockchain");
 
+router.post("/user/updatePassword", (req,res) => {
+	const { username, password } = req.body;
+	User.findOneAndUpdate({
+		username
+	},
+	{
+		password: password
+	},
+	function(err, user){
+		if(err) {
+			res.status(500).json({
+				status:0,
+				error: "Internal Server Error"
+			})
+		}
+		res.status(200).json({
+			status: 1
+		})
+	})
+	
+});
+
+router.post("/user/updateEmail", jwtTokenAuth, (req,res) => {
+	const { email } = req.body;
+	const username = req.username;
+	User.findOneAndUpdate({
+		username
+	},
+	{
+		email: email
+	},
+	function(err, user){
+		if(err) {
+			res.status(500).json({
+				status:0,
+				error: "Internal Server Error"
+			})
+		}
+		res.status(200).json({
+			status: 1
+		})
+	})
+	
+});
+
+router.post("/user/updateName", jwtTokenAuth, (req,res) => {
+	const { name } = req.body;
+	const username = req.username;
+	User.findOneAndUpdate({
+		username
+	},
+	{
+		name: name
+	},
+	function(err, user){
+		if(err) {
+			res.status(500).json({
+				status:0,
+				error: "Internal Server Error"
+			})
+		}
+		res.status(200).json({
+			status: 1
+		})
+	})
+	
+});
+
+router.get("/user/getDetails", jwtTokenAuth, (req,res) => {
+	const username = req.username;
+	User.findOne({
+		username
+	},
+	function(err, user){
+		if(err) {
+			console.log(err)
+			res.status(500).json({
+				status:0,
+				error: "Internal Server Error"
+			})
+		}
+		res.status(200).json({
+			status: 1,
+			user: user
+		})
+	})
+	
+});
+
 router.post("/user/verify", (req, res) => {
 	const { mobile, email } = req.body;
 
@@ -28,13 +117,13 @@ router.post("/user/verify", (req, res) => {
 		},
 		function (err, user) {
 			if (err) {
-				return res.status(200).json({
+				return res.status(500).json({
 					status: 0,
-					error: "Internal Error"
+					error: "Internal Server Error"
 				});
 			}
 			if (user.length > 0) {
-				return res.status(200).json({
+				return res.status(403).json({
 					status: 0,
 					error: "User already exist with either same email id or mobile number."
 				});
@@ -43,8 +132,8 @@ router.post("/user/verify", (req, res) => {
 
 			OTP.findOneAndUpdate({ page: "signup", mobile: mobile, user_id: email }, { $set: { otp: otp } },async (err, result) => {
 				if (err) {
-					return res.send(200).json({
-						error: "Internal Error"
+					return res.send(500).json({
+						error: "Internal Server Error"
 					});
 				}
 				console.log(result)
@@ -79,13 +168,13 @@ router.post("/user/signup", (req, res) => {
 	) {
 		if (err) {
 			console.log(err);
-			return res.status(200).json({
+			return res.status(500).json({
 				status: 0,
-				error: "Internal Error"
+				error: "Internal Server Error"
 			});
 		}
 		if (result == null) {
-			return res.status(200).json({
+			return res.status(403).json({
 				status: 0,
 				error: "OTP Mismatch"
 			});
@@ -93,7 +182,7 @@ router.post("/user/signup", (req, res) => {
 		OTP.deleteOne(result, function(err, obj) {
 			if (err) {
 				console.log(err);
-				return res.status(200).json({
+				return res.status(500).json({
 					status: 0,
 					error: "Internal Server Error"
 				});
@@ -111,7 +200,7 @@ router.post("/user/signup", (req, res) => {
 
 		user.save(err => {
 			if (err)
-				return res.status(200).json({
+				return res.status(403).json({
 					status: 0,
 					error: "User already exist with either same email id or mobile number."
 				});
@@ -125,7 +214,7 @@ router.post("/user/signup", (req, res) => {
 router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 	const { bank } = req.body;
 	const username = req.username;
-	User.findOne({ username }, (err, user) => {
+	User.findOne({ username , status: 2}, (err, user) => {
 		if (err) {
 			console.log(err);
 			return res.status(500).json({
@@ -134,14 +223,7 @@ router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 			});
 		}
 		if (user == null) {
-			return res.status(401).json({
-				status: 0,
-				error: "Invalid User",
-			});
-		}
-		console.log(user.status)
-		if ( user.status != 2) {
-			return res.status(200).json({
+			return res.status(403).json({
 				status: 0,
 				error: "You are not allowed to assign bank.",
 			});
@@ -155,7 +237,7 @@ router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 				});
 			}
 			if (result == null) {
-				return res.status(200).json({
+				return res.status(403).json({
 					status: 0,
 					error: "This bank do not exist",
 				});
@@ -163,13 +245,13 @@ router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 			User.update({ username }, { $set: { bank: bank } }, (err, user) => {
 				if (err) {
 					console.log(err);
-					return res.status(200).json({
+					return res.status(500).json({
 						status: 0,
-						error: "Internal Error",
+						error: "Internal Server Error",
 					});
 				}
 				if (user == null) {
-					return res.status(200).json({
+					return res.status(403).json({
 						status: 0,
 						error: "You are either not authorised or not logged in.",
 					});
@@ -191,13 +273,13 @@ router.post("/user/saveUploadedDocsHash", jwtTokenAuth, (req, res) => {
 		(err, result) => {
 			if (err) {
 				console.log(err);
-				return res.status(200).json({
+				return res.status(500).json({
 					status: 0,
-					error: "Internal Error"
+					error: "Internal Server Error"
 				});
 			}
 			if (result == null) {
-				return res.status(200).json({
+				return res.status(403).json({
 					status: 0,
 					error: "You are either not authorised or not logged in."
 				});
@@ -221,7 +303,7 @@ router.post("/user/skipDocsUpload", jwtTokenAuth, (req, res) => {
 			});
 		}
 		if (result == null) {
-			return res.status(200).json({
+			return res.status(403).json({
 				status: 0,
 				error: "You can not perform this step. Either the docs are already uploaded or you are not authorised,login again and try."
 			});
@@ -237,18 +319,17 @@ router.get("/user/getBanks", jwtTokenAuth, function(req, res) {
 	User.findOne(
 		{
 			username,
-			status: 2
 		},
 		function(err, user) {
 			if (err) {
 				console.log(err);
-				return res.status(200).json({
+				return res.status(500).json({
 					status: 0,
-					error: "Internal Error"
+					error: "Internal Server Error"
 				});
 			}
 			if (user == null) {
-				return res.status(200).json({
+				return res.status(403).json({
 					status: 0,
 					error: "You are either not authorised or not logged in."
 				});
@@ -256,9 +337,9 @@ router.get("/user/getBanks", jwtTokenAuth, function(req, res) {
 				Bank.find({ initial_setup: { $eq: true } }, function(err, approvedBanks) {
 					if (err) {
 						console.log(err);
-						return res.status(200).json({
+						return res.status(500).json({
 							status: 0,
-							error: "Internal Error"
+							error: "Internal Server Error"
 						});
 					}
 					res.status(200).json({
@@ -281,13 +362,13 @@ router.get("/user/getTransactionHistory", jwtTokenAuth, function(req, res) {
 		async function(err, user) {
 			if (err) {
 				console.log(err);
-				return res.status(200).json({
+				return res.status(500).json({
 					status: 0,
-					error: "Internal Error"
+					error: "Internal Server Error"
 				});
 			}
 			if (user == null) {
-				res.status(200).json({
+				return res.status(403).json({
 					status: 0,
 					error: "You are either not authorised or not logged in."
 				});
@@ -313,13 +394,13 @@ router.get("/user/getContactList", jwtTokenAuth, function(req, res) {
 		function(err, user) {
 			if (err) {
 				console.log(err);
-				return res.status(200).json({
+				return res.status(500).json({
 					status: 0,
-					error: "Internal Error"
+					error: "Internal Server Error"
 				});
 			}
 			if (user == null) {
-				res.status(200).json({
+				res.status(403).json({
 					status: 0,
 					error: "You are either not authorised or not logged in."
 				});
@@ -327,17 +408,17 @@ router.get("/user/getContactList", jwtTokenAuth, function(req, res) {
 				User.find({ mobile: { $in: user.contact_list } }, 'mobile name', (err, walletUsers) => {
 					if (err) {
 						console.log(err);
-						return res.status(200).json({
+						return res.status(500).json({
 							status: 0,
-							error: "Internal Error"
+							error: "Internal Server Error"
 						});
 					}
 					NWUser.find({ mobile: { $in: user.contact_list } }, ( err, nonWalletUsers ) => {
 						if (err) {
 							console.log(err);
-							return res.status(200).json({
+							return res.status(500).json({
 								status: 0,
-								error: "Internal Error"
+								error: "Internal Server Error"
 							});
 						}
 						res.status(200).json({
@@ -363,7 +444,6 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 		{
 			username,
 			status: 1,
-			$ne
 		},
 		{
 			$addToSet: {
@@ -371,9 +451,15 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 			},
 		},
 		function (err, sender) {
-			console.log(err);
-			if (err || sender == null) {
-				res.status(401).json({
+			if(err) {
+				console.log(err);
+				res.status(500).json({
+					status: 0,
+					error: "Internal Server Error",
+				});
+			}
+			if ( sender == null ) {
+				res.status(403).json({
 					status: 0,
 					error: "Unauthorized",
 				});
@@ -384,7 +470,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 					},
 					(err, receiver) => {
 						if (err || receiver == null) {
-							res.status(402).json({
+							res.status(403).json({
 								status: 0,
 								error: "Receiver's wallet do not exist",
 							});
@@ -395,7 +481,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 								},
 								async function (err, bank) {
 									if (err || bank == null) {
-										res.status(402).json({
+										res.status(403).json({
 											status: 0,
 											error: "Bank Not Found",
 										});
@@ -403,7 +489,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 										const senderWallet = sender.mobile + "@" + bank.name;
 										var bal = await blockchain.getBalance(senderWallet);
 										if (Number(bal) < sending_amount) {
-											return res.status(200).json({
+											return res.status(403).json({
 												status: 0,
 												error: "Not enough balance. Recharge Your wallet.",
 											});
@@ -414,7 +500,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 											},
 											function (err, infra) {
 												if (err || infra == null) {
-													return res.status(402).json({
+													return res.status(403).json({
 														status: 0,
 														error: "Infra Not Found",
 													});
@@ -427,7 +513,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 													};
 													Fee.findOne(find, function (err, fe) {
 														if (err || fe == null) {
-															return res.status(402).json({
+															return res.status(403).json({
 																status: 0,
 																error: "Revenue Rule Not Found",
 															});
@@ -533,11 +619,13 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																							fee: fee,
 																						},
 																						(err) => {
-																							if (err)
-																								return res.status(200).json({
+																							console.log(err);
+																							if (err) {
+																								return res.status(500).json({
 																									status: 0,
-																									error: err,
+																									error: "Internal Server Error",
 																								});
+																							}
 
 																							res.status(200).json({
 																								status: 1,
@@ -545,7 +633,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																						}
 																					);
 																				} else {
-																					res.status(200).json({
+																					res.status(500).json({
 																						status: 0,
 																						error: result.toString(),
 																					});
@@ -602,10 +690,17 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 			},
 		},
 		async function (err, sender) {
-			if (err || sender == null) {
-				res.status(401).json({
+			if(err) {
+				console.log(err);
+				res.status(500).json({
 					status: 0,
-					error: "Unauthorized",
+					error: "Internal Server Error",
+				});
+			}
+			if ( sender == null) {
+				res.status(403).json({
+					status: 0,
+					error: "Sender not found",
 				});
 			} else {
 				receiver = {
@@ -630,7 +725,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 					},
 					async function (err, bank) {
 						if (err || bank == null) {
-							res.status(402).json({
+							res.status(403).json({
 								status: 0,
 								error: "Bank Not Found",
 							});
@@ -638,7 +733,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 							const senderWallet = sender.mobile + "@" + bank.name;
 				var bal = await blockchain.getBalance(senderWallet);
 				if (Number(bal) < sending_amount) {
-					res.status(200).json({
+					res.status(403).json({
 						status: 0,
 						error: "Not enough balance. Recharge Your wallet.",
 					});
@@ -649,7 +744,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 								},
 								function (err, infra) {
 									if (err || infra == null) {
-										res.status(402).json({
+										res.status(403).json({
 											status: 0,
 											error: "Infra Not Found",
 										});
@@ -662,7 +757,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 										};
 										Fee.findOne(find, function (err, fe) {
 											if (err || fe == null) {
-												res.status(402).json({
+												res.status(403).json({
 													status: 0,
 													error: "Revenue Rule Not Found",
 												});
@@ -785,11 +880,13 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																				fee: fee,
 																			},
 																			(err) => {
-																				if (err)
-																					return res.status(200).json({
+																				if (err) {
+																				console.log(err);
+																					return res.status(500).json({
 																						status: 0,
-																						error: err,
+																						error: "Internal Server Error",
 																					});
+																				}
 
 																				return res.status(200).json({
 																					status: 1,
@@ -797,7 +894,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																			}
 																		);
 																	} else {
-																		res.status(200).json({
+																		res.status(500).json({
 																			status: 0,
 																			error: result.toString(),
 																		});

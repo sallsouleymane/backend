@@ -17,7 +17,6 @@ const UserSchema = new mongoose.Schema({
 	id_number: { type: String, required: false },
 	dob: { type: String, required: false },
 	gender: { type: String, required: false },
-	otp: { type: String, required: false, default: null },
 	bank: { type: String, required: false, default: null },
 	docs_hash: [
 		{

@@ -271,7 +271,7 @@ router.post("/user/login", (req, res) => {
 				console.log(err);
 				return res.status(200).json({
 					status: 0,
-					error: "Internal Error"
+					error: "Internal Server Error"
 				});
 			}
 			if (user == null) {
