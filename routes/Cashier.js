@@ -101,7 +101,7 @@ router.post("/cashier/createUser", function(req, res) {
 		dob: dob,
 		gender: gender,
 		bank: bank,
-		docs_hash: docs_hash,
+	  	docs_hash: docs_hash,
 		status: 3
 	};
 	Cashier.findOne({ cashiertoken }, function(err, cashier) {

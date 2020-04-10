@@ -406,7 +406,7 @@ router.get("/user/getTransactionHistory", jwtTokenAuth, function(req, res) {
 				});
 			} else {
 				const wallet = user.mobile + "@" + user.bank;
-				let result = await getStatement(wallet)
+				let result = await blockchain.getStatement(wallet)
 				res.status(200).json({
 					status: 1,
 					history: result
@@ -509,7 +509,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 						} else {
 							Bank.findOne(
 								{
-									name: sender.bank,
+									_id: sender.bank,
 								},
 								async function (err, bank) {
 									if (err || bank == null) {
@@ -753,7 +753,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 				
 				Bank.findOne(
 					{
-						name: sender.bank,
+						_id: sender.bank,
 					},
 					async function (err, bank) {
 						if (err || bank == null) {
