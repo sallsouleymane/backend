@@ -19,6 +19,38 @@ const makeid = require("./utils/makeotp");
 const makeotp = require("./utils/makeotp");
 const blockchain = require("../services/Blockchain");
 
+router.get("/user/getBalance", jwtTokenAuth, (req, res) => {
+	const username = req.username;
+	User.findOne(
+		{
+			username,
+			status: 1
+		},
+		function(err, user) {
+			if (err) {
+				console.log(err)
+				res.status(500).json({
+					error: "Internal Server Error"
+				});
+			if(user == null ){
+				res.status(403).json({
+					error: "User not found"
+				});
+			}
+			} else {
+				const wallet_id = user.mobile + "@" + user.bank;
+				blockchain.getBalance(wallet_id).then(function(result) {
+					res.status(200).json({
+						status: 1,
+						balance: result
+					});
+				});
+			}
+		}
+	);
+});
+
+
 router.post("/user/updatePassword", (req,res) => {
 	const { username, password } = req.body;
 	User.findOneAndUpdate({
