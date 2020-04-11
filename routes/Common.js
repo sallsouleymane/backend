@@ -1067,7 +1067,7 @@ router.post("/verifyOTP", function(req, res) {
 		},
 		function(err, ot) {
 			if (err || ot == null) {
-				res.status(401).json({
+				res.status(403).json({
 					error: "Invalid OTP!"
 				});
 			} else {

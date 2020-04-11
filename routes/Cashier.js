@@ -32,29 +32,33 @@ router.post("/cashier/getUser", function(req, res) {
 	Cashier.findOne({ token }, function(err, cashier) {
 		if (err) {
 			console.log(err);
-			return res.status(200).json({
-				error: "Internal Error"
+			return res.status(503).json({
+				status: 0,
+				error: "Internal Server Error"
 			});
 		}
 		if (cashier == null) {
-			res.status(200).json({
+			res.status(403).json({
+				status: 0,
 				error: "You are either not authorised or not logged in."
 			});
 		}
 		User.findOne({ mobile }, "-password", function(err, user) {
 			if (err) {
 				console.log(err);
-				return res.status(200).json({
-					error: "Internal Error"
+				return res.status(500).json({
+					status: 0,
+					error: "Internal Server Error"
 				});
 			}
 			if (user == null) {
-				res.status(200).json({
+				res.status(403).json({
+					status: 0,
 					error: "User not found"
 				});
 			}
 			res.status(200).json({
-				status: "success",
+				status: 1,
 				data: user
 			});
 		});
@@ -63,7 +67,7 @@ router.post("/cashier/getUser", function(req, res) {
 
 router.post("/cashier/createUser", function(req, res) {
 	const {
-		cashiertoken,
+		token,
 		name,
 		last_name,
 		mobile,
@@ -104,27 +108,30 @@ router.post("/cashier/createUser", function(req, res) {
 	  	docs_hash: docs_hash,
 		status: 3
 	};
-	Cashier.findOne({ cashiertoken }, function(err, cashier) {
+	Cashier.findOne({ token }, function(err, cashier) {
 		if (err) {
 			console.log(err);
-			return res.status(200).json({
-				error: "Internal Error"
+			return res.status(500).json({
+				status: 0,
+				error: "Internal Server Error"
 			});
 		}
 		if (cashier == null) {
-			return res.status(200).json({
+			return res.status(403).json({
+				status: 0,
 				error: "You are either not authorised or not logged in."
 			});
 		}
 		User.create( userDetails, function(err) {
 			if (err) {
 				console.log(err);
-				return res.status(200).json({
-					error: "Internal Error"
+				return res.status(500).json({
+					status: 0,
+					error: "Internal Server Error"
 				});
 			}
 			res.status(200).json({
-				status: "success"
+				status: 1
 			});
 		});
 	});
@@ -132,12 +139,11 @@ router.post("/cashier/createUser", function(req, res) {
 
 router.post("/cashier/editUser", function(req, res) {
 	const {
-		cashiertoken,
+		token,
 		name,
 		last_name,
 		mobile,
 		email,
-		password,
 		address,
 		city,
 		state,
@@ -148,16 +154,12 @@ router.post("/cashier/editUser", function(req, res) {
 		id_number,
 		dob,
 		gender,
-		bank,
 		docs_hash,
 	} = req.body;
 	var userDetails = {
 		name: name,
 		last_name: last_name,
-		mobile: mobile,
 		email: email,
-		username: mobile,
-		password: password,
 		address: address,
 		city: city,
 		state: state,
@@ -168,35 +170,43 @@ router.post("/cashier/editUser", function(req, res) {
 		id_number: id_number,
 		dob: dob,
 		gender: gender,
-		bank: bank,
 		docs_hash: docs_hash
 	};
-	Cashier.findOne({ token:cashiertoken }, function(err, cashier) {
+	for (let detail in userDetails) {
+		if (userDetails[detail] == "" || userDetails[detail] == []) {
+						delete userDetails[detail];
+		}
+	}
+	Cashier.findOne({ token }, function(err, cashier) {
 		if (err) {
 			console.log(err);
-			return res.status(200).json({
-				error: "Internal Error"
+			return res.status(500).json({
+				status: 0,
+				error: "Internal Server Error"
 			});
 		}
 		if (cashier == null) {
-			return res.status(200).json({
+			return res.status(403).json({
+				status: 0,
 				error: "You are either not authorised or not logged in."
 			});
 		}
 		User.findOneAndUpdate( { mobile }, { $set: userDetails }, function(err, user) {
 			if (err) {
 				console.log(err);
-				return res.status(200).json({
-					error: "Internal Error"
+				return res.status(500).json({
+					status: 0,
+					error: "Email is already used."
 				});
 			}
 			if (user == null) {
-				res.status(200).json({
+				return res.status(403).json({
+					status: 0,
 					error: "User not found"
 				});
 			}
 			res.status(200).json({
-				status: "success"
+				status: 1
 			});
 		});
 	});
@@ -207,24 +217,28 @@ router.post("/cashier/activateUser", function(req, res) {
 	Cashier.findOne({ token }, function(err, cashier) {
 		if (err) {
 			console.log(err);
-			return res.status(200).json({
-				error: "Internal Error"
+			return res.status(500).json({
+				status: 0,
+				error: "Internal Server Error"
 			});
 		}
 		if (cashier == null) {
-			return res.status(200).json({
+			return res.status(403).json({
+				status: 0,
 				error: "You are either not authorised or not logged in."
 			});
 		}
 		User.findOneAndUpdate({ mobile }, { $set: { status: 1 }}, async function(err, user) {
 			if (err) {
 				console.log(err);
-				return res.status(200).json({
-					error: "Internal Error"
+				return res.status(500).json({
+					status: 0,
+					error: "Internal Server Error"
 				});
 			}
 			if (user == null) {
-				return res.status(200).json({
+				return res.status(403).json({
+					status: 0,
 					error: "User not found"
 				});
 			}
@@ -255,8 +269,8 @@ router.post("/cashier/activateUser", function(req, res) {
 				user.password;
 			sendSMS(content2, mobile);
 			res.status(200).json({
-				status: "success",
-				walletStatus: result.toString()
+				status: 1,
+				message: result.toString()
 			
 		});
 		});

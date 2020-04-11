@@ -31,9 +31,9 @@ router.get("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
 		const fee = await Fee.findById(req.params.bankFeeId);
 		if (fee == null) throw { message: "No Fee Rule found" };
 
-		res.send({ code: 1, fee: fee.revenue_sharing_rule});
+		res.send({ status: 1, fee: fee.revenue_sharing_rule});
 	} catch (err) {
-		res.status(200).send({ code: 0, message: err.message });
+		res.status(200).send({ status: 0, message: err.message });
 	}
 });
 
@@ -59,9 +59,9 @@ router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
 			throw { message: "Not Found"}
 		}
 
-		res.send({ code: 1 });
+		res.send({ status: 1 });
 	} catch (err) {
-		res.send({ code: 0, message: err.message });
+		res.send({ status: 0, message: err.message });
 	}
 });
 
@@ -80,7 +80,7 @@ router.post("/bank/sendShareForApproval", function (req, res) {
 					error: "Internal Server Error"
 				});
 			} else if (bank == null) {
-				res.status(401).json({
+				res.status(403).json({
 					status: 0,
 					error: "Unauthorized"
 				});
@@ -101,10 +101,12 @@ router.post("/bank/sendShareForApproval", function (req, res) {
 						if (err) {
 							console.log(err);
 							res.status(500).json({
+								status: 0,
 								error: "Internal Server Error"
 							});
 						} else if (fee == null) {
-							res.status(200).json({
+							res.status(403).json({
+								status: 0,
 								error: "Rule not found"
 							});
 						} else {

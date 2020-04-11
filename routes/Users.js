@@ -509,7 +509,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 						} else {
 							Bank.findOne(
 								{
-									_id: sender.bank,
+									name: sender.bank,
 								},
 								async function (err, bank) {
 									if (err || bank == null) {
@@ -753,7 +753,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 				
 				Bank.findOne(
 					{
-						_id: sender.bank,
+						name: sender.bank,
 					},
 					async function (err, bank) {
 						if (err || bank == null) {
