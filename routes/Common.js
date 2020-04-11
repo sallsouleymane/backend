@@ -518,7 +518,6 @@ router.post("/getBankByName", function(req, res) {
 
 router.post("/getBankRules", function(req, res) {
 	const { bank_id } = req.body;
-	console.log(bank_id)
 	Bank.findOne(
 		{
 			_id: bank_id
@@ -531,7 +530,6 @@ router.post("/getBankRules", function(req, res) {
 					error: "Internal Server Error"
 				})
 			}
-			console.log(bank)
 			if ( bank == null) {
 				res.status(401).json({
 					status: 0,

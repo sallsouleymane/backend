@@ -19,6 +19,24 @@ const makeid = require("./utils/makeotp");
 const makeotp = require("./utils/makeotp");
 const blockchain = require("../services/Blockchain");
 
+router.get("/deleteUser", (req, res) => {
+	const { mobile } = req.query;
+	User.deleteOne({ mobile }, (err, result) => {
+		if (err) {
+			console.log(err);
+				return res.status(500).json({
+					status: 0,
+					error: "Internal Server Error"
+				});
+		}
+		res.status(200).json({
+			status: 1,
+			result: result
+		});
+	}
+	)
+});
+
 router.get("/user/getBalance", jwtTokenAuth, (req, res) => {
 	const username = req.username;
 	User.findOne(
@@ -67,7 +85,8 @@ router.post("/user/updatePassword", (req,res) => {
 			})
 		}
 		res.status(200).json({
-			status: 1
+			status: 1,
+			message: "Updated password successfully"
 		})
 	})
 	
@@ -113,7 +132,8 @@ router.post("/user/updateName", jwtTokenAuth, (req,res) => {
 			})
 		}
 		res.status(200).json({
-			status: 1
+			status: 1,
+			message: "Updated name successfully"
 		})
 	})
 	
@@ -185,7 +205,8 @@ router.post("/user/verify", (req, res) => {
 				let SMSContent = "Your OTP to verify your mobile number is " + otp;
 				sendSMS(SMSContent, mobile);
 				res.status(200).json({
-					status: 1
+					status: 1,
+					message: "OTP sent to the email and mobile"
 				});
 			});
 		}
@@ -237,7 +258,8 @@ router.post("/user/signup", (req, res) => {
 					error: "User already exist with either same email id or mobile number."
 				});
 			res.status(200).json({
-				status: 1
+				status: 1,
+				message: "OTP has been sent successfully"
 			});
 		});
 	});
@@ -289,7 +311,8 @@ router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 					});
 				}
 				res.status(200).json({
-					status: 1
+					status: 1,
+					message: "Bank is assigned"
 				});
 			});
 		});
@@ -341,7 +364,8 @@ router.post("/user/skipDocsUpload", jwtTokenAuth, (req, res) => {
 			});
 		}
 		res.status(200).json({
-			status: 1
+			status: 1,
+			message: "Document upload is skipped. Go to the nearest branch and get them uploaded"
 		});
 	});
 });
@@ -588,7 +612,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																		trans1.from = senderWallet;
 																		trans1.to = bankEsWallet;
 																		trans1.amount = oamount;
-																		trans1.note = "Transfer to " + receiver.name;
+																		trans1.note = "Transfer from " + sender.name + " to " + receiver.name;
 																		trans1.email1 = sender.email;
 																		trans1.email2 = receiver.email;
 																		trans1.mobile1 = sender.mobile;
@@ -661,6 +685,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 
 																							res.status(200).json({
 																								status: 1,
+																								message: sending_amount + " XOF is transferred to " + sender.name
 																							});
 																						}
 																					);
