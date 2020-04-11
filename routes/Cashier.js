@@ -80,7 +80,7 @@ router.post("/cashier/createUser", function(req, res) {
 		dob,
 		gender,
 		bank,
-		docsHash,
+		docs_hash,
 	} = req.body;
 
 	var userDetails = {
@@ -101,7 +101,7 @@ router.post("/cashier/createUser", function(req, res) {
 		dob: dob,
 		gender: gender,
 		bank: bank,
-		docsHash: docsHash,
+	  	docs_hash: docs_hash,
 		status: 3
 	};
 	Cashier.findOne({ cashiertoken }, function(err, cashier) {
@@ -149,7 +149,7 @@ router.post("/cashier/editUser", function(req, res) {
 		dob,
 		gender,
 		bank,
-		docsHash,
+		docs_hash,
 	} = req.body;
 	var userDetails = {
 		name: name,
@@ -169,9 +169,9 @@ router.post("/cashier/editUser", function(req, res) {
 		dob: dob,
 		gender: gender,
 		bank: bank,
-		docsHash: docsHash
+		docs_hash: docs_hash
 	};
-	Cashier.findOne({ cashiertoken }, function(err, cashier) {
+	Cashier.findOne({ token:cashiertoken }, function(err, cashier) {
 		if (err) {
 			console.log(err);
 			return res.status(200).json({
@@ -179,7 +179,7 @@ router.post("/cashier/editUser", function(req, res) {
 			});
 		}
 		if (cashier == null) {
-			res.status(200).json({
+			return res.status(200).json({
 				error: "You are either not authorised or not logged in."
 			});
 		}
