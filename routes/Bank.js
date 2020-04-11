@@ -76,10 +76,12 @@ router.post("/bank/sendShareForApproval", function (req, res) {
 			if (err) {
 				console.log(err);
 				res.status(500).json({
+					status: 0,
 					error: "Internal Server Error"
 				});
 			} else if (bank == null) {
 				res.status(401).json({
+					status: 0,
 					error: "Unauthorized"
 				});
 			} else {
@@ -116,7 +118,7 @@ router.post("/bank/sendShareForApproval", function (req, res) {
 								fee.name;
 							sendSMS(content2, bank.mobile);
 							res.status(200).json({
-								success: true,
+								status: 1
 							});
 						}
 					}
@@ -198,9 +200,7 @@ router.post("/bankActivate", function (req, res) {
 								"master@" + bank.name,
 								"infra_operational@" + bank.name,
 								"infra_master@" + bank.name,
-							],
-							bank._id,
-							bank.user_id
+							]
 						).then(function (result) {
 							res.status(200).json({
 								status: "activated",
@@ -932,10 +932,12 @@ router.post("/createBankRules", (req, res) => {
 			if (err) {
 				console.log(err);
 				res.status(500).json({
+					status: 0,
 					error: "Internal Server Error",
 				});
 			} else if (bank == null) {
 				res.status(401).json({
+					status: 0,
 					error: "Unauthorized",
 				});
 			} else {
@@ -965,6 +967,7 @@ router.post("/createBankRules", (req, res) => {
 						if (err) {
 							console.log(err);
 							res.status(500).json({
+								status: 0,
 								error: "Internal Server Error",
 							});
 						} else if (result == null) {
@@ -972,6 +975,7 @@ router.post("/createBankRules", (req, res) => {
 								if (err) {
 									console.log(err);
 									return res.status(500).json({
+										status: 0,
 										error: "Internal Server Error",
 									});
 								}
@@ -985,11 +989,12 @@ router.post("/createBankRules", (req, res) => {
 									name;
 								sendSMS(content2, bank.mobile);
 								res.status(200).json({
-									success: true,
+									status: 1
 								});
 							});
 						} else {
 							res.status(400).json({
+								status: 0,
 								error: "This rule type already exists for this bank",
 							});
 						}
@@ -1011,11 +1016,13 @@ router.post("/editBankBankRule", (req, res) => {
 			if (err) {
 				console.log(err);
 				res.status(500).json({
+					status: 0,
 					error: "Internal Server Error",
 				});
 			}
 			if ( bank == null) {
-				res.status(401).json({
+				res.status(403).json({
+					status: 0,
 					error: "Unauthorized",
 				});
 			} else {
@@ -1031,6 +1038,7 @@ router.post("/editBankBankRule", (req, res) => {
 						if (err) {
 						console.log(err);
 						res.status(500).json({
+							status: 0,
 							error: "Internal Server Error",
 						});
 					}
@@ -1039,7 +1047,7 @@ router.post("/editBankBankRule", (req, res) => {
 						let content2 = "Rule " + name + " has been updated, check it out";
 						sendSMS(content2, bank.mobile);
 						res.status(200).json({
-							status: true,
+							status: 1
 						});
 					}
 				);

@@ -527,12 +527,14 @@ router.post("/getBankRules", function(req, res) {
 			if (err) {
 				console.log(err),
 				res.status(500).json({
+					status: 0,
 					error: "Internal Server Error"
 				})
 			}
 			console.log(bank)
 			if ( bank == null) {
 				res.status(401).json({
+					status: 0,
 					error: "Unauthorized"
 				});
 			} else {
@@ -543,10 +545,12 @@ router.post("/getBankRules", function(req, res) {
 					function(err, rules) {
 						if (err) {
 							res.status(500).json({
+								status: 0,
 								error: "Internal Server Error"
 							});
 						} else {
 							res.status(200).json({
+								status: 1,
 								rules: rules
 							});
 						}

@@ -41,7 +41,7 @@ router.post("/cashier/getUser", function(req, res) {
 				error: "You are either not authorised or not logged in."
 			});
 		}
-		User.findOne({ mobile }, "-password -token", function(err, user) {
+		User.findOne({ mobile }, "-password", function(err, user) {
 			if (err) {
 				console.log(err);
 				return res.status(200).json({
