@@ -21,7 +21,7 @@ const BankFee = require("../models/BankFee");
 const Fee = require("../models/Fee");
 const CashierLedger = require("../models/CashierLedger");
 
-router.get("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
+router.post("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
 	try {
 		const { token} = req.body;
 		var result= await Bank.findOne({token: token});
@@ -33,7 +33,7 @@ router.get("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
 
 		res.send({ code: 1, fee: fee.revenue_sharing_rule});
 	} catch (err) {
-		res.status(200).send({ code: 0, message: err.message });
+		res.status(403).send({ code: 0, message: err.message });
 	}
 });
 
