@@ -3,7 +3,7 @@ const sendSMS = require("../routes/utils/sendSMS");
 const sendMail = require("../routes/utils/sendMail");
 const config = require("../config.json");
 
-module.exports.createWallet = async (arr, bank = "", infra = "") => {
+module.exports.createWallet = async (arr) => {
 	let err = [];
 	await Promise.all(
 		arr.map(async url => {
@@ -17,10 +17,9 @@ module.exports.createWallet = async (arr, bank = "", infra = "") => {
 				}
 			};
 			let res = await doRequest(options);
-
+			console.log(res);
 			if (res.status === 0) {
 				err.push(res.message);
-			} else {
 			}
 		})
 	);

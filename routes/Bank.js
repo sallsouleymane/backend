@@ -31,7 +31,7 @@ router.post("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
 		const fee = await Fee.findById(req.params.bankFeeId);
 		if (fee == null) throw { message: "No Fee Rule found" };
 
-		res.send({ code: 1, fee: fee.revenue_sharing_rule});
+		res.send({ status: 1, fee: fee.revenue_sharing_rule});
 	} catch (err) {
 		res.status(403).send({ code: 0, message: err.message });
 	}
@@ -59,9 +59,9 @@ router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
 			throw { message: "Not Found"}
 		}
 
-		res.send({ code: 1 });
+		res.send({ status: 1 });
 	} catch (err) {
-		res.send({ code: 0, message: err.message });
+		res.send({ status: 0, message: err.message });
 	}
 });
 
@@ -76,10 +76,12 @@ router.post("/bank/sendShareForApproval", function (req, res) {
 			if (err) {
 				console.log(err);
 				res.status(500).json({
+					status: 0,
 					error: "Internal Server Error"
 				});
 			} else if (bank == null) {
-				res.status(401).json({
+				res.status(403).json({
+					status: 0,
 					error: "Unauthorized"
 				});
 			} else {
@@ -99,10 +101,12 @@ router.post("/bank/sendShareForApproval", function (req, res) {
 						if (err) {
 							console.log(err);
 							res.status(500).json({
+								status: 0,
 								error: "Internal Server Error"
 							});
 						} else if (fee == null) {
-							res.status(200).json({
+							res.status(403).json({
+								status: 0,
 								error: "Rule not found"
 							});
 						} else {
@@ -116,7 +120,7 @@ router.post("/bank/sendShareForApproval", function (req, res) {
 								fee.name;
 							sendSMS(content2, bank.mobile);
 							res.status(200).json({
-								success: true,
+								status: 1
 							});
 						}
 					}
@@ -198,9 +202,7 @@ router.post("/bankActivate", function (req, res) {
 								"master@" + bank.name,
 								"infra_operational@" + bank.name,
 								"infra_master@" + bank.name,
-							],
-							bank._id,
-							bank.user_id
+							]
 						).then(function (result) {
 							res.status(200).json({
 								status: "activated",
@@ -932,10 +934,12 @@ router.post("/createBankRules", (req, res) => {
 			if (err) {
 				console.log(err);
 				res.status(500).json({
+					status: 0,
 					error: "Internal Server Error",
 				});
 			} else if (bank == null) {
 				res.status(401).json({
+					status: 0,
 					error: "Unauthorized",
 				});
 			} else {
@@ -965,6 +969,7 @@ router.post("/createBankRules", (req, res) => {
 						if (err) {
 							console.log(err);
 							res.status(500).json({
+								status: 0,
 								error: "Internal Server Error",
 							});
 						} else if (result == null) {
@@ -972,6 +977,7 @@ router.post("/createBankRules", (req, res) => {
 								if (err) {
 									console.log(err);
 									return res.status(500).json({
+										status: 0,
 										error: "Internal Server Error",
 									});
 								}
@@ -985,11 +991,12 @@ router.post("/createBankRules", (req, res) => {
 									name;
 								sendSMS(content2, bank.mobile);
 								res.status(200).json({
-									success: true,
+									status: 1
 								});
 							});
 						} else {
 							res.status(400).json({
+								status: 0,
 								error: "This rule type already exists for this bank",
 							});
 						}
@@ -1011,11 +1018,13 @@ router.post("/editBankBankRule", (req, res) => {
 			if (err) {
 				console.log(err);
 				res.status(500).json({
+					status: 0,
 					error: "Internal Server Error",
 				});
 			}
 			if ( bank == null) {
-				res.status(401).json({
+				res.status(403).json({
+					status: 0,
 					error: "Unauthorized",
 				});
 			} else {
@@ -1031,6 +1040,7 @@ router.post("/editBankBankRule", (req, res) => {
 						if (err) {
 						console.log(err);
 						res.status(500).json({
+							status: 0,
 							error: "Internal Server Error",
 						});
 					}
@@ -1039,7 +1049,7 @@ router.post("/editBankBankRule", (req, res) => {
 						let content2 = "Rule " + name + " has been updated, check it out";
 						sendSMS(content2, bank.mobile);
 						res.status(200).json({
-							status: true,
+							status: 1
 						});
 					}
 				);

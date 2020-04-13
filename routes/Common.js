@@ -518,7 +518,6 @@ router.post("/getBankByName", function(req, res) {
 
 router.post("/getBankRules", function(req, res) {
 	const { bank_id } = req.body;
-	console.log(bank_id)
 	Bank.findOne(
 		{
 			_id: bank_id
@@ -527,12 +526,13 @@ router.post("/getBankRules", function(req, res) {
 			if (err) {
 				console.log(err),
 				res.status(500).json({
+					status: 0,
 					error: "Internal Server Error"
 				})
 			}
-			console.log(bank)
 			if ( bank == null) {
 				res.status(401).json({
+					status: 0,
 					error: "Unauthorized"
 				});
 			} else {
@@ -543,10 +543,12 @@ router.post("/getBankRules", function(req, res) {
 					function(err, rules) {
 						if (err) {
 							res.status(500).json({
+								status: 0,
 								error: "Internal Server Error"
 							});
 						} else {
 							res.status(200).json({
+								status: 1,
 								rules: rules
 							});
 						}
@@ -1063,7 +1065,7 @@ router.post("/verifyOTP", function(req, res) {
 		},
 		function(err, ot) {
 			if (err || ot == null) {
-				res.status(401).json({
+				res.status(403).json({
 					error: "Invalid OTP!"
 				});
 			} else {
