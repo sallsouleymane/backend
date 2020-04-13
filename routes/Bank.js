@@ -23,7 +23,7 @@ const CashierLedger = require("../models/CashierLedger");
 
 router.post("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
 	try {
-		const { token} = req.body;
+		const { token } = req.body;
 		var result= await Bank.findOne({token: token});
 		if ( result == null ) {
 			throw { message: "Unauthorized"}
