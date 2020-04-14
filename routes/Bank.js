@@ -31,9 +31,9 @@ router.post("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
 		const fee = await Fee.findById(req.params.bankFeeId);
 		if (fee == null) throw { message: "No Fee Rule found" };
 
-		res.send({ status: 1, fee: fee.revenue_sharing_rule});
+		res.send({ status: 1, fee: fee.revenue_sharing_rule, infra_status: fee.status});
 	} catch (err) {
-		res.status(403).send({ code: 0, message: err.message });
+		res.status(403).send({ status: 0, message: err.message });
 	}
 });
 
@@ -1045,7 +1045,7 @@ router.post("/editBankBankRule", (req, res) => {
 						});
 					}
 						let content = "<p>Rule " + name + " has been updated, check it out</p>";
-						let result = sendMail(content, "Rule Updated", bank.email);
+						sendMail(content, "Rule Updated", bank.email);
 						let content2 = "Rule " + name + " has been updated, check it out";
 						sendSMS(content2, bank.mobile);
 						res.status(200).json({
