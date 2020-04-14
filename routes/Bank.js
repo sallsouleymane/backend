@@ -92,7 +92,7 @@ router.post("/bank/sendShareForApproval", function (req, res) {
 					},
 					{
 						$set: {
-							status: 0,
+							status: 2,
 							'revenue_sharing_rule.infra_share.fixed': fixed, 
 							'revenue_sharing_rule.infra_share.percentage': percentage
 						}

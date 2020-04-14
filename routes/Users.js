@@ -50,12 +50,13 @@ router.get("/user/getBalance", jwtTokenAuth, (req, res) => {
 				return res.status(500).json({
 					error: "Internal Server Error"
 				});
+			}
 			if(user == null ){
 				 return res.status(403).json({
 					error: "User not found"
 				});
 			}
-			} else {
+			 else {
 				const wallet_id = user.mobile + "@" + user.bank;
 				blockchain.getBalance(wallet_id).then(function(result) {
 					return res.status(200).json({
