@@ -26,6 +26,7 @@ const FeeSchema = new mongoose.Schema({
 		specific_branch_share: [
 			{
 				branch_code: { type: String, required: false },
+				branch_name: { type: String, required: false },
 				claim: { type: Number, required: false },
 				send: { type: Number, required: false }
 			},
