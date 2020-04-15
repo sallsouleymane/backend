@@ -1410,12 +1410,12 @@ router.post("/approveFee", function (req, res) {
 	Infra.findOne({ token: token }, function (err, infra) {
 		if (err) {
 			console.log(err);
-			res.status(500).json({
+			return res.status(500).json({
 				error: "Internal Server Error",
 			});
 		}
 		if (infra == null) {
-			res.status(401).json({
+			return res.status(401).json({
 				error: "Unauthorized",
 			});
 		}
@@ -1429,17 +1429,18 @@ router.post("/approveFee", function (req, res) {
 			function (err, fee) {
 				if (err) {
 					console.log(err);
-					res.status(500).json({
+					return res.status(500).json({
 						error: "Internal Server Error"
 					});
 				}
 				if (fee == null) {
-					res.status(401).json({
+					return res.status(401).json({
 						error: "Unauthorized"
 					});
 				}
 				res.status(200).json({
-					success: "Updated successfully"
+					status: 1,
+					message: "Updated successfully"
 				});
 			}
 		);

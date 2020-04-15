@@ -1063,8 +1063,9 @@ router.post("/cashierSendMoney", function (req, res) {
 
 																				let feeObject = branch_share;
 																				let sendFee = 0;
-
-																				if (specific_branch_share) {
+																				
+																			
+																				if (specific_branch_share.length > 0) {
 																					feeObject = specific_branch_share.filter(
 																						(bwsf) => bwsf.branch_code == f2.bcode
 																					)[0];
