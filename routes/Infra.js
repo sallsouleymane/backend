@@ -1025,7 +1025,7 @@ router.post("/getRules", function(req, res) {
 				Fee.find(
 					{
 						bank_id,
-						status: 2
+						status: {$in: [1,2]}
 					},
 					function(err, rules) {
 						if (err) {
