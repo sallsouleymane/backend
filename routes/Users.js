@@ -177,7 +177,7 @@ router.post("/user/getUser", jwtTokenAuth, function(req, res) {
 			});
 		}
 		if (result == null) {
-			res.status(403).json({
+			return res.status(403).json({
 				status: 0,
 				error: "You are either not authorised or not logged in."
 			});
