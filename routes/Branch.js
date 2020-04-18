@@ -15,8 +15,6 @@ const OTP = require("../models/OTP");
 const Branch = require("../models/Branch");
 const BankUser = require("../models/BankUser");
 const Cashier = require("../models/Cashier");
-const BankFee = require("../models/BankFee");
-const CashierSend = require("../models/CashierSend");
 const CashierPending = require("../models/CashierPending");
 const CashierLedger = require("../models/CashierLedger");
 const BranchSend = require("../models/BranchSend");
@@ -462,42 +460,6 @@ router.post("/branchVerifyClaim", function(req, res) {
 	);
 });
 
-router.post("/cashierVerifyOTPClaim", function(req, res) {
-	const { transferCode, token, otp } = req.body;
-
-	Cashier.findOne(
-		{
-			token,
-			status: 1
-		},
-		function(err, f) {
-			if (err || f == null) {
-				res.status(401).json({
-					error: "Unauthorized"
-				});
-			} else {
-				CashierSend.findOne(
-					{
-						transaction_code: transferCode,
-						otp: otp
-					},
-					function(err, otpd) {
-						if (err || otpd == null) {
-							res.status(402).json({
-								error: "OTP Missmatch"
-							});
-						} else {
-							res.status(200).json({
-								status: "success"
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
-
 router.post("/branchClaimMoney", function(req, res) {
 	var today = new Date();
 	today = today.toISOString();
@@ -663,6 +625,42 @@ router.post("/branchClaimMoney", function(req, res) {
 									}
 								}
 							); //branch
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/branchVerifyOTPClaim", function(req, res) {
+	const { transferCode, token, otp } = req.body;
+
+	Branch.findOne(
+		{
+			token,
+			status: 1
+		},
+		function(err, f) {
+			if (err || f == null) {
+				res.status(401).json({
+					error: "Unauthorized"
+				});
+			} else {
+				BranchSend.findOne(
+					{
+						transaction_code: transferCode,
+						otp: otp
+					},
+					function(err, otpd) {
+						if (err || otpd == null) {
+							res.status(402).json({
+								error: "OTP Missmatch"
+							});
+						} else {
+							res.status(200).json({
+								status: "success"
+							});
 						}
 					}
 				);
