@@ -191,7 +191,7 @@ router.post("/user/getUser", jwtTokenAuth, function(req, res) {
 				});
 			}
 			if (user == null) {
-				res.status(403).json({
+				return res.status(403).json({
 					status: 0,
 					error: "User not found"
 				});
