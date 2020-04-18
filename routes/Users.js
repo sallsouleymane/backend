@@ -22,7 +22,6 @@ const blockchain = require("../services/Blockchain");
 router.post("/user/checkWalToWalFee", jwtTokenAuth, function (req, res) {
 	var { amount } = req.body;
 	const username = req.username;
-	console.log(username)
 	User.findOne(
 		{
 			username,
@@ -1076,7 +1075,6 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 															child_code = mns + "" + mnr + "" + now + "3";
 															trans3.child_code = child_code;
 
-															
 															blockchain
 																.transferThis(trans1, trans2, trans3)
 																.then(function (result) {

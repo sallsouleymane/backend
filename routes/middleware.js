@@ -10,12 +10,12 @@ module.exports = function(req, res, next) {
       req.cookies.token;
 
   if (!token) {
-    res.status(401).send('Unauthorized: No token provided');
+    res.status(401).send({status: 0, error: 'Unauthorized: No token provided'});
   } else {
     jwt.verify(token, secret, function(err, decoded) {
       if (err) {
         console.log(err)
-        res.status(401).send('Unauthorized: Invalid token');
+        res.status(401).send({status: 0, error: 'Unauthorized: Invalid token'});
       } else {
         req.username = decoded.username;
         req.password = decoded.password;

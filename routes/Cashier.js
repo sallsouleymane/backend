@@ -915,6 +915,7 @@ router.post("/cashier/checkNonWaltoWalFee", function (req, res) {
 								temp = (amount * range.percentage) / 100;
 								fee = temp + range.fixed_amount;
 								res.status(200).json({
+									status: 1,
 									fee: fee
 								})
 							}
@@ -1674,7 +1675,8 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																											}
 																										);
 																										res.status(200).json({
-																											status: "success",
+																											status: 1,
+																											message: receiverIdentificationAmount + "XOF amount is Transferred"
 																										});
 																									}
 																								);
