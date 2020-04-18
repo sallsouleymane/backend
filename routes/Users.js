@@ -182,7 +182,7 @@ router.post("/user/getUser", jwtTokenAuth, function(req, res) {
 				error: "You are either not authorised or not logged in."
 			});
 		}
-		User.findOne({ mobile }, "-password", function(err, user) {
+		User.findOne({ mobile }, "-password -docs_hash -contact_list", function(err, user) {
 			if (err) {
 				console.log(err);
 				return res.status(500).json({
