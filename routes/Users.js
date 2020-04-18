@@ -15,7 +15,7 @@ const CashierSend = require("../models/CashierSend");
 //utils
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
-const makeid = require("./utils/makeotp");
+const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
 const blockchain = require("../services/Blockchain");
 

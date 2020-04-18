@@ -233,7 +233,7 @@ module.exports.transferThis = async (t1, t2 = false, t3 = false, t4 = false) => 
 							};
 
 							res = await doRequest(options);
-							console.log("three: " + res.toString());
+							console.log("Four: " + res.toString());
 							if (res.status == 0) {
 								if (res.message) {
 									err.push(res.message);

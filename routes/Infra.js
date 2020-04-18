@@ -1419,9 +1419,10 @@ router.post("/approveFee", function (req, res) {
 				error: "Unauthorized",
 			});
 		}
-		Fee.findByIdAndUpdate(
+		Fee.findOneAndUpdate(
 			{
 				_id: id,
+				status: 2
 			},
 			{
 				$set: { status: 1 },
@@ -1434,8 +1435,8 @@ router.post("/approveFee", function (req, res) {
 					});
 				}
 				if (fee == null) {
-					return res.status(401).json({
-						error: "Unauthorized"
+					return res.status(403).json({
+						error: "Infra share not updated"
 					});
 				}
 				res.status(200).json({

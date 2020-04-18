@@ -1347,8 +1347,6 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 		receiverIdentificationAmount,
 	} = req.body;
 
-	const transactionCode = makeid(8);
-
 	Cashier.findOne(
 		{
 			token,
@@ -1456,7 +1454,6 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 													data.amount = receiverIdentificationAmount;
 													data.fee = livefee;
 													data.cashier_id = cashier._id;
-													data.transaction_code = transactionCode;
 
 													var mns = branch.mobile.slice(-2);
 													var mnr = bank.mobile.slice(-2);
@@ -1612,19 +1609,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																						.then(function (result) {
 																							console.log("Result: " + result);
 																							if (result.length <= 0) {
-																								let content =
-																									"Your Transaction Code is " + transactionCode;
-																								if (receiverMobile && receiverMobile != null) {
-																									sendSMS(content, receiverMobile);
-																								}
-																								if (receiverEmail && receiverEmail != null) {
-																									sendMail(
-																										content,
-																										"Transaction Code",
-																										receiverEmail
-																									);
-																								}
-
+																								
 																								CashierSend.findByIdAndUpdate(
 																									d._id,
 																									{
