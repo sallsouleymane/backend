@@ -2146,7 +2146,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 																													c._id,
 																													{ amount: amt },
 																													function (err, c) {
-																														res.status(200).json({
+																														return res.status(200).json({
 																															status: "success",
 																														});
 																													}
@@ -2160,7 +2160,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 																								}
 																							);
 																						} else {
-																							return res.status(200).json({
+																							return res.status(403).json({
 																								error: result.toString(),
 																							});
 																						}

@@ -445,7 +445,7 @@ router.post("/user/signup", (req, res) => {
 				});
 			res.status(200).json({
 				status: 1,
-				message: "OTP has been sent successfully"
+				message: "Signup completed"
 			});
 		});
 	});
