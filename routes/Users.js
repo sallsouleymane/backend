@@ -836,6 +836,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																						sending_amount +
 																						" XOF is transferred to " +
 																						receiver.name,
+																					balance: (bal-(omount+fee))
 																				});
 																			} else {
 																				return res.status(500).json({
@@ -1105,7 +1106,8 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 
 																				return res.status(200).json({
 																					status: 1,
-																					message: sending_amount + " XOF is transferred to branch"
+																					message: sending_amount + " XOF is transferred to branch",
+																					balance: (bal-(omount+fee)) 
 																				});
 																			}
 																		);
