@@ -74,11 +74,11 @@ router.post('/fileUpload', function (req, res) {
 })
 
 router.post('/ipfsUpload', function (req, res) {
-  const token = req.query.token
+//   const token = req.query.token
   
   var form = new IncomingForm()
   
-  form.parse(req, function (err, fields, files) {
+  form.parse(req, function (_err, _fields, files) {
 	// var fn = files.file.name.split('.').pop()
 	// fn = fn.toLowerCase()
 	
@@ -91,23 +91,27 @@ router.post('/ipfsUpload', function (req, res) {
 	  
 	  var oldpath = files.file.path
 	  fileUpload(oldpath).then(function (result) {
-		var out
+		// var out
 		if (result) {
 		  result = JSON.parse(result)
 		  if (!result.Hash) {
 			res.status(200).json({
-			  error: 'File Upload Error'
+				status: 0,
+			  	message: 'File Upload Error'
 			})
 		  }
 		  else {
 			res.status(200).json({
-			  name: result.Hash
+				status: 1,
+				message: "File uploaded successfully",
+			  	hash: result.Hash
 			})
 		  }
 		  
 		}
 		else {
 		  res.status(200).json({
+			status: 0,
 			error: 'File Upload Error'
 		  })
 		}
