@@ -79,15 +79,15 @@ router.post('/ipfsUpload', function (req, res) {
   var form = new IncomingForm()
   
   form.parse(req, function (err, fields, files) {
-	var fn = files.file.name.split('.').pop()
-	fn = fn.toLowerCase()
+	// var fn = files.file.name.split('.').pop()
+	// fn = fn.toLowerCase()
 	
-	if (fn != 'pdf') {
-	  res.status(200).json({
-		error: 'Only PDF files are accepted'
-	  })
-	}
-	else {
+	// if (fn != 'pdf') {
+	//   res.status(200).json({
+	// 	error: 'Only PDF files are accepted'
+	//   })
+	// }
+	// else {
 	  
 	  var oldpath = files.file.path
 	  fileUpload(oldpath).then(function (result) {
@@ -113,7 +113,7 @@ router.post('/ipfsUpload', function (req, res) {
 		}
 		
 	  })
-	}
+	// }
 	
   })
 })
