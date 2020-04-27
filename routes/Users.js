@@ -165,42 +165,42 @@ router.post("/user/checkWalToNonWalFee", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/user/getUser", jwtTokenAuth, function(req, res) {
+router.post("/user/getUser", jwtTokenAuth, function (req, res) {
 	const { mobile } = req.body;
 	const username = req.username;
-	User.findOne({ username }, function(err, result) {
+	User.findOne({ username }, function (err, result) {
 		if (err) {
 			console.log(err);
-			return res.status(500).json({
+			res.status(500).json({
 				status: 0,
-				error: "Internal Server Error"
+				error: "Internal Server Error",
+			});
+		} else if (result == null) {
+			res.status(403).json({
+				status: 0,
+				error: "You are either not authorised or not logged in.",
+			});
+		} else {
+			User.findOne({ mobile }, "-password -docs_hash -contact_list", function (err, user) {
+				if (err) {
+					console.log(err);
+					res.status(500).json({
+						status: 0,
+						error: "Internal Server Error",
+					});
+				} else if (user == null) {
+					res.status(403).json({
+						status: 0,
+						error: "User not found",
+					});
+				} else {
+					res.status(200).json({
+						status: 1,
+						user: user,
+					});
+				}
 			});
 		}
-		if (result == null) {
-			return res.status(403).json({
-				status: 0,
-				error: "You are either not authorised or not logged in."
-			});
-		}
-		User.findOne({ mobile }, "-password -docs_hash -contact_list", function(err, user) {
-			if (err) {
-				console.log(err);
-				return res.status(500).json({
-					status: 0,
-					error: "Internal Server Error"
-				});
-			}
-			if (user == null) {
-				return res.status(403).json({
-					status: 0,
-					error: "User not found"
-				});
-			}
-			res.status(200).json({
-				status: 1,
-				user: user
-			});
-		});
 	});
 });
 
