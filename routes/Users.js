@@ -1140,7 +1140,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																								status: 1,
 																								message:
 																									sending_amount + " XOF is transferred to branch",
-																								balance: bal - (omount + fee),
+																								balance: bal - (oamount + fee),
 																							});
 																						}
 																					}
