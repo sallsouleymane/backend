@@ -872,7 +872,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																							sending_amount +
 																							" XOF is transferred to " +
 																							receiver.name,
-																						balance: bal - (omount + fee),
+																						balance: bal - (oamount + fee),
 																					});
 																				} else {
 																					res.status(200).json({
