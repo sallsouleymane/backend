@@ -17,6 +17,7 @@ const CashierSendSchema = new mongoose.Schema({
   master_code: {type: String, required:true},
   child_code: {type: String, required: false},
   status: { type: Number, required: true, default: 0 },
-  created_at: { type: Date, required:true, default: Date.now }
+  created_at: { type: Date, required:true, default: Date.now },
+  rule_type: { type: String, required: false }
 });
 module.exports = mongoose.model('CashierSend', CashierSendSchema);

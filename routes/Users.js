@@ -1030,6 +1030,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 															data.amount = sending_amount;
 															const transactionCode = makeid(8);
 															data.transaction_code = transactionCode;
+															data.rule_type = "Wallet to Non Wallet"
 															data.fee = fee;
 															var mns = sender.mobile.slice(-2);
 															var mnr = receiver.mobile.slice(-2);

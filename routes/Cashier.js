@@ -1038,6 +1038,7 @@ router.post("/cashierSendMoney", function (req, res) {
 													data.amount = receiverIdentificationAmount;
 													data.cashier_id = f._id;
 													data.transaction_code = transactionCode;
+													data.rule_type = "Non Wallet to Non Wallet"
 
 													var mns = f2.mobile.slice(-2);
 													var mnr = f3.mobile.slice(-2);
@@ -1434,6 +1435,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																data.receiver_info = JSON.stringify(temp);
 																data.amount = receiverIdentificationAmount;
 																data.cashier_id = cashier._id;
+																data.rule_type = "Non Wallet to Wallet"
 
 																var mns = branch.mobile.slice(-2);
 																var mnr = bank.mobile.slice(-2);
@@ -1945,7 +1947,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 		},
 		function (err, f) {
 			if (err || f == null) {
-				return res.status(200).json({
+				res.status(200).json({
 					error: "Unauthorized",
 				});
 			} else {
@@ -1955,7 +1957,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 					},
 					function (err, otpd) {
 						if (err || otpd == null) {
-							return res.status(200).json({
+							res.status(200).json({
 								error: "Transaction Not Found",
 							});
 						} else {
@@ -1965,7 +1967,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 								},
 								function (err, f2) {
 									if (err || f2 == null) {
-										return res.status(200).json({
+										res.status(200).json({
 											error: "Branch Not Found",
 										});
 									} else {
@@ -1975,7 +1977,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 											},
 											function (err, f3) {
 												if (err || f3 == null) {
-													return res.status(200).json({
+													res.status(200).json({
 														error: "Bank Not Found",
 													});
 												} else {
@@ -1985,7 +1987,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 														},
 														function (err, f4) {
 															if (err || f4 == null) {
-																return res.status(200).json({
+																res.status(200).json({
 																	error: "Infra Not Found",
 																});
 															} else {
@@ -2007,10 +2009,12 @@ router.post("/cashierClaimMoney", function (req, res) {
 
 																const oamount = otpd.amount;
 																data.save((err, cashierClaimObj) => {
-																	if (err)
-																		return res.json({
+																	if (err) {
+																		res.status(200).json({
 																			error: err.toString(),
 																		});
+																	}
+																		else {
 
 																	const branchOpWallet = f2.bcode + "_operational@" + f3.name;
 																	const bankEsWallet = "escrow@" + f3.name;
@@ -2035,13 +2039,13 @@ router.post("/cashierClaimMoney", function (req, res) {
 
 																	const find = {
 																		bank_id: f.bank_id,
-																		trans_type: "Non Wallet to Non Wallet",
+																		trans_type: otpd.rule_type,
 																		status: 1,
 																		active: "Active",
 																	};
 																	Fee.findOne(find, function (err, fe) {
 																		if (err || fe == null) {
-																			return res.status(200).json({
+																			res.status(200).json({
 																				error: "Revenue Rule Not Found",
 																			});
 																		} else {
@@ -2099,10 +2103,10 @@ router.post("/cashierClaimMoney", function (req, res) {
 																								},
 																								(err) => {
 																									if (err) {
-																										return res.status(200).json({
+																										res.status(200).json({
 																											error: err.toString(),
 																										});
-																									}
+																									} else {
 																									Cashier.findByIdAndUpdate(
 																										f._id,
 																										{
@@ -2126,7 +2130,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 																												$lte: new Date(end),
 																											},
 																										},
-																										function (err, c) {
+																										function (err, c) {h
 																											if (err || c == null) {
 																												let data = new CashierLedger();
 																												data.amount = Number(oamount);
@@ -2140,8 +2144,9 @@ router.post("/cashierClaimMoney", function (req, res) {
 																													c._id,
 																													{ amount: amt },
 																													function (err, c) {
-																														return res.status(200).json({
-																															status: "success",
+																														res.status(200).json({
+																															status: 1,
+																															message: "Cashier claimed money"
 																														});
 																													}
 																												);
@@ -2149,9 +2154,11 @@ router.post("/cashierClaimMoney", function (req, res) {
 																										}
 																									);
 																								}
+																								}
 																							);
 																						} else {
-																							return res.status(200).json({
+																							res.status(200).json({
+																								status: 0,
 																								error: result.toString(),
 																							});
 																						}
@@ -2159,6 +2166,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 																			});
 																		}
 																	});
+																}
 																}); //save
 															} //infra
 														}
