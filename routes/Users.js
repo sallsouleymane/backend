@@ -817,7 +817,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																		let trans1 = {};
 																		trans1.from = senderWallet;
 																		trans1.to = bankEsWallet;
-																		trans1.amount = oamount;
+																		trans1.amount = (oamount-fee);
 																		trans1.note =
 																			"Transfer from " + sender.name + " to " + receiver.name;
 																		trans1.email1 = sender.email;
@@ -872,7 +872,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																							sending_amount +
 																							" XOF is transferred to " +
 																							receiver.name,
-																						balance: bal - (oamount + fee),
+																						balance: bal - oamount,
 																					});
 																				} else {
 																					res.status(200).json({
@@ -1067,7 +1067,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																	let trans1 = {};
 																	trans1.from = senderWallet;
 																	trans1.to = bankEsWallet;
-																	trans1.amount = oamount;
+																	trans1.amount = (oamount-fee);
 																	trans1.note = "Transferred Money to " + receiverFamilyName;
 																	trans1.email1 = sender.email;
 																	trans1.email2 = receiver.email;
@@ -1140,7 +1140,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																								status: 1,
 																								message:
 																									sending_amount + " XOF is transferred to branch",
-																								balance: bal - (oamount + fee),
+																								balance: bal - oamount,
 																							});
 																						}
 																					}

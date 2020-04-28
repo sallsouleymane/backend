@@ -925,9 +925,7 @@ router.post("/cashierSendMoney", function (req, res) {
 	var now = new Date().getTime();
 
 	const {
-		otpId,
 		token,
-		otp,
 		givenname,
 		familyname,
 		note,
@@ -942,7 +940,6 @@ router.post("/cashierSendMoney", function (req, res) {
 		country,
 		email,
 		mobile,
-		livefee,
 		withoutID,
 		requireOTP,
 		receiverMobile,
@@ -1039,7 +1036,6 @@ router.post("/cashierSendMoney", function (req, res) {
 													};
 													data.receiver_id = JSON.stringify(temp);
 													data.amount = receiverIdentificationAmount;
-													data.fee = livefee;
 													data.cashier_id = f._id;
 													data.transaction_code = transactionCode;
 
@@ -1097,10 +1093,11 @@ router.post("/cashierSendMoney", function (req, res) {
 																	if (amount >= range.trans_from && amount <= range.trans_to) {
 																		temp = (amount * range.percentage) / 100;
 																		fee = temp + range.fixed_amount;
+
 																		let trans1 = {};
 																		trans1.from = branchOpWallet;
 																		trans1.to = bankEsWallet;
-																		trans1.amount = oamount;
+																		trans1.amount = (oamount-fee);
 																		trans1.note = "Cashier Send Money";
 																		trans1.email1 = f2.email;
 																		trans1.email2 = f3.email;
@@ -1330,7 +1327,6 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 		country,
 		email,
 		mobile,
-		livefee,
 		requireOTP,
 		receiverMobile,
 		receiverIdentificationAmount,
@@ -1437,7 +1433,6 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																};
 																data.receiver_info = JSON.stringify(temp);
 																data.amount = receiverIdentificationAmount;
-																data.fee = livefee;
 																data.cashier_id = cashier._id;
 
 																var mns = branch.mobile.slice(-2);
@@ -1500,7 +1495,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																						let trans1 = {};
 																						trans1.from = branchOpWallet;
 																						trans1.to = receiverWallet;
-																						trans1.amount = oamount;
+																						trans1.amount = (oamount-fee);
 																						trans1.note = "Cashier Send Money";
 																						trans1.email1 = branch.email;
 																						trans1.email2 = receiver.email;
