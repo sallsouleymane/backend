@@ -1898,6 +1898,7 @@ router.post("/cashierVerifyClaim", function (req, res) {
 		function (err, f) {
 			if (err || f == null) {
 				res.status(200).json({
+					status: 0,
 					error: "Unauthorized",
 				});
 			} else {
@@ -1909,11 +1910,13 @@ router.post("/cashierVerifyClaim", function (req, res) {
 					function (err, otpd) {
 						if (err || otpd == null) {
 							res.status(200).json({
+								status:0,
 								error: "OTP Missmatch",
 							});
 						} else {
 							res.status(200).json({
-								status: "success",
+								status: 1,
+								message: "Cashier verify claim success"
 							});
 						}
 					}
