@@ -2133,7 +2133,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 																												$lte: new Date(end),
 																											},
 																										},
-																										function (err, c) {h
+																										function (err, c) {
 																											if (err || c == null) {
 																												let data = new CashierLedger();
 																												data.amount = Number(oamount);
