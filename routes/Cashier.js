@@ -1081,6 +1081,8 @@ router.post("/cashierSendMoney", function (req, res) {
 															status: 1,
 															active: "Active",
 														};
+
+														const amount = receiverIdentificationAmount;
 														Fee.findOne(find, function (err, fe) {
 															if (err || fe == null) {
 																res.status(200).json({
@@ -1094,7 +1096,6 @@ router.post("/cashierSendMoney", function (req, res) {
 																		temp = (amount * range.percentage) / 100;
 																		fee = temp + range.fixed_amount;
 
-																		const amount = receiverIdentificationAmount;
 																		oamount = Number(amount);
 
 																		if(isInclusive) {
@@ -1483,6 +1484,8 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																			status: 1,
 																			active: "Active",
 																		};
+
+																		const amount = receiverIdentificationAmount;
 																		Fee.findOne(find, function (err, fe) {
 																			if (err || fe == null) {
 																				res.status(200).json({
@@ -1499,7 +1502,6 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																						temp = (amount * range.percentage) / 100;
 																						fee = temp + range.fixed_amount;
 
-																						const amount = receiverIdentificationAmount;
 																						oamount = Number(amount);
 
 																						if (isInclusive) {
