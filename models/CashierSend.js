@@ -10,6 +10,7 @@ const CashierSendSchema = new mongoose.Schema({
   transaction_code: { type: String, required: false, default: null },
   otp: { type: String, required: false, default: null },
   amount: { type: Number, required: true },
+  is_inclusive: { type: Boolean, required: true, default: false },
   fee: { type: String, required: false},
   transaction_details: { type: String, required: false, default: null },
   cashier_id: { type: String, required: false},

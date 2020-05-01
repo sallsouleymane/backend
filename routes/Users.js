@@ -717,7 +717,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 	var now = new Date().getTime();
 	const username = req.username;
 
-	const { receiverMobile, note, sending_amount } = req.body;
+	const { receiverMobile, note, sending_amount, isInclusive } = req.body;
 
 	User.findOneAndUpdate(
 		{
@@ -803,21 +803,25 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																		var temp = (oamount * range.percentage) / 100;
 																		fee = temp + range.fixed_amount;
 
+																		if(isInclusive) {
+																			oamount = oamount - fee;
+																		}
+
 																		var mns = sender.mobile.slice(-2);
 																		var mnr = receiver.mobile.slice(-2);
 																		var master_code = (child_code = mns + mnr + now);
 
 																		//send transaction sms after actual transaction
 
-																		const bankEsWallet = receiverMobile + "@" + bank.name;
+																		const receiverWallet = receiverMobile + "@" + bank.name;
 																		const bankOpWallet = "operational@" + bank.name;
 																		const infraOpWallet = "infra_operational@" + bank.name;
 																		const { infra_share } = fe.revenue_sharing_rule;
 
 																		let trans1 = {};
 																		trans1.from = senderWallet;
-																		trans1.to = bankEsWallet;
-																		trans1.amount = (oamount-fee);
+																		trans1.to = receiverWallet;
+																		trans1.amount = oamount;
 																		trans1.note =
 																			"Transfer from " + sender.name + " to " + receiver.name;
 																		trans1.email1 = sender.email;
@@ -919,6 +923,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 		receiverIdentificationNumber,
 		receiverIdentificationValidTill,
 		sending_amount,
+		isInclusive
 	} = req.body;
 
 	User.findOneAndUpdate(
@@ -1005,6 +1010,10 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 															var temp = (oamount * range.percentage) / 100;
 															fee = temp + range.fixed_amount;
 
+															if(isInclusive) {
+																oamount = oamount - fee;
+															}
+
 															let data = new CashierSend();
 															temp = {
 																mobile: sender.mobile,
@@ -1028,6 +1037,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 															};
 															data.receiver_id = JSON.stringify(temp);
 															data.amount = sending_amount;
+															data.is_inclusive = isInclusive;
 															const transactionCode = makeid(8);
 															data.transaction_code = transactionCode;
 															data.rule_type = "Wallet to Non Wallet"
@@ -1068,7 +1078,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																	let trans1 = {};
 																	trans1.from = senderWallet;
 																	trans1.to = bankEsWallet;
-																	trans1.amount = (oamount-fee);
+																	trans1.amount = oamount;
 																	trans1.note = "Transferred Money to " + receiverFamilyName;
 																	trans1.email1 = sender.email;
 																	trans1.email2 = receiver.email;

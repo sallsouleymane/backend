@@ -953,6 +953,7 @@ router.post("/cashierSendMoney", function (req, res) {
 		receiverIdentificationNumber,
 		receiverIdentificationValidTill,
 		receiverIdentificationAmount,
+		isInclusive,
 	} = req.body;
 
 	const transactionCode = makeid(8);
@@ -1036,9 +1037,10 @@ router.post("/cashierSendMoney", function (req, res) {
 													};
 													data.receiver_id = JSON.stringify(temp);
 													data.amount = receiverIdentificationAmount;
+													data.is_inclusive = isInclusive;
 													data.cashier_id = f._id;
 													data.transaction_code = transactionCode;
-													data.rule_type = "Non Wallet to Non Wallet"
+													data.rule_type = "Non Wallet to Non Wallet";
 
 													var mns = f2.mobile.slice(-2);
 													var mnr = f3.mobile.slice(-2);
@@ -1073,9 +1075,6 @@ router.post("/cashierSendMoney", function (req, res) {
 														const bankOpWallet = "operational@" + f3.name;
 														const infraOpWallet = "infra_operational@" + f3.name;
 
-														const amount = receiverIdentificationAmount;
-														oamount = Number(amount);
-
 														const find = {
 															bank_id: f3._id,
 															trans_type: "Non Wallet to Non Wallet",
@@ -1095,10 +1094,16 @@ router.post("/cashierSendMoney", function (req, res) {
 																		temp = (amount * range.percentage) / 100;
 																		fee = temp + range.fixed_amount;
 
+																		const amount = receiverIdentificationAmount;
+																		oamount = Number(amount);
+
+																		if(isInclusive) {
+																			oamount = oamount - fee;
+																		}
 																		let trans1 = {};
 																		trans1.from = branchOpWallet;
 																		trans1.to = bankEsWallet;
-																		trans1.amount = (oamount-fee);
+																		trans1.amount = oamount;
 																		trans1.note = "Cashier Send Money";
 																		trans1.email1 = f2.email;
 																		trans1.email2 = f3.email;
@@ -1331,6 +1336,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 		requireOTP,
 		receiverMobile,
 		receiverIdentificationAmount,
+		isInclusive
 	} = req.body;
 
 	Cashier.findOne(
@@ -1434,8 +1440,9 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																};
 																data.receiver_info = JSON.stringify(temp);
 																data.amount = receiverIdentificationAmount;
+																data.is_inclusive = isInclusive;
 																data.cashier_id = cashier._id;
-																data.rule_type = "Non Wallet to Wallet"
+																data.rule_type = "Non Wallet to Wallet";
 
 																var mns = branch.mobile.slice(-2);
 																var mnr = bank.mobile.slice(-2);
@@ -1470,9 +1477,6 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																		const bankOpWallet = "operational@" + bank.name;
 																		const infraOpWallet = "infra_operational@" + bank.name;
 
-																		const amount = receiverIdentificationAmount;
-																		oamount = Number(amount);
-
 																		const find = {
 																			bank_id: bank._id,
 																			trans_type: "Non Wallet to Wallet",
@@ -1494,10 +1498,18 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																					) {
 																						temp = (amount * range.percentage) / 100;
 																						fee = temp + range.fixed_amount;
+
+																						const amount = receiverIdentificationAmount;
+																						oamount = Number(amount);
+
+																						if (isInclusive) {
+																							oamount = oamount - fee;
+																						}
+
 																						let trans1 = {};
 																						trans1.from = branchOpWallet;
 																						trans1.to = receiverWallet;
-																						trans1.amount = (oamount-fee);
+																						trans1.amount = oamount;
 																						trans1.note = "Cashier Send Money";
 																						trans1.email1 = branch.email;
 																						trans1.email2 = receiver.email;
@@ -1910,13 +1922,13 @@ router.post("/cashierVerifyClaim", function (req, res) {
 					function (err, otpd) {
 						if (err || otpd == null) {
 							res.status(200).json({
-								status:0,
+								status: 0,
 								error: "OTP Missmatch",
 							});
 						} else {
 							res.status(200).json({
 								status: 1,
-								message: "Cashier verify claim success"
+								message: "Cashier verify claim success",
 							});
 						}
 					}
@@ -2016,160 +2028,160 @@ router.post("/cashierClaimMoney", function (req, res) {
 																		res.status(200).json({
 																			error: err.toString(),
 																		});
-																	}
-																		else {
+																	} else {
+																		const branchOpWallet = f2.bcode + "_operational@" + f3.name;
+																		const bankEsWallet = "escrow@" + f3.name;
+																		let trans1 = {};
+																		trans1.from = bankEsWallet;
+																		trans1.to = branchOpWallet;
+																		trans1.amount = oamount;
+																		trans1.note = "Cashier claim Money";
+																		trans1.email1 = f3.email;
+																		trans1.email2 = f2.email;
+																		trans1.mobile1 = f3.mobile;
+																		trans1.mobile2 = f2.mobile;
+																		trans1.master_code = master_code;
+																		trans1.child_code = child_code;
 
-																	const branchOpWallet = f2.bcode + "_operational@" + f3.name;
-																	const bankEsWallet = "escrow@" + f3.name;
-																	let trans1 = {};
-																	trans1.from = bankEsWallet;
-																	trans1.to = branchOpWallet;
-																	trans1.amount = oamount;
-																	trans1.note = "Cashier claim Money";
-																	trans1.email1 = f3.email;
-																	trans1.email2 = f2.email;
-																	trans1.mobile1 = f3.mobile;
-																	trans1.mobile2 = f2.mobile;
-																	trans1.master_code = master_code;
-																	trans1.child_code = child_code;
+																		//Code by hatim
 
-																	//Code by hatim
+																		//req
+																		//branchId
+																		//feeId
+																		//bankFee
 
-																	//req
-																	//branchId
-																	//feeId
-																	//bankFee
+																		const find = {
+																			bank_id: f.bank_id,
+																			trans_type: otpd.rule_type,
+																			status: 1,
+																			active: "Active",
+																		};
+																		Fee.findOne(find, function (err, fe) {
+																			if (err || fe == null) {
+																				res.status(200).json({
+																					error: "Revenue Rule Not Found",
+																				});
+																			} else {
+																				let fee = 0;
 
-																	const find = {
-																		bank_id: f.bank_id,
-																		trans_type: otpd.rule_type,
-																		status: 1,
-																		active: "Active",
-																	};
-																	Fee.findOne(find, function (err, fe) {
-																		if (err || fe == null) {
-																			res.status(200).json({
-																				error: "Revenue Rule Not Found",
-																			});
-																		} else {
-																			let fee = 0;
+																				fe.ranges.map((range) => {
+																					if (
+																						oamount >= range.trans_from &&
+																						oamount <= range.trans_to
+																					) {
+																						temp = (oamount * range.percentage) / 100;
+																						fee = temp + range.fixed_amount;
+																					}
 
-																			fe.ranges.map((range) => {
-																				if (
-																					oamount >= range.trans_from &&
-																					oamount <= range.trans_to
-																				) {
-																					temp = (oamount * range.percentage) / 100;
-																					fee = temp + range.fixed_amount;
-																				}
+																					const {
+																						branch_share,
+																						specific_branch_share,
+																					} = fe.revenue_sharing_rule;
+																					let feeObject = branch_share;
+																					let claimFee = 0;
 
-																				const {
-																					branch_share,
-																					specific_branch_share,
-																				} = fe.revenue_sharing_rule;
-																				let feeObject = branch_share;
-																				let claimFee = 0;
+																					if (specific_branch_share.length > 0) {
+																						feeObject = specific_branch_share.filter(
+																							(bwsf) => bwsf.branch_code == f2.bcode
+																						)[0];
+																					}
 
-																				if (specific_branch_share.length > 0) {
-																					feeObject = specific_branch_share.filter(
-																						(bwsf) => bwsf.branch_code == f2.bcode
-																					)[0];
-																				}
+																					const { claim } = feeObject;
+																					claimFee = (claim * fee) / 100;
 
-																				const { claim } = feeObject;
-																				claimFee = (claim * fee) / 100;
+																					const bankOpWallet = "operational@" + f3.name;
+																					let trans2 = {};
+																					trans2.from = bankOpWallet;
+																					trans2.to = branchOpWallet;
+																					//Replace the amount with the Claim Revenue below
+																					trans2.amount = claimFee;
+																					trans2.note = "Revenue for claim Money";
+																					trans2.email1 = f2.email;
+																					trans2.email2 = f3.email;
+																					trans2.mobile1 = f2.mobile;
+																					trans2.mobile2 = f3.mobile;
+																					trans2.master_code = master_code;
+																					trans1.child_code = data.child_code + "2";
 
-																				const bankOpWallet = "operational@" + f3.name;
-																				let trans2 = {};
-																				trans2.from = bankOpWallet;
-																				trans2.to = branchOpWallet;
-																				//Replace the amount with the Claim Revenue below
-																				trans2.amount = claimFee;
-																				trans2.note = "Revenue for claim Money";
-																				trans2.email1 = f2.email;
-																				trans2.email2 = f3.email;
-																				trans2.mobile1 = f2.mobile;
-																				trans2.mobile2 = f3.mobile;
-																				trans2.master_code = master_code;
-																				trans1.child_code = data.child_code + "2";
+																					//End of hatim Code
 
-																				//End of hatim Code
+																					blockchain
+																						.transferThis(trans1, trans2)
+																						.then(function (result) {
+																							if (result.length <= 0) {
+																								CashierClaim.findByIdAndUpdate(
+																									cashierClaimObj._id,
+																									{
+																										status: 1,
+																									},
+																									(err) => {
+																										if (err) {
+																											res.status(200).json({
+																												error: err.toString(),
+																											});
+																										} else {
+																											Cashier.findByIdAndUpdate(
+																												f._id,
+																												{
+																													cash_paid:
+																														Number(f.cash_paid) + Number(oamount),
+																													cash_in_hand:
+																														Number(f.cash_in_hand) -
+																														Number(oamount),
+																													fee_generated:
+																														Number(f.fee_generated) +
+																														Number(claimFee),
 
-																				blockchain
-																					.transferThis(trans1, trans2)
-																					.then(function (result) {
-																						if (result.length <= 0) {
-																							CashierClaim.findByIdAndUpdate(
-																								cashierClaimObj._id,
-																								{
-																									status: 1,
-																								},
-																								(err) => {
-																									if (err) {
-																										res.status(200).json({
-																											error: err.toString(),
-																										});
-																									} else {
-																									Cashier.findByIdAndUpdate(
-																										f._id,
-																										{
-																											cash_paid:
-																												Number(f.cash_paid) + Number(oamount),
-																											cash_in_hand:
-																												Number(f.cash_in_hand) - Number(oamount),
-																											fee_generated:
-																												Number(f.fee_generated) + Number(claimFee),
-
-																											total_trans: Number(f.total_trans) + 1,
-																										},
-																										function (e, v) {}
-																									);
-																									CashierLedger.findOne(
-																										{
-																											cashier_id: f._id,
-																											trans_type: "DR",
-																											created_at: {
-																												$gte: new Date(start),
-																												$lte: new Date(end),
-																											},
-																										},
-																										function (err, c) {
-																											if (err || c == null) {
-																												let data = new CashierLedger();
-																												data.amount = Number(oamount);
-																												data.trans_type = "DR";
-																												data.cashier_id = f._id;
-																												data.save(function (err, c) {});
-																											} else {
-																												var amt =
-																													Number(c.amount) + Number(oamount);
-																												CashierLedger.findByIdAndUpdate(
-																													c._id,
-																													{ amount: amt },
-																													function (err, c) {
-																														res.status(200).json({
-																															status: 1,
-																															message: "Cashier claimed money"
-																														});
+																													total_trans: Number(f.total_trans) + 1,
+																												},
+																												function (e, v) {}
+																											);
+																											CashierLedger.findOne(
+																												{
+																													cashier_id: f._id,
+																													trans_type: "DR",
+																													created_at: {
+																														$gte: new Date(start),
+																														$lte: new Date(end),
+																													},
+																												},
+																												function (err, c) {
+																													if (err || c == null) {
+																														let data = new CashierLedger();
+																														data.amount = Number(oamount);
+																														data.trans_type = "DR";
+																														data.cashier_id = f._id;
+																														data.save(function (err, c) {});
+																													} else {
+																														var amt =
+																															Number(c.amount) + Number(oamount);
+																														CashierLedger.findByIdAndUpdate(
+																															c._id,
+																															{ amount: amt },
+																															function (err, c) {
+																																res.status(200).json({
+																																	status: 1,
+																																	message: "Cashier claimed money",
+																																});
+																															}
+																														);
 																													}
-																												);
-																											}
+																												}
+																											);
 																										}
-																									);
-																								}
-																								}
-																							);
-																						} else {
-																							res.status(200).json({
-																								status: 0,
-																								error: result.toString(),
-																							});
-																						}
-																					});
-																			});
-																		}
-																	});
-																}
+																									}
+																								);
+																							} else {
+																								res.status(200).json({
+																									status: 0,
+																									error: result.toString(),
+																								});
+																							}
+																						});
+																				});
+																			}
+																		});
+																	}
 																}); //save
 															} //infra
 														}
