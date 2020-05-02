@@ -2174,9 +2174,10 @@ router.post("/cashierClaimMoney", function (req, res) {
 																									}
 																								);
 																							} else {
+																								console.log(result.toString())
 																								res.status(200).json({
 																									status: 0,
-																									error: result.toString(),
+																									error: "Something went wrong, please try again",
 																								});
 																							}
 																						});
