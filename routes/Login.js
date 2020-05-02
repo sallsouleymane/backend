@@ -14,18 +14,18 @@ const Branch = require("../models/Branch");
 const BankUser = require("../models/BankUser");
 const Cashier = require("../models/Cashier");
 
-function jwtsign(username, password){
+function jwtsign(username, password) {
 	var token = jwt.sign(
 		{
 			username: username,
-			password, password
+			password: password,
 		},
-		secret,
-		{
-			expiresIn: "6800000"
-		}
+		secret
+		// {
+		// 	expiresIn: "365d"
+		// }
 	);
-	return token
+	return token;
 }
 
 router.post("/login", function(req, res) {

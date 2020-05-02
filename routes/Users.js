@@ -510,7 +510,7 @@ router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 						error: "This bank do not exist",
 					});
 				} else {
-					User.update({ username }, { $set: { bank: bank } }, (err, user) => {
+					User.updateOne({ username }, { $set: { bank: bank } }, (err, user) => {
 						if (err) {
 							console.log(err);
 							res.status(200).json({

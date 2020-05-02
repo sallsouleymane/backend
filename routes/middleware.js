@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken');
 const secret = "jwt_secret_key_for_ewallet_of_32bit_string";
 
 module.exports = function(req, res, next) {
-  console.log(req.headers.authorization)
   const token = 
       req.body.token ||
       req.query.token ||
