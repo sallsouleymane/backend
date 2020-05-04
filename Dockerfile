@@ -1,7 +1,7 @@
 FROM node:12
-WORKDIR /app
-COPY package.json /app
+WORKDIR /var/app
+COPY package.json /var/app
 RUN npm install
-COPY . /app
+COPY . /var/app
 CMD node index.js
 EXPOSE 3001
