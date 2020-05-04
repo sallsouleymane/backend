@@ -1078,38 +1078,6 @@ router.post("/bankStatus", function(req, res) {
 	);
 });
 
-router.post("/getBanks", function(req, res) {
-	//res.send("hi");
-	const { token } = req.body;
-	Infra.findOne(
-		{
-			token,
-			status: 1
-		},
-		function(err, user) {
-			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized"
-				});
-			} else {
-				const user_id = user._id;
-				// if (user.isAdmin) {
-				Bank.find({}, function(err, bank) {
-					if (err) {
-						res.status(404).json({
-							error: err
-						});
-					} else {
-						res.status(200).json({
-							banks: bank
-						});
-					}
-				});
-			}
-		}
-	);
-});
-
 router.post("/getRoles", function(req, res) {
 	//res.send("hi");
 	const { token } = req.body;

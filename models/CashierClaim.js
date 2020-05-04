@@ -8,6 +8,7 @@ const CashierClaimSchema = new mongoose.Schema({
   proof: { type: String, required: false, default: null },
   cashier_id: { type: String, required: true},
   sender_name: {type: String, required: true},
+  sender_mobile: {type: String, required: false},
   receiver_name: {type: String, required: true},
   trans_type: { type: String, required: true, default: 'CR' },
   master_code: {type: String, required:true},

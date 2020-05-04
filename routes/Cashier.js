@@ -1955,6 +1955,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 		familyname,
 		receiverGivenName,
 		receiverFamilyName,
+		mobile
 	} = req.body;
 
 	Cashier.findOne(
@@ -2015,6 +2016,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 																data.amount = otpd.amount;
 																data.fee = otpd.fee;
 																data.sender_name = givenname + " " + familyname;
+																data.sender_mobile = mobile;
 																data.receiver_name = receiverGivenName + " " + receiverFamilyName;
 																var mns = f3.mobile.slice(-2);
 																var mnr = f2.mobile.slice(-2);
