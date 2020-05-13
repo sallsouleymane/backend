@@ -16,7 +16,7 @@ const blockchain = require("../services/Blockchain");
 router.post("/merchant/changePassword", jwtTokenAuth, (req, res) => {
     const { password } = req.body;
     const username = req.username;
-	merchant.findOneAndUpdate(
+	Merchant.findOneAndUpdate(
 		{
 			username,
 		},
@@ -38,3 +38,5 @@ router.post("/merchant/changePassword", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+module.exports = router;
