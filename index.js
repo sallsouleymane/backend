@@ -6,10 +6,11 @@ const infraRouter = require("./routes/Infra");
 const bankRouter = require("./routes/Bank");
 const uploadRouter = require("./routes/Upload");
 const cashierRouter = require("./routes/Cashier");
-const branchRouter = require("./routes/Branch")
-const bankUserRouter = require("./routes/BankUser")
-const loginRouter = require("./routes/Login")
-const commonRouter = require("./routes/Common")
+const branchRouter = require("./routes/Branch");
+const bankUserRouter = require("./routes/BankUser");
+const loginRouter = require("./routes/Login");
+const commonRouter = require("./routes/Common");
+const merchantRouter = require("./routes/Merchant");
 
 var cors = require("cors");
 const bodyParser = require("body-parser");
@@ -46,5 +47,6 @@ app.use("/api", cashierRouter);
 app.use("/api", branchRouter);
 app.use("/api", bankUserRouter);
 app.use("/api", loginRouter);
-app.use("/api", commonRouter)
+app.use("/api", commonRouter);
+app.use("/api", merchantRouter);
 app.listen(API_PORT, () => console.log("Backend Started"));

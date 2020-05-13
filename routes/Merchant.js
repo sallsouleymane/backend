@@ -39,4 +39,30 @@ router.post("/merchant/changePassword", jwtTokenAuth, (req, res) => {
 	);
 });
 
+router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
+    const username = req.username;
+	Merchant.findOne(
+		{
+			username,
+			status: 1
+		},
+		function(err, merchant) {
+			if (err || merchant == null) {
+				res.status(401).json({
+                    status: 0,
+					message: "Unauthorized"
+				});
+			} else {
+                const wallet_id = merchant.username + "_operational@" + merchant.bank;
+				blockchain.getBalance(wallet_id).then(function(result) {
+					res.status(200).json({
+						status: 1,
+						balance: result
+					});
+				});
+			}
+		}
+	);
+});
+
 module.exports = router;

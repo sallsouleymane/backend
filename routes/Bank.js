@@ -90,6 +90,8 @@ router.post("/bank/createMerchant", function (req, res) {
 				data.mobile = mobile;
 				data.username = merchant_id;
 				data.password = makeid(8);
+				data.bank = bank.name;
+				data.status = 1;
 
 				data.save((err) => {
 					if (err) {
