@@ -1,7 +1,7 @@
 const express = require("express");
 
 //routes
-const userRouter = require("./routes/Users");
+const userRouter = require("./routes/User");
 const infraRouter = require("./routes/Infra");
 const bankRouter = require("./routes/Bank");
 const uploadRouter = require("./routes/Upload");

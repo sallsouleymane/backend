@@ -828,6 +828,84 @@ router.put("/updateCashier", function(req, res) {
 	);
 });
 
+router.post("/common/forgotPassword", function(req, res) {
+	//res.send("hi");
+	let data = new OTP();
+	const { mobile, user_type } = req.body;
+	const Type = getTypeClass(user_type)
+	Type.findOne(
+		{
+			mobile: mobile
+		},
+		function(err, user) {
+			if (err || user == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Account not found!"
+				});
+			} else {
+				data.user_id = user._id;
+				data.otp = makeotp(6);
+				data.page = user_type + "ForgotPassword";
+				data.mobile = mobile;
+
+				data.save(err => {
+					if (err)
+						return res.status(200).json({
+							status: 0,
+							message: "Internal server error"
+						});
+
+					let content = "Beyond Ewallet :-Your OTP to change password is " + data.otp;
+					sendSMS(content, mobile);
+					sendMail(content, "OTP", user.email);
+
+					res.status(200).json({
+						status: 1,
+						mobile: mobile,
+						username: user.username
+					});
+				});
+			}
+		}
+	);
+});
+
+router.post("/common/verifyForgotPasswordOTP", function (req, res) {
+	const { mobile, otp, user_type } = req.body;
+	const page = user_type + "ForgotPassword";
+	OTP.findOne(
+		{
+			mobile,
+			otp,
+			page
+		},
+		function (err, ot) {
+			if (err || ot == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Invalid OTP!",
+				});
+			} else {
+				const Type = getTypeClass(user_type);
+				Type.findById(ot.user_id, (err, _res) => {
+					if (err) {
+						return res.json({
+							success: 0,
+							message: "Internal Server error",
+						});
+					} else {
+						OTP.deleteOne({_id: ot._id},(err) => {console.log("deleted")})
+						res.status(200).json({
+							status: 1,
+							message: "OTP Verification for forgot password is successfull",
+						});
+					}
+				});
+			}
+		}
+	);
+});
 
 router.post("/bankForgotPassword", function(req, res) {
 	//res.send("hi");
@@ -1066,10 +1144,10 @@ router.post("/verifyOTP", function(req, res) {
 		function(err, ot) {
 			if (err || ot == null) {
 				res.status(403).json({
-					error: "Invalid OTP!"
+					status: 0,
+					message: "Invalid OTP!"
 				});
 			} else {
-				if (ot.otp == otp && ot.mobile == mobile) {
 					let token = makeid(10);
 					let page = Infra;
 					if (ot.page == "bankForgotPassword") {
@@ -1087,19 +1165,15 @@ router.post("/verifyOTP", function(req, res) {
 						err => {
 							if (err)
 								return res.json({
-									success: false,
-									error: err
+									success: 0,
+									message: "Internal Server error"
 								});
 							res.status(200).json({
+								status: 1,
 								token: token
 							});
 						}
 					);
-				} else {
-					res.status(402).json({
-						error: "Invalid OTP!"
-					});
-				}
 			}
 		}
 	);

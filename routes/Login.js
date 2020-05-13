@@ -8,6 +8,7 @@ const makeid = require("./utils/idGenerator");
 
 const Infra = require("../models/Infra");
 const User = require("../models/User");
+const Merchant = require("../models/Merchant");
 const Bank = require("../models/Bank");
 const Profile = require("../models/Profile");
 const Branch = require("../models/Branch");
@@ -27,6 +28,35 @@ function jwtsign(username, password) {
 	);
 	return token;
 }
+
+router.post("/merchant/login", (req, res) => {
+	const { username, password } = req.body;
+	Merchant.findOne(
+		{ username, password },
+		"-password",
+		function(err, merchant) {
+			if (err) {
+				console.log(err);
+				return res.status(200).json({
+					status: 0,
+					error: "Internal Server Error"
+				});
+			}
+			if (merchant == null) {
+				return res.status(200).json({
+					status: 0,
+					error: "User account not found. Please signup"
+				});
+			}
+			const token = jwtsign(username, password)
+			res.status(200).json({
+				status: 1,
+				details: merchant,
+				token: token
+			});
+		}
+	);
+});
 
 router.post("/login", function(req, res) {
 	const { username, password } = req.body;

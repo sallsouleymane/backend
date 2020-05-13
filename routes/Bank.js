@@ -17,9 +17,102 @@ const OTP = require("../models/OTP");
 const Branch = require("../models/Branch");
 const BankUser = require("../models/BankUser");
 const Cashier = require("../models/Cashier");
-const BankFee = require("../models/BankFee");
 const Fee = require("../models/Fee");
 const CashierLedger = require("../models/CashierLedger");
+const Merchant = require("../models/Merchant");
+
+router.get("/bank/listMerchant", function (req, res) {
+	var { token } = req.body;
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					error: "Internal error please try again",
+				});
+			} else if (bank == null) {
+				res.status(200).json({
+					status: 0,
+					error: "Unauthorized",
+				});
+			} else {
+				Merchant.find({}, "-password",(err, merchants) => {
+					if (err) {
+						console.log(err);
+						res.status(200).json({
+							status: 0,
+							message: "Internal Server Error",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Merchant List",
+							list: merchants,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/bank/createMerchant", function (req, res) {
+	var { token, merchant_id, name, logo_hash, description, document_hash, email, mobile} = req.body;
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					error: "Internal error please try again",
+				});
+			} else if (bank == null) {
+				res.status(200).json({
+					status: 0,
+					error: "Unauthorized",
+				});
+			} else {
+				const data = new Merchant();
+				data.name = name;
+				data.logo_hash = logo_hash;
+				data.description = description;
+				data.document_hash = document_hash;
+				data.email = email;
+				data.mobile = mobile;
+				data.username = merchant_id;
+				data.password = makeid(8);
+
+				data.save((err) => {
+					if (err) {
+						console.log(err);
+						res.status(200).json({
+							status: 0,
+							message: "Internal Server Error",
+						});
+					} else {
+						const wallet = merchant_id + "_operational@" + bank.name;
+						createWallet([wallet]).then((result) => {
+							res.status(200).json({
+								status: 1,
+								message: "Merchant Created",
+								blockchain_result: result
+							});
+						});
+					}
+				});
+			}
+		}
+	);
+});
 
 router.post("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
 	try {

@@ -7,6 +7,7 @@ const Fee = require('../../models/Fee')
 const CashierPending = require('../../models/CashierPending')
 const CashierLedger = require('../../models/CashierLedger')
 const User = require('../../models/User')
+const Merchant = require('../../models/Merchant')
 
 module.exports = (key) => {
   switch (key) {
@@ -36,6 +37,9 @@ module.exports = (key) => {
 	  break
 	case 'user':
 		return User
+		break
+	case 'merchant':
+		return Merchant
 		break
 	default:
 	  return null
