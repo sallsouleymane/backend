@@ -33,12 +33,12 @@ router.get("/bank/listMerchant", function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal error please try again",
+					message: "Internal error please try again",
 				});
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Unauthorized",
 				});
 			} else {
 				Merchant.find({}, "-password",(err, merchants) => {
@@ -73,12 +73,12 @@ router.post("/bank/createMerchant", function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal error please try again",
+					message: "Internal error please try again",
 				});
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Unauthorized",
 				});
 			} else {
 				const data = new Merchant();
@@ -98,19 +98,71 @@ router.post("/bank/createMerchant", function (req, res) {
 						console.log(err);
 						res.status(200).json({
 							status: 0,
-							message: "Internal Server Error",
+							message: "Either merchant id/ email / mobile aready exist",
 						});
 					} else {
 						const wallet = merchant_id + "_operational@" + bank.name;
 						createWallet([wallet]).then((result) => {
 							res.status(200).json({
 								status: 1,
-								message: "Merchant Created",
+								message: "Merchant created successfully",
 								blockchain_result: result
 							});
 						});
 					}
 				});
+			}
+		}
+	);
+});
+
+router.post("/bank/editMerchant", function (req, res) {
+	var { token, username, name, logo_hash, description, document_hash, email, mobile} = req.body;
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal error please try again",
+				});
+			} else if (bank == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				Merchant.findOneAndUpdate({username: username}, {
+					name: name,
+					logo_hash: logo_hash,
+					description: description,
+					document_hash: document_hash,
+					email: email,
+
+				},(err , merchant) => {
+					if (err) {
+						console.log(err);
+						res.status(200).json({
+							status: 0,
+							message: "Email already exist.",
+						});
+					}
+					else if (merchant == null) {
+						res.status(200).json({
+							status: 0,
+							message: "Merchant not found.",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Merchant edited successfully",
+						});
+					}
+				})
 			}
 		}
 	);
@@ -1086,7 +1138,8 @@ router.post("/createBankRules", (req, res) => {
 									name;
 								sendSMS(content2, bank.mobile);
 								res.status(200).json({
-									status: 1
+									status: 1,
+									message: "Rule created successfully"
 								});
 							});
 						} else {

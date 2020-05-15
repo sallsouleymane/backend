@@ -1378,16 +1378,18 @@ router.post("/approveFee", function (req, res) {
 	Infra.findOne({ token: token }, function (err, infra) {
 		if (err) {
 			console.log(err);
-			return res.status(500).json({
-				error: "Internal Server Error",
+			return res.status(200).json({
+				status: 0,
+				message: "Internal Server Error",
 			});
 		}
 		if (infra == null) {
-			return res.status(401).json({
-				error: "Unauthorized",
+			return res.status(200).json({
+				status: 0,
+				message: "Unauthorized",
 			});
 		}
-		Fee.findOneAndUpdate(
+		Fee.findOne(
 			{
 				_id: id,
 				status: 2

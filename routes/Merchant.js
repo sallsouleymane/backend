@@ -1,11 +1,14 @@
 const express = require("express");
 const router = express.Router();
 
+const config = require("../config.json");
 const jwtTokenAuth = require("./JWTTokenAuth");
 
 //models
 const Merchant = require("../models/Merchant");
 const MerchantBranch = require("../models/MerchantBranch");
+const MerchantUser = require("../models/MerchantUser");
+const MerchantCashier = require("../models/MerchantCashier");
 
 //utils
 const sendSMS = require("./utils/sendSMS");
@@ -13,6 +16,172 @@ const sendMail = require("./utils/sendMail");
 const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
 const blockchain = require("../services/Blockchain");
+
+router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
+	let data = new MerchantCashier();
+	const {
+		name,
+		branch_id,
+		credit_limit,
+		bcode,
+		working_from,
+		working_to,
+		per_trans_amt,
+		max_trans_amt,
+		max_trans_count,
+	} = req.body;
+	const jwtusername = req.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err || merchant == null) {
+				res.status(200).json({
+					status:0,
+					message: "Unauthorized",
+				});
+			} else {
+				data.name = name;
+				data.bcode = bcode;
+				data.credit_limit = credit_limit;
+				data.working_from = working_from;
+				data.working_to = working_to;
+				data.per_trans_amt = per_trans_amt;
+				data.max_trans_amt = max_trans_amt;
+				data.max_trans_count = max_trans_count;
+				data.merchant_id = merchant._id;
+				data.branch_id = branch_id;
+				data.save((err, d) => {
+					if (err) {
+						console.log(err)
+						return res.json({
+							status: 0,
+							message: err.toString(),
+						});
+					}
+				 else {
+						MerchantBranch.findByIdAndUpdate(branch_id, { $inc: { total_cashiers: 1 } }, function (e, v) {
+							return res.status(200).json({ status: 1, data: d});
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
+	let data = new MerchantUser();
+	const jwtusername = req.username;
+	const { name, email, ccode, mobile, username, password, branch_id, logo } = req.body;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, user) {
+			if (err || user == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				data.name = name;
+				data.email = email;
+				data.mobile = mobile;
+				data.username = username;
+				data.password = password;
+				data.branch_id = branch_id;
+				data.merchant_id = user._id;
+				data.ccode = ccode;
+				data.logo = logo;
+
+				data.save((err) => {
+					if (err) {
+						console.log(err)
+						return res.json({
+							status: 0,
+							message: "User ID / Email / Mobile already exists",
+						});
+					} else {
+					let content =
+						"<p>Your have been added as a Merchant User in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+						config.mainIP +
+						"/merchant/cashier/yourBranchName'>http://" +
+						config.mainIP +
+						"/</a></p><p><p>Your username: " +
+						username +
+						"</p><p>Your password: " +
+						password +
+						"</p>";
+					sendMail(content, "Merchant User Account Created", email);
+					let content2 =
+						"Your have been added as Merchant User in E-Wallet application Login URL: http://" +
+						config.mainIP +
+						"/cashier/yourBranchName Your username: " +
+						username +
+						" Your password: " +
+						password;
+					sendSMS(content2, mobile);
+					return res.status(200).json({
+						status: 1,
+						message: "Merchant user added successfully"
+					});
+				}
+				});
+			}
+		}
+	);
+});
+router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
+	const { name, email, ccode, mobile, username, password, branch_id, logo, user_id } = req.body;
+	const jwtusername = req.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, user) {
+			if (err || user == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				MerchantUser.findOneAndUpdate(
+					{
+						_id: user_id,
+					},
+					{
+						name: name,
+						email: email,
+						ccode: ccode,
+						mobile: mobile,
+						username: username,
+						password: password,
+						branch_id: branch_id,
+						logo: logo,
+					},
+					(err, user) => {
+						if (err) {
+							res.status(200).json({
+								status: 0,
+								message: err,
+							});
+						} else {
+							res.status(200).json({
+								status: 0,
+								data: "Staff updated successfully",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
 
 router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 	let data = new MerchantBranch();
@@ -36,7 +205,7 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.username;
 	Merchant.findOne(
 		{
-			jwtusername,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, merchant) {
@@ -90,9 +259,8 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/merchant/editBranch", (req, res) => {
+router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 	const {
-		branch_id,
 		name,
 		username,
 		credit_limit,
@@ -102,15 +270,15 @@ router.post("/merchant/editBranch", (req, res) => {
 		zip,
 		country,
 		ccode,
-		mobile,
 		email,
 		working_from,
 		working_to,
 	} = req.body;
 	const jwtusername = req.username;
+	console.log(jwtusername)
 	Merchant.findOne(
 		{
-			jwtusername,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, merchant) {
@@ -125,8 +293,8 @@ router.post("/merchant/editBranch", (req, res) => {
 					message: "Unauthorized",
 				});
 			} else {
-				MerchantBranch.findByIdAndUpdate(
-					branch_id,
+				MerchantBranch.findOneAndUpdate(
+					bcode,
 					{
 						name: name,
 						credit_limit: credit_limit,
@@ -137,21 +305,20 @@ router.post("/merchant/editBranch", (req, res) => {
 						ccode: ccode,
 						bcode: bcode,
 						country: country,
-						mobile: mobile,
 						email: email,
 						working_from: working_from,
 						working_to: working_to,
 					},
-					(err) => {
+					(err, branch) => {
 						if (err) {
-							return res.status(200).json({
+							res.status(200).json({
 								status: 0,
 								message: err,
 							});
 						} else {
-							return res.status(200).json({
+							res.status(200).json({
 								status: 1,
-								data: merchant,
+								data: branch,
 							});
 						}
 					}

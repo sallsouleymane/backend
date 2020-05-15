@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 const MerchantBranchSchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true },
-  bcode: { type: String, required: true, unique: true },
+  branch_id: { type: String, required: true, unique: true },
   username: { type: String, required: true, unique:true },
   password: { type: String, required: true },
   credit_limit: { type: Number, required: false, default: 0 },
