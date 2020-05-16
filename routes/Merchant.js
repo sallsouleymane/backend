@@ -172,8 +172,81 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 							});
 						} else {
 							res.status(200).json({
+								status: 1,
+								message: "Staff updated successfully",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.get("/merchant/listStaff", jwtTokenAuth, (req, res) => {
+	const jwtusername = req.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, user) {
+			if (err || user == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				MerchantUser.find(
+					(err, staffs) => {
+						if (err) {
+							res.status(200).json({
 								status: 0,
-								data: "Staff updated successfully",
+								message: err,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								data: staffs,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/merchant/blockStaff", jwtTokenAuth, (req, res) => {
+	const { merchant_id } = req.body;
+	const jwtusername = req.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, user) {
+			if (err || user == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				MerchantUser.findOneAndUpdate({_id: merchant_id},
+					{ $set: {
+						status: 0
+					}
+					},
+					(err, staff) => {
+						if (err) {
+							res.status(200).json({
+								status: 0,
+								message: err,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								data: "blocked staff",
 							});
 						}
 					}
