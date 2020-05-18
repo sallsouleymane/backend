@@ -5,6 +5,7 @@ const config = require("../config.json");
 const jwtTokenAuth = require("./JWTTokenAuth");
 
 //models
+const Bank = require("../models/Bank");
 const Merchant = require("../models/Merchant");
 const MerchantBranch = require("../models/MerchantBranch");
 const MerchantUser = require("../models/MerchantUser");
@@ -465,25 +466,34 @@ router.post("/merchant/changePassword", jwtTokenAuth, (req, res) => {
 });
 
 router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
-    const username = req.username;
+	const username = req.username;
 	Merchant.findOne(
 		{
 			username,
-			status: 1
+			status: 1,
 		},
-		function(err, merchant) {
+		function (err, merchant) {
 			if (err || merchant == null) {
 				res.status(401).json({
-                    status: 0,
-					message: "Unauthorized"
+					status: 0,
+					message: "Unauthorized",
 				});
 			} else {
-                const wallet_id = merchant.username + "_operational@" + merchant.bank;
-				blockchain.getBalance(wallet_id).then(function(result) {
-					res.status(200).json({
-						status: 1,
-						balance: result
-					});
+				Bank.findOne({ _id: merchant.bank_id }, (err, bank) => {
+					if (err) {
+						res.status(200).json({
+							status: 0,
+							error: "Internal Server Error",
+						});
+					} else {
+						const wallet_id = merchant.username + "_operational@" + bank.name;
+						blockchain.getBalance(wallet_id).then(function (result) {
+							res.status(200).json({
+								status: 1,
+								balance: result,
+							});
+						});
+					}
 				});
 			}
 		}

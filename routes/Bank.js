@@ -41,7 +41,7 @@ router.get("/bank/listMerchant", function (req, res) {
 					message: "Unauthorized",
 				});
 			} else {
-				Merchant.find({}, "-password",(err, merchants) => {
+				Merchant.find({ bank_id: bank._id}, "-password",(err, merchants) => {
 					if (err) {
 						console.log(err);
 						res.status(200).json({
@@ -90,7 +90,7 @@ router.post("/bank/createMerchant", function (req, res) {
 				data.mobile = mobile;
 				data.username = merchant_id;
 				data.password = makeid(8);
-				data.bank = bank.name;
+				data.bank_id = bank._id;
 				data.status = 1;
 
 				data.save((err) => {
@@ -103,6 +103,31 @@ router.post("/bank/createMerchant", function (req, res) {
 					} else {
 						const wallet = merchant_id + "_operational@" + bank.name;
 						createWallet([wallet]).then((result) => {
+							let content =
+								"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+								config.mainIP +
+								"/merchant/" +
+								bank.name +
+								"'>http://" +
+								config.mainIP +
+								"/merchant/" +
+								bank.name +
+								"</a></p><p><p>Your username: " +
+								data.username +
+								"</p><p>Your password: " +
+								data.password +
+								"</p>";
+							sendMail(content, "Bank Branch Created", email);
+							let content2 =
+								"You are added as a Merchant in E-Wallet application Login URL: http://" +
+								config.mainIP +
+								"/merchant/" +
+								bank.name +
+								" Your username: " +
+								data.username +
+								" Your password: " +
+								data.password;
+							sendSMS(content2, mobile);
 							res.status(200).json({
 								status: 1,
 								message: "Merchant created successfully",
@@ -117,7 +142,7 @@ router.post("/bank/createMerchant", function (req, res) {
 });
 
 router.post("/bank/editMerchant", function (req, res) {
-	var { token, username, name, logo_hash, description, document_hash, email, mobile} = req.body;
+	var { token, username, name, logo_hash, description, document_hash, email} = req.body;
 	Bank.findOne(
 		{
 			token,

@@ -9,6 +9,6 @@ const MerchantSchema = new mongoose.Schema({
 	email: { type: String, required: false, unique: true },
 	mobile: { type: String, required: true, unique: true },
 	status: { type: Number, required: true  },
-	bank: { type: String, required: true }
+	bank_id: { type: String, required: true }
 });
 module.exports = mongoose.model("Merchant", MerchantSchema);
