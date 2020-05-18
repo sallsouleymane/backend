@@ -117,7 +117,7 @@ router.post("/bank/createMerchant", function (req, res) {
 								"</p><p>Your password: " +
 								data.password +
 								"</p>";
-							sendMail(content, "Bank Branch Created", email);
+							sendMail(content, "Bank Merchant Created", email);
 							let content2 =
 								"You are added as a Merchant in E-Wallet application Login URL: http://" +
 								config.mainIP +
