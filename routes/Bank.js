@@ -21,7 +21,7 @@ const Fee = require("../models/Fee");
 const CashierLedger = require("../models/CashierLedger");
 const Merchant = require("../models/Merchant");
 
-router.get("/bank/listMerchant", function (req, res) {
+router.post("/bank/listMerchant", function (req, res) {
 	var { token } = req.body;
 	Bank.findOne(
 		{
