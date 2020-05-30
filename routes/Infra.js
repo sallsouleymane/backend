@@ -23,11 +23,51 @@ const Bank = require("../models/Bank");
 const OTP = require("../models/OTP");
 const Profile = require("../models/Profile");
 const Document = require("../models/Document");
-const BankFee = require("../models/BankFee");
+const Merchant = require("../models/merchant/Merchant");
 
 const mainFee = config.mainFee;
 const defaultFee = config.defaultFee;
 const defaultAmt = config.defaultAmt;
+
+router.post("/infra/bank/listMerchants", function (req, res) {
+	var { token, bank_id } = req.body;
+	Infra.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, infra) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal error please try again",
+				});
+			} else if (infra == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				Merchant.find({ bank_id: bank_id}, "-password", (err, merchants) => {
+					if (err) {
+						console.log(err);
+						res.status(200).json({
+							status: 0,
+							message: "Internal Server Error",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Merchant List",
+							list: merchants,
+						});
+					}
+				});
+			}
+		}
+	);
+});
 
 router.post("/getDashStats", function(req, res) {
 	const { token } = req.body;
@@ -768,204 +808,6 @@ router.post("/editInfraUser", (req, res) => {
 		}
 	);
 });
-
-// router.get("/infraTopup", (req, res) => {
-// 	const { amount, bank } = req.query;
-// 	Infra.findOne(
-// 		{
-// 			name: "Infra Admin"
-// 		},
-// 		function(err, infra) {
-// 			const infra_email = infra.email;
-// 			const infra_mobile = infra.mobile;
-
-// 			if (err) return res.status(401);
-// 			Bank.findOne(
-// 				{
-// 					name: bank
-// 				},
-// 				function(err, ba) {
-// 					const bank_email = ba.email;
-// 					const bank_mobile = ba.mobile;
-// 					if (err) return res.status(401);
-
-// 					let data = {};
-
-// 					let fee = (amount * mainFee) / 100;
-// 					var temp = (fee * defaultFee) / 100;
-// 					let fee3 = temp + defaultAmt;
-
-// 					data.amount = (amount - fee).toString();
-// 					data.from = "recharge";
-// 					data.to = ("testuser@" + ba.name).toString();
-// 					const bank = ba.name;
-
-// 					getTransactionCount(data.to).then(function(count) {
-// 						count = Number(count) + 1;
-// 						Fee.findOne(
-// 							{
-// 								bank_id: ba._id,
-// 								trans_type: "Wallet to Wallet",
-// 								status: 1,
-// 								active: 1
-// 							},
-// 							function(err, fe) {
-// 								if (!fe || fe == null) {
-// 									res.status(200).json({
-// 										status: "Transaction cannot be done at this time"
-// 									});
-// 								} else {
-// 									var ranges = JSON.parse(fe.ranges);
-// 									if (ranges.length > 0) {
-// 										ranges.map(function(v) {
-// 											if (
-// 												Number(count) >= Number(v.trans_from) &&
-// 												Number(count) <= Number(v.trans_to)
-// 											) {
-// 												var temp = (fee * Number(v.percentage)) / 100;
-// 												fee3 = temp + Number(v.fixed_amount);
-// 											}
-// 										});
-// 									}
-// 									rechargeNow([data]).then(function(result) {
-// 										let data2 = {};
-// 										data2.amount = fee.toString();
-// 										data2.from = "testuser@" + bank;
-// 										data2.to = "operational@" + bank;
-// 										data2.note = "commission";
-// 										data2.email2 = bank_email;
-// 										data2.mobile2 = bank_mobile;
-
-// 										let data3 = {};
-// 										data3.amount = fee3.toString();
-// 										data3.from = "operational@" + bank;
-// 										data3.to = "infra_operational@" + bank;
-// 										data3.note = "operational commission";
-// 										data3.email1 = bank_email;
-// 										data3.email2 = infra_email;
-// 										data3.mobile1 = bank_mobile;
-// 										data3.mobile2 = infra_mobile;
-
-// 										// ;
-// 										// ;
-// 										// ;
-// 										// transferNow([data, data2, data3]).then(function(result) {
-
-// 										// });
-// 										transferThis(data2, data3).then(function(result) {});
-// 										res.status(200).json({
-// 											status: result + " Transfer initiated and will be notified via email and sms"
-// 										});
-// 									});
-// 								}
-
-// 								// res.status(200).json({
-// 								//   status: fee3
-// 								// });
-// 							}
-// 						);
-// 					});
-
-// 					// rechargeNow([data]).then(function (result) {
-
-// 					//   let data2 = {};
-// 					//   data2.amount = fee.toString();
-// 					//   data2.from = "testuser@" + ba.name;
-// 					//   data2.to = "operational@" + ba.name;
-// 					//   data2.note = "recharge commission";
-// 					//   data2.email2 = bank_email;
-// 					//   data2.mobile2 = bank_mobile;
-
-// 					//   let data3 = {};
-// 					//   data3.amount = fee3.toString();
-// 					//   data3.from = "operational@" + ba.name;
-// 					//   data3.to = "infra_operational@" + ba.name;
-// 					//   data3.note = "commission";
-// 					//   data3.email1 = bank_email;
-// 					//   data3.email2 = infra_email;
-// 					//   data3.mobile1 = bank_mobile;
-// 					//   data3.mobile2 = infra_mobile;
-
-// 					//   // transferNow([data2, data3]).then(function(result) {
-
-// 					//   // });
-// 					//   transferThis(data2, data3).then(function (result) {
-// 					//     ;
-// 					//   });
-
-// 					//   res.status(200).json({
-// 					//     status: result + " Transfer initiated and will be notified via email and sms"
-// 					//   });
-// 					// });
-// 				}
-// 			);
-// 		}
-// 	);
-// });
-
-// router.post("/editBankRule", (req, res) => {
-// 	const { name, trans_type, trans_from, trans_to, active, ranges, token, rule_id } = req.body;
-// 	Infra.findOne(
-// 		{
-// 			token,
-// 			status: 1
-// 		},
-// 		function(err, user) {
-// 			if (err || user == null) {
-// 				res.status(401).json({
-// 					error: "Unauthorized"
-// 				});
-// 			} else {
-// 				Bank.findOne(
-// 					{
-// 						_id: bank_id
-// 					},
-// 					function(err, bank) {
-// 						if (err) {
-// 							res.status(401).json({
-// 								error: err
-// 							});
-// 						} else {
-// 							// Fee.findOne({
-// 							//   "trans_type": trans_type,
-// 							//   "bank_id" : bank_id
-// 							// }, function (err, fee) {
-
-// 							// });
-// 							var edited = {
-// 								name: name,
-// 								trans_type: trans_type,
-// 								active: active,
-// 								trans_from: trans_from,
-// 								trans_to: trans_to,
-// 								ranges: JSON.stringify(ranges)
-// 							};
-// 							BankFee.findByIdAndUpdate(
-// 								{
-// 									_id: rule_id
-// 								},
-// 								edited,
-// 								err => {
-// 									if (err)
-// 										return res.status(400).json({
-// 											error: err
-// 										});
-// 									let content = "<p>Rule " + name + " has been updated, check it out</p>";
-// 									let result = sendMail(content, "Rule Updated", bank.email);
-// 									let content2 = "Rule " + name + " has been updated, check it out";
-// 									sendSMS(content2, bank.mobile);
-// 									res.status(200).json({
-// 										status: true
-// 									});
-// 								}
-// 							);
-// 						}
-// 					}
-// 				);
-// 			}
-// 		}
-// 	);
-// });
 
 router.post("/getBank", function(req, res) {
 	//res.send("hi");

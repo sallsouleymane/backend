@@ -6,10 +6,10 @@ const jwtTokenAuth = require("./JWTTokenAuth");
 
 //models
 const Bank = require("../models/Bank");
-const Merchant = require("../models/Merchant");
-const MerchantBranch = require("../models/MerchantBranch");
-const MerchantUser = require("../models/MerchantUser");
-const MerchantCashier = require("../models/MerchantCashier");
+const Merchant = require("../models/merchant/Merchant");
+const MerchantBranch = require("../models/merchant/MerchantBranch");
+const MerchantStaff = require("../models/merchant/MerchantStaff");
+const MerchantCashier = require("../models/merchant/MerchantCashier");
 
 //utils
 const sendSMS = require("./utils/sendSMS");
@@ -31,7 +31,7 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 		max_trans_amt,
 		max_trans_count,
 	} = req.body;
-	const jwtusername = req.username;
+	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
 			username: jwtusername,
@@ -74,8 +74,8 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
-	let data = new MerchantUser();
-	const jwtusername = req.username;
+	let data = new MerchantStaff();
+	const jwtusername = req.sign_creds.username;
 	const { name, email, ccode, mobile, username, password, branch_id, logo } = req.body;
 	Merchant.findOne(
 		{
@@ -138,7 +138,7 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 });
 router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 	const { name, email, ccode, mobile, username, password, branch_id, logo, user_id } = req.body;
-	const jwtusername = req.username;
+	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
 			username: jwtusername,
@@ -151,7 +151,7 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 					message: "Unauthorized",
 				});
 			} else {
-				MerchantUser.findOneAndUpdate(
+				MerchantStaff.findOneAndUpdate(
 					{
 						_id: user_id,
 					},
@@ -185,7 +185,7 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 });
 
 router.get("/merchant/listStaff", jwtTokenAuth, (req, res) => {
-	const jwtusername = req.username;
+	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
 			username: jwtusername,
@@ -198,7 +198,7 @@ router.get("/merchant/listStaff", jwtTokenAuth, (req, res) => {
 					message: "Unauthorized",
 				});
 			} else {
-				MerchantUser.find(
+				MerchantStaff.find(
 					(err, staffs) => {
 						if (err) {
 							res.status(200).json({
@@ -220,7 +220,7 @@ router.get("/merchant/listStaff", jwtTokenAuth, (req, res) => {
 
 router.post("/merchant/blockStaff", jwtTokenAuth, (req, res) => {
 	const { merchant_id } = req.body;
-	const jwtusername = req.username;
+	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
 			username: jwtusername,
@@ -233,7 +233,7 @@ router.post("/merchant/blockStaff", jwtTokenAuth, (req, res) => {
 					message: "Unauthorized",
 				});
 			} else {
-				MerchantUser.findOneAndUpdate({_id: merchant_id},
+				MerchantStaff.findOneAndUpdate({_id: merchant_id},
 					{ $set: {
 						status: 0
 					}
@@ -276,7 +276,7 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 		working_to,
 	} = req.body;
 
-	const jwtusername = req.username;
+	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
 			username: jwtusername,
@@ -348,7 +348,7 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 		working_from,
 		working_to,
 	} = req.body;
-	const jwtusername = req.username;
+	const jwtusername = req.sign_creds.username;
 	console.log(jwtusername)
 	Merchant.findOne(
 		{
@@ -383,6 +383,7 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 						working_from: working_from,
 						working_to: working_to,
 					},
+					{ new: true },
 					(err, branch) => {
 						if (err) {
 							res.status(200).json({
@@ -403,7 +404,7 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 });
 
 router.get("/merchant/listBranches", jwtTokenAuth, function (req, res) {
-    const username = req.username;
+    const username = req.sign_creds.username;
 	Merchant.findOne(
 		{
 			username,
@@ -441,7 +442,7 @@ router.get("/merchant/listBranches", jwtTokenAuth, function (req, res) {
 
 router.post("/merchant/changePassword", jwtTokenAuth, (req, res) => {
     const { password } = req.body;
-    const username = req.username;
+    const username = req.sign_creds.username;
 	Merchant.findOneAndUpdate(
 		{
 			username,
@@ -466,7 +467,7 @@ router.post("/merchant/changePassword", jwtTokenAuth, (req, res) => {
 });
 
 router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
-	const username = req.username;
+	const username = req.sign_creds.username;
 	Merchant.findOne(
 		{
 			username,

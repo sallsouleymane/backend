@@ -19,9 +19,9 @@ const BankUser = require("../models/BankUser");
 const Cashier = require("../models/Cashier");
 const Fee = require("../models/Fee");
 const CashierLedger = require("../models/CashierLedger");
-const Merchant = require("../models/Merchant");
+const Merchant = require("../models/merchant/Merchant");
 
-router.post("/bank/listMerchant", function (req, res) {
+router.post("/bank/listMerchants", function (req, res) {
 	var { token } = req.body;
 	Bank.findOne(
 		{
@@ -41,7 +41,7 @@ router.post("/bank/listMerchant", function (req, res) {
 					message: "Unauthorized",
 				});
 			} else {
-				Merchant.find({ bank_id: bank._id}, "-password",(err, merchants) => {
+				Merchant.find({ bank_id: bank._id}, "-password", (err, merchants) => {
 					if (err) {
 						console.log(err);
 						res.status(200).json({
@@ -62,7 +62,16 @@ router.post("/bank/listMerchant", function (req, res) {
 });
 
 router.post("/bank/createMerchant", function (req, res) {
-	var { token, merchant_id, name, logo_hash, description, document_hash, email, mobile} = req.body;
+	var {
+		token,
+		merchant_id,
+		name,
+		logo_hash,
+		description,
+		document_hash,
+		email,
+		mobile,
+	} = req.body;
 	Bank.findOne(
 		{
 			token,
@@ -131,7 +140,7 @@ router.post("/bank/createMerchant", function (req, res) {
 							res.status(200).json({
 								status: 1,
 								message: "Merchant created successfully",
-								blockchain_result: result
+								blockchain_result: result,
 							});
 						});
 					}
@@ -167,7 +176,6 @@ router.post("/bank/editMerchant", function (req, res) {
 					description: description,
 					document_hash: document_hash,
 					email: email,
-
 				},(err , merchant) => {
 					if (err) {
 						console.log(err);

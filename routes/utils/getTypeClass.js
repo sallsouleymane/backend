@@ -7,7 +7,7 @@ const Fee = require('../../models/Fee')
 const CashierPending = require('../../models/CashierPending')
 const CashierLedger = require('../../models/CashierLedger')
 const User = require('../../models/User')
-const Merchant = require('../../models/Merchant')
+const Merchant = require('../../models/merchant/Merchant')
 
 module.exports = (key) => {
   switch (key) {

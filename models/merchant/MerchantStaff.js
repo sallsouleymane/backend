@@ -1,6 +1,6 @@
 // BankUser.js
 const mongoose = require("mongoose");
-const MerchantUserSchema = new mongoose.Schema({
+const MerchantStaffSchema = new mongoose.Schema({
 	name: { type: String, required: true },
 	username: { type: String, required: true, unique: true },
 	ccode: { type: String, required: false },
@@ -13,4 +13,4 @@ const MerchantUserSchema = new mongoose.Schema({
 	status: { type: Number, required: true, default: 1 },
 	token: { type: String, required: false },
 });
-module.exports = mongoose.model("MerchantUser", MerchantUserSchema);
+module.exports = mongoose.model("MerchantStaff", MerchantStaffSchema);

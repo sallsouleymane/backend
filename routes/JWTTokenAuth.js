@@ -16,8 +16,7 @@ module.exports = function(req, res, next) {
         console.log(err)
         res.status(200).send({status: 10, error: 'Unauthorized: Invalid token'});
       } else {
-        req.username = decoded.username;
-        req.password = decoded.password;
+        req.sign_creds = decoded.sign_creds;
         next();
       }
     });

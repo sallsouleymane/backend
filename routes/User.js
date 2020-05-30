@@ -11,6 +11,7 @@ const Bank = require("../models/Bank");
 const Infra = require("../models/Infra");
 const Fee = require("../models/Fee");
 const CashierSend = require("../models/CashierSend");
+const Merchant = require("../models/merchant/Merchant");
 
 //utils
 const sendSMS = require("./utils/sendSMS");
@@ -19,9 +20,63 @@ const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
 const blockchain = require("../services/Blockchain");
 
+router.get("/user/listMerchants", jwtTokenAuth, function (req, res) {
+	const username = req.sign_creds.username;
+	User.findOne(
+		{
+			username,
+			status: 1,
+		},
+		function (err, user) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal error please try again",
+				});
+			} else if (user == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				Bank.findOne({ name: user.bank }, (err, bank) => {
+					if (err || bank == null) {
+						console.log(err);
+						res.status(200).json({
+							status: 0,
+							message: "Internal error please try again",
+						});
+					} else {
+						Merchant.find(
+							{ bank_id: bank._id },
+							"-password",
+							(err, merchants) => {
+								if (err) {
+									console.log(err);
+									res.status(200).json({
+										status: 0,
+										message: "Internal Server Error",
+									});
+								} else {
+									res.status(200).json({
+										status: 1,
+										message: "Merchant List",
+										list: merchants,
+									});
+								}
+							}
+						);
+					}
+				});
+			}
+		}
+	);
+});
+
 router.post("/user/checkWalToWalFee", jwtTokenAuth, function (req, res) {
 	var { amount } = req.body;
-	const username = req.username;
+	const username = req.sign_creds.username;
 	User.findOne(
 		{
 			username,
@@ -101,7 +156,7 @@ router.post("/user/checkWalToWalFee", jwtTokenAuth, function (req, res) {
 
 router.post("/user/checkWalToNonWalFee", jwtTokenAuth, function (req, res) {
 	var { amount } = req.body;
-	const username = req.username;
+	const username = req.sign_creds.username;
 	User.findOne(
 		{
 			username,
@@ -181,7 +236,7 @@ router.post("/user/checkWalToNonWalFee", jwtTokenAuth, function (req, res) {
 
 router.post("/user/getUser", jwtTokenAuth, function (req, res) {
 	const { mobile } = req.body;
-	const username = req.username;
+	const username = req.sign_creds.username;
 	User.findOne({ username }, function (err, result) {
 		if (err) {
 			console.log(err);
@@ -239,7 +294,7 @@ router.get("/deleteUser", (req, res) => {
 });
 
 router.get("/user/getBalance", jwtTokenAuth, (req, res) => {
-	const username = req.username;
+	const username = req.sign_creds.username;
 	User.findOne(
 		{
 			username,
@@ -298,7 +353,7 @@ router.post("/user/updatePassword", (req, res) => {
 
 router.post("/user/updateEmail", jwtTokenAuth, (req, res) => {
 	const { email } = req.body;
-	const username = req.username;
+	const username = req.sign_creds.username;
 	User.findOneAndUpdate(
 		{
 			username,
@@ -324,7 +379,7 @@ router.post("/user/updateEmail", jwtTokenAuth, (req, res) => {
 
 router.post("/user/updateName", jwtTokenAuth, (req, res) => {
 	const { name } = req.body;
-	const username = req.username;
+	const username = req.sign_creds.username;
 	User.findOneAndUpdate(
 		{
 			username,
@@ -349,7 +404,7 @@ router.post("/user/updateName", jwtTokenAuth, (req, res) => {
 });
 
 router.get("/user/getDetails", jwtTokenAuth, (req, res) => {
-	const username = req.username;
+	const username = req.sign_creds.username;
 	User.findOne(
 		{
 			username,
@@ -483,7 +538,7 @@ router.post("/user/signup", (req, res) => {
 
 router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 	const { bank } = req.body;
-	const username = req.username;
+	const username = req.sign_creds.username;
 	User.findOne({ username, status: 2 }, (err, user) => {
 		if (err) {
 			console.log(err);
@@ -537,7 +592,7 @@ router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 
 router.post("/user/saveUploadedDocsHash", jwtTokenAuth, (req, res) => {
 	const { hashes } = req.body;
-	const username = req.username;
+	const username = req.sign_creds.username;
 	User.findOneAndUpdate(
 		{ username, status: 2 },
 		{ $set: { docs_hash: hashes, status: 3 } }, //Status 3: Waiting for cashier approval
@@ -564,7 +619,7 @@ router.post("/user/saveUploadedDocsHash", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/user/skipDocsUpload", jwtTokenAuth, (req, res) => {
-	const username = req.username;
+	const username = req.sign_creds.username;
 	User.findOneAndUpdate(
 		{ username: username, status: 2 },
 		{ $set: { status: 4 } },
@@ -593,7 +648,7 @@ router.post("/user/skipDocsUpload", jwtTokenAuth, (req, res) => {
 });
 
 router.get("/user/getBanks", jwtTokenAuth, function (req, res) {
-	const username = req.username;
+	const username = req.sign_creds.username;
 	User.findOne(
 		{
 			username,
@@ -632,7 +687,7 @@ router.get("/user/getBanks", jwtTokenAuth, function (req, res) {
 });
 
 router.get("/user/getTransactionHistory", jwtTokenAuth, function (req, res) {
-	const username = req.username;
+	const username = req.sign_creds.username;
 	User.findOne(
 		{
 			username,
@@ -664,7 +719,7 @@ router.get("/user/getTransactionHistory", jwtTokenAuth, function (req, res) {
 });
 
 router.get("/user/getContactList", jwtTokenAuth, function (req, res) {
-	const username = req.username;
+	const username = req.sign_creds.username;
 	User.findOne(
 		{
 			username,
@@ -715,7 +770,7 @@ router.get("/user/getContactList", jwtTokenAuth, function (req, res) {
 
 router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 	var now = new Date().getTime();
-	const username = req.username;
+	const username = req.sign_creds.username;
 
 	const { receiverMobile, note, sending_amount, isInclusive } = req.body;
 
@@ -908,7 +963,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 	var now = new Date().getTime();
 
-	const username = req.username;
+	const username = req.sign_creds.username;
 
 	const {
 		note,
