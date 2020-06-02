@@ -449,6 +449,7 @@ router.post("/merchant/changePassword", jwtTokenAuth, (req, res) => {
 		},
 		{
 			password: password,
+			status: 1
 		},
 		function (err, merchant) {
 			if (err) {

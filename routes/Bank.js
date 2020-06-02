@@ -100,7 +100,7 @@ router.post("/bank/createMerchant", function (req, res) {
 				data.username = merchant_id;
 				data.password = makeid(8);
 				data.bank_id = bank._id;
-				data.status = 1;
+				data.status = 0;
 
 				data.save((err) => {
 					if (err) {
