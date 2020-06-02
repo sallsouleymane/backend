@@ -2,20 +2,19 @@ const express = require("express");
 const router = express.Router();
 
 //utils
-const makeid = require("./utils/idGenerator");
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
 
 const Bank = require("../models/Bank");
 const Infra = require("../models/Infra");
-const Commission = require("../models/merchant/BankCommission");
+const MerchantFee = require("../models/merchant/MerchantFee");
 const Merchant = require("../models/merchant/Merchant");
 const jwtTokenAuth = require("./JWTTokenAuth");
 
-router.post("/bank/commission/updatePartnersShare", function (req, res) {
+router.post("/bank/merchantFee/updatePartnersShare", function (req, res) {
 	const {
 		token,
-		commission_id,
+		fee_id,
 		percentage,
 		specific_partners_share,
 	} = req.body;
@@ -37,33 +36,33 @@ router.post("/bank/commission/updatePartnersShare", function (req, res) {
 					error: "Unauthorized",
 				});
 			} else {
-				Commission.findOneAndUpdate(
+				MerchantFee.findOneAndUpdate(
 					{
-						_id: commission_id,
+						_id: fee_id,
 					},
 					{
 						partner_share_percentage: percentage,
 						specific_partners_share: specific_partners_share,
 					},
 					{ new: true },
-					(err, comm) => {
+					(err, fee) => {
 						if (err) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
 								error: "Internal Server Error",
 							});
-						} else if (comm == null) {
+						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "Commission not found.",
+								error: "MerchantFee not found.",
 							});
 						} else {
 							res.status(200).json({
 								status: 1,
 								message:
-									"Commission Rule successfully updated with partner share",
-								rule: comm,
+									"Merchant Fee Rule successfully updated with partner share",
+								rule: fee,
 							});
 						}
 					}
@@ -72,8 +71,8 @@ router.post("/bank/commission/updatePartnersShare", function (req, res) {
 		}
 	);
 });
-router.post("/bank/commission/createRule", function (req, res) {
-	const { token, merchant_id, active, ranges } = req.body;
+router.post("/bank/merchantFee/createRule", function (req, res) {
+	const { token, merchant_id, active, type, ranges } = req.body;
 	Bank.findOne(
 		{
 			token,
@@ -105,32 +104,33 @@ router.post("/bank/commission/createRule", function (req, res) {
 							error: "Merchant not found",
 						});
 					} else {
-						Commission.findOne({ merchant_id: merchant_id }, (err, comm) => {
+						MerchantFee.findOne({ merchant_id: merchant_id }, (err, fee) => {
 							if (err) {
 								console.log(err);
 								res.status(200).json({
 									status: 0,
 									error: "Internal Server Error",
 								});
-							} else if (comm != null) {
+							} else if (fee != null) {
 								res.status(200).json({
 									status: 0,
-									error: "Commision already exist.",
+									error: "Fee Rule already exist.",
 								});
 							} else {
-								let commission = new Commission();
-								commission.merchant_id = merchant_id;
-								commission.active = active;
+								let merchantFee = new MerchantFee();
+								merchantFee.merchant_id = merchant_id;
+								merchantFee.active = active;
+								merchantFee.type = type;
 								ranges.forEach((range) => {
 									var { trans_from, trans_to, fixed, percentage } = range;
-									commission.ranges.push({
+									merchantFee.ranges.push({
 										trans_from: trans_from,
 										trans_to: trans_to,
 										fixed: fixed,
 										percentage: percentage,
 									});
 								});
-								commission.save((err) => {
+								merchantFee.save((err) => {
 									if (err) {
 										console.log(err);
 										return res.status(200).json({
@@ -139,21 +139,21 @@ router.post("/bank/commission/createRule", function (req, res) {
 										});
 									}
 									let content =
-										"<p>New commision rule has been added for merchant " +
+										"<p>New fee rule rule has been added for merchant " +
 										merchant.name +
 										" for your bank in E-Wallet application</p><p>&nbsp;</p>";
-									sendMail(content, "New Commision Added", bank.email);
-									sendMail(content, "New Commision Added", merchant.email);
+									sendMail(content, "New Fee Rule Added", bank.email);
+									sendMail(content, "New Fee Rule Added", merchant.email);
 									let content2 =
-										" E-Wallet: New commision rule has been added for merchant " +
+										" E-Wallet: New fee rule rule has been added for merchant " +
 										merchant.name;
 									sendSMS(content2, bank.mobile);
 									sendSMS(content2, merchant.mobile);
 
 									res.status(200).json({
 										status: 1,
-										message: "Commission Rule created successfully",
-										rule: commission,
+										message: "Merchant Fee Rule created successfully",
+										rule: merchantFee,
 									});
 								});
 							}
@@ -165,8 +165,8 @@ router.post("/bank/commission/createRule", function (req, res) {
 	);
 });
 
-router.post("/bank/commission/addInfraShare", function (req, res) {
-	const { token, commission_id, fixed, percentage } = req.body;
+router.post("/bank/merchantFee/addInfraShare", function (req, res) {
+	const { token, fee_id, fixed, percentage } = req.body;
 	Bank.findOne(
 		{
 			token,
@@ -185,33 +185,33 @@ router.post("/bank/commission/addInfraShare", function (req, res) {
 					error: "Unauthorized",
 				});
 			} else {
-				Commission.findOneAndUpdate(
+				MerchantFee.findOneAndUpdate(
 					{
-						_id: commission_id,
+						_id: fee_id,
 					},
 					{
 						"infra_share.fixed": fixed,
 						"infra_share.percentage": percentage,
 					},
 					{ new: true },
-					(err, comm) => {
+					(err, fee) => {
 						if (err) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
 								error: "Internal Server Error",
 							});
-						} else if (comm == null) {
+						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "Commission not found.",
+								error: "MerchantFee not found.",
 							});
 						} else {
 							res.status(200).json({
 								status: 1,
 								message:
-									"Commission Rule successfully updated with infra share",
-								rule: comm,
+									"Merchant Fee Rule successfully updated with infra share",
+								rule: fee,
 							});
 						}
 					}
@@ -221,8 +221,8 @@ router.post("/bank/commission/addInfraShare", function (req, res) {
 	);
 });
 
-router.post("/bank/commission/editRule", function (req, res) {
-	const { token, commission_id, active, ranges } = req.body;
+router.post("/bank/merchantFee/editRule", function (req, res) {
+	const { token, fee_id, active, type, ranges } = req.body;
 	Bank.findOne(
 		{
 			token,
@@ -241,31 +241,32 @@ router.post("/bank/commission/editRule", function (req, res) {
 					error: "Unauthorized",
 				});
 			} else {
-				Commission.findOne({ _id: commission_id }, (err, comm) => {
+				MerchantFee.findOne({ _id: fee_id }, (err, fee) => {
 					if (err) {
 						console.log(err);
 						res.status(200).json({
 							status: 0,
 							error: "Internal Server Error",
 						});
-					} else if (comm == null) {
+					} else if (fee == null) {
 						res.status(200).json({
 							status: 0,
-							error: "Commission not found.",
+							error: "MerchantFee not found.",
 						});
 					} else {
 						if (
-							comm.merchant_approve_status == 0 ||
-							comm.merchant_approve_status == 2
+							fee.merchant_approve_status == 0 ||
+							fee.merchant_approve_status == 2
 						) {
 							console.log("Condition 1");
-							Commission.updateOne(
+							MerchantFee.updateOne(
 								{
-									_id: commission_id,
+									_id: fee_id,
 								},
 								{
 									$set: {
 										active: active,
+										type: type,
 										ranges: ranges,
 										merchant_approve_status: 0,
 									},
@@ -282,14 +283,15 @@ router.post("/bank/commission/editRule", function (req, res) {
 							);
 						} else {
 							console.log("Condition 2");
-							Commission.updateOne(
+							MerchantFee.updateOne(
 								{
-									_id: commission_id,
+									_id: fee_id,
 								},
 								{
 									$set: {
 										rule_edit_status: 1,
 										"edited.active": active,
+										"edited.type": type,
 										"edited.ranges": ranges,
 										"edited.merchant_approve_status": 0,
 										"edited.infra_approve_status": 0,
@@ -307,7 +309,7 @@ router.post("/bank/commission/editRule", function (req, res) {
 							);
 						}
 
-						Merchant.findOne({ _id: comm.merchant_id }, (err, merchant) => {
+						Merchant.findOne({ _id: fee.merchant_id }, (err, merchant) => {
 							if (err) {
 								console.log(err);
 								res.status(200).json({
@@ -321,18 +323,18 @@ router.post("/bank/commission/editRule", function (req, res) {
 								});
 							} else {
 								let content =
-									"<p>Commision rule has been edited for merchant " +
+									"<p>Fee Rule rule has been edited for merchant " +
 									merchant.name +
 									" for your bank in E-Wallet application</p><p>&nbsp;</p>";
-								sendMail(content, "Commision Edited", bank.email);
+								sendMail(content, "Fee Rule Edited", bank.email);
 								let content2 =
-									" E-Wallet: Commision rule has been edited for merchant " +
+									" E-Wallet: Fee Rule rule has been edited for merchant " +
 									merchant.name;
 								sendSMS(content2, bank.mobile);
 
 								res.status(200).json({
 									status: 1,
-									message: "Commission Rule edited successfully",
+									message: "Merchant Fee Rule edited successfully",
 								});
 							}
 						});
@@ -343,8 +345,8 @@ router.post("/bank/commission/editRule", function (req, res) {
 	);
 });
 
-router.post("/bank/commission/editInfraShare", function (req, res) {
-	const { token, commission_id, fixed, percentage } = req.body;
+router.post("/bank/merchantFee/editInfraShare", function (req, res) {
+	const { token, fee_id, fixed, percentage } = req.body;
 	Bank.findOne(
 		{
 			token,
@@ -363,28 +365,28 @@ router.post("/bank/commission/editInfraShare", function (req, res) {
 					error: "Unauthorized",
 				});
 			} else {
-				Commission.findOne(
+				MerchantFee.findOne(
 					{
-						_id: commission_id,
+						_id: fee_id,
 					},
-					(err, comm) => {
+					(err, fee) => {
 						if (err) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
 								error: "Internal Server Error",
 							});
-						} else if (comm == null) {
+						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "Commission not found.",
+								error: "MerchantFee not found.",
 							});
 						} else {
-							if (comm.infra_approve_status == 1) {
+							if (fee.infra_approve_status == 1) {
 								console.log("Condition 1");
-								Commission.updateOne(
+								MerchantFee.updateOne(
 									{
-										_id: commission_id,
+										_id: fee_id,
 									},
 									{
 										$set: {
@@ -406,9 +408,9 @@ router.post("/bank/commission/editInfraShare", function (req, res) {
 								);
 							} else {
 								console.log("Condition 2");
-								Commission.updateOne(
+								MerchantFee.updateOne(
 									{
-										_id: commission_id,
+										_id: fee_id,
 									},
 									{
 										$set: {
@@ -430,7 +432,7 @@ router.post("/bank/commission/editInfraShare", function (req, res) {
 							}
 							res.status(200).json({
 								status: 1,
-								message: "Commission Rule's infra share edited successfully",
+								message: "Merchant Fee Rule's infra share edited successfully",
 							});
 						}
 					}
@@ -440,7 +442,7 @@ router.post("/bank/commission/editInfraShare", function (req, res) {
 	);
 });
 
-router.get("/merchant/commission/getRule", jwtTokenAuth, function (req, res) {
+router.get("/merchant/merchantFee/getRule", jwtTokenAuth, function (req, res) {
 	const username = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -461,29 +463,29 @@ router.get("/merchant/commission/getRule", jwtTokenAuth, function (req, res) {
 				});
 			} else {
 				var excludeFields =
-					"-infra_share_edit_status -infra_share.fixed -infra_share.percentage -edited.infra_share.fixed -edited.infra_share.percentage";
-				Commission.findOne(
+					"-infra_approve_status -infra_share_edit_status -infra_share.fixed -infra_share.percentage -edited.infra_share.fixed -edited.infra_share.percentage";
+				MerchantFee.findOne(
 					{
 						merchant_id: merchant._id,
 					},
 					excludeFields,
-					(err, comm) => {
+					(err, fee) => {
 						if (err) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
 								error: "Internal Server Error",
 							});
-						} else if (comm == null) {
+						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "Commission not found.",
+								error: "MerchantFee not found.",
 							});
 						} else {
 							res.status(200).json({
 								status: 1,
-								message: "Commission Rule",
-								rule: comm,
+								message: "Merchant Fee Rule",
+								rule: fee,
 							});
 						}
 					}
@@ -493,7 +495,7 @@ router.get("/merchant/commission/getRule", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/bank/commission/getRule", function (req, res) {
+router.post("/bank/merchantFee/getRule", function (req, res) {
 	const { token, merchant_id } = req.body;
 	Bank.findOne(
 		{
@@ -513,23 +515,23 @@ router.post("/bank/commission/getRule", function (req, res) {
 					error: "Unauthorized",
 				});
 			} else {
-				Commission.findOne({ merchant_id: merchant_id }, (err, comm) => {
+				MerchantFee.findOne({ merchant_id: merchant_id }, (err, fee) => {
 					if (err) {
 						console.log(err);
 						res.status(200).json({
 							status: 0,
 							error: "Internal Server Error",
 						});
-					} else if (comm == null) {
+					} else if (fee == null) {
 						res.status(200).json({
 							status: 0,
-							error: "Commission not found.",
+							error: "MerchantFee not found.",
 						});
 					} else {
 						res.status(200).json({
 							status: 1,
-							message: "Commission Rule",
-							rule: comm,
+							message: "MerchantFee Rule",
+							rule: fee,
 						});
 					}
 				});
@@ -538,7 +540,7 @@ router.post("/bank/commission/getRule", function (req, res) {
 	);
 });
 
-router.post("/infra/commission/getRule", function (req, res) {
+router.post("/infra/merchantFee/getRule", function (req, res) {
 	const { token, merchant_id } = req.body;
 	Infra.findOne(
 		{
@@ -558,7 +560,7 @@ router.post("/infra/commission/getRule", function (req, res) {
 					error: "Unauthorized",
 				});
 			} else {
-				Commission.findOne(
+				MerchantFee.findOne(
 					{
 						merchant_id: merchant_id,
 						$or: [
@@ -578,26 +580,26 @@ router.post("/infra/commission/getRule", function (req, res) {
 							},
 						],
 					},
-					(err, comm) => {
+					(err, fee) => {
 						if (err) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
 								error: "Internal Server Error",
 							});
-						} else if (comm == null) {
+						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "Commission not found.",
+								error: "MerchantFee not found.",
 							});
 						} else {
-							if (comm.edited.merchant_approve_status == 0) {
-								comm["edited"] = undefined;
+							if (fee.edited.merchant_approve_status == 0) {
+								fee["edited"] = undefined;
 							}
 							res.status(200).json({
 								status: 1,
-								message: "Commission Rule",
-								rule: comm,
+								message: "Merchant Fee Rule",
+								rule: fee,
 							});
 						}
 					}
@@ -607,8 +609,8 @@ router.post("/infra/commission/getRule", function (req, res) {
 	);
 });
 
-router.post("/merchant/commission/approve", jwtTokenAuth, function (req, res) {
-	const { commission_id } = req.body;
+router.post("/merchant/merchantFee/approve", jwtTokenAuth, function (req, res) {
+	const { fee_id } = req.body;
 	const username = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -628,32 +630,32 @@ router.post("/merchant/commission/approve", jwtTokenAuth, function (req, res) {
 					error: "Unauthorized",
 				});
 			} else {
-				Commission.findOne(
+				MerchantFee.findOne(
 					{
-						_id: commission_id,
+						_id: fee_id,
 						$or: [
 							{ merchant_approve_status: 0 },
 							{ "edited.merchant_approve_status": 0 },
 						],
 					},
-					(err, comm) => {
+					(err, fee) => {
 						if (err) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
 								error: "Internal Server Error",
 							});
-						} else if (comm == null) {
+						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "Commission not found.",
+								error: "MerchantFee not found.",
 							});
 						} else {
-							if (comm.rule_edit_status == 1) {
+							if (fee.rule_edit_status == 1) {
 								console.log("Condition 1");
-								Commission.updateOne(
+								MerchantFee.updateOne(
 									{
-										_id: commission_id,
+										_id: fee_id,
 									},
 									{
 										$set: {
@@ -672,9 +674,9 @@ router.post("/merchant/commission/approve", jwtTokenAuth, function (req, res) {
 								);
 							} else {
 								console.log("Condition 2");
-								Commission.updateOne(
+								MerchantFee.updateOne(
 									{
-										_id: commission_id,
+										_id: fee_id,
 									},
 									{
 										$set: {
@@ -704,8 +706,8 @@ router.post("/merchant/commission/approve", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/merchant/commission/decline", jwtTokenAuth, function (req, res) {
-	const { commission_id } = req.body;
+router.post("/merchant/merchantFee/decline", jwtTokenAuth, function (req, res) {
+	const { fee_id } = req.body;
 	const username = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -725,32 +727,32 @@ router.post("/merchant/commission/decline", jwtTokenAuth, function (req, res) {
 					error: "Unauthorized",
 				});
 			} else {
-				Commission.findOne(
+				MerchantFee.findOne(
 					{
-						_id: commission_id,
+						_id: fee_id,
 						$or: [
 							{ merchant_approve_status: 0 },
 							{ "edited.merchant_approve_status": 0 },
 						],
 					},
-					(err, comm) => {
+					(err, fee) => {
 						if (err) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
 								error: "Internal Server Error",
 							});
-						} else if (comm == null) {
+						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "Commission not found.",
+								error: "MerchantFee not found.",
 							});
 						} else {
-							if (comm.rule_edit_status == 1) {
+							if (fee.rule_edit_status == 1) {
 								console.log("Condition 1");
-								Commission.updateOne(
+								MerchantFee.updateOne(
 									{
-										_id: commission_id,
+										_id: fee_id,
 									},
 									{
 										$set: {
@@ -769,9 +771,9 @@ router.post("/merchant/commission/decline", jwtTokenAuth, function (req, res) {
 								);
 							} else {
 								console.log("Condition 2");
-								Commission.updateOne(
+								MerchantFee.updateOne(
 									{
-										_id: commission_id,
+										_id: fee_id,
 									},
 									{
 										$set: {
@@ -801,8 +803,8 @@ router.post("/merchant/commission/decline", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/infra/commission/approve", function (req, res) {
-	const { token, commission_id } = req.body;
+router.post("/infra/merchantFee/approve", function (req, res) {
+	const { token, fee_id } = req.body;
 	Infra.findOne(
 		{
 			token,
@@ -821,9 +823,9 @@ router.post("/infra/commission/approve", function (req, res) {
 					error: "Unauthorized",
 				});
 			} else {
-				Commission.findOne(
+				MerchantFee.findOne(
 					{
-						_id: commission_id,
+						_id: fee_id,
 						$or: [
 							{ infra_approve_status: 0 },
 							{ "edited.infra_approve_status": 0 },
@@ -840,32 +842,33 @@ router.post("/infra/commission/approve", function (req, res) {
 							},
 						],
 					},
-					(err, comm) => {
+					(err, fee) => {
 						if (err) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
 								error: "Internal Server Error",
 							});
-						} else if (comm == null) {
+						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "Commission not found.",
+								error: "MerchantFee not found.",
 							});
 						} else {
 							if (
-								comm.infra_share_edit_status == 0 &&
-								comm.rule_edit_status == 1
+								fee.infra_share_edit_status == 0 &&
+								fee.rule_edit_status == 1
 							) {
 								console.log("Condition 1");
-								Commission.updateOne(
+								MerchantFee.updateOne(
 									{
-										_id: commission_id,
+										_id: fee_id,
 									},
 									{
 										$set: {
-											active: comm.edited.active,
-											ranges: comm.edited.ranges,
+											active: fee.edited.active,
+											type: fee.edited.type,
+											ranges: fee.edited.ranges,
 											status: 1,
 											infra_approve_status: 1,
 											rule_edit_status: 0,
@@ -883,21 +886,22 @@ router.post("/infra/commission/approve", function (req, res) {
 									}
 								);
 							} else if (
-								comm.infra_share_edit_status == 1 &&
-								comm.rule_edit_status == 1
+								fee.infra_share_edit_status == 1 &&
+								fee.rule_edit_status == 1
 							) {
 								console.log("Condition 2");
-								Commission.updateOne(
+								MerchantFee.updateOne(
 									{
-										_id: commission_id,
+										_id: fee_id,
 									},
 									{
 										$set: {
-											active: comm.edited.active,
-											ranges: comm.edited.ranges,
-											"infra_share.fixed": comm.edited.infra_share.fixed,
+											active: fee.edited.active,
+											ranges: fee.edited.ranges,
+											type: fee.edited.type,
+											"infra_share.fixed": fee.edited.infra_share.fixed,
 											"infra_share.percentage":
-												comm.edited.infra_share.percentage,
+												fee.edited.infra_share.percentage,
 											infra_share_edit_status: 0,
 											rule_edit_status: 0,
 											status: 1,
@@ -917,19 +921,19 @@ router.post("/infra/commission/approve", function (req, res) {
 									}
 								);
 							} else if (
-								comm.infra_share_edit_status == 1 &&
-								comm.rule_edit_status == 0
+								fee.infra_share_edit_status == 1 &&
+								fee.rule_edit_status == 0
 							) {
 								console.log("Condition 3");
 								MerchantFee.updateOne(
 									{
-										_id: commission_id,
+										_id: fee_id,
 									},
 									{
 										$set: {
-											"infra_share.fixed": comm.edited.infra_share.fixed,
+											"infra_share.fixed": fee.edited.infra_share.fixed,
 											"infra_share.percentage":
-												comm.edited.infra_share.percentage,
+												fee.edited.infra_share.percentage,
 											infra_share_edit_status: 0,
 											status: 1,
 										},
@@ -948,10 +952,10 @@ router.post("/infra/commission/approve", function (req, res) {
 									}
 								);
 							} else {
-								console.log("Condition 3");
-								Commission.updateOne(
+								console.log("Condition 4");
+								MerchantFee.updateOne(
 									{
-										_id: commission_id,
+										_id: fee_id,
 									},
 									{
 										$set: {
@@ -982,8 +986,8 @@ router.post("/infra/commission/approve", function (req, res) {
 	);
 });
 
-router.post("/infra/commission/decline", function (req, res) {
-	const { token, commission_id } = req.body;
+router.post("/infra/merchantFee/decline", function (req, res) {
+	const { token, fee_id } = req.body;
 	Infra.findOne(
 		{
 			token,
@@ -1002,32 +1006,32 @@ router.post("/infra/commission/decline", function (req, res) {
 					error: "Unauthorized",
 				});
 			} else {
-				Commission.findOne(
+				MerchantFee.findOne(
 					{
-						_id: commission_id,
+						_id: fee_id,
 						$or: [
 							{ infra_approve_status: 0 },
 							{ "edited.infra_approve_status": 0 },
 						],
 					},
-					(err, comm) => {
+					(err, fee) => {
 						if (err) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
 								error: "Internal Server Error",
 							});
-						} else if (comm == null) {
+						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "Commission not found.",
+								error: "MerchantFee not found.",
 							});
 						} else {
-							if (comm.infra_share_edit_status == 1) {
+							if (fee.infra_share_edit_status == 1) {
 								console.log("Condition 1");
-								Commission.updateOne(
+								MerchantFee.updateOne(
 									{
-										commission_id,
+										fee_id,
 									},
 									{
 										$set: {
@@ -1046,9 +1050,9 @@ router.post("/infra/commission/decline", function (req, res) {
 								);
 							} else {
 								console.log("Condition 2");
-								Commission.updateOne(
+								MerchantFee.updateOne(
 									{
-										commission_id,
+										fee_id,
 									},
 									{
 										$set: {

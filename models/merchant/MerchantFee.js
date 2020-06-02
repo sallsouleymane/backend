@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
-const BankCommissionSchema = new mongoose.Schema({
+const MerchantFeeSchema = new mongoose.Schema({
 	merchant_id: { type: String, required: true },
 	status: { type: Number, required: true, default: 0 },
-	active: { type: Number, required: true, default: 0 },
+    active: { type: Number, required: true, default: 0 },
+    type: { type: Number, required: true },
 	rule_edit_status: { type: Number, required: true, default: 0 },
 	infra_share_edit_status: { type: Number, required: true, default: 0 },
 	merchant_approve_status: { type: Number, required: true, default: 0 },
@@ -32,7 +33,8 @@ const BankCommissionSchema = new mongoose.Schema({
 			fixed: { type: Number, required: false },
 			percentage: { type: Number, required: false },
 		},
-		active: { type: Number, required: false },
+        active: { type: Number, required: false },
+        type: { type: Number, required: false },
 		merchant_approve_status: { type: Number, required: false },
 		ranges: [
 			{
@@ -44,4 +46,4 @@ const BankCommissionSchema = new mongoose.Schema({
 		],
 	},
 });
-module.exports = mongoose.model("BankCommission", BankCommissionSchema);
+module.exports = mongoose.model("MerchantFee", MerchantFeeSchema);
