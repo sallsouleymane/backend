@@ -10,6 +10,7 @@ const Merchant = require("../models/merchant/Merchant");
 const MerchantBranch = require("../models/merchant/MerchantBranch");
 const MerchantStaff = require("../models/merchant/MerchantStaff");
 const MerchantCashier = require("../models/merchant/MerchantCashier");
+const Zone = require("../models/merchant/Zone");
 
 //utils
 const sendSMS = require("./utils/sendSMS");
@@ -17,6 +18,72 @@ const sendMail = require("./utils/sendMail");
 const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
 const blockchain = require("../services/Blockchain");
+
+router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
+	let data = new Zone();
+	const { code, name } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err || merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				data.code = code;
+				data.name = name;
+				data.save((err, zone) => {
+					if (err) {
+						console.log(err);
+						return res.status(200).json({
+							status: 0,
+							message: "Either code/name is already exist",
+						});
+					} else {
+						return res.status(200).json({ status: 1, message: "Zone Created", zone: zone });
+					}
+				});
+			}
+		}
+	);
+});
+
+router.get("/merchant/listZones", jwtTokenAuth, (req, res) => {
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err || merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				Zone.find((err, zones) => {
+					if (err) {
+						res.status(200).json({
+							status: 0,
+							message: "Internal server error",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							zones: zones,
+						});
+					}
+				});
+			}
+		}
+	);
+});
 
 router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 	let data = new MerchantCashier();
