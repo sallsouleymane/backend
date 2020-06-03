@@ -11,6 +11,5 @@ const MerchantStaffSchema = new mongoose.Schema({
 	merchant_id: { type: String, required: true },
 	logo: { type: String, required: false },
 	status: { type: Number, required: true, default: 1 },
-	token: { type: String, required: false },
 });
 module.exports = mongoose.model("MerchantStaff", MerchantStaffSchema);

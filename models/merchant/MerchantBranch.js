@@ -2,7 +2,8 @@
 const mongoose = require('mongoose');
 const MerchantBranchSchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true },
-  branch_id: { type: String, required: true, unique: true },
+  code: { type: String, required: true, unique: true },
+  zone_id: { type: String, required: true },
   username: { type: String, required: true, unique:true },
   password: { type: String, required: true },
   address1: { type: String, required: true },

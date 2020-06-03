@@ -24,7 +24,6 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 		name,
 		branch_id,
 		credit_limit,
-		bcode,
 		working_from,
 		working_to,
 		per_trans_amt,
@@ -45,7 +44,6 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 				});
 			} else {
 				data.name = name;
-				data.bcode = bcode;
 				data.credit_limit = credit_limit;
 				data.working_from = working_from;
 				data.working_to = working_to;
@@ -63,7 +61,7 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 						});
 					}
 				 else {
-						MerchantBranch.findByIdAndUpdate(branch_id, { $inc: { total_cashiers: 1 } }, function (e, v) {
+						MerchantBranch.findOneAndUpdate({ _id: branch_id }, { $inc: { total_cashiers: 1 } }, function (e, v) {
 							return res.status(200).json({ status: 1, data: d});
 						});
 					}
@@ -108,27 +106,27 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 						});
 					} else {
 					let content =
-						"<p>Your have been added as a Merchant User in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+						"<p>Your have been added as a Merchant Staff in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
 						config.mainIP +
-						"/merchant/cashier/yourBranchName'>http://" +
+						"/merchant/cashier/" + name + "'>http://" +
 						config.mainIP +
-						"/</a></p><p><p>Your username: " +
+						"/merchant/cashier/" + name + "</a></p><p><p>Your username: " +
 						username +
 						"</p><p>Your password: " +
 						password +
 						"</p>";
-					sendMail(content, "Merchant User Account Created", email);
+					sendMail(content, "Merchant Staff Account Created", email);
 					let content2 =
-						"Your have been added as Merchant User in E-Wallet application Login URL: http://" +
+						"Your have been added as Merchant Staff in E-Wallet application Login URL: http://" +
 						config.mainIP +
-						"/cashier/yourBranchName Your username: " +
+						"/cashier/" + name + " Your username: " +
 						username +
 						" Your password: " +
 						password;
 					sendSMS(content2, mobile);
 					return res.status(200).json({
 						status: 1,
-						message: "Merchant user added successfully"
+						message: "Merchant staff added successfully"
 					});
 				}
 				});
@@ -261,10 +259,9 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 	let data = new MerchantBranch();
 	const {
 		name,
-		bcode,
+		code,
+		zone_id,
 		username,
-		credit_limit,
-		cash_in_hand,
 		address1,
 		state,
 		zip,
@@ -295,13 +292,8 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 				});
 			} else {
 				data.name = name;
-				data.bcode = bcode;
-				if (credit_limit !== "" && credit_limit != null) {
-					data.credit_limit = credit_limit;
-				}
-				if (cash_in_hand !== "" && cash_in_hand != null) {
-					data.cash_in_hand = cash_in_hand;
-				}
+				data.code = code;
+				data.zone_id = zone_id;
 				data.username = username;
 				data.address1 = address1;
 				data.state = state;
@@ -315,16 +307,47 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 				data.working_from = working_from;
 				data.working_to = working_to;
 
-				data.save((err) => {
+				data.save((err, branch) => {
 					if (err) {
+						console.log(err);
 						return res.json({
 							status: 0,
-							message: err.toString(),
+							message: "Internal server error",
 						});
 					} else {
+						let content =
+							"<p>You are added as a branch for merchant " +
+							merchant.name +
+							" in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+							config.mainIP +
+							"/merchant/branch/" +
+							name +
+							"'>http://" +
+							config.mainIP +
+							"/merchant/branch/" +
+							name +
+							"</a></p><p><p>Your username: " +
+							username +
+							"</p><p>Your password: " +
+							data.password +
+							"</p>";
+						sendMail(content, "Merchant Branch Created", email);
+						let content2 =
+							"You are added as a branch for merchant " +
+							merchant.name +
+							" in E-Wallet application Login URL: http://" +
+							config.mainIP +
+							"/merchant/branch/" +
+							name +
+							" Your username: " +
+							username +
+							" Your password: " +
+							data.password;
+						sendSMS(content2, mobile);
 						res.status(200).json({
 							status: 1,
-							message: "Branch Created"
+							message: "Branch Created",
+							branch: branch
 						});
 					}
 				});
@@ -337,7 +360,6 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 	const {
 		name,
 		username,
-		credit_limit,
 		bcode,
 		address1,
 		state,
@@ -371,7 +393,6 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 					bcode,
 					{
 						name: name,
-						credit_limit: credit_limit,
 						username: username,
 						address1: address1,
 						state: state,
@@ -422,7 +443,7 @@ router.get("/merchant/listBranches", jwtTokenAuth, function (req, res) {
 					message: "Unauthorized",
 				});
 			} else {
-				MerchantBranch.find({ merchant_id: merchant._id }, function (err, branch) {
+				MerchantBranch.find({ merchant_id: merchant._id }, "-password", function (err, branch) {
 					if (err) {
 						res.status(200).json({
 							status: 0,

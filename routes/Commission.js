@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 
 //utils
-const makeid = require("./utils/idGenerator");
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
 
