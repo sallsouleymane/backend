@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../dbConfig");
+const config = require("../config.json");
 
 //utils
 const makeid = require("./utils/idGenerator");
@@ -862,8 +863,7 @@ router.post("/common/forgotPassword", function(req, res) {
 
 					res.status(200).json({
 						status: 1,
-						mobile: mobile,
-						username: user.username
+						message: "OTP is sent to your mobile and email"
 					});
 				});
 			}
@@ -887,15 +887,43 @@ router.post("/common/verifyForgotPasswordOTP", function (req, res) {
 					message: "Invalid OTP!",
 				});
 			} else {
+				const password = makeid(10);
 				const Type = getTypeClass(user_type);
-				Type.findById(ot.user_id, (err, _res) => {
+				Type.findByIdAndUpdate(ot.user_id, {password: password, status: 0}, (err, user) => {
 					if (err) {
 						return res.json({
 							success: 0,
 							message: "Internal Server error",
 						});
 					} else {
-						OTP.deleteOne({_id: ot._id},(err) => {console.log("deleted")})
+						OTP.deleteOne({_id: ot._id},(err) => {console.log("deleted")});
+						let content =
+							"<p>A one time password is generated for user " +
+							user.name +
+							" in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+							config.mainIP + "/" + user_type +
+							"/" +
+							"'>http://" +
+							config.mainIP +
+							+ "/" + user_type + 
+							"/" +
+							"</a></p><p><p>Your username: " +
+							user.username +
+							"</p><p>Your password: " +
+							password +
+							"</p>";
+						sendMail(content, "One Time Password ", user.email);
+						let content2 =
+							"E-Wallet: A one time password is generated for user " +
+							user.name +
+							" Login URL: http://" +
+							config.mainIP + "/" + user_type +
+							"/" +
+							" Your username: " +
+							user.username +
+							" Your password: " +
+							password;
+						sendSMS(content2, user.mobile);
 						res.status(200).json({
 							status: 1,
 							message: "OTP Verification for forgot password is successfull",
