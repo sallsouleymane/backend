@@ -30,7 +30,7 @@ function jwtsign(sign_creds) {
 	return token;
 }
 
-router.post("/merchant/branch/login", (req, res) => {
+router.post("/merchantBranch/login", (req, res) => {
 	const { username, password } = req.body;
 	MerchantBranch.findOne(
 		{ username, password },
@@ -60,7 +60,7 @@ router.post("/merchant/branch/login", (req, res) => {
 	);
 });
 
-router.post("/merchant/cashier/login", (req, res) => {
+router.post("/merchantCashier/login", (req, res) => {
 	const { username, password } = req.body;
 	MerchantStaff.findOne(
 		{ username, password },

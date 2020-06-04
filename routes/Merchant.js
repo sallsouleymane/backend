@@ -44,7 +44,7 @@ router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 						console.log(err);
 						return res.status(200).json({
 							status: 0,
-							message: "Either code/name is already exist",
+							message: "code already exist",
 						});
 					} else {
 						return res.status(200).json({ status: 1, message: "Zone Created", zone: zone });
