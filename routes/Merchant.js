@@ -11,6 +11,7 @@ const MerchantBranch = require("../models/merchant/MerchantBranch");
 const MerchantStaff = require("../models/merchant/MerchantStaff");
 const MerchantCashier = require("../models/merchant/MerchantCashier");
 const Zone = require("../models/merchant/Zone");
+const Invoice = require("../models/merchant/Invoice");
 
 //utils
 const sendSMS = require("./utils/sendSMS");
@@ -18,6 +19,84 @@ const sendMail = require("./utils/sendMail");
 const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
 const blockchain = require("../services/Blockchain");
+
+router.post("/merchant/createInvoices", jwtTokenAuth, (req, res) => {
+	let data = new Array();
+	let invoiceObj = new Invoice();
+	const { group_id, invoices } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err || merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				invoices.forEach((invoice) => {
+					var {
+						number,
+						name,
+						merchant_id,
+						amount,
+						due_date,
+						description,
+						mobile,
+						zone_id,
+					} = invoice;
+					var invoiceObj = new Invoice();
+					invoiceObj.number = number;
+					invoiceObj.name = name;
+					invoiceObj.merchant_id = merchant_id;
+					invoiceObj.amount = amount;
+					invoiceObj.due_date = due_date;
+					invoiceObj.description = description;
+					invoiceObj.mobile = mobile;
+					invoiceObj.group_id = group_id;
+					invoiceObj.zone_id = zone_id;
+					invoiceObj.save((err) => {});
+				});
+				return res.status(200).json({ status: 1, message: "Invoices Created" });
+			}
+		}
+	);
+});
+
+router.get("/merchant/listInvoices", jwtTokenAuth, (req, res) => {
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err || merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				Invoice.find({merchant_id: merchant._id},(err, invoices) => {
+					if (err) {
+						res.status(200).json({
+							status: 0,
+							message: "Internal server error",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							invoices: invoices,
+						});
+					}
+				});
+			}
+		}
+	);
+});
 
 router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 	let data = new Zone();
@@ -37,6 +116,7 @@ router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 			} else {
 				data.code = code;
 				data.name = name;
+				data.merchant_id = merchant._id;
 				data.save((err, zone) => {
 					if (err) {
 						console.log(err);
@@ -67,7 +147,7 @@ router.get("/merchant/listZones", jwtTokenAuth, (req, res) => {
 					message: "Unauthorized",
 				});
 			} else {
-				Zone.find((err, zones) => {
+				Zone.find({ merchant_id: merchant._id },(err, zones) => {
 					if (err) {
 						res.status(200).json({
 							status: 0,

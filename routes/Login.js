@@ -9,6 +9,8 @@ const makeid = require("./utils/idGenerator");
 const Infra = require("../models/Infra");
 const User = require("../models/User");
 const Merchant = require("../models/merchant/Merchant");
+const MerchantBranch = require("../models/merchant/MerchantBranch");
+const MerchantStaff = require("../models/merchant/MerchantStaff");
 const Bank = require("../models/Bank");
 const Profile = require("../models/Profile");
 const Branch = require("../models/Branch");
@@ -27,6 +29,66 @@ function jwtsign(sign_creds) {
 	);
 	return token;
 }
+
+router.post("/merchant/branch/login", (req, res) => {
+	const { username, password } = req.body;
+	MerchantBranch.findOne(
+		{ username, password },
+		"-password",
+		function(err, branch) {
+			if (err) {
+				console.log(err);
+				return res.status(200).json({
+					status: 0,
+					error: "Internal Server Error"
+				});
+			}
+			if (branch == null) {
+				return res.status(200).json({
+					status: 0,
+					error: "User account not found. Please signup"
+				});
+			}
+			let sign_creds = { username: username, password: password }
+			const token = jwtsign(sign_creds)
+			res.status(200).json({
+				status: 1,
+				details: branch,
+				token: token
+			});
+		}
+	);
+});
+
+router.post("/merchant/cashier/login", (req, res) => {
+	const { username, password } = req.body;
+	MerchantStaff.findOne(
+		{ username, password },
+		"-password",
+		function(err, staff) {
+			if (err) {
+				console.log(err);
+				return res.status(200).json({
+					status: 0,
+					error: "Internal Server Error"
+				});
+			}
+			if (staff == null) {
+				return res.status(200).json({
+					status: 0,
+					error: "User account not found. Please signup"
+				});
+			}
+			let sign_creds = { username: username, password: password }
+			const token = jwtsign(sign_creds)
+			res.status(200).json({
+				status: 1,
+				details: staff,
+				token: token
+			});
+		}
+	);
+});
 
 router.post("/merchant/login", (req, res) => {
 	const { username, password } = req.body;
