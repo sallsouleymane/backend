@@ -12,6 +12,7 @@ const Infra = require("../models/Infra");
 const Fee = require("../models/Fee");
 const CashierSend = require("../models/CashierSend");
 const Merchant = require("../models/merchant/Merchant");
+const Invoice = require("../models/merchant/Invoice");
 
 //utils
 const sendSMS = require("./utils/sendSMS");
@@ -19,6 +20,64 @@ const sendMail = require("./utils/sendMail");
 const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
 const blockchain = require("../services/Blockchain");
+
+router.post("/user/merchant/getDetails", jwtTokenAuth, function (req, res) {
+	const { merchant_id } = req.body;
+	const username = req.sign_creds.username;
+	User.findOne(
+		{
+			username,
+			status: 1,
+		},
+		function (err, user) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal error please try again",
+				});
+			} else if (user == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				Merchant.findOne(
+					{ _id: merchant_id },
+					"name logo_hash description",
+					(err, merchant) => {
+						if (err) {
+							console.log(err);
+							res.status(200).json({
+								status: 0,
+								message: "Internal Server Error",
+							});
+						} else {
+							Invoice.find(
+								{ merchant_id: merchant_id, mobile: user.mobile },
+								(err, invoices) => {
+									if (err) {
+										console.log(err);
+										res.status(200).json({
+											status: 0,
+											message: "Internal Server Error",
+										});
+									} else {
+										res.status(200).json({
+											status: 1,
+											merchant: merchant,
+											invoices: invoices,
+										});
+									}
+								}
+							);
+						}
+					}
+				);
+			}
+		}
+	);
+});
 
 router.get("/user/listMerchants", jwtTokenAuth, function (req, res) {
 	const username = req.sign_creds.username;

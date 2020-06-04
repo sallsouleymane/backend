@@ -10,6 +10,8 @@ const sendMail = require("./utils/sendMail");
 const getTypeClass = require("./utils/getTypeClass");
 const makeotp = require("./utils/makeotp");
 
+const jwtTokenAuth = require("./JWTTokenAuth");
+
 //services
 const {
 	rechargeNow,
@@ -36,6 +38,35 @@ router.get("/testGet", function (req, res) {
 	return res.status(200).json({
 		status: "Internal error please try again",
 	});
+});
+
+router.post("/:user/changePassword", jwtTokenAuth, (req, res) => {
+	const user = req.params.user;
+	const Type = getTypeClass(user)
+    const { password } = req.body;
+    const username = req.sign_creds.username;
+	Type.findOneAndUpdate(
+		{
+			username,
+		},
+		{
+			password: password,
+			status: 1
+		},
+		function (err, details) {
+			if (err) {
+				res.status(200).json({
+					status: 0,
+					error: "Internal Server Error",
+				});
+			} else {
+				res.status(200).json({
+					status: 1,
+					message: "Updated password successfully",
+				});
+			}
+		}
+	);
 });
 
 router.get("/getBalance", (req, res) => {
@@ -831,10 +862,10 @@ router.put("/updateCashier", function (req, res) {
 	);
 });
 
-router.post("/common/forgotPassword", function (req, res) {
-	//res.send("hi");
+router.post("/:user/forgotPassword", function (req, res) {
 	let data = new OTP();
-	const { mobile, user_type } = req.body;
+	const user_type = req.params.user;
+	const { mobile } = req.body;
 	const Type = getTypeClass(user_type);
 	Type.findOne(
 		{
@@ -874,8 +905,9 @@ router.post("/common/forgotPassword", function (req, res) {
 	);
 });
 
-router.post("/common/verifyForgotPasswordOTP", function (req, res) {
-	const { mobile, otp, user_type } = req.body;
+router.post("/:user/verifyForgotPasswordOTP", function (req, res) {
+	const { mobile, otp } = req.body;
+	const user_type = req.params.user;
 	const page = user_type + "ForgotPassword";
 	OTP.findOne(
 		{

@@ -608,33 +608,6 @@ router.get("/merchant/listBranches", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/merchant/changePassword", jwtTokenAuth, (req, res) => {
-    const { password } = req.body;
-    const username = req.sign_creds.username;
-	Merchant.findOneAndUpdate(
-		{
-			username,
-		},
-		{
-			password: password,
-			status: 1
-		},
-		function (err, merchant) {
-			if (err) {
-				res.status(200).json({
-					status: 0,
-					error: "Internal Server Error",
-				});
-			} else {
-				res.status(200).json({
-					status: 1,
-					message: "Updated password successfully",
-				});
-			}
-		}
-	);
-});
-
 router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 	const username = req.sign_creds.username;
 	Merchant.findOne(
