@@ -21,7 +21,7 @@ const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
 const blockchain = require("../services/Blockchain");
 
-router.post("/user/merchant/getDetails", jwtTokenAuth, function (req, res) {
+router.post("/user/getMerchantDetails", jwtTokenAuth, function (req, res) {
 	const { merchant_id } = req.body;
 	const username = req.sign_creds.username;
 	User.findOne(
