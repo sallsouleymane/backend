@@ -13,6 +13,7 @@ const commonRouter = require("./routes/Common");
 const merchantRouter = require("./routes/Merchant");
 const commissionRouter = require("./routes/Commission");
 const merchantFeeRouter = require("./routes/MerchantFee");
+const merchantCashierRouter = require("./routes/MerchantCashier");
 
 var cors = require("cors");
 const bodyParser = require("body-parser");
@@ -53,4 +54,5 @@ app.use("/api", commonRouter);
 app.use("/api", merchantRouter);
 app.use("/api", commissionRouter);
 app.use("/api", merchantFeeRouter);
+app.use("/api", merchantCashierRouter);
 app.listen(API_PORT, () => console.log("Backend Started"));

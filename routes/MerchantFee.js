@@ -72,7 +72,7 @@ router.post("/bank/merchantFee/updatePartnersShare", function (req, res) {
 	);
 });
 router.post("/bank/merchantFee/createRule", function (req, res) {
-	const { token, merchant_id, active, type, ranges } = req.body;
+	const { token, merchant_id, active, type, ranges, description } = req.body;
 	Bank.findOne(
 		{
 			token,
@@ -121,6 +121,7 @@ router.post("/bank/merchantFee/createRule", function (req, res) {
 								merchantFee.merchant_id = merchant_id;
 								merchantFee.active = active;
 								merchantFee.type = type;
+								merchantFee.description = description;
 								ranges.forEach((range) => {
 									var { trans_from, trans_to, fixed, percentage } = range;
 									merchantFee.ranges.push({
