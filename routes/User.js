@@ -44,7 +44,7 @@ router.post("/user/getMerchantDetails", jwtTokenAuth, function (req, res) {
 			} else {
 				Merchant.findOne(
 					{ _id: merchant_id },
-					"name logo_hash description",
+					"name logo description",
 					(err, merchant) => {
 						if (err) {
 							console.log(err);

@@ -66,7 +66,7 @@ router.post("/bank/createMerchant", function (req, res) {
 		token,
 		merchant_id,
 		name,
-		logo_hash,
+		logo,
 		description,
 		document_hash,
 		email,
@@ -92,7 +92,7 @@ router.post("/bank/createMerchant", function (req, res) {
 			} else {
 				const data = new Merchant();
 				data.name = name;
-				data.logo_hash = logo_hash;
+				data.logo = logo;
 				data.description = description;
 				data.document_hash = document_hash;
 				data.email = email;
@@ -151,7 +151,7 @@ router.post("/bank/createMerchant", function (req, res) {
 });
 
 router.post("/bank/editMerchant", function (req, res) {
-	var { token, username, name, logo_hash, description, document_hash, email} = req.body;
+	var { token, username, name, logo, description, document_hash, email} = req.body;
 	Bank.findOne(
 		{
 			token,
@@ -172,7 +172,7 @@ router.post("/bank/editMerchant", function (req, res) {
 			} else {
 				Merchant.findOneAndUpdate({username: username}, {
 					name: name,
-					logo_hash: logo_hash,
+					logo: logo,
 					description: description,
 					document_hash: document_hash,
 					email: email,
