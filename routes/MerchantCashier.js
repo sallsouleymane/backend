@@ -13,7 +13,7 @@ const MerchantCashier = require("../models/merchant/MerchantCashier");
 const Zone = require("../models/merchant/Zone");
 const Invoice = require("../models/merchant/Invoice");
 
-router.post("/merchant/cashier/createInvoices", jwtTokenAuth, (req, res) => {
+router.post("/merchantCashier/createInvoices", jwtTokenAuth, (req, res) => {
 	const { group_id, invoices } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantStaff.findOne(
@@ -57,7 +57,7 @@ router.post("/merchant/cashier/createInvoices", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.get("/merchant/cashier/listInvoices", jwtTokenAuth, (req, res) => {
+router.get("/merchantCashier/listInvoices", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
 	MerchantStaff.findOne(
 		{
