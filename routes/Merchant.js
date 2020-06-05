@@ -61,7 +61,7 @@ router.post("/merchant/editDetails", jwtTokenAuth, function (req, res) {
 
 router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 	let data = new Zone();
-	const { code, name } = req.body;
+	const { code, name, description } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -77,6 +77,7 @@ router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 			} else {
 				data.code = code;
 				data.name = name;
+				data.description = description;
 				data.merchant_id = merchant._id;
 				data.save((err, zone) => {
 					if (err) {
@@ -89,6 +90,48 @@ router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 						return res.status(200).json({ status: 1, message: "Zone Created", zone: zone });
 					}
 				});
+			}
+		}
+	);
+});
+
+router.post("/merchant/editZone", jwtTokenAuth, (req, res) => {
+	const { zone_id, code, name, description } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err || merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				Zone.findOneAndUpdate(
+					{ _id: zone_id },
+					{ code: code, name: name, description: description },
+					(err, zone) => {
+						if (err) {
+							res.status(200).json({
+								status: 0,
+								message: "Internal Server Error",
+							});
+						} else if (zone == null ){
+							res.status(200).json({
+								status: 0,
+								message: "Zone not found",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Zone edited successfully",
+							});
+						}
+					}
+				);
 			}
 		}
 	);
