@@ -465,6 +465,7 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 				data.password = makeid(10);
 				data.working_from = working_from;
 				data.working_to = working_to;
+				data.status = 0;
 
 				data.save((err, branch) => {
 					if (err) {
