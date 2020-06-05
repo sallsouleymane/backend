@@ -747,12 +747,11 @@ router.post("/checkCashierFee", function (req, res) {
 				return res.status(200).json({
 					error: "Internal error please try again",
 				});
-			}
-			if (cashier == null) {
+			} else if (cashier == null) {
 				return res.status(200).json({
 					error: "Unauthorized",
 				});
-			}
+			} else {
 			Bank.findOne(
 				{
 					_id: cashier.bank_id,
@@ -784,6 +783,7 @@ router.post("/checkCashierFee", function (req, res) {
 						}
 						if (fe == null) {
 							return res.status(200).json({
+								status: 0,
 								error: "Transaction cannot be done at this time",
 							});
 						}
@@ -795,6 +795,7 @@ router.post("/checkCashierFee", function (req, res) {
 								temp = (amount * range.percentage) / 100;
 								fee = temp + range.fixed_amount;
 								res.status(200).json({
+									status:1,
 									fee: fee,
 								});
 							}
@@ -802,6 +803,7 @@ router.post("/checkCashierFee", function (req, res) {
 					});
 				}
 			);
+			}
 		}
 	);
 });

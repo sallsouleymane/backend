@@ -9,6 +9,9 @@ const Bank = require("../models/Bank");
 const Infra = require("../models/Infra");
 const MerchantFee = require("../models/merchant/MerchantFee");
 const Merchant = require("../models/merchant/Merchant");
+const Cashier = require("../models/Cashier");
+const User = require("../models/User");
+
 const jwtTokenAuth = require("./JWTTokenAuth");
 
 router.post("/bank/merchantFee/updatePartnersShare", function (req, res) {
@@ -104,7 +107,7 @@ router.post("/bank/merchantFee/createRule", function (req, res) {
 							error: "Merchant not found",
 						});
 					} else {
-						MerchantFee.findOne({ merchant_id: merchant_id }, (err, fee) => {
+						MerchantFee.findOne({ merchant_id, type }, (err, fee) => {
 							if (err) {
 								console.log(err);
 								res.status(200).json({
@@ -1082,6 +1085,129 @@ router.post("/infra/merchantFee/decline", function (req, res) {
 			}
 		}
 	);
+});
+
+router.post("/cashier/checkMerchantFee", (req, res) => {
+	var { token, merchant_id, amount } = req.body;
+	Cashier.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, cashier) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					error: "Internal error please try again",
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					error: "Unauthorized",
+				});
+			} else {
+				MerchantFee.findOne(
+					{ merchant_id: merchant_id, type: 1 },
+					(err, fee) => {
+						if (err) {
+							console.log(err);
+							return res.status(200).json({
+								status: 0,
+								error: "Internal Server Error",
+							});
+						} else if ( fee == null ) {
+							return res.status(200).json({
+								status: 0,
+								error: "Fee rule not found",
+							});
+						} else {
+							amount = Number(amount);
+						var temp = 0;
+						fee.ranges.map((range) => {
+							if (amount >= range.trans_from && amount <= range.trans_to) {
+								temp = (amount * range.percentage) / 100;
+								fee = temp + range.fixed;
+								res.status(200).json({
+									status: 1,
+									fee: fee,
+								});
+							}
+						});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/user/checkMerchantFee", jwtTokenAuth, (req, res) => {
+	var { merchant_id, amount } = req.body;
+	const jwtusername = req.sign_creds.username;
+	console.log(jwtusername)
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, user) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					error: "Internal error please try again",
+				});
+			} else if (user == null) {
+				res.status(200).json({
+					status: 0,
+					error: "Unauthorized",
+				});
+			} else {
+				MerchantFee.findOne(
+					{ merchant_id: merchant_id, type: 0 },
+					(err, fee) => {
+						if (err) {
+							console.log(err);
+							return res.status(200).json({
+								status: 0,
+								error: "Internal Server Error",
+							});
+						} else if (fee == null) {
+							return res.status(200).json({
+								status: 0,
+								error: "Fee rule not found",
+							});
+						} else {
+							amount = Number(amount);
+							var temp = 0;
+							fee.ranges.map((range) => {
+								if (amount >= range.trans_from && amount <= range.trans_to) {
+									temp = (amount * range.percentage) / 100;
+									fee = temp + range.fixed;
+									res.status(200).json({
+										status: 1,
+										message: "Wallet to Merchant fee",
+										fee: fee,
+									});
+								}
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/cashier/payBill", jwtTokenAuth, (req, res) => {
+	const { invoice_id, amount } = req.body;
+
+});
+
+router.post("/user/payBill", jwtTokenAuth, (req, res) => {
+	const { invoice_id, amount } = req.body;
+
 });
 
 module.exports = router;

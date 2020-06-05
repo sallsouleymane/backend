@@ -20,6 +20,45 @@ const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
 const blockchain = require("../services/Blockchain");
 
+router.post("/merchant/editDetails", jwtTokenAuth, function (req, res) {
+	var { username, name, logo, description, document_hash, email } = req.body;
+	const jwtusername = req.sign_creds.username;
+	console.log(jwtusername);
+	Merchant.findOneAndUpdate(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		{
+			username: username,
+			name: name,
+			logo: logo,
+			description: description,
+			document_hash: document_hash,
+			email: email,
+		},
+		function (err, merchant) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal error please try again",
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				res.status(200).json({
+					status: 1,
+					message: "Merchant edited successfully",
+				});
+			}
+		}
+	);
+});
+
 router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 	let data = new Zone();
 	const { code, name } = req.body;

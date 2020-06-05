@@ -151,7 +151,7 @@ router.post("/bank/createMerchant", function (req, res) {
 });
 
 router.post("/bank/editMerchant", function (req, res) {
-	var { token, username, name, logo, description, document_hash, email} = req.body;
+	var { token, merchant_id, username, name, logo, description, document_hash, email} = req.body;
 	Bank.findOne(
 		{
 			token,
@@ -170,7 +170,8 @@ router.post("/bank/editMerchant", function (req, res) {
 					message: "Unauthorized",
 				});
 			} else {
-				Merchant.findOneAndUpdate({username: username}, {
+				Merchant.findOneAndUpdate({ _id: merchant_id }, {
+					username: username,
 					name: name,
 					logo: logo,
 					description: description,
