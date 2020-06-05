@@ -37,6 +37,7 @@ router.post("/merchant/editDetails", jwtTokenAuth, function (req, res) {
 			document_hash: document_hash,
 			email: email,
 		},
+		{ new: true },
 		function (err, merchant) {
 			if (err) {
 				console.log(err);
@@ -53,6 +54,7 @@ router.post("/merchant/editDetails", jwtTokenAuth, function (req, res) {
 				res.status(200).json({
 					status: 1,
 					message: "Merchant edited successfully",
+					merchant: merchant
 				});
 			}
 		}
@@ -270,7 +272,7 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 					let content2 =
 						"Your have been added as Merchant Staff in E-Wallet application Login URL: http://" +
 						config.mainIP +
-						"/cashier/" + name + " Your username: " +
+						"/merchant/cashier/" + name + " Your username: " +
 						username +
 						" Your password: " +
 						password;
@@ -286,15 +288,15 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 	);
 });
 router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
-	const { name, email, ccode, mobile, username, password, branch_id, logo, user_id } = req.body;
+	const { name, email, ccode, mobile, username, password, branch_id, logo, staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, user) {
-			if (err || user == null) {
+		function (err, merchant) {
+			if (err || merchant == null) {
 				res.status(200).json({
 					status: 0,
 					message: "Unauthorized",
@@ -302,7 +304,7 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 			} else {
 				MerchantStaff.findOneAndUpdate(
 					{
-						_id: user_id,
+						_id: staff_id,
 					},
 					{
 						name: name,
@@ -314,11 +316,17 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 						branch_id: branch_id,
 						logo: logo,
 					},
-					(err, user) => {
+					(err, staff) => {
 						if (err) {
+							console.log(err);
 							res.status(200).json({
 								status: 0,
-								message: err,
+								message: "Internal Server Error",
+							});
+						} else if (staff == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Staff not found",
 							});
 						} else {
 							res.status(200).json({
