@@ -15,12 +15,7 @@ const User = require("../models/User");
 const jwtTokenAuth = require("./JWTTokenAuth");
 
 router.post("/bank/merchantFee/updatePartnersShare", function (req, res) {
-	const {
-		token,
-		fee_id,
-		percentage,
-		specific_partners_share,
-	} = req.body;
+	const { token, fee_id, percentage, specific_partners_share } = req.body;
 	Bank.findOne(
 		{
 			token,
@@ -31,12 +26,12 @@ router.post("/bank/merchantFee/updatePartnersShare", function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Unauthorized",
 				});
 			} else {
 				MerchantFee.findOneAndUpdate(
@@ -53,12 +48,12 @@ router.post("/bank/merchantFee/updatePartnersShare", function (req, res) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
-								error: "Internal Server Error",
+								message: "Internal Server Error",
 							});
 						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "MerchantFee not found.",
+								message: "MerchantFee not found.",
 							});
 						} else {
 							res.status(200).json({
@@ -86,12 +81,12 @@ router.post("/bank/merchantFee/createRule", function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Unauthorized",
 				});
 			} else {
 				Merchant.findOne({ _id: merchant_id }, (err, merchant) => {
@@ -99,12 +94,12 @@ router.post("/bank/merchantFee/createRule", function (req, res) {
 						console.log(err);
 						res.status(200).json({
 							status: 0,
-							error: "Internal Server Error",
+							message: "Internal Server Error",
 						});
 					} else if (merchant == null) {
 						res.status(200).json({
 							status: 0,
-							error: "Merchant not found",
+							message: "Merchant not found",
 						});
 					} else {
 						MerchantFee.findOne({ merchant_id, type }, (err, fee) => {
@@ -112,12 +107,12 @@ router.post("/bank/merchantFee/createRule", function (req, res) {
 								console.log(err);
 								res.status(200).json({
 									status: 0,
-									error: "Internal Server Error",
+									message: "Internal Server Error",
 								});
 							} else if (fee != null) {
 								res.status(200).json({
 									status: 0,
-									error: "Fee Rule already exist.",
+									message: "Fee Rule already exist.",
 								});
 							} else {
 								let merchantFee = new MerchantFee();
@@ -139,7 +134,7 @@ router.post("/bank/merchantFee/createRule", function (req, res) {
 										console.log(err);
 										return res.status(200).json({
 											status: 0,
-											error: "Internal Server Error",
+											message: "Internal Server Error",
 										});
 									}
 									let content =
@@ -181,12 +176,12 @@ router.post("/bank/merchantFee/addInfraShare", function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Unauthorized",
 				});
 			} else {
 				MerchantFee.findOneAndUpdate(
@@ -203,12 +198,12 @@ router.post("/bank/merchantFee/addInfraShare", function (req, res) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
-								error: "Internal Server Error",
+								message: "Internal Server Error",
 							});
 						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "MerchantFee not found.",
+								message: "MerchantFee not found.",
 							});
 						} else {
 							res.status(200).json({
@@ -226,7 +221,7 @@ router.post("/bank/merchantFee/addInfraShare", function (req, res) {
 });
 
 router.post("/bank/merchantFee/editRule", function (req, res) {
-	const { token, fee_id, active, type, ranges } = req.body;
+	const { token, fee_id, active, description, type, ranges } = req.body;
 	Bank.findOne(
 		{
 			token,
@@ -237,12 +232,12 @@ router.post("/bank/merchantFee/editRule", function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Unauthorized",
 				});
 			} else {
 				MerchantFee.findOne({ _id: fee_id }, (err, fee) => {
@@ -250,12 +245,12 @@ router.post("/bank/merchantFee/editRule", function (req, res) {
 						console.log(err);
 						res.status(200).json({
 							status: 0,
-							error: "Internal Server Error",
+							message: "Internal Server Error",
 						});
 					} else if (fee == null) {
 						res.status(200).json({
 							status: 0,
-							error: "MerchantFee not found.",
+							message: "MerchantFee not found.",
 						});
 					} else {
 						if (
@@ -271,6 +266,7 @@ router.post("/bank/merchantFee/editRule", function (req, res) {
 									$set: {
 										active: active,
 										type: type,
+										description: description,
 										ranges: ranges,
 										merchant_approve_status: 0,
 									},
@@ -280,7 +276,7 @@ router.post("/bank/merchantFee/editRule", function (req, res) {
 										console.log(err);
 										return res.status(200).json({
 											status: 0,
-											error: "Internal Server Error",
+											message: "Internal Server Error",
 										});
 									}
 								}
@@ -296,6 +292,7 @@ router.post("/bank/merchantFee/editRule", function (req, res) {
 										rule_edit_status: 1,
 										"edited.active": active,
 										"edited.type": type,
+										"edited.description": description,
 										"edited.ranges": ranges,
 										"edited.merchant_approve_status": 0,
 										"edited.infra_approve_status": 0,
@@ -306,7 +303,7 @@ router.post("/bank/merchantFee/editRule", function (req, res) {
 										console.log(err);
 										return res.status(200).json({
 											status: 0,
-											error: "Internal Server Error",
+											message: "Internal Server Error",
 										});
 									}
 								}
@@ -318,12 +315,12 @@ router.post("/bank/merchantFee/editRule", function (req, res) {
 								console.log(err);
 								res.status(200).json({
 									status: 0,
-									error: "Internal Server Error",
+									message: "Internal Server Error",
 								});
 							} else if (merchant == null) {
 								res.status(200).json({
 									status: 0,
-									error: "Merchant not found",
+									message: "Merchant not found",
 								});
 							} else {
 								let content =
@@ -361,12 +358,12 @@ router.post("/bank/merchantFee/editInfraShare", function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Unauthorized",
 				});
 			} else {
 				MerchantFee.findOne(
@@ -378,12 +375,12 @@ router.post("/bank/merchantFee/editInfraShare", function (req, res) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
-								error: "Internal Server Error",
+								message: "Internal Server Error",
 							});
 						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "MerchantFee not found.",
+								message: "MerchantFee not found.",
 							});
 						} else {
 							if (fee.infra_approve_status == 1) {
@@ -405,7 +402,7 @@ router.post("/bank/merchantFee/editInfraShare", function (req, res) {
 											console.log(err);
 											return res.status(200).json({
 												status: 0,
-												error: "Internal Server Error",
+												message: "Internal Server Error",
 											});
 										}
 									}
@@ -428,7 +425,7 @@ router.post("/bank/merchantFee/editInfraShare", function (req, res) {
 											console.log(err);
 											return res.status(200).json({
 												status: 0,
-												error: "Internal Server Error",
+												message: "Internal Server Error",
 											});
 										}
 									}
@@ -458,12 +455,12 @@ router.get("/merchant/merchantFee/getRule", jwtTokenAuth, function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Unauthorized",
 				});
 			} else {
 				var excludeFields =
@@ -478,12 +475,12 @@ router.get("/merchant/merchantFee/getRule", jwtTokenAuth, function (req, res) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
-								error: "Internal Server Error",
+								message: "Internal Server Error",
 							});
 						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "MerchantFee not found.",
+								message: "MerchantFee not found.",
 							});
 						} else {
 							res.status(200).json({
@@ -511,12 +508,12 @@ router.post("/bank/merchantFee/getRule", function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Unauthorized",
 				});
 			} else {
 				MerchantFee.findOne({ merchant_id: merchant_id }, (err, fee) => {
@@ -524,12 +521,12 @@ router.post("/bank/merchantFee/getRule", function (req, res) {
 						console.log(err);
 						res.status(200).json({
 							status: 0,
-							error: "Internal Server Error",
+							message: "Internal Server Error",
 						});
 					} else if (fee == null) {
 						res.status(200).json({
 							status: 0,
-							error: "MerchantFee not found.",
+							message: "MerchantFee not found.",
 						});
 					} else {
 						res.status(200).json({
@@ -556,12 +553,12 @@ router.post("/infra/merchantFee/getRule", function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (infra == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Unauthorized",
 				});
 			} else {
 				MerchantFee.findOne(
@@ -589,12 +586,12 @@ router.post("/infra/merchantFee/getRule", function (req, res) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
-								error: "Internal Server Error",
+								message: "Internal Server Error",
 							});
 						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "MerchantFee not found.",
+								message: "MerchantFee not found.",
 							});
 						} else {
 							if (fee.edited.merchant_approve_status == 0) {
@@ -626,12 +623,12 @@ router.post("/merchant/merchantFee/approve", jwtTokenAuth, function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Unauthorized",
 				});
 			} else {
 				MerchantFee.findOne(
@@ -647,12 +644,12 @@ router.post("/merchant/merchantFee/approve", jwtTokenAuth, function (req, res) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
-								error: "Internal Server Error",
+								message: "Internal Server Error",
 							});
 						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "MerchantFee not found.",
+								message: "MerchantFee not found.",
 							});
 						} else {
 							if (fee.rule_edit_status == 1) {
@@ -671,7 +668,7 @@ router.post("/merchant/merchantFee/approve", jwtTokenAuth, function (req, res) {
 											console.log(err);
 											res.status(200).json({
 												status: 0,
-												error: "Internal Server Error",
+												message: "Internal Server Error",
 											});
 										}
 									}
@@ -692,7 +689,7 @@ router.post("/merchant/merchantFee/approve", jwtTokenAuth, function (req, res) {
 											console.log(err);
 											res.status(200).json({
 												status: 0,
-												error: "Internal Server Error",
+												message: "Internal Server Error",
 											});
 										}
 									}
@@ -723,12 +720,12 @@ router.post("/merchant/merchantFee/decline", jwtTokenAuth, function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Unauthorized",
 				});
 			} else {
 				MerchantFee.findOne(
@@ -744,12 +741,12 @@ router.post("/merchant/merchantFee/decline", jwtTokenAuth, function (req, res) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
-								error: "Internal Server Error",
+								message: "Internal Server Error",
 							});
 						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "MerchantFee not found.",
+								message: "MerchantFee not found.",
 							});
 						} else {
 							if (fee.rule_edit_status == 1) {
@@ -768,7 +765,7 @@ router.post("/merchant/merchantFee/decline", jwtTokenAuth, function (req, res) {
 											console.log(err);
 											return res.status(200).json({
 												status: 0,
-												error: "Internal Server Error",
+												message: "Internal Server Error",
 											});
 										}
 									}
@@ -789,7 +786,7 @@ router.post("/merchant/merchantFee/decline", jwtTokenAuth, function (req, res) {
 											console.log(err);
 											return res.status(200).json({
 												status: 0,
-												error: "Internal Server Error",
+												message: "Internal Server Error",
 											});
 										}
 									}
@@ -819,12 +816,12 @@ router.post("/infra/merchantFee/approve", function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (infra == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Unauthorized",
 				});
 			} else {
 				MerchantFee.findOne(
@@ -851,12 +848,12 @@ router.post("/infra/merchantFee/approve", function (req, res) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
-								error: "Internal Server Error",
+								message: "Internal Server Error",
 							});
 						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "MerchantFee not found.",
+								message: "MerchantFee not found.",
 							});
 						} else {
 							if (
@@ -884,7 +881,7 @@ router.post("/infra/merchantFee/approve", function (req, res) {
 											console.log(err);
 											return res.status(200).json({
 												status: 0,
-												error: "Internal Server Error",
+												message: "Internal Server Error",
 											});
 										}
 									}
@@ -919,7 +916,7 @@ router.post("/infra/merchantFee/approve", function (req, res) {
 											console.log(err);
 											return res.status(200).json({
 												status: 0,
-												error: "Internal Server Error",
+												message: "Internal Server Error",
 											});
 										}
 									}
@@ -950,7 +947,7 @@ router.post("/infra/merchantFee/approve", function (req, res) {
 											console.log(err);
 											return res.status(200).json({
 												status: 0,
-												error: "Internal Server Error",
+												message: "Internal Server Error",
 											});
 										}
 									}
@@ -972,7 +969,7 @@ router.post("/infra/merchantFee/approve", function (req, res) {
 											console.log(err);
 											return res.status(200).json({
 												status: 0,
-												error: "Internal Server Error",
+												message: "Internal Server Error",
 											});
 										}
 									}
@@ -1002,12 +999,12 @@ router.post("/infra/merchantFee/decline", function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (infra == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Unauthorized",
 				});
 			} else {
 				MerchantFee.findOne(
@@ -1023,12 +1020,12 @@ router.post("/infra/merchantFee/decline", function (req, res) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
-								error: "Internal Server Error",
+								message: "Internal Server Error",
 							});
 						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								error: "MerchantFee not found.",
+								message: "MerchantFee not found.",
 							});
 						} else {
 							if (fee.infra_share_edit_status == 1) {
@@ -1047,7 +1044,7 @@ router.post("/infra/merchantFee/decline", function (req, res) {
 											console.log(err);
 											return res.status(200).json({
 												status: 0,
-												error: "Internal Server Error",
+												message: "Internal Server Error",
 											});
 										}
 									}
@@ -1068,7 +1065,7 @@ router.post("/infra/merchantFee/decline", function (req, res) {
 											console.log(err);
 											return res.status(200).json({
 												status: 0,
-												error: "Internal Server Error",
+												message: "Internal Server Error",
 											});
 										}
 									}
@@ -1099,12 +1096,12 @@ router.post("/cashier/checkMerchantFee", (req, res) => {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal error please try again",
+					message: "Internal error please try again",
 				});
 			} else if (cashier == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Unauthorized",
 				});
 			} else {
 				MerchantFee.findOne(
@@ -1114,26 +1111,26 @@ router.post("/cashier/checkMerchantFee", (req, res) => {
 							console.log(err);
 							return res.status(200).json({
 								status: 0,
-								error: "Internal Server Error",
+								message: "Internal Server Error",
 							});
-						} else if ( fee == null ) {
+						} else if (fee == null) {
 							return res.status(200).json({
 								status: 0,
-								error: "Fee rule not found",
+								message: "Fee rule not found",
 							});
 						} else {
 							amount = Number(amount);
-						var temp = 0;
-						fee.ranges.map((range) => {
-							if (amount >= range.trans_from && amount <= range.trans_to) {
-								temp = (amount * range.percentage) / 100;
-								fee = temp + range.fixed;
-								res.status(200).json({
-									status: 1,
-									fee: fee,
-								});
-							}
-						});
+							var temp = 0;
+							fee.ranges.map((range) => {
+								if (amount >= range.trans_from && amount <= range.trans_to) {
+									temp = (amount * range.percentage) / 100;
+									fee = temp + range.fixed;
+									res.status(200).json({
+										status: 1,
+										fee: fee,
+									});
+								}
+							});
 						}
 					}
 				);
@@ -1145,7 +1142,7 @@ router.post("/cashier/checkMerchantFee", (req, res) => {
 router.post("/user/checkMerchantFee", jwtTokenAuth, (req, res) => {
 	var { merchant_id, amount } = req.body;
 	const jwtusername = req.sign_creds.username;
-	console.log(jwtusername)
+	console.log(jwtusername);
 	User.findOne(
 		{
 			username: jwtusername,
@@ -1156,12 +1153,12 @@ router.post("/user/checkMerchantFee", jwtTokenAuth, (req, res) => {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal error please try again",
+					message: "Internal error please try again",
 				});
 			} else if (user == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Unauthorized",
 				});
 			} else {
 				MerchantFee.findOne(
@@ -1171,12 +1168,12 @@ router.post("/user/checkMerchantFee", jwtTokenAuth, (req, res) => {
 							console.log(err);
 							return res.status(200).json({
 								status: 0,
-								error: "Internal Server Error",
+								message: "Internal Server Error",
 							});
 						} else if (fee == null) {
 							return res.status(200).json({
 								status: 0,
-								error: "Fee rule not found",
+								message: "Fee rule not found",
 							});
 						} else {
 							amount = Number(amount);
@@ -1198,16 +1195,6 @@ router.post("/user/checkMerchantFee", jwtTokenAuth, (req, res) => {
 			}
 		}
 	);
-});
-
-router.post("/cashier/payBill", jwtTokenAuth, (req, res) => {
-	const { invoice_id, amount } = req.body;
-
-});
-
-router.post("/user/payBill", jwtTokenAuth, (req, res) => {
-	const { invoice_id, amount } = req.body;
-
 });
 
 module.exports = router;

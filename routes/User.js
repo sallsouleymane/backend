@@ -574,7 +574,7 @@ router.post("/user/signup", (req, res) => {
 					user.address = address;
 					user.username = mobile;
 					user.password = password;
-					user.status = 2;
+					user.status = 0;
 
 					user.save((err) => {
 						if (err)
@@ -598,7 +598,7 @@ router.post("/user/signup", (req, res) => {
 router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 	const { bank } = req.body;
 	const username = req.sign_creds.username;
-	User.findOne({ username, status: 2 }, (err, user) => {
+	User.findOne({ username, status: 0 }, (err, user) => {
 		if (err) {
 			console.log(err);
 			res.status(200).json({
@@ -653,8 +653,8 @@ router.post("/user/saveUploadedDocsHash", jwtTokenAuth, (req, res) => {
 	const { hashes } = req.body;
 	const username = req.sign_creds.username;
 	User.findOneAndUpdate(
-		{ username, status: 2 },
-		{ $set: { docs_hash: hashes, status: 3 } }, //Status 3: Waiting for cashier approval
+		{ username, status: 0 },
+		{ $set: { docs_hash: hashes, status: 2 } }, //Status 2: Waiting for cashier approval
 		(err, result) => {
 			if (err) {
 				console.log(err);
@@ -681,9 +681,9 @@ router.post("/user/skipDocsUpload", jwtTokenAuth, (req, res) => {
 	const username = req.sign_creds.username;
 	User.findOneAndUpdate(
 		{ username: username, status: 2 },
-		{ $set: { status: 4 } },
+		{ $set: { status: 3 } },
 		(err, result) => {
-			//status 4: Go to the nearest branch and get docs uploaded
+			//status 3: Go to the nearest branch and get docs uploaded
 			if (err) {
 				console.log(err);
 				res.status(200).json({

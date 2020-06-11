@@ -20,6 +20,7 @@ const Cashier = require("../models/Cashier");
 const Fee = require("../models/Fee");
 const CashierLedger = require("../models/CashierLedger");
 const Merchant = require("../models/merchant/Merchant");
+const FailedTX = require("../models/FailedTXLedger");
 
 router.post("/bank/listMerchants", function (req, res) {
 	var { token } = req.body;
@@ -64,7 +65,7 @@ router.post("/bank/listMerchants", function (req, res) {
 router.post("/bank/createMerchant", function (req, res) {
 	var {
 		token,
-		merchant_id,
+		code,
 		name,
 		logo,
 		description,
@@ -97,10 +98,12 @@ router.post("/bank/createMerchant", function (req, res) {
 				data.document_hash = document_hash;
 				data.email = email;
 				data.mobile = mobile;
-				data.username = merchant_id;
+				data.code = code;
+				data.username = code;
 				data.password = makeid(8);
 				data.bank_id = bank._id;
 				data.status = 0;
+				data.creator = 0;
 
 				data.save((err) => {
 					if (err) {
@@ -110,7 +113,7 @@ router.post("/bank/createMerchant", function (req, res) {
 							message: "Either merchant id/ email / mobile aready exist",
 						});
 					} else {
-						const wallet = merchant_id + "_operational@" + bank.name;
+						const wallet = username + "_operational@" + bank.name;
 						createWallet([wallet]).then((result) => {
 							let content =
 								"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
@@ -151,7 +154,7 @@ router.post("/bank/createMerchant", function (req, res) {
 });
 
 router.post("/bank/editMerchant", function (req, res) {
-	var { token, merchant_id, username, name, logo, description, document_hash, email} = req.body;
+	var { token, merchant_id, name, logo, description, document_hash, email} = req.body;
 	Bank.findOne(
 		{
 			token,
@@ -170,8 +173,7 @@ router.post("/bank/editMerchant", function (req, res) {
 					message: "Unauthorized",
 				});
 			} else {
-				Merchant.findOneAndUpdate({ _id: merchant_id }, {
-					username: username,
+				Merchant.findOneAndUpdate({ _id: merchant_id , creator: 0, bank_id: bank._id}, {
 					name: name,
 					logo: logo,
 					description: description,
@@ -893,15 +895,26 @@ router.post("/getBankHistory", function (req, res) {
 		},
 		function (err, b) {
 			if (err || b == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
 				});
 			} else {
 				const wallet = from + "@" + b.name;
-				getStatement(wallet).then(function (result) {
-					res.status(200).json({
-						status: "success",
-						history: result,
+				getStatement(wallet).then(function (history) {
+					FailedTX.find({ wallet_id: wallet }, (err, failed) => {
+						if (err) {
+							res.status(200).json({
+								status: 0,
+								message: "Internal server error",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								history: history,
+								failed: failed,
+							});
+						}
 					});
 				});
 				// });

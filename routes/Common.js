@@ -17,6 +17,7 @@ const {
 	rechargeNow,
 	getChildStatements,
 	getBalance,
+	initiateTransfer
 } = require("../services/Blockchain.js");
 
 const Infra = require("../models/Infra");
@@ -33,11 +34,70 @@ const CashierClaim = require("../models/CashierClaim");
 const BranchSend = require("../models/BranchSend");
 const BranchClaim = require("../models/BranchClaim");
 const CurrencyModel = require("../models/Currency");
+const FailedTX = require("../models/FailedTXLedger");
 
 router.get("/testGet", function (req, res) {
 	return res.status(200).json({
 		status: "Internal error please try again",
 	});
+});
+
+router.post("/:user/reinitiateTransfer", jwtTokenAuth, (req, res) => {
+	const user = req.params.user;
+	const Type = getTypeClass(user);
+	const { trans_id } = req.body;
+	const username = req.sign_creds.username;
+	Type.findOne(
+		{
+			username,
+			status: 1,
+		},
+		function (err, details) {
+			if (err) {
+				res.status(200).json({
+					status: 0,
+					error: "Internal Server Error",
+				});
+			} else if (details == null ) {
+				res.status(200).json({
+					status: 0,
+					error: "Unauthorised",
+				});
+			} else {
+				FailedTX.findOne(
+					{ _id: trans_id },
+					async (err, trans) => {
+						if (err) {
+							res.status(200).json({
+								status: 0,
+								error: "Internal Server Error",
+							});
+						} else {
+							var result = await initiateTransfer(trans.transaction, trans_id);
+							if (result.status == 0) {
+								res.status(200).json({
+									status: 0,
+									message: "Transaction failed again",
+									blockchain_message: result.message,
+								});
+							} else if (trans == null ) {
+								res.status(200).json({
+									status: 0,
+									error: "Transaction not found",
+								});
+							} else {
+								res.status(200).json({
+									status: 0,
+									message: "Transaction Success !!",
+									blockchain_message: result.message,
+								});
+							}
+						}
+					}
+				);
+			}
+		}
+	);
 });
 
 router.post("/:user/changePassword", jwtTokenAuth, (req, res) => {

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 const secret = "jwt_secret_key_for_ewallet_of_32bit_string";
 
 //utils
@@ -11,6 +11,7 @@ const User = require("../models/User");
 const Merchant = require("../models/merchant/Merchant");
 const MerchantBranch = require("../models/merchant/MerchantBranch");
 const MerchantStaff = require("../models/merchant/MerchantStaff");
+const MerchantCashier = require("../models/merchant/MerchantCashier");
 const Bank = require("../models/Bank");
 const Profile = require("../models/Profile");
 const Branch = require("../models/Branch");
@@ -20,7 +21,7 @@ const Cashier = require("../models/Cashier");
 function jwtsign(sign_creds) {
 	var token = jwt.sign(
 		{
-			sign_creds: sign_creds
+			sign_creds: sign_creds,
 		},
 		secret
 		// {
@@ -32,134 +33,171 @@ function jwtsign(sign_creds) {
 
 router.post("/merchantBranch/login", (req, res) => {
 	const { username, password } = req.body;
-	MerchantBranch.findOne(
-		{ username, password },
-		"-password",
-		function(err, branch) {
-			if (err) {
-				console.log(err);
-				return res.status(200).json({
-					status: 0,
-					error: "Internal Server Error"
-				});
-			}
-			if (branch == null) {
-				return res.status(200).json({
-					status: 0,
-					error: "User account not found. Please signup"
-				});
-			}
-			let sign_creds = { username: username, password: password }
-			const token = jwtsign(sign_creds)
-			res.status(200).json({
-				status: 1,
-				details: branch,
-				token: token
+	MerchantBranch.findOne({ username, password, status: 1 }, "-password", function (
+		err,
+		branch
+	) {
+		if (err) {
+			console.log(err);
+			return res.status(200).json({
+				status: 0,
+				error: "Internal Server Error",
 			});
 		}
-	);
+		if (branch == null) {
+			return res.status(200).json({
+				status: 0,
+				error: "User account not found or blocked.",
+			});
+		}
+		let sign_creds = { username: username, password: password };
+		const token = jwtsign(sign_creds);
+		res.status(200).json({
+			status: 1,
+			details: branch,
+			token: token,
+		});
+	});
 });
 
 router.post("/merchantCashier/login", (req, res) => {
 	const { username, password } = req.body;
-	MerchantStaff.findOne(
-		{ username, password },
-		"-password",
-		function(err, staff) {
-			if (err) {
-				console.log(err);
-				return res.status(200).json({
-					status: 0,
-					error: "Internal Server Error"
-				});
-			}
-			if (staff == null) {
-				return res.status(200).json({
-					status: 0,
-					error: "User account not found. Please signup"
-				});
-			}
-			let sign_creds = { username: username, password: password }
-			const token = jwtsign(sign_creds)
+	MerchantStaff.findOne({ username, password, status: 1 }, "-password", function (
+		err,
+		staff
+	) {
+		if (err) {
+			console.log(err);
 			res.status(200).json({
-				status: 1,
-				details: staff,
-				token: token
+				status: 0,
+				message: "Internal Server Error",
 			});
+		} else if (staff == null) {
+			res.status(200).json({
+				status: 0,
+				message: "User account not found or blocked.",
+			});
+		} else {
+			MerchantBranch.findOne(
+				{ _id: staff.branch_id, status: 1 },
+				(err, branch) => {
+					if (err) {
+						console.log(err);
+						return res.status(200).json({
+							status: 0,
+							message: "Internal Server Error",
+						});
+					} else if (branch == null) {
+						res.status(200).json({
+							status: 0,
+							message: "Branch is blocked",
+						});
+					} else {
+						MerchantCashier.findOneAndUpdate(
+							{ staff_id: staff._id, status: 1 },
+							{ username: username },
+							{ new: true },
+							(err, cashier) => {
+								if (err) {
+									console.log(err);
+									return res.status(200).json({
+										status: 0,
+										message: "Internal Server error",
+									});
+								}
+								if (cashier == null) {
+									return res.status(200).json({
+										status: 0,
+										message: "Cashier not found or blocked",
+									});
+								} else {
+									let sign_creds = { username: username, password: password };
+									const token = jwtsign(sign_creds);
+									res.status(200).json({
+										status: 1,
+										token: token,
+										cashier: cashier,
+										staff: staff,
+									});
+								}
+							}
+						);
+					}
+				}
+			);
 		}
-	);
+	});
 });
 
 router.post("/merchant/login", (req, res) => {
 	const { username, password } = req.body;
-	Merchant.findOne(
-		{ username, password },
-		"-password",
-		function(err, merchant) {
-			if (err) {
-				console.log(err);
-				return res.status(200).json({
-					status: 0,
-					error: "Internal Server Error"
-				});
-			}
-			if (merchant == null) {
-				return res.status(200).json({
-					status: 0,
-					error: "User account not found. Please signup"
-				});
-			}
-			let sign_creds = { username: username, password: password }
-			const token = jwtsign(sign_creds)
-			res.status(200).json({
-				status: 1,
-				details: merchant,
-				token: token
+	Merchant.findOne({ username, password }, "-password", function (
+		err,
+		merchant
+	) {
+		if (err) {
+			console.log(err);
+			return res.status(200).json({
+				status: 0,
+				error: "Internal Server Error",
 			});
 		}
-	);
+		if (merchant == null) {
+			return res.status(200).json({
+				status: 0,
+				error: "User account not found. Please signup",
+			});
+		}
+		let sign_creds = { username: username, password: password };
+		const token = jwtsign(sign_creds);
+		res.status(200).json({
+			status: 1,
+			details: merchant,
+			token: token,
+		});
+	});
 });
 
-router.post("/login", function(req, res) {
+router.post("/login", function (req, res) {
 	const { username, password } = req.body;
 	Infra.findOne(
 		{
 			username: { $regex: new RegExp(username, "i") },
-			password
+			password,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err) {
 				res.status(500).json({
-					error: "Internal error please try again"
+					error: "Internal error please try again",
 				});
 			} else if (!user) {
 				res.status(401).json({
-					error: "Incorrect username or password"
+					error: "Incorrect username or password",
 				});
 			} else {
 				let token = makeid(10);
 				Infra.findByIdAndUpdate(
 					user._id,
 					{
-						token: token
+						token: token,
 					},
-					err => {
+					(err) => {
 						if (err)
 							return res.status(400).json({
-								error: err
+								error: err,
 							});
 						if (user.profile_id && user.profile_id !== "") {
 							Profile.findOne(
 								{
-									_id: user.profile_id
+									_id: user.profile_id,
 								},
-								function(err, profile) {
+								function (err, profile) {
 									res.status(200).json({
 										token: token,
 										permissions: profile.permissions,
 										name: user.name,
 										isAdmin: user.isAdmin,
-										initial_setup: user.initial_setup
+										initial_setup: user.initial_setup,
 									});
 								}
 							);
@@ -170,7 +208,7 @@ router.post("/login", function(req, res) {
 									permissions: "all",
 									name: user.name,
 									isAdmin: user.isAdmin,
-									initial_setup: user.initial_setup
+									initial_setup: user.initial_setup,
 								});
 							} else {
 								res.status(200).json({
@@ -178,7 +216,7 @@ router.post("/login", function(req, res) {
 									permissions: "",
 									name: user.name,
 									isAdmin: user.isAdmin,
-									initial_setup: user.initial_setup
+									initial_setup: user.initial_setup,
 								});
 							}
 						}
@@ -189,37 +227,37 @@ router.post("/login", function(req, res) {
 	);
 });
 
-router.post("/bankLogin", function(req, res) {
+router.post("/bankLogin", function (req, res) {
 	const { username, password } = req.body;
 	Bank.findOne(
 		{
 			username,
-			password
+			password,
 		},
-		function(err, bank) {
+		function (err, bank) {
 			if (err) {
 				res.status(500).json({
-					error: "Internal error please try again"
+					error: "Internal error please try again",
 				});
 			} else if (!bank) {
 				res.status(401).json({
-					error: "Incorrect username or password"
+					error: "Incorrect username or password",
 				});
 			} else if (bank.status == -1) {
 				res.status(401).json({
-					error: "Your account has been blocked, pls contact the admin!"
+					error: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
 				let token = makeid(10);
 				Bank.findByIdAndUpdate(
 					bank._id,
 					{
-						token: token
+						token: token,
 					},
-					err => {
+					(err) => {
 						if (err)
 							return res.status(400).json({
-								error: err
+								error: err,
 							});
 						res.status(200).json({
 							token: token,
@@ -230,7 +268,7 @@ router.post("/bankLogin", function(req, res) {
 							status: bank.status,
 							contract: bank.contract,
 							logo: bank.logo,
-							id: bank._id
+							id: bank._id,
 						});
 					}
 				);
@@ -239,43 +277,43 @@ router.post("/bankLogin", function(req, res) {
 	);
 });
 
-router.post("/branchLogin", function(req, res) {
+router.post("/branchLogin", function (req, res) {
 	const { username, password } = req.body;
 	Branch.findOne(
 		{
 			username,
-			password
+			password,
 		},
-		function(err, bank) {
+		function (err, bank) {
 			if (err) {
 				res.status(500).json({
-					error: "Internal error please try again"
+					error: "Internal error please try again",
 				});
 			} else if (!bank) {
 				res.status(401).json({
-					error: "Incorrect username or password"
+					error: "Incorrect username or password",
 				});
 			} else if (bank.status == -1) {
 				res.status(401).json({
-					error: "Your account has been blocked, pls contact the admin!"
+					error: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
 				Bank.findOne(
 					{
-						_id: bank.bank_id
+						_id: bank.bank_id,
 					},
-					function(err, ba) {
+					function (err, ba) {
 						let logo = ba.logo;
 						let token = makeid(10);
 						Branch.findByIdAndUpdate(
 							bank._id,
 							{
-								token: token
+								token: token,
 							},
-							err => {
+							(err) => {
 								if (err)
 									return res.status(400).json({
-										error: err
+										error: err,
 									});
 								res.status(200).json({
 									token: token,
@@ -286,7 +324,7 @@ router.post("/branchLogin", function(req, res) {
 									email: bank.email,
 									mobile: bank.mobile,
 									logo: logo,
-									id: bank._id
+									id: bank._id,
 								});
 							}
 						);
@@ -356,32 +394,28 @@ router.post("/cashierLogin", function (req, res) {
 
 router.post("/user/login", (req, res) => {
 	const { username, password } = req.body;
-	User.findOne(
-		{ username, password },
-		"-password",
-		function(err, user) {
-			if (err) {
-				console.log(err);
-				return res.status(200).json({
-					status: 0,
-					error: "Internal Server Error"
-				});
-			}
-			if (user == null) {
-				return res.status(200).json({
-					status: 0,
-					error: "User account not found. Please signup"
-				});
-			}
-			let sign_creds = { username: username, password: password }
-			const token = jwtsign( sign_creds )
-			res.status(200).json({
-				status: 1,
-				user: user,
-				token: token
+	User.findOne({ username, password }, "-password", function (err, user) {
+		if (err) {
+			console.log(err);
+			return res.status(200).json({
+				status: 0,
+				error: "Internal Server Error",
 			});
 		}
-	);
+		if (user == null) {
+			return res.status(200).json({
+				status: 0,
+				error: "User account not found. Please signup",
+			});
+		}
+		let sign_creds = { username: username, password: password };
+		const token = jwtsign(sign_creds);
+		res.status(200).json({
+			status: 1,
+			user: user,
+			token: token,
+		});
+	});
 });
 
 module.exports = router;

@@ -1,57 +1,346 @@
 const express = require("express");
 const router = express.Router();
 
-const config = require("../config.json");
 const jwtTokenAuth = require("./JWTTokenAuth");
 
 //models
-const Bank = require("../models/Bank");
 const Merchant = require("../models/merchant/Merchant");
 const MerchantBranch = require("../models/merchant/MerchantBranch");
-const MerchantStaff = require("../models/merchant/MerchantStaff");
 const MerchantCashier = require("../models/merchant/MerchantCashier");
-const Zone = require("../models/merchant/Zone");
+const InvoiceGroup = require("../models/merchant/InvoiceGroup");
 const Invoice = require("../models/merchant/Invoice");
 
-router.post("/merchantCashier/createInvoices", jwtTokenAuth, (req, res) => {
-	const { group_id, invoices } = req.body;
+router.post("/merchantCashier/createInvoiceGroup", jwtTokenAuth, (req, res) => {
+	let data = new InvoiceGroup();
+	const { code, name, description } = req.body;
 	const jwtusername = req.sign_creds.username;
-	MerchantStaff.findOne(
+	MerchantCashier.findOne(
 		{
 			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err || cashier == null) {
+			if (err) {
+				res.status(200).json({
+					status: 0,
+					message: "Internal Server error",
+				});
+			} else if (cashier == null){
+				res.status(200).json({
+					status: 0,
+					message: "Cashier is blocked",
+				});
+			} else {
+				data.code = code;
+				data.name = name;
+				data.description = description;
+				data.cashier_id = cashier._id;
+				data.save((err, group) => {
+					if (err) {
+						console.log(err);
+						return res.status(200).json({
+							status: 0,
+							message: "code already exist",
+						});
+					} else {
+						return res.status(200).json({
+							status: 1,
+							message: "Invoice Group Created",
+							group: group,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/merchantCashier/editInvoiceGroup", jwtTokenAuth, (req, res) => {
+	const { group_id, code, name, description } = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			if (err) {
 				res.status(200).json({
 					status: 0,
 					message: "Unauthorized",
 				});
-			} else {
-				invoices.forEach((invoice) => {
-					var {
-						number,
-						name,
-						merchant_id,
-						amount,
-						due_date,
-						description,
-						mobile,
-						zone_id,
-					} = invoice;
-					var invoiceObj = new Invoice();
-					invoiceObj.number = number;
-					invoiceObj.name = name;
-					invoiceObj.merchant_id = merchant_id;
-					invoiceObj.amount = amount;
-					invoiceObj.due_date = due_date;
-					invoiceObj.description = description;
-					invoiceObj.mobile = mobile;
-					invoiceObj.group_id = group_id;
-					invoiceObj.zone_id = zone_id;
-					invoiceObj.save((err) => {});
+			} else if (cashier == null){
+				res.status(200).json({
+					status: 0,
+					message: "Cashier is blocked",
 				});
-				return res.status(200).json({ status: 1, message: "Invoices Created" });
+			} else {
+				InvoiceGroup.findOneAndUpdate(
+					{ _id: group_id,
+					cashier_id: cashier._id },
+					{ code: code, name: name, description: description },
+					(err, group) => {
+						if (err) {
+							res.status(200).json({
+								status: 0,
+								message: "Internal Server Error",
+							});
+						} else if (group == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Invoice Group not found",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Invoice Group edited successfully",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.get("/merchantCashier/listInvoiceGroups", jwtTokenAuth, (req, res) => {
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			if (err) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else if (cashier == null){
+				res.status(200).json({
+					status: 0,
+					message: "Cashier is blocked",
+				});
+			} else {
+				InvoiceGroup.find({ cashier_id: cashier._id }, (err, groups) => {
+					if (err) {
+						res.status(200).json({
+							status: 0,
+							message: "Internal server error",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Invoice Groups list",
+							groups: groups,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
+	const { group_id, invoices } = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			if (err) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Cashier is blocked",
+				});
+			} else {
+				InvoiceGroup.findOne(
+					{ _id: group_id, cashier_id: cashier._id },
+					async (err, group) => {
+						if (err) {
+							console.log(err);
+							res.status(200).json({
+								status: 0,
+								message: "Internal server error",
+							});
+						} else if (group == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Group not found",
+							});
+						} else {
+							var invoicePromises = invoices.map(async (invoice) => {
+								var {
+									number,
+									name,
+									amount,
+									due_date,
+									description,
+									mobile,
+								} = invoice;
+								var invoiceObj = new Invoice();
+								invoiceObj.number = number;
+								invoiceObj.name = name;
+								invoiceObj.amount = amount;
+								invoiceObj.merchant_id = cashier.merchant_id;
+								invoiceObj.due_date = due_date;
+								invoiceObj.description = description;
+								invoiceObj.mobile = mobile;
+								invoiceObj.group_id = group_id;
+								invoiceObj.cashier_id = cashier._id;
+								invoiceObj.paid = 0;
+								await invoiceObj.save();
+								var branch = await MerchantBranch.findOneAndUpdate(
+									{ _id: cashier.branch_id },
+									{ $inc: { bills_raised: 1, amount_due: amount } }
+								);
+								await Merchant.findOneAndUpdate(
+									{ _id: branch.merchant_id },
+									{
+										$inc: {
+											bills_raised: 1,
+											amount_due: amount,
+										},
+									}
+								);
+								return true;
+							});
+							await Promise.all(invoicePromises);
+							res.status(200).json({
+								status: 1,
+								message: "Invoice uploaded",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
+	const {
+		group_id,
+		invoice_id,
+		number,
+		name,
+		amount,
+		due_date,
+		description,
+		mobile,
+	} = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			if (err) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Cashier is blocked",
+				});
+			} else {
+				InvoiceGroup.findOne(
+					{ _id: group_id, cashier_id: cashier._id },
+					(err, group) => {
+						if (err) {
+							res.status(200).json({
+								status: 0,
+								message: "Unauthorized",
+							});
+						} else if (group == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Group not found",
+							});
+						} else {
+							Invoice.findOneAndUpdate(
+								{ _id: invoice_id, cashier_id: cashier._id, paid: 0 },
+								{
+									group_id,
+									number,
+									name,
+									amount,
+									due_date,
+									description,
+									mobile,
+								},
+								(err, invoice) => {
+									if (err){
+										console.log(err);
+												res.status(200).json({
+													status: 0,
+													message: "Internal server error",
+												});
+									}
+									else if (invoice == null){
+										res.status(200).json({
+											status: 0,
+											message: "Invoice might already be paid. Or Does not belong to this group.",
+										});
+									} else {
+									var biasAmount = amount - invoice.amount;
+									MerchantBranch.findOneAndUpdate(
+										{ _id: cashier.branch_id, status: 1 },
+										{ $inc: { amount_due: biasAmount } },
+										(err, branch) => {
+											if (err) {
+												console.log(err);
+												res.status(200).json({
+													status: 0,
+													message: "Internal server error",
+												});
+											} else if (branch == null) {
+												res.status(200).json({
+													status: 0,
+													message: "Branch is blocked",
+												});
+											} else {
+												Merchant.findOneAndUpdate(
+													{ _id: branch.merchant_id },
+													{
+														$inc: {
+															amount_due: biasAmount,
+														},
+													},
+													(err, merchant) => {
+														if (err || merchant == null) {
+															console.log(err);
+															res.status(200).json({
+																status: 0,
+																message: "Internal server error",
+															});
+														} else {
+															res.status(200).json({
+																status: 1,
+																message: "Invoice edited successfully",
+															});
+														}
+													}
+												);
+											}
+										}
+									);
+									}
+								}
+							);
+						}
+					}
+				);
 			}
 		}
 	);
@@ -59,19 +348,24 @@ router.post("/merchantCashier/createInvoices", jwtTokenAuth, (req, res) => {
 
 router.get("/merchantCashier/listInvoices", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
-	MerchantStaff.findOne(
+	MerchantCashier.findOne(
 		{
 			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err || cashier == null) {
+			if (err) {
 				res.status(200).json({
 					status: 0,
 					message: "Unauthorized",
 				});
+			} else if (cashier == null){
+				res.status(200).json({
+					status: 0,
+					message: "Cashier is blocked",
+				});
 			} else {
-				Invoice.find({ merchant_id: cashier.merchant_id }, (err, invoices) => {
+				Invoice.find({ cashier_id: cashier._id }, (err, invoices) => {
 					if (err) {
 						res.status(200).json({
 							status: 0,

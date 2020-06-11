@@ -104,7 +104,7 @@ router.post("/cashier/createUser", function (req, res) {
 		gender: gender,
 		bank: bank,
 		docs_hash: docs_hash,
-		status: 3,
+		status: 2,
 	};
 	Cashier.findOne({ token }, function (err, cashier) {
 		if (err) {
@@ -129,6 +129,7 @@ router.post("/cashier/createUser", function (req, res) {
 				} else {
 					res.status(200).json({
 						status: 1,
+						message: "User created"
 					});
 				}
 			});
@@ -204,6 +205,7 @@ router.post("/cashier/editUser", function (req, res) {
 				} else {
 					res.status(200).json({
 						status: 1,
+						message: "edit successfull"
 					});
 				}
 			});

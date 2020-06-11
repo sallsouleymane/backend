@@ -11,6 +11,7 @@ const makeotp = require("./utils/makeotp");
 //services
 const {
 	getStatement,
+	createWallet,
 	rechargeNow,
 	transferThis,
 	getTransactionCount,
@@ -64,6 +65,205 @@ router.post("/infra/bank/listMerchants", function (req, res) {
 						});
 					}
 				});
+			}
+		}
+	);
+});
+
+router.post("/infra/listMerchants", function (req, res) {
+	var { token } = req.body;
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal error please try again",
+				});
+			} else if (bank == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				Merchant.find({ bank_id: bank._id}, "-password", (err, merchants) => {
+					if (err) {
+						console.log(err);
+						res.status(200).json({
+							status: 0,
+							message: "Internal Server Error",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Merchant List",
+							list: merchants,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/infra/createMerchant", function (req, res) {
+	var {
+		token,
+		code,
+		name,
+		logo,
+		description,
+		document_hash,
+		email,
+		mobile,
+		bank_id,
+	} = req.body;
+	Infra.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, infra) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal error please try again",
+				});
+			} else if (infra == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				Bank.findOne({ _id: bank_id }, (err, bank) => {
+					if (err) {
+						console.log(err);
+						res.status(200).json({
+							status: 0,
+							message: "Internal error please try again",
+						});
+					} else if (bank == null) {
+						res.status(200).json({
+							status: 0,
+							message: "Bank not found",
+						});
+					} else {
+						const data = new Merchant();
+						data.name = name;
+						data.logo = logo;
+						data.description = description;
+						data.document_hash = document_hash;
+						data.email = email;
+						data.mobile = mobile;
+						data.code = code;
+						data.username = code;
+						data.password = makeid(8);
+						data.bank_id = bank_id;
+						data.infra_id = infra._id;
+						data.status = 0;
+						data.creator = 1;
+
+						data.save((err) => {
+							if (err) {
+								console.log(err);
+								res.status(200).json({
+									status: 0,
+									message: "Internal Server Error",
+								});
+							} else {
+								const wallet = code + "_operational@" + bank.name;
+								createWallet([wallet]).then((result) => {
+									let content =
+										"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+										config.mainIP +
+										"/merchant/" +
+										bank.name +
+										"'>http://" +
+										config.mainIP +
+										"/merchant/" +
+										bank.name +
+										"</a></p><p><p>Your username: " +
+										data.username +
+										"</p><p>Your password: " +
+										data.password +
+										"</p>";
+									sendMail(content, "Infra Merchant Created", email);
+									let content2 =
+										"You are added as a Merchant in E-Wallet application Login URL: http://" +
+										config.mainIP +
+										"/merchant/" +
+										bank.name +
+										" Your username: " +
+										data.username +
+										" Your password: " +
+										data.password;
+									sendSMS(content2, mobile);
+									res.status(200).json({
+										status: 1,
+										message: "Merchant created successfully",
+										blockchain_result: result,
+									});
+								});
+							}
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/infra/editMerchant", function (req, res) {
+	var { token, merchant_id, name, logo, description, document_hash, email} = req.body;
+	Infra.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, infra) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal error please try again",
+				});
+			} else if (infra == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				Merchant.findOneAndUpdate({ _id: merchant_id, creator: 1 , infra_id: infra._id}, {
+					name: name,
+					logo: logo,
+					description: description,
+					document_hash: document_hash,
+					email: email,
+				},(err , merchant) => {
+					if (err) {
+						console.log(err);
+						res.status(200).json({
+							status: 0,
+							message: "Email already exist.",
+						});
+					}
+					else if (merchant == null) {
+						res.status(200).json({
+							status: 0,
+							message: "Merchant not found.",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Merchant edited successfully",
+						});
+					}
+				})
 			}
 		}
 	);
