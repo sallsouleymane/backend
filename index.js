@@ -14,6 +14,8 @@ const merchantRouter = require("./routes/Merchant");
 const commissionRouter = require("./routes/Commission");
 const merchantFeeRouter = require("./routes/MerchantFee");
 const merchantCashierRouter = require("./routes/MerchantCashier");
+const merchantBranchRouter = require("./routes/MerchantBranch");
+const invoicePay = require("./routes/InvoicePay");
 
 var cors = require("cors");
 const bodyParser = require("body-parser");
@@ -55,4 +57,6 @@ app.use("/api", merchantRouter);
 app.use("/api", commissionRouter);
 app.use("/api", merchantFeeRouter);
 app.use("/api", merchantCashierRouter);
+app.use("/api", merchantBranchRouter);
+app.use("/api", invoicePay);
 app.listen(API_PORT, () => console.log("Backend Started"));
