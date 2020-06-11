@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const BankCommissionSchema = new mongoose.Schema({
 	merchant_id: { type: String, required: true },
 	status: { type: Number, required: true, default: 0 },
+	status_desc: { type: String, required: true, default: "0-created 1-valid"},
 	active: { type: Number, required: true, default: 0 },
 	rule_edit_status: { type: Number, required: true, default: 0 },
 	infra_share_edit_status: { type: Number, required: true, default: 0 },

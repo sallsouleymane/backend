@@ -7,7 +7,10 @@ const InvoiceSchema = new mongoose.Schema({
     due_date: { type: String, required: true },
     description: { type: String, required: true },
     mobile: { type: String, required: true },
+    paid: { type: Number, required: true },
+    paid_desc: { type: String, required: false, default: "0-not paid 1-paid" },
     group_id: { type: String, required: false },
-    zone_id: { type: String, required: true }
+    cashier_id: { type: String, required: true },
+    created_at: { type: Date, required: true, default: Date.now },
 });
 module.exports = mongoose.model("Invoice", InvoiceSchema);

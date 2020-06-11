@@ -4,6 +4,7 @@ const MerchantFeeSchema = new mongoose.Schema({
 	status: { type: Number, required: true, default: 0 },
     active: { type: Number, required: true, default: 0 },
 	type: { type: Number, required: true },
+	type_desc: { type: String, required: false, default: "0-Wallet, 1-Non-Wallet" },
 	description: { type: String, required: false },
 	rule_edit_status: { type: Number, required: true, default: 0 },
 	infra_share_edit_status: { type: Number, required: true, default: 0 },
