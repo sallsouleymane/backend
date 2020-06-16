@@ -1611,6 +1611,50 @@ router.get("/clearDb", function (req, res) {
 		db.dropCollection("branchledgers", function () {});
 	}
 
+	if (type == "all" || type == "user") {
+		db.dropCollection("users", function () {});
+	}
+
+	if (type == "all" || type == "merchant") {
+		db.dropCollection("merchants", function () {});
+	}
+
+	if (type == "all" || type == "merchantfee") {
+		db.dropCollection("merchantfees", function () {});
+	}
+
+	if (type == "all" || type == "commission") {
+		db.dropCollection("bankcommissions", function () {});
+	}
+
+	if (type == "all" || type == "failedtx") {
+		db.dropCollection("failedtxes", function () {});
+	}
+
+	if (type == "all" || type == "invoicegroup") {
+		db.dropCollection("invoicegroups", function () {});
+	}
+
+	if (type == "all" || type == "invoice") {
+		db.dropCollection("invoices", function () {});
+	}
+
+	if (type == "all" || type == "merchantbranch") {
+		db.dropCollection("merchantbranches", function () {});
+	}
+
+	if (type == "all" || type == "merchantcashier") {
+		db.dropCollection("merchantcashiers", function () {});
+	}
+
+	if (type == "all" || type == "merchantstaff") {
+		db.dropCollection("merchantstaffs", function () {});
+	}
+
+	if (type == "all" || type == "zone") {
+		db.dropCollection("zones", function () {});
+	}
+
 	res.status(200).json({
 		status: "success",
 	});
