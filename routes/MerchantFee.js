@@ -446,7 +446,7 @@ router.post("/bank/merchantFee/editInfraShare", function (req, res) {
 	);
 });
 
-router.get("/merchant/merchantFee/getRule", jwtTokenAuth, function (req, res) {
+router.get("/merchant/merchantFee/getRules", jwtTokenAuth, function (req, res) {
 	const username = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -494,7 +494,7 @@ router.get("/merchant/merchantFee/getRule", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/bank/merchantFee/getRule", function (req, res) {
+router.post("/bank/merchantFee/getRules", function (req, res) {
 	const { token, merchant_id } = req.body;
 	Bank.findOne(
 		{
@@ -534,7 +534,7 @@ router.post("/bank/merchantFee/getRule", function (req, res) {
 	);
 });
 
-router.post("/infra/merchantFee/getRule", function (req, res) {
+router.post("/infra/merchantFee/getRules", function (req, res) {
 	const { token, merchant_id } = req.body;
 	Infra.findOne(
 		{
