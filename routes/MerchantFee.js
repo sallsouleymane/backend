@@ -70,7 +70,7 @@ router.post("/bank/merchantFee/updatePartnersShare", function (req, res) {
 	);
 });
 router.post("/bank/merchantFee/createRule", function (req, res) {
-	const { token, merchant_id, active, type, ranges, description } = req.body;
+	const { token, name, merchant_id, active, type, ranges, description } = req.body;
 	Bank.findOne(
 		{
 			token,
@@ -116,6 +116,7 @@ router.post("/bank/merchantFee/createRule", function (req, res) {
 								});
 							} else {
 								let merchantFee = new MerchantFee();
+								merchantFee.name = name;
 								merchantFee.merchant_id = merchant_id;
 								merchantFee.active = active;
 								merchantFee.type = type;
@@ -221,7 +222,7 @@ router.post("/bank/merchantFee/addInfraShare", function (req, res) {
 });
 
 router.post("/bank/merchantFee/editRule", function (req, res) {
-	const { token, fee_id, active, description, type, ranges } = req.body;
+	const { token, fee_id, name, active, description, type, ranges } = req.body;
 	Bank.findOne(
 		{
 			token,
@@ -264,6 +265,7 @@ router.post("/bank/merchantFee/editRule", function (req, res) {
 								},
 								{
 									$set: {
+										name: name,
 										active: active,
 										type: type,
 										description: description,
@@ -290,6 +292,7 @@ router.post("/bank/merchantFee/editRule", function (req, res) {
 								{
 									$set: {
 										rule_edit_status: 1,
+										"edited.name": name,
 										"edited.active": active,
 										"edited.type": type,
 										"edited.description": description,
@@ -465,28 +468,23 @@ router.get("/merchant/merchantFee/getRule", jwtTokenAuth, function (req, res) {
 			} else {
 				var excludeFields =
 					"-infra_approve_status -infra_share_edit_status -infra_share.fixed -infra_share.percentage -edited.infra_share.fixed -edited.infra_share.percentage";
-				MerchantFee.findOne(
+				MerchantFee.find(
 					{
 						merchant_id: merchant._id,
 					},
 					excludeFields,
-					(err, fee) => {
+					(err, rules) => {
 						if (err) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
 								message: "Internal Server Error",
 							});
-						} else if (fee == null) {
-							res.status(200).json({
-								status: 0,
-								message: "MerchantFee not found.",
-							});
 						} else {
 							res.status(200).json({
 								status: 1,
 								message: "Merchant Fee Rule",
-								rule: fee,
+								rules: rules,
 							});
 						}
 					}
@@ -516,23 +514,18 @@ router.post("/bank/merchantFee/getRule", function (req, res) {
 					message: "Unauthorized",
 				});
 			} else {
-				MerchantFee.findOne({ merchant_id: merchant_id }, (err, fee) => {
+				MerchantFee.find({ merchant_id: merchant_id }, (err, rules) => {
 					if (err) {
 						console.log(err);
 						res.status(200).json({
 							status: 0,
 							message: "Internal Server Error",
 						});
-					} else if (fee == null) {
-						res.status(200).json({
-							status: 0,
-							message: "MerchantFee not found.",
-						});
 					} else {
 						res.status(200).json({
 							status: 1,
 							message: "MerchantFee Rule",
-							rule: fee,
+							rules: rules,
 						});
 					}
 				});
@@ -561,7 +554,7 @@ router.post("/infra/merchantFee/getRule", function (req, res) {
 					message: "Unauthorized",
 				});
 			} else {
-				MerchantFee.findOne(
+				MerchantFee.find(
 					{
 						merchant_id: merchant_id,
 						$or: [
@@ -581,26 +574,24 @@ router.post("/infra/merchantFee/getRule", function (req, res) {
 							},
 						],
 					},
-					(err, fee) => {
+					async (err, rules) => {
 						if (err) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
 								message: "Internal Server Error",
 							});
-						} else if (fee == null) {
-							res.status(200).json({
-								status: 0,
-								message: "MerchantFee not found.",
-							});
 						} else {
-							if (fee.edited.merchant_approve_status == 0) {
-								fee["edited"] = undefined;
-							}
+							rules = rules.map((rule) => {
+								if (rule.edited.merchant_approve_status == 0) {
+									rule["edited"] = undefined;
+								}
+								return rule;
+							});
 							res.status(200).json({
 								status: 1,
 								message: "Merchant Fee Rule",
-								rule: fee,
+								rules: rules,
 							});
 						}
 					}

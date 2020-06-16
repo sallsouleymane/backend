@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const MerchantFeeSchema = new mongoose.Schema({
 	merchant_id: { type: String, required: true },
+	name: { type: String, required: true },
 	status: { type: Number, required: true, default: 0 },
     active: { type: Number, required: true, default: 0 },
 	type: { type: Number, required: true },

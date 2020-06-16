@@ -226,12 +226,10 @@ router.post("/cashier/payInvoice", (req, res) => {
 														}
 
 														content =
-															"<p>E-Wallet Application: You invoice nummber: " +
+															"E-Wallet:  Due amount "+ invoice.amount +" is paid for invoice nummber " +
 															invoice.number +
 															" for purpose " +
-															invoice.description +
-															" is paid at cashier counter. Amount Paid: " +
-															invoice.amount;
+															invoice.description;
 														sendSMS(content, invoice.mobile);
 														res.status(200).json(result);
 													}
@@ -448,12 +446,10 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 														}
 
 														content =
-															"<p>E-Wallet Application: You invoice nummber: " +
+															"E-Wallet:: Due amount "+ invoice.amount +" is paid for invoice nummber " +
 															invoice.number +
 															" for purpose " +
-															invoice.description +
-															" is paid. Amount Paid: " +
-															invoice.amount;
+															invoice.description;
 														sendSMS(content, invoice.mobile);
 														res.status(200).json(result);
 													}
