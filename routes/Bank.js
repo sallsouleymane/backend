@@ -91,63 +91,77 @@ router.post("/bank/createMerchant", function (req, res) {
 					message: "Unauthorized",
 				});
 			} else {
-				const data = new Merchant();
-				data.name = name;
-				data.logo = logo;
-				data.description = description;
-				data.document_hash = document_hash;
-				data.email = email;
-				data.mobile = mobile;
-				data.code = code;
-				data.username = code;
-				data.password = makeid(8);
-				data.bank_id = bank._id;
-				data.status = 0;
-				data.creator = 0;
-
-				data.save((err) => {
-					if (err) {
-						console.log(err);
-						res.status(200).json({
-							status: 0,
-							message: "Either merchant id/ email / mobile aready exist",
-						});
-					} else {
-						const wallet = code + "_operational@" + bank.name;
-						createWallet([wallet]).then((result) => {
-							let content =
-								"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-								config.mainIP +
-								"/merchant/" +
-								bank.name +
-								"'>http://" +
-								config.mainIP +
-								"/merchant/" +
-								bank.name +
-								"</a></p><p><p>Your username: " +
-								data.username +
-								"</p><p>Your password: " +
-								data.password +
-								"</p>";
-							sendMail(content, "Bank Merchant Created", email);
-							let content2 =
-								"You are added as a Merchant in E-Wallet application Login URL: http://" +
-								config.mainIP +
-								"/merchant/" +
-								bank.name +
-								" Your username: " +
-								data.username +
-								" Your password: " +
-								data.password;
-							sendSMS(content2, mobile);
+				if (!code) {
+					res.status(200).json({
+						status: 0,
+						message: "Code is a required field",
+					});
+				} else {
+					const wallet = code + "_operational@" + bank.name;
+					createWallet([wallet]).then((result) => {
+						if (result.status == 0) {
 							res.status(200).json({
-								status: 1,
-								message: "Merchant created successfully",
-								blockchain_result: result,
+								status: 0,
+								message: "Blockchain service is unavailabel",
 							});
-						});
-					}
-				});
+						} else {
+							const data = new Merchant();
+							data.name = name;
+							data.logo = logo;
+							data.description = description;
+							data.document_hash = document_hash;
+							data.email = email;
+							data.mobile = mobile;
+							data.code = code;
+							data.username = code;
+							data.password = makeid(8);
+							data.bank_id = bank._id;
+							data.status = 0;
+							data.creator = 0;
+
+							data.save((err) => {
+								if (err) {
+									console.log(err);
+									res.status(200).json({
+										status: 0,
+										message: "Either merchant id/ email / mobile aready exist",
+									});
+								} else {
+									let content =
+										"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+										config.mainIP +
+										"/merchant/" +
+										bank.name +
+										"'>http://" +
+										config.mainIP +
+										"/merchant/" +
+										bank.name +
+										"</a></p><p><p>Your username: " +
+										data.username +
+										"</p><p>Your password: " +
+										data.password +
+										"</p>";
+									sendMail(content, "Bank Merchant Created", email);
+									let content2 =
+										"You are added as a Merchant in E-Wallet application Login URL: http://" +
+										config.mainIP +
+										"/merchant/" +
+										bank.name +
+										" Your username: " +
+										data.username +
+										" Your password: " +
+										data.password;
+									sendSMS(content2, mobile);
+									res.status(200).json({
+										status: 1,
+										message: "Merchant created successfully",
+										blockchain_result: result,
+									});
+								}
+							});
+						}
+					});
+				}
 			}
 		}
 	);
