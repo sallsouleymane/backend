@@ -649,33 +649,46 @@ router.post("/editBank", (req, res) => {
 	);
 });
 
-router.post("/getInfraHistory", function(req, res) {
+router.post("/getInfraHistory", function (req, res) {
 	const { from, bank_id, token } = req.body;
 
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, f) {
+		function (err, f) {
 			if (err || f == null) {
-				res.status(401).json({
-					error: "Unauthorized"
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
 				});
 			} else {
 				Bank.findOne(
 					{
-						_id: bank_id
+						_id: bank_id,
 					},
-					function(err, b) {
-						const wallet = "infra_" + from + "@" + b.name;
-
-						getStatement(wallet).then(function(result) {
+					function (err, b) {
+						if (err) {
 							res.status(200).json({
-								status: "success",
-								history: result
+								status: 0,
+								message: "Internal server error",
 							});
-						});
+						} else if (b == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Bank not found",
+							});
+						} else {
+							const wallet = "infra_" + from + "@" + b.name;
+
+							getStatement(wallet).then(function (result) {
+								res.status(200).json({
+									status: 1,
+									history: result,
+								});
+							});
+						}
 					}
 				);
 			}

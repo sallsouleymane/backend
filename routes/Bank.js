@@ -113,7 +113,7 @@ router.post("/bank/createMerchant", function (req, res) {
 							message: "Either merchant id/ email / mobile aready exist",
 						});
 					} else {
-						const wallet = username + "_operational@" + bank.name;
+						const wallet = code + "_operational@" + bank.name;
 						createWallet([wallet]).then((result) => {
 							let content =
 								"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +

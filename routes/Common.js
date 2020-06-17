@@ -1554,109 +1554,138 @@ router.post("/getHistoryTotal", function (req, res) {
 
 router.get("/clearDb", function (req, res) {
 	const type = req.query.type;
+	var matchfound = false;
 
 	if (type == "all" || type == "infra") {
+		matchfound = true;
 		db.dropCollection("infras", function () {});
 	}
 	if (type == "all" || type == "otp") {
+		matchfound = true;
 		db.dropCollection("otps", function () {});
 	}
 	if (type == "all" || type == "bank") {
+		matchfound = true;
 		db.dropCollection("banks", function () {});
 	}
 	if (type == "all" || type == "profile") {
+		matchfound = true;
 		db.dropCollection("profiles", function () {});
 	}
 	if (type == "all" || type == "fee") {
+		matchfound = true;
 		db.dropCollection("fees", function () {});
 	}
 	if (type == "all" || type == "document") {
+		matchfound = true;
 		db.dropCollection("documents", function () {});
 	}
 	if (type == "all" || type == "bankfee") {
+		matchfound = true;
 		db.dropCollection("bankfees", function () {});
 	}
 	if (type == "all" || type == "branch") {
+		matchfound = true;
 		db.dropCollection("branches", function () {});
 	}
 	if (type == "all" || type == "cashier") {
+		matchfound = true;
 		db.dropCollection("cashiers", function () {});
 	}
 
 	if (type == "all" || type == "bankuser") {
+		matchfound = true;
 		db.dropCollection("bankusers", function () {});
 	}
 
 	if (type == "all" || type == "cashiersend") {
+		matchfound = true;
 		db.dropCollection("cashiersends", function () {});
 	}
 
 	if (type == "all" || type == "cashierclaim") {
+		matchfound = true;
 		db.dropCollection("cashierclaims", function () {});
 	}
 
 	if (type == "all" || type == "cashierledger") {
+		matchfound = true;
 		db.dropCollection("cashierledgers", function () {});
 	}
 
 	if (type == "all" || type == "branchsend") {
+		matchfound = true;
 		db.dropCollection("branchsends", function () {});
 	}
 
 	if (type == "all" || type == "branchclaim") {
+		matchfound = true;
 		db.dropCollection("branchclaims", function () {});
 	}
 
 	if (type == "all" || type == "branchledger") {
+		matchfound = true;
 		db.dropCollection("branchledgers", function () {});
 	}
 
 	if (type == "all" || type == "user") {
+		matchfound = true;
 		db.dropCollection("users", function () {});
 	}
 
 	if (type == "all" || type == "merchant") {
+		matchfound = true;
 		db.dropCollection("merchants", function () {});
 	}
 
 	if (type == "all" || type == "merchantfee") {
+		matchfound = true;
 		db.dropCollection("merchantfees", function () {});
 	}
 
 	if (type == "all" || type == "commission") {
+		matchfound = true;
 		db.dropCollection("bankcommissions", function () {});
 	}
 
 	if (type == "all" || type == "failedtx") {
+		matchfound = true;
 		db.dropCollection("failedtxes", function () {});
 	}
 
 	if (type == "all" || type == "invoicegroup") {
+		matchfound = true;
 		db.dropCollection("invoicegroups", function () {});
 	}
 
 	if (type == "all" || type == "invoice") {
+		matchfound = true;
 		db.dropCollection("invoices", function () {});
 	}
 
 	if (type == "all" || type == "merchantbranch") {
+		matchfound = true;
 		db.dropCollection("merchantbranches", function () {});
 	}
 
 	if (type == "all" || type == "merchantcashier") {
+		matchfound = true;
 		db.dropCollection("merchantcashiers", function () {});
 	}
 
 	if (type == "all" || type == "merchantstaff") {
+		matchfound = true;
 		db.dropCollection("merchantstaffs", function () {});
 	}
 
 	if (type == "all" || type == "zone") {
+		matchfound = true;
 		db.dropCollection("zones", function () {});
 	}
 
 	res.status(200).json({
 		status: "success",
+		matchfound: matchfound
 	});
 });
 
