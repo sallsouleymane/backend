@@ -5,6 +5,7 @@ const config = require("../config.json");
 const FailedTX = require("../models/FailedTXLedger");
 
 module.exports.createWallet = async (arr) => {
+	console.log("Blockchain service: createWallet " + arr);
 	let err = [];
 	await Promise.all(
 		arr.map(async url => {
@@ -18,8 +19,8 @@ module.exports.createWallet = async (arr) => {
 				}
 			};
 			let res = await doRequest(options);
-			console.log(res);
 			if (res.status === 0) {
+				console.log(res);
 				err.push(res.message);
 			}
 		})
@@ -28,6 +29,7 @@ module.exports.createWallet = async (arr) => {
 };
 
 module.exports.getStatement = async arr => {
+	console.log("Blockchain service: getStatement " + arr);
 	let options = {
 		uri: "http://" + config.blockChainIP + ":8000/getEWalletStatement",
 		method: "GET",
@@ -40,11 +42,13 @@ module.exports.getStatement = async arr => {
 	if (res.status && res.status === 1) {
 		return res.data;
 	} else {
+		console.log(res);
 		return [];
 	}
 };
 
 module.exports.rechargeNow = async arr => {
+	console.log("Blockchain service: rechargeNow " + arr);
 	var err = [];
 	await Promise.all(
 		arr.map(async url => {
@@ -61,6 +65,9 @@ module.exports.rechargeNow = async arr => {
 			if (res.status == 1) {
 				err.push(res.Reason);
 			}
+			else {
+				console.log(res);
+			}
 		})
 	).catch(errr => {
 		return errr;
@@ -69,6 +76,7 @@ module.exports.rechargeNow = async arr => {
 };
 
 module.exports.transferThis = async (t1, t2 = false, t3 = false, t4 = false) => {
+	console.log("Blockchain service: transferThis");
 	var err = [];
 
 	var url = t1;
@@ -279,6 +287,7 @@ module.exports.transferThis = async (t1, t2 = false, t3 = false, t4 = false) => 
 };
 
 module.exports.getChildStatements = async arr => {
+	console.log("Blockchain service: getChildStatements " + arr);
 	var options = {
 		uri: "http://" + config.blockChainIP + ":8000/getChildIds",
 		method: "GET",
@@ -288,6 +297,7 @@ module.exports.getChildStatements = async arr => {
 	};
 
 	let res = await doRequest(options);
+	console.log(res);
 	if (res.status && res.status == 1) {
 		return res.data;
 	} else {
@@ -296,6 +306,7 @@ module.exports.getChildStatements = async arr => {
 };
 
 module.exports.getTransactionCount = async arr => {
+	console.log("Blockchain service: getTransactionCount " + arr);
 	var options = {
 		uri: "http://" + config.blockChainIP + ":8000/getEWalletTransactionCount",
 		method: "GET",
@@ -305,15 +316,16 @@ module.exports.getTransactionCount = async arr => {
 	};
 
 	let res = await doRequest(options);
-
 	if ( res.status && res.status == 1) {
 		return res.data
 	} else {
+		console.log(res);
 		return 0;
 	}
 };
 
 module.exports.getBalance = async arr => {
+	console.log("Blockchain service: getBalance " + arr);
 	var options = {
 		uri: "http://" + config.blockChainIP + ":8000/showEWalletBalance",
 		method: "GET",
@@ -323,18 +335,16 @@ module.exports.getBalance = async arr => {
 	};
 
 	let res = await doRequest(options);
-
 	if (res.status && res.status === 1) {
 		return res.data.balance;
 	} else {
+		console.log(res);
 		return 0;
 	}
 };
 
 module.exports.initiateTransfer = async function (transaction, tx_id = "") {
-	// var status = [];
-	// await Promise.all(
-	// transactions.map(async (transaction) => {
+	console.log("Blockchain service: initiateTransfer " + transaction);
 
 	var options = {
 		uri: "http://" + config.blockChainIP + ":8000/transferBtwEWallets",

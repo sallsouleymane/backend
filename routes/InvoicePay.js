@@ -26,6 +26,72 @@ const Commission = require("../models/merchant/BankCommission");
 
 const jwtTokenAuth = require("./JWTTokenAuth");
 
+router.post("/cashier/getInvoiceDetails", (req, res) => {
+	const { token, number } = req.body;
+	Cashier.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, cashier) {
+			if (err || cashier == null) {
+				console.log("1", err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal server error",
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				Invoice.findOne({ number: number }, async (err, invoice) => {
+					if (err) {
+						console.log("2", err);
+						res.status(200).json({
+							status: 0,
+							message: "Internal server error",
+						});
+					} else if (invoice == null) {
+						res.status(200).json({
+							status: 0,
+							message: "Invoice not found",
+						});
+					} else {
+						Merchant.findOne(
+							{
+								_id: invoice.merchant_id,
+								bank_id: cashier.bank_id,
+								status: 1,
+							},
+							(err, merchant) => {
+								if (err) {
+									console.log("3", err);
+									res.status(200).json({
+										status: 0,
+										message: "Internal server error",
+									});
+								} else if (merchant == null) {
+									res.status(200).json({
+										status: 0,
+										message: "Invalid Merchant",
+									});
+								} else {
+									res.status(200).json({
+										status: 1,
+										invoice: invoice,
+									});
+								}
+							}
+						);
+					}
+				});
+			}
+		}
+	);
+});
+
 router.post("/cashier/getUserInvoices", (req, res) => {
 	const { token, mobile } = req.body;
 	Cashier.findOne(
@@ -53,9 +119,10 @@ router.post("/cashier/getUserInvoices", (req, res) => {
 					var invoicePromises = invoices.map(async (invoice) => {
 						var merchant = await Merchant.findOne({
 							_id: invoice.merchant_id,
+							bank_id: cashier.bank_id,
 							status: 1,
 						});
-						if (merchant != null && merchant.bank_id == cashier.bank_id) {
+						if (merchant != null) {
 							return invoice;
 						}
 					});

@@ -190,6 +190,7 @@ router.post("/bank/merchantFee/addInfraShare", function (req, res) {
 						_id: fee_id,
 					},
 					{
+						infra_approve_status: 3,
 						"infra_share.fixed": fixed,
 						"infra_share.percentage": percentage,
 					},
@@ -298,7 +299,7 @@ router.post("/bank/merchantFee/editRule", function (req, res) {
 										"edited.description": description,
 										"edited.ranges": ranges,
 										"edited.merchant_approve_status": 0,
-										"edited.infra_approve_status": 0,
+										"edited.infra_approve_status": 3,
 									},
 								},
 								(err) => {
@@ -396,7 +397,7 @@ router.post("/bank/merchantFee/editInfraShare", function (req, res) {
 										$set: {
 											"edited.infra_share.fixed": fixed,
 											"edited.infra_share.percentage": percentage,
-											"edited.infra_approve_status": 0,
+											"edited.infra_approve_status": 3,
 											infra_share_edit_status: 1,
 										},
 									},
@@ -420,7 +421,7 @@ router.post("/bank/merchantFee/editInfraShare", function (req, res) {
 										$set: {
 											"infra_share.fixed": fixed,
 											"infra_share.percentage": percentage,
-											infra_approve_status: 0,
+											infra_approve_status: 3,
 										},
 									},
 									(err) => {
@@ -819,8 +820,8 @@ router.post("/infra/merchantFee/approve", function (req, res) {
 					{
 						_id: fee_id,
 						$or: [
-							{ infra_approve_status: 0 },
-							{ "edited.infra_approve_status": 0 },
+							{ infra_approve_status: 3 },
+							{ "edited.infra_approve_status": 3 },
 						],
 						$or: [
 							{
@@ -1002,8 +1003,8 @@ router.post("/infra/merchantFee/decline", function (req, res) {
 					{
 						_id: fee_id,
 						$or: [
-							{ infra_approve_status: 0 },
-							{ "edited.infra_approve_status": 0 },
+							{ infra_approve_status: 3 },
+							{ "edited.infra_approve_status": 3 },
 						],
 					},
 					(err, fee) => {

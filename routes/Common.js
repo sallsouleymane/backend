@@ -131,9 +131,7 @@ router.post("/:user/changePassword", jwtTokenAuth, (req, res) => {
 
 router.get("/getBalance", (req, res) => {
 	const { token, wallet_id, type } = req.query;
-	console.log(type);
 	const typeClass = getTypeClass(type);
-	console.log(typeClass);
 	typeClass.findOne(
 		{
 			token,
