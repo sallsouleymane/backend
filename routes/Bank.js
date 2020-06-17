@@ -99,7 +99,7 @@ router.post("/bank/createMerchant", function (req, res) {
 				} else {
 					const wallet = code + "_operational@" + bank.name;
 					createWallet([wallet]).then((result) => {
-						if (result.status == 0) {
+						if (result[0].status == 0) {
 							res.status(200).json({
 								status: 0,
 								message: "Blockchain service is unavailabel",
