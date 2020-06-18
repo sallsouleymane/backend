@@ -34,7 +34,7 @@ function jwtsign(sign_creds) {
 router.post("/merchantBranch/login", (req, res) => {
 	const { username, password } = req.body;
 	MerchantBranch.findOne(
-		{ username, password, status: { ne: 2 } },
+		{ username, password, status: { $ne: 2 } },
 		"-password",
 		function (err, branch) {
 			if (err) {
@@ -64,7 +64,7 @@ router.post("/merchantBranch/login", (req, res) => {
 router.post("/merchantCashier/login", (req, res) => {
 	const { username, password } = req.body;
 	MerchantStaff.findOne(
-		{ username, password, status: { ne: 2 } },
+		{ username, password, status: { $ne: 2 } },
 		"-password",
 		function (err, staff) {
 			if (err) {
