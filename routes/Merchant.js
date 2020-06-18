@@ -632,7 +632,7 @@ router.post("/merchant/unblockStaff", jwtTokenAuth, (req, res) => {
 					message: "Unauthorized",
 				});
 			} else {
-				MerchantStaff.findOneAndUpdate({_id: staff_id, merchant_id: merchant._id},
+				MerchantStaff.findOneAndUpdate({_id: staff_id, merchant_id: merchant._id, status: 2},
 					{
 						status: 1
 					},
@@ -723,7 +723,7 @@ router.post("/merchant/unblockBranch", jwtTokenAuth, (req, res) => {
 					message: "Internal server error",
 				});
 			} else {
-				MerchantBranch.findOneAndUpdate({_id: branch_id, merchant_id: merchant._id},
+				MerchantBranch.findOneAndUpdate({_id: branch_id, merchant_id: merchant._id, status: 2},
 					{ 
 						status: 1
 					
@@ -738,7 +738,7 @@ router.post("/merchant/unblockBranch", jwtTokenAuth, (req, res) => {
 						}else if(branch == null){
 							res.status(200).json({
 								status: 0,
-								message: "Branch not found",
+								message: "Branch not found/ not blocked",
 							});
 						} else {
 							res.status(200).json({

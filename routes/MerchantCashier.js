@@ -198,7 +198,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 								invoiceObj.paid = 0;
 								await invoiceObj.save();
 								var branch = await MerchantBranch.findOneAndUpdate(
-									{ _id: cashier.branch_id },
+									{ _id: cashier.branch_id, status: 1 },
 									{ $inc: { bills_raised: 1, amount_due: amount } }
 								);
 								await Merchant.findOneAndUpdate(
