@@ -246,31 +246,33 @@ router.post("/infra/editMerchant", function (req, res) {
 	);
 });
 
-router.post("/getDashStats", function(req, res) {
+router.post("/getDashStats", function (req, res) {
 	const { token } = req.body;
 
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
-			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized"
+		async function (err, infra) {
+			if (err) {
+				res.status(200).json({
+					status: 0,
+					message: "Internal server error",
+				});
+			} else if (infra == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
 				});
 			} else {
-				const user_id = user._id;
-				Bank.countDocuments({}, function(err, bank) {
-					if (err) {
-						res.status(402).json({
-							error: err
-						});
-					} else {
-						res.status(200).json({
-							totalBanks: bank
-						});
-					}
+				var totalBanks = await Bank.countDocuments({}, () => {});
+				var totalmerchants = await Merchant.countDocuments({}, () => {});
+
+				res.status(200).json({
+					status: 1,
+					totalBanks: totalBanks,
+					totalMerchants: totalmerchants,
 				});
 			}
 		}
