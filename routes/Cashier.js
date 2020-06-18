@@ -24,6 +24,50 @@ const CashierPending = require("../models/CashierPending");
 const CashierClaim = require("../models/CashierClaim");
 const CashierLedger = require("../models/CashierLedger");
 const CashierTransfer = require("../models/CashierTransfer");
+const Merchant = require("../models/merchant/Merchant");
+
+router.post("/cashier/listMerchants", function (req, res) {
+	var { token } = req.body;
+	Cashier.findOne(
+		{
+			token,
+		},
+		function (err, cashier) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal error please try again",
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				Merchant.find(
+					{ bank_id: cashier.bank_id, status: 1 },
+					"-password",
+					(err, merchants) => {
+						if (err) {
+							console.log(err);
+							res.status(200).json({
+								status: 0,
+								message: "Internal Server Error",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Merchants List",
+								list: merchants,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
 
 router.post("/cashier/getUser", function (req, res) {
 	const { token, mobile } = req.body;
