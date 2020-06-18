@@ -589,7 +589,7 @@ router.post("/merchant/blockStaff", jwtTokenAuth, (req, res) => {
 			} else {
 				MerchantStaff.findOneAndUpdate({_id: staff_id, merchant_id: merchant._id},
 					{ $set: {
-						status: 0
+						status: 2
 					}
 					},
 					(err, staff) => {
@@ -679,7 +679,7 @@ router.post("/merchant/blockBranch", jwtTokenAuth, (req, res) => {
 			} else {
 				MerchantBranch.findOneAndUpdate({_id: branch_id, merchant_id: merchant._id},
 					{ 
-						status: 0
+						status: 2
 					
 					},
 					(err, branch) => {
