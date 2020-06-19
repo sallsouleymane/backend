@@ -40,7 +40,8 @@ router.post("/merchantCashier/createInvoiceGroup", jwtTokenAuth, (req, res) => {
 						console.log(err);
 						return res.status(200).json({
 							status: 0,
-							message: "code already exist",
+							message: "code already used",
+							err: err
 						});
 					} else {
 						return res.status(200).json({

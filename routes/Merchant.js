@@ -189,7 +189,8 @@ router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 						console.log(err);
 						return res.status(200).json({
 							status: 0,
-							message: "code already exist",
+							message: "Zone already exist with this code",
+							err: err
 						});
 					} else {
 						return res.status(200).json({ status: 1, message: "Zone Created", zone: zone });
@@ -313,7 +314,8 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 						console.log(err)
 						return res.json({
 							status: 0,
-							message: err.toString(),
+							message: "Cashier name is already used.",
+							err: err
 						});
 					}
 				 else {
@@ -451,7 +453,8 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 						console.log(err)
 						return res.json({
 							status: 0,
-							message: "User ID / Email / Mobile already exists",
+							message: "User ID / Email / Mobile already used",
+							err: err
 						});
 					} else {
 					let content =
@@ -811,7 +814,8 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 						console.log(err);
 						return res.json({
 							status: 0,
-							message: "Internal server error",
+							message: "Any of the fields among name, code, username, mobile and email are already used by another branch",
+							err: err
 						});
 					} else {
 						let content =
