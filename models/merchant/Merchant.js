@@ -4,7 +4,7 @@ const MerchantSchema = new mongoose.Schema({
 	creator: { type: Number, required: true },
 	creator_desc: { type: String, required: false, default: "0-Bank, 1-Infra"},
 	username: { type: String, required: true, unique: true },
-	password: { type: String, required: true },
+	password: { type: String, required: true, select: false},
 	code: { type: String, required: true, unique: true },
 	logo: { type: String, required: false },
 	description: { type: String, required: false },

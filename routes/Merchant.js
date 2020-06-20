@@ -776,6 +776,7 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 			username: jwtusername,
 			status: 1,
 		},
+		"-password",
 		function (err, merchant) {
 			if (err) {
 				res.status(200).json({
@@ -871,7 +872,6 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 		working_to,
 	} = req.body;
 	const jwtusername = req.sign_creds.username;
-	console.log(jwtusername)
 	Merchant.findOne(
 		{
 			username: jwtusername,

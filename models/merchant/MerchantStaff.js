@@ -6,7 +6,7 @@ const MerchantStaffSchema = new mongoose.Schema({
 	ccode: { type: String, required: false },
 	mobile: { type: String, required: true, unique: true },
 	email: { type: String, required: true, unique: true },
-	password: { type: String, required: true },
+	password: { type: String, required: true, select: false },
 	branch_id: { type: String, required: true },
 	merchant_id: { type: String, required: true },
 	logo: { type: String, required: false },

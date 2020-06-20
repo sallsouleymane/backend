@@ -8,6 +8,63 @@ const MerchantBranch = require("../models/merchant/MerchantBranch");
 const MerchantStaff = require("../models/merchant/MerchantStaff");
 const MerchantCashier = require("../models/merchant/MerchantCashier");
 
+router.post("/merchantBranch/editDetails", jwtTokenAuth, (req, res) => {
+	const {
+		name,
+		username,
+		bcode,
+		address1,
+		state,
+		zip,
+		country,
+		ccode,
+		email,
+		working_from,
+		working_to,
+	} = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantBranch.findOneAndUpdate(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		{
+			name: name,
+			username: username,
+			address1: address1,
+			state: state,
+			zip: zip,
+			ccode: ccode,
+			bcode: bcode,
+			country: country,
+			email: email,
+			working_from: working_from,
+			working_to: working_to,
+		},
+		{
+			new: true
+		},
+		function (err, branch) {
+			if (err) {
+				res.status(200).json({
+					status: 0,
+					message: "Internal Server Error",
+				});
+			} else if (branch == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				res.status(200).json({
+					status: 1,
+					data: branch,
+				});
+			}
+		}
+	);
+});
+
 router.get("/merchantBranch/todaysStatus", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	MerchantBranch.findOne(
@@ -222,38 +279,45 @@ router.post("/merchantBranch/assignStaff", jwtTokenAuth, (req, res) => {
 					message: "Branch is blocked",
 				});
 			} else {
-				MerchantStaff.findOne({ _id: staff_id, status: 1, branch_id: branch._id }, (err, staff) => {
-					if (err) {
-						res.status(200).json({
-							status: 0,
-							message: "Internal Server Error",
-						});
-					} else if (staff == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Staff not found",
-						});
-					} else {
-						MerchantCashier.findOneAndUpdate({ _id: cashier_id, branch_id: branch._id }, { staff_id: staff_id }, (err, cashier) => {
-							if (err) {
-								res.status(200).json({
-									status: 0,
-									message: "Internal Server Error",
-								});
-							} else if (cashier == null) {
-								res.status(200).json({
-									status: 0,
-									message: "Cashier not found",
-								});
-							} else {
-                                res.status(200).json({
-									status: 1,
-									message: "Assigned staff as a cashier",
-								});
-                            }
-						});
+				MerchantStaff.findOne(
+					{ _id: staff_id, status: 1, branch_id: branch._id },
+					(err, staff) => {
+						if (err) {
+							res.status(200).json({
+								status: 0,
+								message: "Internal Server Error",
+							});
+						} else if (staff == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Staff not found",
+							});
+						} else {
+							MerchantCashier.findOneAndUpdate(
+								{ _id: cashier_id, branch_id: branch._id },
+								{ staff_id: staff_id },
+								(err, cashier) => {
+									if (err) {
+										res.status(200).json({
+											status: 0,
+											message: "Internal Server Error",
+										});
+									} else if (cashier == null) {
+										res.status(200).json({
+											status: 0,
+											message: "Cashier not found",
+										});
+									} else {
+										res.status(200).json({
+											status: 1,
+											message: "Assigned staff as a cashier",
+										});
+									}
+								}
+							);
+						}
 					}
-				});
+				);
 			}
 		}
 	);
