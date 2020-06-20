@@ -382,7 +382,8 @@ router.post("/merchant/editCashier", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.get("/merchant/listCashier", jwtTokenAuth, (req, res) => {
+router.post("/merchant/listCashier", jwtTokenAuth, (req, res) => {
+	const { branch_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -396,7 +397,8 @@ router.get("/merchant/listCashier", jwtTokenAuth, (req, res) => {
 					message: "Internal Server Error",
 				});
 			} else {
-				MerchantCashier.find({ merchant_id: merchant._id},
+				MerchantCashier.find(
+					{ merchant_id: merchant._id, branch_id: branch_id },
 					(err, cashiers) => {
 						if (err) {
 							res.status(200).json({
