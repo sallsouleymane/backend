@@ -280,7 +280,6 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 	const {
 		name,
 		branch_id,
-		credit_limit,
 		working_from,
 		working_to,
 		per_trans_amt,
@@ -301,7 +300,6 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 				});
 			} else {
 				data.name = name;
-				data.credit_limit = credit_limit;
 				data.working_from = working_from;
 				data.working_to = working_to;
 				data.per_trans_amt = per_trans_amt;
@@ -330,11 +328,9 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/merchant/editCashier", jwtTokenAuth, (req, res) => {
-	let data = new MerchantCashier();
 	const {
 		cashier_id,
 		name,
-		credit_limit,
 		working_from,
 		working_to,
 		per_trans_amt,
@@ -357,13 +353,11 @@ router.post("/merchant/editCashier", jwtTokenAuth, (req, res) => {
 				MerchantCashier.findOneAndUpdate({_id: cashier_id, merchant_id: merchant._id}, 
 					{
 						name: name,
-						credit_limit: credit_limit,
 						working_from: working_from,
 						working_to: working_to,
 						per_trans_amt: per_trans_amt,
 						max_trans_amt: max_trans_amt,
 						max_trans_count: max_trans_count,
-						merchant_id: merchant._id,
 					}, (err, cashier)=> {
 						if (err) {
 							res.status(200).json({
