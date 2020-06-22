@@ -3,6 +3,9 @@ const BankCommissionSchema = new mongoose.Schema({
 	merchant_id: { type: String, required: true },
 	status: { type: Number, required: true, default: 0 },
 	status_desc: { type: String, required: true, default: "0-created 1-valid"},
+	name: { type: String, required: true },
+	type: { type: Number, required: true },
+	type_desc: { type: String, required: false, default: "0-Wallet, 1-Non-Wallet" },
 	active: { type: Number, required: true, default: 0 },
 	rule_edit_status: { type: Number, required: true, default: 0 },
 	infra_share_edit_status: { type: Number, required: true, default: 0 },
@@ -34,6 +37,8 @@ const BankCommissionSchema = new mongoose.Schema({
 			percentage: { type: Number, required: false },
 		},
 		active: { type: Number, required: false },
+		name: { type: String, required: true },
+		type: { type: Number, required: false },
 		merchant_approve_status: { type: Number, required: false },
 		ranges: [
 			{

@@ -36,7 +36,8 @@ const MerchantFeeSchema = new mongoose.Schema({
 			fixed: { type: Number, required: false },
 			percentage: { type: Number, required: false },
 		},
-        active: { type: Number, required: false },
+		active: { type: Number, required: false },
+		name: { type: String, required: true },
         type: { type: Number, required: false },
 		merchant_approve_status: { type: Number, required: false },
 		ranges: [

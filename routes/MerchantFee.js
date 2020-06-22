@@ -139,7 +139,7 @@ router.post("/bank/merchantFee/createRule", function (req, res) {
 										});
 									}
 									let content =
-										"<p>New fee rule rule has been added for merchant " +
+										"<p>New fee rule has been added for merchant " +
 										merchant.name +
 										" for your bank in E-Wallet application</p><p>&nbsp;</p>";
 									sendMail(content, "New Fee Rule Added", bank.email);
