@@ -40,6 +40,7 @@ const MerchantFeeSchema = new mongoose.Schema({
 		name: { type: String, required: true },
         type: { type: Number, required: false },
 		merchant_approve_status: { type: Number, required: false },
+		infra_approve_status: { type: Number, required: false },
 		ranges: [
 			{
 				trans_from: { type: Number, required: false },

@@ -193,7 +193,7 @@ router.post("/bank/commission/addInfraShare", function (req, res) {
 					{
 						"infra_share.fixed": fixed,
 						"infra_share.percentage": percentage,
-						infra_approve_status: 3
+						infra_approve_status: 3,
 					},
 					{ new: true },
 					(err, comm) => {
@@ -249,6 +249,7 @@ router.post("/bank/commission/editRule", function (req, res) {
 						$or: [
 							{ merchant_approve_status: 1 },
 							{ merchant_approve_status: 2 },
+							{ "edited.merchant_approve_status": 2 },
 						],
 					},
 					{
@@ -334,7 +335,11 @@ router.post("/bank/commission/editInfraShare", function (req, res) {
 				Commission.findOne(
 					{
 						_id: commission_id,
-						$or: [{ infra_approve_status: 1 }, { infra_approve_status: 2 }],
+						$or: [
+							{ infra_approve_status: 1 },
+							{ infra_approve_status: 2 },
+							{ "edited.infra_approve_status": 2 },
+						],
 					},
 					{
 						$set: {
