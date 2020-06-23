@@ -250,7 +250,7 @@ router.post("/bank/merchantFee/editRule", function (req, res) {
 					message: "Unauthorized",
 				});
 			} else {
-				MerchantFee.findOne(
+				MerchantFee.findOneAndUpdate(
 					{
 						_id: fee_id,
 						$or: [
@@ -269,6 +269,7 @@ router.post("/bank/merchantFee/editRule", function (req, res) {
 							"edited.merchant_approve_status": 0,
 						},
 					},
+					{new: true},
 					(err, fee) => {
 						if (err) {
 							console.log(err);
@@ -308,6 +309,7 @@ router.post("/bank/merchantFee/editRule", function (req, res) {
 									res.status(200).json({
 										status: 1,
 										message: "Merchant Fee Rule edited successfully",
+										fee: fee
 									});
 								}
 							});

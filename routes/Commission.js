@@ -262,6 +262,7 @@ router.post("/bank/commission/editRule", function (req, res) {
 							"edited.merchant_approve_status": 0,
 						},
 					},
+					{new: true},
 					(err, comm) => {
 						if (err) {
 							console.log(err);
@@ -301,6 +302,7 @@ router.post("/bank/commission/editRule", function (req, res) {
 									res.status(200).json({
 										status: 1,
 										message: "Commission Rule edited successfully",
+										comm: comm
 									});
 								}
 							});
