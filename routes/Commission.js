@@ -332,7 +332,7 @@ router.post("/bank/commission/editInfraShare", function (req, res) {
 					error: "Unauthorized",
 				});
 			} else {
-				Commission.findOne(
+				Commission.findOneAndUpdate(
 					{
 						_id: commission_id,
 						$or: [

@@ -339,7 +339,7 @@ router.post("/bank/merchantFee/editInfraShare", function (req, res) {
 					message: "Unauthorized",
 				});
 			} else {
-				MerchantFee.findOne(
+				MerchantFee.findOneAndUpdate(
 					{
 						_id: fee_id,
 						$or: [
@@ -1000,7 +1000,6 @@ router.post("/infra/merchantFee/decline", function (req, res) {
 							res.status(200).json({
 								status: 1,
 								message: "Approved",
-								merchant_approve_status: merchant_approve_status,
 							});
 						}
 					}
