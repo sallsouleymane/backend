@@ -356,6 +356,7 @@ router.post("/bank/merchantFee/editInfraShare", function (req, res) {
 							infra_share_edit_status: 1,
 						},
 					},
+					{new: true},
 					(err, fee) => {
 						if (err) {
 							console.log(err);
@@ -372,6 +373,7 @@ router.post("/bank/merchantFee/editInfraShare", function (req, res) {
 							res.status(200).json({
 								status: 1,
 								message: "Merchant Fee Rule's infra share edited successfully",
+								fee: fee
 							});
 						}
 					}

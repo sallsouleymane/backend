@@ -349,6 +349,7 @@ router.post("/bank/commission/editInfraShare", function (req, res) {
 							infra_share_edit_status: 1,
 						},
 					},
+					{new:true},
 					(err, comm) => {
 						if (err) {
 							console.log(err);
@@ -365,6 +366,7 @@ router.post("/bank/commission/editInfraShare", function (req, res) {
 							res.status(200).json({
 								status: 1,
 								message: "Commission Rule's infra share edited successfully",
+								comm: comm
 							});
 						}
 					}
