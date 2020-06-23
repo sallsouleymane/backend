@@ -962,7 +962,7 @@ router.post("/infra/merchantFee/decline", function (req, res) {
 								console.log("Condition 1");
 								MerchantFee.updateOne(
 									{
-										fee_id,
+										_id: fee_id,
 									},
 									{
 										$set: {
@@ -983,7 +983,7 @@ router.post("/infra/merchantFee/decline", function (req, res) {
 								console.log("Condition 2");
 								MerchantFee.updateOne(
 									{
-										fee_id,
+										_id: fee_id,
 									},
 									{
 										$set: {
@@ -1003,7 +1003,7 @@ router.post("/infra/merchantFee/decline", function (req, res) {
 							}
 							res.status(200).json({
 								status: 1,
-								message: "Approved",
+								message: "Declined",
 							});
 						}
 					}

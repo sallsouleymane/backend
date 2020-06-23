@@ -953,7 +953,7 @@ router.post("/infra/commission/decline", function (req, res) {
 								console.log("Condition 1");
 								Commission.updateOne(
 									{
-										commission_id,
+										_id: commission_id,
 									},
 									{
 										$set: {
@@ -974,7 +974,7 @@ router.post("/infra/commission/decline", function (req, res) {
 								console.log("Condition 2");
 								Commission.updateOne(
 									{
-										commission_id,
+										_id: commission_id,
 									},
 									{
 										$set: {
