@@ -103,10 +103,12 @@ router.post("/bank/createMerchant", function (req, res) {
 				} else {
 					const wallet = code + "_operational@" + bank.name;
 					createWallet([wallet]).then((result) => {
-						if (result[0].status == 0) {
+						if (result != "") {
+							console.log(result);
 							res.status(200).json({
 								status: 0,
-								message: "Blockchain service is unavailabel",
+								message: "Blockchain service is unavailable",
+								result: result,
 							});
 						} else {
 							const data = new Merchant();
@@ -403,31 +405,41 @@ router.post("/bankActivate", function (req, res) {
 					error: "Account not found",
 				});
 			} else {
-				Bank.findByIdAndUpdate(
-					bank._id,
-					{
-						status: 1,
-					},
-					(err) => {
-						if (err)
-							return res.status(400).json({
-								error: err,
-							});
-						createWallet([
-							"testuser@" + bank.name,
-							"operational@" + bank.name,
-							"escrow@" + bank.name,
-							"master@" + bank.name,
-							"infra_operational@" + bank.name,
-							"infra_master@" + bank.name,
-						]).then(function (result) {
-							res.status(200).json({
-								status: "activated",
-								walletStatus: result,
-							});
+				createWallet([
+					"testuser@" + bank.name,
+					"operational@" + bank.name,
+					"escrow@" + bank.name,
+					"master@" + bank.name,
+					"infra_operational@" + bank.name,
+					"infra_master@" + bank.name,
+				]).then(function (result) {
+					if (result != "") {
+						console.log(result);
+						res.status(200).json({
+							status: 0,
+							message: "Blockchain service is unavailable",
+							result: result,
 						});
+					} else {
+						Bank.findByIdAndUpdate(
+							bank._id,
+							{
+								status: 1,
+							},
+							(err) => {
+								if (err)
+									return res.status(400).json({
+										error: err,
+									});
+
+								res.status(200).json({
+									status: "activated",
+									walletStatus: result,
+								});
+							}
+						);
 					}
-				);
+				});
 			}
 		}
 	);
@@ -597,68 +609,78 @@ router.post("/addBranch", (req, res) => {
 					error: "Unauthorized",
 				});
 			} else {
-				data.name = name;
-				data.bcode = bcode;
-				if (credit_limit !== "" && credit_limit != null) {
-					data.credit_limit = credit_limit;
-				}
-				if (cash_in_hand !== "" && cash_in_hand != null) {
-					data.cash_in_hand = cash_in_hand;
-				}
-				data.username = username;
-				data.address1 = address1;
-				data.state = state;
-				data.country = country;
-				data.zip = zip;
-				data.ccode = ccode;
-				data.mobile = mobile;
-				data.email = email;
-				data.bank_id = bank._id;
-				data.password = makeid(10);
-				data.working_from = working_from;
-				data.working_to = working_to;
-				let bankName = bank.name;
-
-				data.save((err) => {
-					if (err)
-						return res.json({
-							error: err.toString(),
-						});
-					createWallet([
-						bcode + "_operational@" + bank.name,
-						bcode + "_master@" + bank.name,
-					]).then(function (result) {
-						let content =
-							"<p>Your branch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-							config.mainIP +
-							"/branch/" +
-							bankName +
-							"'>http://" +
-							config.mainIP +
-							"/branch/" +
-							bankName +
-							"</a></p><p><p>Your username: " +
-							data.username +
-							"</p><p>Your password: " +
-							data.password +
-							"</p>";
-						sendMail(content, "Bank Branch Created", email);
-						let content2 =
-							"Your branch is added in E-Wallet application Login URL: http://" +
-							config.mainIP +
-							"/branch/" +
-							bankName +
-							" Your username: " +
-							data.username +
-							" Your password: " +
-							data.password;
-						sendSMS(content2, mobile);
-						// return res.status(200).json(data);
+				createWallet([
+					bcode + "_operational@" + bank.name,
+					bcode + "_master@" + bank.name,
+				]).then(function (result) {
+					if (result != "") {
+						console.log(result);
 						res.status(200).json({
-							status: "Branch Created",
-							walletStatus: result.toString(),
+							status: 0,
+							message: "Blockchain service is unavailable",
+							result: result,
 						});
-					});
+					} else {
+						data.name = name;
+						data.bcode = bcode;
+						if (credit_limit !== "" && credit_limit != null) {
+							data.credit_limit = credit_limit;
+						}
+						if (cash_in_hand !== "" && cash_in_hand != null) {
+							data.cash_in_hand = cash_in_hand;
+						}
+						data.username = username;
+						data.address1 = address1;
+						data.state = state;
+						data.country = country;
+						data.zip = zip;
+						data.ccode = ccode;
+						data.mobile = mobile;
+						data.email = email;
+						data.bank_id = bank._id;
+						data.password = makeid(10);
+						data.working_from = working_from;
+						data.working_to = working_to;
+						let bankName = bank.name;
+
+						data.save((err) => {
+							if (err)
+								return res.json({
+									error: err.toString(),
+								});
+
+							let content =
+								"<p>Your branch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+								config.mainIP +
+								"/branch/" +
+								bankName +
+								"'>http://" +
+								config.mainIP +
+								"/branch/" +
+								bankName +
+								"</a></p><p><p>Your username: " +
+								data.username +
+								"</p><p>Your password: " +
+								data.password +
+								"</p>";
+							sendMail(content, "Bank Branch Created", email);
+							let content2 =
+								"Your branch is added in E-Wallet application Login URL: http://" +
+								config.mainIP +
+								"/branch/" +
+								bankName +
+								" Your username: " +
+								data.username +
+								" Your password: " +
+								data.password;
+							sendSMS(content2, mobile);
+							// return res.status(200).json(data);
+							res.status(200).json({
+								status: "Branch Created",
+								walletStatus: result.toString(),
+							});
+						});
+					}
 				});
 			}
 		}
@@ -967,113 +989,6 @@ router.post("/getBankHistory", function (req, res) {
 					});
 				});
 				// });
-			}
-		}
-	);
-});
-
-router.post("/addBranch", (req, res) => {
-	let data = new Branch();
-	const {
-		name,
-		bcode,
-		username,
-		credit_limit,
-		cash_in_hand,
-		address1,
-		state,
-		zip,
-		country,
-		ccode,
-		mobile,
-		email,
-		token,
-		working_from,
-		working_to,
-	} = req.body;
-
-	Bank.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (err, bank) {
-			if (err || bank == null) {
-				res.status(401).json({
-					error: "Unauthorized",
-				});
-			} else {
-				data.name = name;
-				data.bcode = bcode;
-				if (
-					credit_limit != "" &&
-					credit_limit != null &&
-					credit_limit != undefined
-				) {
-					data.credit_limit = credit_limit;
-				}
-				if (
-					cash_in_hand != "" &&
-					cash_in_hand != null &&
-					cash_in_hand != undefined
-				) {
-					data.cash_in_hand = cash_in_hand;
-				}
-				data.username = username;
-				data.address1 = address1;
-				data.state = state;
-				data.country = country;
-				data.zip = zip;
-				data.ccode = ccode;
-				data.mobile = mobile;
-				data.email = email;
-				data.bank_id = bank._id;
-				data.password = makeid(10);
-				data.working_from = working_from;
-				data.working_to = working_to;
-				let bankName = bank.name;
-
-				data.save((err, d) => {
-					if (err)
-						return res.json({
-							error: err.toString(),
-						});
-					createWallet([
-						bcode + "_operational@" + bank.name,
-						bcode + "_master@" + bank.name,
-					]).then(function (result) {
-						let content =
-							"<p>Your bracnch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-							config.mainIP +
-							"/branch/" +
-							bankName +
-							"'>http://" +
-							config.mainIP +
-							"/branch/" +
-							bankName +
-							"</a></p><p><p>Your username: " +
-							data.username +
-							"</p><p>Your password: " +
-							data.password +
-							"</p>";
-						sendMail(content, "Bank Branch Created", email);
-						let content2 =
-							"Your branch is added in E-Wallet application Login URL: http://" +
-							config.mainIP +
-							"/branch/" +
-							bankName +
-							" Your username: " +
-							data.username +
-							" Your password: " +
-							data.password;
-						sendSMS(content2, mobile);
-						// return res.status(200).json(data);
-						res.status(200).json({
-							status: "Branch Created",
-							walletStatus: result.toString(),
-						});
-					});
-				});
 			}
 		}
 	);

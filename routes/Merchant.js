@@ -157,7 +157,7 @@ router.post("/merchant/editDetails", jwtTokenAuth, function (req, res) {
 				res.status(200).json({
 					status: 1,
 					message: "Merchant edited successfully",
-					merchant: merchant
+					merchant: merchant,
 				});
 			}
 		}
@@ -190,10 +190,12 @@ router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 						return res.status(200).json({
 							status: 0,
 							message: "Zone already exist with this code",
-							err: err
+							err: err,
 						});
 					} else {
-						return res.status(200).json({ status: 1, message: "Zone Created", zone: zone });
+						return res
+							.status(200)
+							.json({ status: 1, message: "Zone Created", zone: zone });
 					}
 				});
 			}
@@ -225,7 +227,7 @@ router.post("/merchant/editZone", jwtTokenAuth, (req, res) => {
 								status: 0,
 								message: "Internal Server Error",
 							});
-						} else if (zone == null ){
+						} else if (zone == null) {
 							res.status(200).json({
 								status: 0,
 								message: "Zone not found",
@@ -257,7 +259,7 @@ router.get("/merchant/listZones", jwtTokenAuth, (req, res) => {
 					message: "Unauthorized",
 				});
 			} else {
-				Zone.find({ merchant_id: merchant._id },(err, zones) => {
+				Zone.find({ merchant_id: merchant._id }, (err, zones) => {
 					if (err) {
 						res.status(200).json({
 							status: 0,
@@ -295,7 +297,7 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 		function (err, merchant) {
 			if (err || merchant == null) {
 				res.status(200).json({
-					status:0,
+					status: 0,
 					message: "Unauthorized",
 				});
 			} else {
@@ -309,17 +311,20 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 				data.branch_id = branch_id;
 				data.save((err, d) => {
 					if (err) {
-						console.log(err)
+						console.log(err);
 						return res.json({
 							status: 0,
 							message: "Cashier name is already used.",
-							err: err
+							err: err,
 						});
-					}
-				 else {
-						MerchantBranch.findOneAndUpdate({ _id: branch_id }, { $inc: { total_cashiers: 1 } }, function (e, v) {
-							return res.status(200).json({ status: 1, data: d});
-						});
+					} else {
+						MerchantBranch.findOneAndUpdate(
+							{ _id: branch_id },
+							{ $inc: { total_cashiers: 1 } },
+							function (e, v) {
+								return res.status(200).json({ status: 1, data: d });
+							}
+						);
 					}
 				});
 			}
@@ -346,11 +351,12 @@ router.post("/merchant/editCashier", jwtTokenAuth, (req, res) => {
 		function (err, merchant) {
 			if (err || merchant == null) {
 				res.status(200).json({
-					status:0,
+					status: 0,
 					message: "Internal Server Error",
 				});
 			} else {
-				MerchantCashier.findOneAndUpdate({_id: cashier_id, merchant_id: merchant._id}, 
+				MerchantCashier.findOneAndUpdate(
+					{ _id: cashier_id, merchant_id: merchant._id },
 					{
 						name: name,
 						working_from: working_from,
@@ -358,7 +364,8 @@ router.post("/merchant/editCashier", jwtTokenAuth, (req, res) => {
 						per_trans_amt: per_trans_amt,
 						max_trans_amt: max_trans_amt,
 						max_trans_count: max_trans_count,
-					}, (err, cashier)=> {
+					},
+					(err, cashier) => {
 						if (err) {
 							res.status(200).json({
 								status: 0,
@@ -369,14 +376,14 @@ router.post("/merchant/editCashier", jwtTokenAuth, (req, res) => {
 								status: 0,
 								message: "Cashier not found",
 							});
-						}
-						else {
+						} else {
 							res.status(200).json({
 								status: 1,
-								message:  "edited merchant cashier successfully"
+								message: "edited merchant cashier successfully",
 							});
 						}
-					});
+					}
+				);
 			}
 		}
 	);
@@ -421,7 +428,16 @@ router.post("/merchant/listCashier", jwtTokenAuth, (req, res) => {
 router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 	let data = new MerchantStaff();
 	const jwtusername = req.sign_creds.username;
-	const { name, email, ccode, mobile, username, password, branch_id, logo } = req.body;
+	const {
+		name,
+		email,
+		ccode,
+		mobile,
+		username,
+		password,
+		branch_id,
+		logo,
+	} = req.body;
 	Merchant.findOne(
 		{
 			username: jwtusername,
@@ -446,44 +462,60 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 
 				data.save((err) => {
 					if (err) {
-						console.log(err)
+						console.log(err);
 						return res.json({
 							status: 0,
 							message: "User ID / Email / Mobile already used",
-							err: err
+							err: err,
 						});
 					} else {
-					let content =
-						"<p>Your have been added as a Merchant Staff in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-						config.mainIP +
-						"/merchant/cashier/" + name + "'>http://" +
-						config.mainIP +
-						"/merchant/cashier/" + name + "</a></p><p><p>Your username: " +
-						username +
-						"</p><p>Your password: " +
-						password +
-						"</p>";
-					sendMail(content, "Merchant Staff Account Created", email);
-					let content2 =
-						"Your have been added as Merchant Staff in E-Wallet application Login URL: http://" +
-						config.mainIP +
-						"/merchant/cashier/" + name + " Your username: " +
-						username +
-						" Your password: " +
-						password;
-					sendSMS(content2, mobile);
-					return res.status(200).json({
-						status: 1,
-						message: "Merchant staff added successfully"
-					});
-				}
+						let content =
+							"<p>Your have been added as a Merchant Staff in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+							config.mainIP +
+							"/merchant/cashier/" +
+							name +
+							"'>http://" +
+							config.mainIP +
+							"/merchant/cashier/" +
+							name +
+							"</a></p><p><p>Your username: " +
+							username +
+							"</p><p>Your password: " +
+							password +
+							"</p>";
+						sendMail(content, "Merchant Staff Account Created", email);
+						let content2 =
+							"Your have been added as Merchant Staff in E-Wallet application Login URL: http://" +
+							config.mainIP +
+							"/merchant/cashier/" +
+							name +
+							" Your username: " +
+							username +
+							" Your password: " +
+							password;
+						sendSMS(content2, mobile);
+						return res.status(200).json({
+							status: 1,
+							message: "Merchant staff added successfully",
+						});
+					}
 				});
 			}
 		}
 	);
 });
 router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
-	const { name, email, ccode, mobile, username, password, branch_id, logo, staff_id } = req.body;
+	const {
+		name,
+		email,
+		ccode,
+		mobile,
+		username,
+		password,
+		branch_id,
+		logo,
+		staff_id,
+	} = req.body;
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -500,7 +532,7 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 				MerchantStaff.findOneAndUpdate(
 					{
 						_id: staff_id,
-						merchant_id: merchant._id
+						merchant_id: merchant._id,
 					},
 					{
 						name: name,
@@ -551,7 +583,9 @@ router.get("/merchant/listStaff", jwtTokenAuth, (req, res) => {
 					message: "Unauthorized",
 				});
 			} else {
-				MerchantStaff.find({ merchant_id: merchant._id},"-password",
+				MerchantStaff.find(
+					{ merchant_id: merchant._id },
+					"-password",
 					(err, staffs) => {
 						if (err) {
 							res.status(200).json({
@@ -586,10 +620,12 @@ router.post("/merchant/blockStaff", jwtTokenAuth, (req, res) => {
 					message: "Unauthorized",
 				});
 			} else {
-				MerchantStaff.findOneAndUpdate({_id: staff_id, merchant_id: merchant._id},
-					{ $set: {
-						status: 2
-					}
+				MerchantStaff.findOneAndUpdate(
+					{ _id: staff_id, merchant_id: merchant._id },
+					{
+						$set: {
+							status: 2,
+						},
 					},
 					(err, staff) => {
 						if (err) {
@@ -598,12 +634,12 @@ router.post("/merchant/blockStaff", jwtTokenAuth, (req, res) => {
 								status: 0,
 								message: "Internal Server Error",
 							});
-						}else if(staff == null){
+						} else if (staff == null) {
 							res.status(200).json({
 								status: 0,
 								message: "Staff not found",
 							});
-						}else {
+						} else {
 							res.status(200).json({
 								status: 1,
 								data: "blocked staff",
@@ -631,9 +667,10 @@ router.post("/merchant/unblockStaff", jwtTokenAuth, (req, res) => {
 					message: "Unauthorized",
 				});
 			} else {
-				MerchantStaff.findOneAndUpdate({_id: staff_id, merchant_id: merchant._id, status: 2},
+				MerchantStaff.findOneAndUpdate(
+					{ _id: staff_id, merchant_id: merchant._id, status: 2 },
 					{
-						status: 1
+						status: 1,
 					},
 					(err, staff) => {
 						if (err) {
@@ -642,12 +679,12 @@ router.post("/merchant/unblockStaff", jwtTokenAuth, (req, res) => {
 								status: 0,
 								message: "Internal Server Error",
 							});
-						}else if(staff == null){
+						} else if (staff == null) {
 							res.status(200).json({
 								status: 0,
 								message: "Staff not found",
 							});
-						}else {
+						} else {
 							res.status(200).json({
 								status: 1,
 								data: "unblocked staff",
@@ -676,19 +713,19 @@ router.post("/merchant/blockBranch", jwtTokenAuth, (req, res) => {
 					message: "Internal server error",
 				});
 			} else {
-				MerchantBranch.findOneAndUpdate({_id: branch_id, merchant_id: merchant._id},
-					{ 
-						status: 2
-					
+				MerchantBranch.findOneAndUpdate(
+					{ _id: branch_id, merchant_id: merchant._id },
+					{
+						status: 2,
 					},
 					(err, branch) => {
 						if (err) {
-							console.log(err)
+							console.log(err);
 							res.status(200).json({
 								status: 0,
 								message: "Internal server error",
 							});
-						}else if(branch == null){
+						} else if (branch == null) {
 							res.status(200).json({
 								status: 0,
 								message: "Branch not found",
@@ -722,19 +759,19 @@ router.post("/merchant/unblockBranch", jwtTokenAuth, (req, res) => {
 					message: "Internal server error",
 				});
 			} else {
-				MerchantBranch.findOneAndUpdate({_id: branch_id, merchant_id: merchant._id, status: 2},
-					{ 
-						status: 1
-					
+				MerchantBranch.findOneAndUpdate(
+					{ _id: branch_id, merchant_id: merchant._id, status: 2 },
+					{
+						status: 1,
 					},
 					(err, branch) => {
 						if (err) {
-							console.log(err)
+							console.log(err);
 							res.status(200).json({
 								status: 0,
 								message: "Internal server error",
 							});
-						}else if(branch == null){
+						} else if (branch == null) {
 							res.status(200).json({
 								status: 0,
 								message: "Branch not found/ not blocked",
@@ -806,69 +843,84 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 				data.working_to = working_to;
 				data.status = 0;
 
-				Zone.count({_id: zone_id},(err, count) => {
+				Zone.countDocuments({ _id: zone_id }, (err, count) => {
 					if (err) {
 						console.log(err);
 						res.status(200).json({
 							status: 0,
-							message: "Any of the fields among name, code, username, mobile and email are already used by another branch",
-							err: err
+							message:
+								"Internal server error",
+							err: err,
 						});
-					}
-					else if(count == 1) {
-				
-				data.save((err, branch) => {
-					if (err) {
-						console.log(err);
-						res.status(200).json({
-							status: 0,
-							message: "Any of the fields among name, code, username, mobile and email are already used by another branch",
-							err: err
+					} else if (count == 1) {
+						data.save((err, branch) => {
+							if (err) {
+								console.log(err);
+								res.status(200).json({
+									status: 0,
+									message:
+										"Any of the fields among name, code, username, mobile and email are already used by another branch",
+									err: err,
+								});
+							} else {
+								Zone.updateOne(
+									{ _id: zone_id },
+									{ $inc: { branches_count: 1 } },
+									function (err, zone) {
+										if (err || zone == null) {
+											console.log(err);
+											res.status(200).json({
+												status: 0,
+												message: "Internal server error",
+												err: err,
+											});
+										} else {
+											let content =
+												"<p>You are added as a branch for merchant " +
+												merchant.name +
+												" in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+												config.mainIP +
+												"/merchant/branch/" +
+												name +
+												"'>http://" +
+												config.mainIP +
+												"/merchant/branch/" +
+												name +
+												"</a></p><p><p>Your username: " +
+												username +
+												"</p><p>Your password: " +
+												data.password +
+												"</p>";
+											sendMail(content, "Merchant Branch Created", email);
+											let content2 =
+												"You are added as a branch for merchant " +
+												merchant.name +
+												" in E-Wallet application Login URL: http://" +
+												config.mainIP +
+												"/merchant/branch/" +
+												name +
+												" Your username: " +
+												username +
+												" Your password: " +
+												data.password;
+											sendSMS(content2, mobile);
+											res.status(200).json({
+												status: 1,
+												message: "Branch Created",
+												branch: branch,
+											});
+										}
+									}
+								);
+							}
 						});
 					} else {
-						let content =
-							"<p>You are added as a branch for merchant " +
-							merchant.name +
-							" in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-							config.mainIP +
-							"/merchant/branch/" +
-							name +
-							"'>http://" +
-							config.mainIP +
-							"/merchant/branch/" +
-							name +
-							"</a></p><p><p>Your username: " +
-							username +
-							"</p><p>Your password: " +
-							data.password +
-							"</p>";
-						sendMail(content, "Merchant Branch Created", email);
-						let content2 =
-							"You are added as a branch for merchant " +
-							merchant.name +
-							" in E-Wallet application Login URL: http://" +
-							config.mainIP +
-							"/merchant/branch/" +
-							name +
-							" Your username: " +
-							username +
-							" Your password: " +
-							data.password;
-						sendSMS(content2, mobile);
 						res.status(200).json({
-							status: 1,
-							message: "Branch Created",
-							branch: branch
+							status: 0,
+							message: "Zone do not exist.",
 						});
 					}
 				});
-			} else {
-				res.status(200).json({
-					status: 0,
-					message: "Zone do not exist.",
-				});
-			}
-			})
 			}
 		}
 	);
@@ -908,7 +960,7 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 				});
 			} else {
 				MerchantBranch.findOneAndUpdate(
-					{ _id:branch_id, merchant_id: merchant._id },
+					{ _id: branch_id, merchant_id: merchant._id },
 					{
 						name: name,
 						username: username,
@@ -961,19 +1013,23 @@ router.get("/merchant/listBranches", jwtTokenAuth, function (req, res) {
 					message: "Unauthorized",
 				});
 			} else {
-				MerchantBranch.find({ merchant_id: merchant._id }, "-password", function (err, branch) {
-					if (err) {
-						res.status(200).json({
-							status: 0,
-							message: err,
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							branches: branch,
-						});
+				MerchantBranch.find(
+					{ merchant_id: merchant._id },
+					"-password",
+					function (err, branch) {
+						if (err) {
+							res.status(200).json({
+								status: 0,
+								message: err,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								branches: branch,
+							});
+						}
 					}
-				});
+				);
 			}
 		}
 	);

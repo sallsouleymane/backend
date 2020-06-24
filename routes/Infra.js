@@ -15,7 +15,7 @@ const {
 	rechargeNow,
 	transferThis,
 	getTransactionCount,
-	getBalance
+	getBalance,
 } = require("../services/Blockchain.js");
 
 const Infra = require("../models/Infra");
@@ -50,7 +50,7 @@ router.post("/infra/bank/listMerchants", function (req, res) {
 					message: "Unauthorized",
 				});
 			} else {
-				Merchant.find({ bank_id: bank_id}, "-password", (err, merchants) => {
+				Merchant.find({ bank_id: bank_id }, "-password", (err, merchants) => {
 					if (err) {
 						console.log(err);
 						res.status(200).json({
@@ -121,10 +121,12 @@ router.post("/infra/createMerchant", function (req, res) {
 						} else {
 							const wallet = code + "_operational@" + bank.name;
 							createWallet([wallet]).then((result) => {
-								if (result[0].status == 0) {
+								if (result != "") {
+									console.log(result);
 									res.status(200).json({
 										status: 0,
-										message: "Blockchain service is unavailabel",
+										message: "Blockchain service is unavailable",
+										result: result,
 									});
 								} else {
 									const data = new Merchant();
@@ -150,38 +152,35 @@ router.post("/infra/createMerchant", function (req, res) {
 												message: "Internal Server Error",
 											});
 										} else {
-											const wallet = code + "_operational@" + bank.name;
-											createWallet([wallet]).then((result) => {
-												let content =
-													"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-													config.mainIP +
-													"/merchant/" +
-													bank.name +
-													"'>http://" +
-													config.mainIP +
-													"/merchant/" +
-													bank.name +
-													"</a></p><p><p>Your username: " +
-													data.username +
-													"</p><p>Your password: " +
-													data.password +
-													"</p>";
-												sendMail(content, "Infra Merchant Created", email);
-												let content2 =
-													"You are added as a Merchant in E-Wallet application Login URL: http://" +
-													config.mainIP +
-													"/merchant/" +
-													bank.name +
-													" Your username: " +
-													data.username +
-													" Your password: " +
-													data.password;
-												sendSMS(content2, mobile);
-												res.status(200).json({
-													status: 1,
-													message: "Merchant created successfully",
-													blockchain_result: result,
-												});
+											let content =
+												"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+												config.mainIP +
+												"/merchant/" +
+												bank.name +
+												"'>http://" +
+												config.mainIP +
+												"/merchant/" +
+												bank.name +
+												"</a></p><p><p>Your username: " +
+												data.username +
+												"</p><p>Your password: " +
+												data.password +
+												"</p>";
+											sendMail(content, "Infra Merchant Created", email);
+											let content2 =
+												"You are added as a Merchant in E-Wallet application Login URL: http://" +
+												config.mainIP +
+												"/merchant/" +
+												bank.name +
+												" Your username: " +
+												data.username +
+												" Your password: " +
+												data.password;
+											sendSMS(content2, mobile);
+											res.status(200).json({
+												status: 1,
+												message: "Merchant created successfully",
+												blockchain_result: result,
 											});
 										}
 									});
@@ -196,7 +195,15 @@ router.post("/infra/createMerchant", function (req, res) {
 });
 
 router.post("/infra/editMerchant", function (req, res) {
-	var { token, merchant_id, name, logo, description, document_hash, email} = req.body;
+	var {
+		token,
+		merchant_id,
+		name,
+		logo,
+		description,
+		document_hash,
+		email,
+	} = req.body;
 	Infra.findOne(
 		{
 			token,
@@ -215,32 +222,35 @@ router.post("/infra/editMerchant", function (req, res) {
 					message: "Unauthorized",
 				});
 			} else {
-				Merchant.findOneAndUpdate({ _id: merchant_id, creator: 1 , infra_id: infra._id}, {
-					name: name,
-					logo: logo,
-					description: description,
-					document_hash: document_hash,
-					email: email,
-				},(err , merchant) => {
-					if (err) {
-						console.log(err);
-						res.status(200).json({
-							status: 0,
-							message: "Email already exist.",
-						});
+				Merchant.findOneAndUpdate(
+					{ _id: merchant_id, creator: 1, infra_id: infra._id },
+					{
+						name: name,
+						logo: logo,
+						description: description,
+						document_hash: document_hash,
+						email: email,
+					},
+					(err, merchant) => {
+						if (err) {
+							console.log(err);
+							res.status(200).json({
+								status: 0,
+								message: "Email already exist.",
+							});
+						} else if (merchant == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Merchant not found.",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Merchant edited successfully",
+							});
+						}
 					}
-					else if (merchant == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Merchant not found.",
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							message: "Merchant edited successfully",
-						});
-					}
-				})
+				);
 			}
 		}
 	);
@@ -297,7 +307,7 @@ router.post("/infraSetupUpdate", function (req, res) {
 				res.status(500).json({
 					error: "Internal error please try again",
 				});
-			} else if ( infra == null) {
+			} else if (infra == null) {
 				res.status(401).json({
 					error: "Incorrect username or password",
 				});
@@ -310,27 +320,27 @@ router.post("/infraSetupUpdate", function (req, res) {
 	);
 });
 
-router.post("/getBanks", function(req, res) {
+router.post("/getBanks", function (req, res) {
 	const { token } = req.body;
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
-				Bank.find({}, function(err, bank) {
+				Bank.find({}, function (err, bank) {
 					if (err) {
 						res.status(404).json({
-							error: err
+							error: err,
 						});
 					} else {
 						res.status(200).json({
-							banks: bank
+							banks: bank,
 						});
 					}
 				});
@@ -339,7 +349,7 @@ router.post("/getBanks", function(req, res) {
 	);
 });
 
-router.post("/setupUpdate", function(req, res) {
+router.post("/setupUpdate", function (req, res) {
 	let data = new Infra();
 	const { username, password, email, mobile, ccode } = req.body;
 
@@ -352,10 +362,10 @@ router.post("/setupUpdate", function(req, res) {
 	data.ccode = ccode;
 	data.isAdmin = true;
 
-	data.save(err => {
+	data.save((err) => {
 		if (err)
 			return res.json({
-				error: err.toString()
+				error: err.toString(),
 			});
 		let content =
 			"<p>Your Infra account is activated in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
@@ -377,20 +387,20 @@ router.post("/setupUpdate", function(req, res) {
 			data.password;
 		sendSMS(content2, mobile);
 		res.status(200).json({
-			success: true
+			success: true,
 		});
 	});
 });
 
-router.get("/checkInfra", function(req, res) {
-	Infra.countDocuments({}, function(err, c) {
+router.get("/checkInfra", function (req, res) {
+	Infra.countDocuments({}, function (err, c) {
 		if (err || c == null) {
 			res.status(401).json({
-				error: "Unauthorized"
+				error: "Unauthorized",
 			});
 		} else {
 			res.status(200).json({
-				infras: c
+				infras: c,
 			});
 		}
 	});
@@ -412,34 +422,34 @@ router.post("/addBank", (req, res) => {
 		logo,
 		contract,
 		otp_id,
-		otp
+		otp,
 	} = req.body;
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				// const user_id = user._id;
 				OTP.findOne(
 					{
 						_id: otp_id,
-						otp: otp
+						otp: otp,
 					},
-					function(err, otpd) {
+					function (err, otpd) {
 						if (err) {
 							res.status(401).json({
-								error: err
+								error: err,
 							});
 						} else {
 							if (!otpd) {
 								res.status(401).json({
-									error: "OTP Missmatch"
+									error: "OTP Missmatch",
 								});
 							} else {
 								if (otpd.otp === otp) {
@@ -451,7 +461,7 @@ router.post("/addBank", (req, res) => {
 										email === ""
 									) {
 										return res.status(402).json({
-											error: "Please provide valid inputs"
+											error: "Please provide valid inputs",
 										});
 									}
 
@@ -473,13 +483,13 @@ router.post("/addBank", (req, res) => {
 									data.save((err, d) => {
 										if (err)
 											return res.json({
-												error: "Duplicate entry!"
+												error: "Duplicate entry!",
 											});
 
 										let data2 = new Document();
 										data2.bank_id = d._id;
 										data2.contract = contract;
-										data2.save(err => {});
+										data2.save((err) => {});
 
 										let content =
 											"<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
@@ -505,7 +515,7 @@ router.post("/addBank", (req, res) => {
 									});
 								} else {
 									res.status(200).json({
-										error: "OTP Missmatch"
+										error: "OTP Missmatch",
 									});
 								}
 							}
@@ -534,30 +544,30 @@ router.post("/editBank", (req, res) => {
 		logo,
 		contract,
 		otp_id,
-		otp
+		otp,
 	} = req.body;
 
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				// const user_id = user._id;
 				OTP.findOne(
 					{
 						_id: otp_id,
-						otp: otp
+						otp: otp,
 					},
-					function(err, otpd) {
+					function (err, otpd) {
 						if (err || !otpd) {
 							res.status(401).json({
-								error: err
+								error: err,
 							});
 						} else {
 							if (otpd.otp === otp) {
@@ -569,7 +579,7 @@ router.post("/editBank", (req, res) => {
 									email === ""
 								) {
 									return res.status(402).json({
-										error: "Please provide valid inputs"
+										error: "Please provide valid inputs",
 									});
 								}
 
@@ -600,24 +610,24 @@ router.post("/editBank", (req, res) => {
 										mobile: mobile,
 										email: email,
 										logo: logo,
-										contract: contract
+										contract: contract,
 									},
-									err => {
+									(err) => {
 										if (err)
 											return res.status(400).json({
-												error: err
+												error: err,
 											});
 
 										let data2 = new Document();
 										data2.bank_id = bank_id;
 										data2.contract = contract;
-										data2.save(err => {});
+										data2.save((err) => {});
 										return res.status(200).json(data);
 									}
 								);
 							} else {
 								res.status(200).json({
-									error: "OTP Missmatch"
+									error: "OTP Missmatch",
 								});
 							}
 						}
@@ -675,35 +685,35 @@ router.post("/getInfraHistory", function (req, res) {
 	);
 });
 
-router.get("/getInfraOperationalBalance", function(req, res) {
+router.get("/getInfraOperationalBalance", function (req, res) {
 	const { bank, token } = req.query;
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(e, b) {
+		function (e, b) {
 			if (e || b == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				Bank.findOne(
 					{
-						_id: bank
+						_id: bank,
 					},
-					function(err, ba) {
+					function (err, ba) {
 						if (err || ba == null) {
 							res.status(404).json({
-								error: "Not found"
+								error: "Not found",
 							});
 						} else {
 							const wallet_id = "infra_operational@" + ba.name;
 
-							getBalance(wallet_id).then(function(result) {
+							getBalance(wallet_id).then(function (result) {
 								res.status(200).json({
 									status: "success",
-									balance: result
+									balance: result,
 								});
 							});
 						}
@@ -714,35 +724,35 @@ router.get("/getInfraOperationalBalance", function(req, res) {
 	);
 });
 
-router.get("/getInfraMasterBalance", function(req, res) {
+router.get("/getInfraMasterBalance", function (req, res) {
 	const { bank, token } = req.query;
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(e, b) {
+		function (e, b) {
 			if (e || b == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				Bank.findOne(
 					{
-						_id: bank
+						_id: bank,
 					},
-					function(err, ba) {
+					function (err, ba) {
 						if (err) {
 							res.status(401).json({
-								error: "Unauthorized"
+								error: "Unauthorized",
 							});
 						} else {
 							const wallet_id = "infra_master@" + ba.name;
 
-							getBalance(wallet_id).then(function(result) {
+							getBalance(wallet_id).then(function (result) {
 								res.status(200).json({
 									status: "success",
-									balance: result
+									balance: result,
 								});
 							});
 						}
@@ -753,37 +763,37 @@ router.get("/getInfraMasterBalance", function(req, res) {
 	);
 });
 
-router.post("/getPermission", function(req, res) {
+router.post("/getPermission", function (req, res) {
 	const { token } = req.body;
 
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err) {
 				res.status(500).json({
-					error: "Internal error please try again"
+					error: "Internal error please try again",
 				});
 			} else if (user == null) {
 				res.status(401).json({
-					error: "Incorrect username or password"
+					error: "Incorrect username or password",
 				});
 			} else {
 				if (user.profile_id && user.profile_id != "") {
 					Profile.findOne(
 						{
-							_id: user.profile_id
+							_id: user.profile_id,
 						},
-						function(err, profile) {
+						function (err, profile) {
 							var p = JSON.parse(profile.permissions);
 							res.status(200).json({
 								token: token,
 								permissions: p,
 								name: user.name,
 								isAdmin: user.isAdmin,
-								initial_setup: user.initial_setup
+								initial_setup: user.initial_setup,
 							});
 						}
 					);
@@ -794,7 +804,7 @@ router.post("/getPermission", function(req, res) {
 							permissions: "all",
 							name: user.name,
 							isAdmin: user.isAdmin,
-							initial_setup: user.initial_setup
+							initial_setup: user.initial_setup,
 						});
 					} else {
 						res.status(200).json({
@@ -802,7 +812,7 @@ router.post("/getPermission", function(req, res) {
 							permissions: "",
 							name: user.name,
 							isAdmin: user.isAdmin,
-							initial_setup: user.initial_setup
+							initial_setup: user.initial_setup,
 						});
 					}
 				}
@@ -813,16 +823,23 @@ router.post("/getPermission", function(req, res) {
 
 router.post("/addProfile", (req, res) => {
 	let data = new Profile();
-	const { pro_name, pro_description, create_bank, edit_bank, create_fee, token } = req.body;
+	const {
+		pro_name,
+		pro_description,
+		create_bank,
+		edit_bank,
+		create_fee,
+		token,
+	} = req.body;
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				const user_id = user._id;
@@ -832,19 +849,19 @@ router.post("/addProfile", (req, res) => {
 				var c = {
 					create_bank,
 					edit_bank,
-					create_fee
+					create_fee,
 				};
 				data.permissions = JSON.stringify(c);
 				data.user_id = user_id;
 
-				data.save(err => {
+				data.save((err) => {
 					if (err)
 						return res.json({
-							error: err.toString()
+							error: err.toString(),
 						});
 
 					return res.status(200).json({
-						success: "True"
+						success: "True",
 					});
 				});
 			}
@@ -861,42 +878,42 @@ router.post("/editProfile", (req, res) => {
 		edit_bank,
 		create_fee,
 		profile_id,
-		token
+		token,
 	} = req.body;
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				var _id = profile_id;
 				var c = {
 					create_bank,
 					edit_bank,
-					create_fee
+					create_fee,
 				};
 				let c2 = JSON.stringify(c);
 				Profile.findOneAndUpdate(
 					{
-						_id: _id
+						_id: _id,
 					},
 					{
 						name: pro_name,
 						description: pro_description,
-						permissions: c2
+						permissions: c2,
 					},
 					(err, d) => {
 						if (err)
 							return res.status(400).json({
-								error: err
+								error: err,
 							});
 						return res.status(200).json({
-							success: true
+							success: true,
 						});
 					}
 				);
@@ -907,16 +924,25 @@ router.post("/editProfile", (req, res) => {
 
 router.post("/addInfraUser", (req, res) => {
 	let data = new Infra();
-	const { name, email, mobile, username, password, profile_id, logo, token } = req.body;
+	const {
+		name,
+		email,
+		mobile,
+		username,
+		password,
+		profile_id,
+		logo,
+		token,
+	} = req.body;
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				data.name = name;
@@ -926,10 +952,10 @@ router.post("/addInfraUser", (req, res) => {
 				data.password = password;
 				data.profile_id = profile_id;
 				data.logo = logo;
-				data.save(err => {
+				data.save((err) => {
 					if (err)
 						return res.json({
-							error: "Email / Username/ Mobile already exist!"
+							error: "Email / Username/ Mobile already exist!",
 						});
 					let content =
 						"<p>Your have been added as Infra in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
@@ -951,7 +977,7 @@ router.post("/addInfraUser", (req, res) => {
 						password;
 					sendSMS(content2, mobile);
 					return res.status(200).json({
-						success: "True"
+						success: "True",
 					});
 				});
 			}
@@ -960,22 +986,32 @@ router.post("/addInfraUser", (req, res) => {
 });
 
 router.post("/editInfraUser", (req, res) => {
-	const { name, email, mobile, username, password, profile_id, logo, user_id, token } = req.body;
+	const {
+		name,
+		email,
+		mobile,
+		username,
+		password,
+		profile_id,
+		logo,
+		user_id,
+		token,
+	} = req.body;
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				var _id = user_id;
 				Infra.findOneAndUpdate(
 					{
-						_id: _id
+						_id: _id,
 					},
 					{
 						name: name,
@@ -984,15 +1020,15 @@ router.post("/editInfraUser", (req, res) => {
 						username: username,
 						password: password,
 						profile_id: profile_id,
-						logo: logo
+						logo: logo,
 					},
 					(err, d) => {
 						if (err)
 							return res.status(400).json({
-								error: err
+								error: err,
 							});
 						return res.status(200).json({
-							success: true
+							success: true,
 						});
 					}
 				);
@@ -1001,32 +1037,32 @@ router.post("/editInfraUser", (req, res) => {
 	);
 });
 
-router.post("/getBank", function(req, res) {
+router.post("/getBank", function (req, res) {
 	//res.send("hi");
 	const { token, bank_id } = req.body;
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				Bank.findOne(
 					{
-						_id: bank_id
+						_id: bank_id,
 					},
-					function(err, bank) {
+					function (err, bank) {
 						if (err) {
 							res.status(404).json({
-								error: err
+								error: err,
 							});
 						} else {
 							res.status(200).json({
-								banks: bank
+								banks: bank,
 							});
 						}
 					}
@@ -1036,74 +1072,74 @@ router.post("/getBank", function(req, res) {
 	);
 });
 
-router.post("/getRules", function(req, res) {
+router.post("/getRules", function (req, res) {
 	//res.send("hi");
 	const { token, bank_id } = req.body;
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err) {
 				console.log(err);
 				res.status(500).json({
 					error: "Internal Server Error",
 				});
 			}
-			if ( user == null) {
+			if (user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				Fee.find(
 					{
 						bank_id,
-						status: {$in: [1,2]}
+						status: { $in: [1, 2] },
 					},
-					function(err, rules) {
+					function (err, rules) {
 						if (err) {
 							res.status(404).json({
-								error: err
+								error: err,
 							});
 						} else {
 							res.status(200).json({
-								rules: rules
+								rules: rules,
 							});
 						}
 					}
 				);
 			}
-		});
+		}
+	);
 });
 
-router.post("/bankStatus", function(req, res) {
-	
+router.post("/bankStatus", function (req, res) {
 	const { token, status, bank_id } = req.body;
 
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				Bank.findByIdAndUpdate(
 					bank_id,
 					{
-						status: status
+						status: status,
 					},
-					err => {
+					(err) => {
 						if (err)
 							return res.status(400).json({
-								error: err
+								error: err,
 							});
 						res.status(200).json({
-							status: true
+							status: true,
 						});
 					}
 				);
@@ -1112,33 +1148,33 @@ router.post("/bankStatus", function(req, res) {
 	);
 });
 
-router.post("/getRoles", function(req, res) {
+router.post("/getRoles", function (req, res) {
 	//res.send("hi");
 	const { token } = req.body;
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				const user_id = user._id;
 				Profile.find(
 					{
-						user_id
+						user_id,
 					},
-					function(err, bank) {
+					function (err, bank) {
 						if (err) {
 							res.status(404).json({
-								error: err
+								error: err,
 							});
 						} else {
 							res.status(200).json({
-								roles: bank
+								roles: bank,
 							});
 						}
 					}
@@ -1148,29 +1184,29 @@ router.post("/getRoles", function(req, res) {
 	);
 });
 
-router.post("/getInfraUsers", function(req, res) {
+router.post("/getInfraUsers", function (req, res) {
 	//res.send("hi");
 	const { token } = req.body;
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				const user_id = user._id;
-				Infra.find({}, function(err, bank) {
+				Infra.find({}, function (err, bank) {
 					if (err) {
 						res.status(404).json({
-							error: err
+							error: err,
 						});
 					} else {
 						res.status(200).json({
-							users: bank
+							users: bank,
 						});
 					}
 				});
@@ -1179,39 +1215,39 @@ router.post("/getInfraUsers", function(req, res) {
 	);
 });
 
-router.post("/getProfile", function(req, res) {
+router.post("/getProfile", function (req, res) {
 	//res.send("hi");
 	const { token } = req.body;
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				res.status(200).json({
-					users: user
+					users: user,
 				});
 			}
 		}
 	);
 });
 
-router.post("/editInfraProfile", function(req, res) {
+router.post("/editInfraProfile", function (req, res) {
 	const { name, username, email, mobile, password, ccode, token } = req.body;
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				let upd = {};
@@ -1221,7 +1257,7 @@ router.post("/editInfraProfile", function(req, res) {
 						email: email,
 						mobile: mobile,
 						username: username,
-						ccode: ccode
+						ccode: ccode,
 					};
 				} else {
 					upd = {
@@ -1230,17 +1266,17 @@ router.post("/editInfraProfile", function(req, res) {
 						mobile: mobile,
 						password: password,
 						username: username,
-						ccode: ccode
+						ccode: ccode,
 					};
 				}
 
-				Infra.findByIdAndUpdate(user._id, upd, err => {
+				Infra.findByIdAndUpdate(user._id, upd, (err) => {
 					if (err)
 						return res.status(400).json({
-							error: err
+							error: err,
 						});
 					res.status(200).json({
-						success: true
+						success: true,
 					});
 				});
 			}
@@ -1248,18 +1284,18 @@ router.post("/editInfraProfile", function(req, res) {
 	);
 });
 
-router.post("/generateOTP", function(req, res) {
+router.post("/generateOTP", function (req, res) {
 	let data = new OTP();
 	const { token, username, page, name, email, mobile, bcode } = req.body;
 	Infra.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, user) {
+		function (err, user) {
 			if (err || user == null) {
 				res.status(401).json({
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				data.user_id = user._id;
@@ -1268,14 +1304,14 @@ router.post("/generateOTP", function(req, res) {
 				if (page == "editBank") {
 					Bank.findOne(
 						{
-							username
+							username,
 						},
-						function(err, bank) {
+						function (err, bank) {
 							data.mobile = bank.mobile;
 							data.save((err, ot) => {
 								if (err)
 									return res.json({
-										error: err
+										error: err,
 									});
 
 								let content = "Your OTP to edit Bank is " + data.otp;
@@ -1283,22 +1319,29 @@ router.post("/generateOTP", function(req, res) {
 								sendMail(content, "OTP", bank.email);
 
 								res.status(200).json({
-									id: ot._id
+									id: ot._id,
 								});
 							});
 						}
 					);
 				} else {
 					Bank.find(
-						{ $or: [{ name: name }, { email: email }, { mobile: mobile }, { bcode: bcode }] },
-						function(err, bank) {
+						{
+							$or: [
+								{ name: name },
+								{ email: email },
+								{ mobile: mobile },
+								{ bcode: bcode },
+							],
+						},
+						function (err, bank) {
 							if (bank == null || bank == undefined || bank.length == 0) {
 								data.mobile = user.mobile;
 
 								data.save((err, ot) => {
 									if (err)
 										return res.json({
-											error: err
+											error: err,
 										});
 
 									let content = "Your OTP to add Bank is " + data.otp;
@@ -1306,12 +1349,12 @@ router.post("/generateOTP", function(req, res) {
 									sendMail(content, "OTP", user.email);
 
 									res.status(200).json({
-										id: ot._id
+										id: ot._id,
 									});
 								});
 							} else {
 								res.status(400).json({
-									error: "Duplicate Entry"
+									error: "Duplicate Entry",
 								});
 							}
 						}
@@ -1322,19 +1365,19 @@ router.post("/generateOTP", function(req, res) {
 	);
 });
 
-router.post("/transferMoney", function(req, res) {
+router.post("/transferMoney", function (req, res) {
 	const { from, to, note, amount, auth, token } = req.body;
 
 	if (auth == "infra") {
 		Infra.findOne(
 			{
 				token,
-				status: 1
+				status: 1,
 			},
-			function(err, f) {
+			function (err, f) {
 				if (err || f == null) {
 					res.status(401).json({
-						error: "Unauthorized"
+						error: "Unauthorized",
 					});
 				} else {
 					const infra_email = f.email;
@@ -1344,9 +1387,9 @@ router.post("/transferMoney", function(req, res) {
 					const bank = c[1];
 					Bank.findOne(
 						{
-							name: bank
+							name: bank,
 						},
-						function(err, b) {
+						function (err, b) {
 							//var oamount = amount - fee;
 							var oamount = amount;
 
@@ -1360,11 +1403,10 @@ router.post("/transferMoney", function(req, res) {
 							data.mobile1 = infra_mobile;
 							data.mobile2 = infra_mobile;
 
-							transferThis(data).then(function(result) {});
+							transferThis(data).then(function (result) {});
 							res.status(200).json({
-								status: "success"
+								status: "success",
 							});
-
 						}
 					);
 				}
@@ -1372,37 +1414,37 @@ router.post("/transferMoney", function(req, res) {
 		);
 	} else {
 		res.status(200).json({
-			status: null
+			status: null,
 		});
 	}
 });
 
-router.post("/checkFee", function(req, res) {
+router.post("/checkFee", function (req, res) {
 	const { from, to, amount, auth, token } = req.body;
 
 	if (auth == "infra") {
 		Infra.findOne(
 			{
 				token,
-				status: 1
+				status: 1,
 			},
-			function(err, f) {
+			function (err, f) {
 				if (err || f == null) {
 					res.status(401).json({
-						error: "Unauthorized"
+						error: "Unauthorized",
 					});
 				} else {
 					var temp = (amount * mainFee) / 100;
 					var fee = temp;
 					res.status(200).json({
-						fee: fee
+						fee: fee,
 					});
 				}
 			}
 		);
 	} else {
 		res.status(200).json({
-			fee: null
+			fee: null,
 		});
 	}
 });
@@ -1426,7 +1468,7 @@ router.post("/approveFee", function (req, res) {
 		Fee.findOne(
 			{
 				_id: id,
-				status: 2
+				status: 2,
 			},
 			{
 				$set: { status: 1 },
@@ -1435,17 +1477,17 @@ router.post("/approveFee", function (req, res) {
 				if (err) {
 					console.log(err);
 					return res.status(500).json({
-						error: "Internal Server Error"
+						error: "Internal Server Error",
 					});
 				}
 				if (fee == null) {
 					return res.status(403).json({
-						error: "Infra share not updated"
+						error: "Infra share not updated",
 					});
 				}
 				res.status(200).json({
 					status: 1,
-					message: "Updated successfully"
+					message: "Updated successfully",
 				});
 			}
 		);

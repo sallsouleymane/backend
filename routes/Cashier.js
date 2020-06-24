@@ -294,8 +294,15 @@ router.post("/cashier/activateUser", function (req, res) {
 						} else {
 							let wallet_id = mobile + "@" + user.bank;
 							let result = await blockchain.createWallet([wallet_id]);
+							if (result != "") {
+								console.log(result);
+								res.status(200).json({
+									status: 0,
+									message: "Blockchain service is unavailable",
+									result: result
+								});
+							} else {
 
-							console.log(result);
 							let content =
 								"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
 								config.mainIP +
@@ -322,6 +329,7 @@ router.post("/cashier/activateUser", function (req, res) {
 								status: 1,
 								message: result.toString(),
 							});
+						}
 						}
 					}
 				);
