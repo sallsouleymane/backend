@@ -847,7 +847,7 @@ router.post("/infra/commission/approve", function (req, res) {
 								comm.rule_edit_status == 0
 							) {
 								console.log("Condition 3");
-								MerchantFee.updateOne(
+								Commission.updateOne(
 									{
 										_id: commission_id,
 									},
