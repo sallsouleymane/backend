@@ -367,7 +367,7 @@ module.exports.initiateTransfer = async function (transaction, tx_id = "") {
 		let tx = new FailedTX();
 		tx.wallet_id = transaction.from.toString();
 		tx.transaction = transaction;
-		tx.user_id = user_id;
+		// tx.user_id = user_id;
 		tx.message = res.message;
 		tx.status = 0;
 		tx.save((err) => {

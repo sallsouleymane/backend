@@ -10,7 +10,11 @@ const getTypeClass = require("./utils/getTypeClass");
 const makeotp = require("./utils/makeotp");
 
 //services
-const { createWallet, getStatement, getBalance } = require("../services/Blockchain.js");
+const {
+	createWallet,
+	getStatement,
+	getBalance,
+} = require("../services/Blockchain.js");
 
 const Bank = require("../models/Bank");
 const OTP = require("../models/OTP");
@@ -42,7 +46,7 @@ router.post("/bank/listMerchants", function (req, res) {
 					message: "Unauthorized",
 				});
 			} else {
-				Merchant.find({ bank_id: bank._id}, "-password", (err, merchants) => {
+				Merchant.find({ bank_id: bank._id }, "-password", (err, merchants) => {
 					if (err) {
 						console.log(err);
 						res.status(200).json({
@@ -168,7 +172,15 @@ router.post("/bank/createMerchant", function (req, res) {
 });
 
 router.post("/bank/editMerchant", function (req, res) {
-	var { token, merchant_id, name, logo, description, document_hash, email} = req.body;
+	var {
+		token,
+		merchant_id,
+		name,
+		logo,
+		description,
+		document_hash,
+		email,
+	} = req.body;
 	Bank.findOne(
 		{
 			token,
@@ -187,32 +199,35 @@ router.post("/bank/editMerchant", function (req, res) {
 					message: "Unauthorized",
 				});
 			} else {
-				Merchant.findOneAndUpdate({ _id: merchant_id , creator: 0, bank_id: bank._id}, {
-					name: name,
-					logo: logo,
-					description: description,
-					document_hash: document_hash,
-					email: email,
-				},(err , merchant) => {
-					if (err) {
-						console.log(err);
-						res.status(200).json({
-							status: 0,
-							message: "Email already exist.",
-						});
+				Merchant.findOneAndUpdate(
+					{ _id: merchant_id, creator: 0, bank_id: bank._id },
+					{
+						name: name,
+						logo: logo,
+						description: description,
+						document_hash: document_hash,
+						email: email,
+					},
+					(err, merchant) => {
+						if (err) {
+							console.log(err);
+							res.status(200).json({
+								status: 0,
+								message: "Email already exist.",
+							});
+						} else if (merchant == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Merchant not found.",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Merchant edited successfully",
+							});
+						}
 					}
-					else if (merchant == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Merchant not found.",
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							message: "Merchant edited successfully",
-						});
-					}
-				})
+				);
 			}
 		}
 	);
@@ -221,14 +236,18 @@ router.post("/bank/editMerchant", function (req, res) {
 router.post("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
 	try {
 		const { token } = req.body;
-		var result= await Bank.findOne({token: token});
-		if ( result == null ) {
-			throw { message: "Unauthorized"}
+		var result = await Bank.findOne({ token: token });
+		if (result == null) {
+			throw { message: "Unauthorized" };
 		}
 		const fee = await Fee.findById(req.params.bankFeeId);
 		if (fee == null) throw { message: "No Fee Rule found" };
 
-		res.send({ status: 1, fee: fee.revenue_sharing_rule, infra_status: fee.status});
+		res.send({
+			status: 1,
+			fee: fee.revenue_sharing_rule,
+			infra_status: fee.status,
+		});
 	} catch (err) {
 		res.status(403).send({ status: 0, message: err.message });
 	}
@@ -238,22 +257,25 @@ router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
 	try {
 		const { token, revenue_sharing_rule } = req.body;
 		const { id } = req.params;
-		var result= await Bank.findOne({token: token});
-		if ( result == null ) {
-			throw { message: "Unauthorized"}
+		var result = await Bank.findOne({ token: token });
+		if (result == null) {
+			throw { message: "Unauthorized" };
 		}
 		result = await Fee.updateOne(
 			{ _id: id },
 			{
 				$set: {
-				'revenue_sharing_rule.branch_share.claim': revenue_sharing_rule.branch_share.claim, 
-				'revenue_sharing_rule.branch_share.send': revenue_sharing_rule.branch_share.send,
-				'revenue_sharing_rule.specific_branch_share': revenue_sharing_rule.specific_branch_share
-			}
+					"revenue_sharing_rule.branch_share.claim":
+						revenue_sharing_rule.branch_share.claim,
+					"revenue_sharing_rule.branch_share.send":
+						revenue_sharing_rule.branch_share.send,
+					"revenue_sharing_rule.specific_branch_share":
+						revenue_sharing_rule.specific_branch_share,
+				},
 			}
 		);
-		if ( result == null ) {
-			throw { message: "Not Found"}
+		if (result == null) {
+			throw { message: "Not Found" };
 		}
 
 		res.send({ status: 1 });
@@ -267,44 +289,44 @@ router.post("/bank/sendShareForApproval", function (req, res) {
 	Bank.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
 		function (err, bank) {
 			if (err) {
 				console.log(err);
 				res.status(500).json({
 					status: 0,
-					error: "Internal Server Error"
+					error: "Internal Server Error",
 				});
 			} else if (bank == null) {
 				res.status(403).json({
 					status: 0,
-					error: "Unauthorized"
+					error: "Unauthorized",
 				});
 			} else {
 				Fee.findOneAndUpdate(
 					{
 						trans_type: trans_type,
-						bank_id: bank._id.toString()
+						bank_id: bank._id.toString(),
 					},
 					{
 						$set: {
 							status: 2,
-							'revenue_sharing_rule.infra_share.fixed': fixed, 
-							'revenue_sharing_rule.infra_share.percentage': percentage
-						}
+							"revenue_sharing_rule.infra_share.fixed": fixed,
+							"revenue_sharing_rule.infra_share.percentage": percentage,
+						},
 					},
 					function (err, fee) {
 						if (err) {
 							console.log(err);
 							res.status(500).json({
 								status: 0,
-								error: "Internal Server Error"
+								error: "Internal Server Error",
 							});
 						} else if (fee == null) {
 							res.status(403).json({
 								status: 0,
-								error: "Rule not found"
+								error: "Rule not found",
 							});
 						} else {
 							let content =
@@ -317,7 +339,7 @@ router.post("/bank/sendShareForApproval", function (req, res) {
 								fee.name;
 							sendSMS(content2, bank.mobile);
 							res.status(200).json({
-								status: 1
+								status: 1,
 							});
 						}
 					}
@@ -391,16 +413,14 @@ router.post("/bankActivate", function (req, res) {
 							return res.status(400).json({
 								error: err,
 							});
-						createWallet(
-							[
-								"testuser@" + bank.name,
-								"operational@" + bank.name,
-								"escrow@" + bank.name,
-								"master@" + bank.name,
-								"infra_operational@" + bank.name,
-								"infra_master@" + bank.name,
-							]
-						).then(function (result) {
+						createWallet([
+							"testuser@" + bank.name,
+							"operational@" + bank.name,
+							"escrow@" + bank.name,
+							"master@" + bank.name,
+							"infra_operational@" + bank.name,
+							"infra_master@" + bank.name,
+						]).then(function (result) {
 							res.status(200).json({
 								status: "activated",
 								walletStatus: result,
@@ -414,38 +434,42 @@ router.post("/bankActivate", function (req, res) {
 });
 
 router.post("/getBankDashStats", function (req, res) {
-	const { token } = req.body;
-	Bank.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (err, user) {
-			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized",
-				});
-			} else {
-				const user_id = user._id;
-				Branch.countDocuments(
-					{
+	try {
+		const { token } = req.body;
+		Bank.findOne(
+			{
+				token,
+				status: 1,
+			},
+			async function (err, user) {
+				if (err || user == null) {
+					res.status(401).json({
+						error: "Unauthorized",
+					});
+				} else {
+					const user_id = user._id;
+					var branchCount = await Branch.countDocuments({
 						bank_id: user_id,
-					},
-					function (err, branch) {
-						if (err) {
-							res.status(402).json({
-								error: err,
-							});
-						} else {
-							res.status(200).json({
-								totalBranches: branch,
-							});
-						}
-					}
-				);
+					});
+					var merchantCount = await Merchant.countDocuments({
+						bank_id: user_id,
+					});
+
+					res.status(200).json({
+						totalBranches: branchCount,
+						totalMerchants: merchantCount,
+					});
+				}
 			}
+		);
+	} catch (err) {
+		console.log(err);
+		var message = "Internal server error";
+		if (err.message) {
+			message = err.message;
 		}
-	);
+		res.status(200).json({ status: 0, message: message, err: err });
+	}
 });
 
 router.get("/getBankOperationalBalance", function (req, res) {
@@ -600,40 +624,41 @@ router.post("/addBranch", (req, res) => {
 						return res.json({
 							error: err.toString(),
 						});
-					createWallet([bcode + "_operational@" + bank.name, bcode + "_master@" + bank.name]).then(
-						function (result) {
-							let content =
-								"<p>Your branch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-								config.mainIP +
-								"/branch/" +
-								bankName +
-								"'>http://" +
-								config.mainIP +
-								"/branch/" +
-								bankName +
-								"</a></p><p><p>Your username: " +
-								data.username +
-								"</p><p>Your password: " +
-								data.password +
-								"</p>";
-							sendMail(content, "Bank Branch Created", email);
-							let content2 =
-								"Your branch is added in E-Wallet application Login URL: http://" +
-								config.mainIP +
-								"/branch/" +
-								bankName +
-								" Your username: " +
-								data.username +
-								" Your password: " +
-								data.password;
-							sendSMS(content2, mobile);
-							// return res.status(200).json(data);
-							res.status(200).json({
-								status: "Branch Created",
-								walletStatus: result.toString(),
-							});
-						}
-					);
+					createWallet([
+						bcode + "_operational@" + bank.name,
+						bcode + "_master@" + bank.name,
+					]).then(function (result) {
+						let content =
+							"<p>Your branch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+							config.mainIP +
+							"/branch/" +
+							bankName +
+							"'>http://" +
+							config.mainIP +
+							"/branch/" +
+							bankName +
+							"</a></p><p><p>Your username: " +
+							data.username +
+							"</p><p>Your password: " +
+							data.password +
+							"</p>";
+						sendMail(content, "Bank Branch Created", email);
+						let content2 =
+							"Your branch is added in E-Wallet application Login URL: http://" +
+							config.mainIP +
+							"/branch/" +
+							bankName +
+							" Your username: " +
+							data.username +
+							" Your password: " +
+							data.password;
+						sendSMS(content2, mobile);
+						// return res.status(200).json(data);
+						res.status(200).json({
+							status: "Branch Created",
+							walletStatus: result.toString(),
+						});
+					});
 				});
 			}
 		}
@@ -792,7 +817,17 @@ router.get("/getWalletBalance", function (req, res) {
 
 router.post("/addBankUser", (req, res) => {
 	let data = new BankUser();
-	const { name, email, ccode, mobile, username, password, branch_id, logo, token } = req.body;
+	const {
+		name,
+		email,
+		ccode,
+		mobile,
+		username,
+		password,
+		branch_id,
+		logo,
+		token,
+	} = req.body;
 	Bank.findOne(
 		{
 			token,
@@ -970,10 +1005,18 @@ router.post("/addBranch", (req, res) => {
 			} else {
 				data.name = name;
 				data.bcode = bcode;
-				if (credit_limit != "" && credit_limit != null && credit_limit != undefined) {
+				if (
+					credit_limit != "" &&
+					credit_limit != null &&
+					credit_limit != undefined
+				) {
 					data.credit_limit = credit_limit;
 				}
-				if (cash_in_hand != "" && cash_in_hand != null && cash_in_hand != undefined) {
+				if (
+					cash_in_hand != "" &&
+					cash_in_hand != null &&
+					cash_in_hand != undefined
+				) {
 					data.cash_in_hand = cash_in_hand;
 				}
 				data.username = username;
@@ -995,40 +1038,41 @@ router.post("/addBranch", (req, res) => {
 						return res.json({
 							error: err.toString(),
 						});
-					createWallet([bcode + "_operational@" + bank.name, bcode + "_master@" + bank.name]).then(
-						function (result) {
-							let content =
-								"<p>Your bracnch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-								config.mainIP +
-								"/branch/" +
-								bankName +
-								"'>http://" +
-								config.mainIP +
-								"/branch/" +
-								bankName +
-								"</a></p><p><p>Your username: " +
-								data.username +
-								"</p><p>Your password: " +
-								data.password +
-								"</p>";
-							sendMail(content, "Bank Branch Created", email);
-							let content2 =
-								"Your branch is added in E-Wallet application Login URL: http://" +
-								config.mainIP +
-								"/branch/" +
-								bankName +
-								" Your username: " +
-								data.username +
-								" Your password: " +
-								data.password;
-							sendSMS(content2, mobile);
-							// return res.status(200).json(data);
-							res.status(200).json({
-								status: "Branch Created",
-								walletStatus: result.toString(),
-							});
-						}
-					);
+					createWallet([
+						bcode + "_operational@" + bank.name,
+						bcode + "_master@" + bank.name,
+					]).then(function (result) {
+						let content =
+							"<p>Your bracnch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+							config.mainIP +
+							"/branch/" +
+							bankName +
+							"'>http://" +
+							config.mainIP +
+							"/branch/" +
+							bankName +
+							"</a></p><p><p>Your username: " +
+							data.username +
+							"</p><p>Your password: " +
+							data.password +
+							"</p>";
+						sendMail(content, "Bank Branch Created", email);
+						let content2 =
+							"Your branch is added in E-Wallet application Login URL: http://" +
+							config.mainIP +
+							"/branch/" +
+							bankName +
+							" Your username: " +
+							data.username +
+							" Your password: " +
+							data.password;
+						sendSMS(content2, mobile);
+						// return res.status(200).json(data);
+						res.status(200).json({
+							status: "Branch Created",
+							walletStatus: result.toString(),
+						});
+					});
 				});
 			}
 		}
@@ -1120,9 +1164,13 @@ router.post("/addCashier", (req, res) => {
 							}
 						);
 					} else {
-						Branch.findByIdAndUpdate(branch_id, { $inc: { total_cashiers: 1 } }, function (e, v) {
-							return res.status(200).json(data);
-						});
+						Branch.findByIdAndUpdate(
+							branch_id,
+							{ $inc: { total_cashiers: 1 } },
+							function (e, v) {
+								return res.status(200).json(data);
+							}
+						);
 					}
 				});
 			}
@@ -1200,7 +1248,7 @@ router.post("/createBankRules", (req, res) => {
 								sendSMS(content2, bank.mobile);
 								res.status(200).json({
 									status: 1,
-									message: "Rule created successfully"
+									message: "Rule created successfully",
 								});
 							});
 						} else {
@@ -1231,7 +1279,7 @@ router.post("/editBankBankRule", (req, res) => {
 					error: "Internal Server Error",
 				});
 			}
-			if ( bank == null) {
+			if (bank == null) {
 				res.status(403).json({
 					status: 0,
 					error: "Unauthorized",
@@ -1247,18 +1295,19 @@ router.post("/editBankBankRule", (req, res) => {
 					},
 					(err) => {
 						if (err) {
-						console.log(err);
-						res.status(500).json({
-							status: 0,
-							error: "Internal Server Error",
-						});
-					}
-						let content = "<p>Rule " + name + " has been updated, check it out</p>";
+							console.log(err);
+							res.status(500).json({
+								status: 0,
+								error: "Internal Server Error",
+							});
+						}
+						let content =
+							"<p>Rule " + name + " has been updated, check it out</p>";
 						sendMail(content, "Rule Updated", bank.email);
 						let content2 = "Rule " + name + " has been updated, check it out";
 						sendSMS(content2, bank.mobile);
 						res.status(200).json({
-							status: 1
+							status: 1,
 						});
 					}
 				);

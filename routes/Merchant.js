@@ -264,9 +264,13 @@ router.get("/merchant/listZones", jwtTokenAuth, (req, res) => {
 							message: "Internal server error",
 						});
 					} else {
+						var branchesCount = await MerchantBranch.countDocuments({
+							zone_id: _id,
+						});
 						res.status(200).json({
 							status: 1,
 							zones: zones,
+							branchesCount: branchesCount
 						});
 					}
 				});
@@ -806,10 +810,13 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 				data.working_to = working_to;
 				data.status = 0;
 
+				Zone.count({_id: zone_id},(err, count) => {
+					if(count == 1) {
+				
 				data.save((err, branch) => {
 					if (err) {
 						console.log(err);
-						return res.json({
+						res.status(200).json({
 							status: 0,
 							message: "Any of the fields among name, code, username, mobile and email are already used by another branch",
 							err: err
@@ -851,6 +858,13 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 						});
 					}
 				});
+			} else {
+				res.status(200).json({
+					status: 0,
+					message: "Zone do not exist.",
+				});
+			}
+			})
 			}
 		}
 	);
