@@ -11,7 +11,7 @@ const MerchantBranch = require("../models/merchant/MerchantBranch");
 const MerchantStaff = require("../models/merchant/MerchantStaff");
 const MerchantCashier = require("../models/merchant/MerchantCashier");
 const Zone = require("../models/merchant/Zone");
-const Invoice = require("../models/merchant/Invoice");
+const InvoiceGroup = require("../models/merchant/InvoiceGroup");
 const FailedTX = require("../models/FailedTXLedger");
 
 //utils
@@ -301,30 +301,75 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 					message: "Unauthorized",
 				});
 			} else {
-				data.name = name;
-				data.working_from = working_from;
-				data.working_to = working_to;
-				data.per_trans_amt = per_trans_amt;
-				data.max_trans_amt = max_trans_amt;
-				data.max_trans_count = max_trans_count;
-				data.merchant_id = merchant._id;
-				data.branch_id = branch_id;
-				data.save((err, d) => {
+				MerchantBranch.findOne({ _id: branch_id }, function (err, branch) {
 					if (err) {
 						console.log(err);
 						return res.json({
 							status: 0,
-							message: "Cashier name is already used.",
+							message: "Internal server error",
 							err: err,
 						});
+					} else if (branch == null) {
+						return res.json({
+							status: 0,
+							message: "Invalid branch",
+						});
 					} else {
-						MerchantBranch.findOneAndUpdate(
-							{ _id: branch_id },
-							{ $inc: { total_cashiers: 1 } },
-							function (e, v) {
-								return res.status(200).json({ status: 1, data: d });
+						data.name = name;
+						data.working_from = working_from;
+						data.working_to = working_to;
+						data.per_trans_amt = per_trans_amt;
+						data.max_trans_amt = max_trans_amt;
+						data.max_trans_count = max_trans_count;
+						data.merchant_id = merchant._id;
+						data.branch_id = branch_id;
+						data.save((err, cashier) => {
+							if (err) {
+								console.log(err);
+								return res.json({
+									status: 0,
+									message: "Cashier name is already used.",
+									err: err,
+								});
+							} else {
+								MerchantBranch.updateOne(
+									{ _id: branch_id },
+									{ $inc: { total_cashiers: 1 } },
+									function (err, branch) {
+										if (err || branch == null) {
+											console.log(err);
+											return res.json({
+												status: 0,
+												message: "Internal server error",
+												err: err,
+											});
+										} else {
+											let ig = new InvoiceGroup();
+											ig.code = "group-"+name;
+											ig.name = "default";
+											ig.description = "Default invoice group for merchant cashier";
+											ig.cashier_id = cashier._id;
+											ig.save((err, group) => {
+												if (err) {
+													console.log(err);
+													return res.status(200).json({
+														status: 0,
+														message: "code already used",
+														err: err,
+													});
+												} else {
+													return res.status(200).json({
+														status: 1,
+														data: cashier,
+														group: group
+													});
+												}
+											});
+										}
+									}
+								);
 							}
-						);
+						});
 					}
 				});
 			}
@@ -848,8 +893,7 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 						console.log(err);
 						res.status(200).json({
 							status: 0,
-							message:
-								"Internal server error",
+							message: "Internal server error",
 							err: err,
 						});
 					} else if (count == 1) {
