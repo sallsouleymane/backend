@@ -416,19 +416,16 @@ router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
 									});
 								} else {
 									var result = [];
-									if (invoices.length > 0) {
-										var invoicePromises = invoices.map(async (invoice) => {
+									for(const invoice of invoices) {
 											var merchant = await Merchant.findOne({
 												_id: invoice.merchant_id,
+												bank_id: bank._id,
 												status: 1,
 											});
-											if (merchant && merchant.bank_id == bank._id) {
-												return invoice;
+											if (merchant){
+												result.push(invoice);
 											}
-										});
-									
-									result = await Promise.all(invoicePromises);
-									}
+										}
 									res.status(200).json({
 										status: 1,
 										invoices: result,
