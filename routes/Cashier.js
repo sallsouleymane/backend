@@ -114,7 +114,6 @@ router.post("/cashier/createUser", function (req, res) {
 		last_name,
 		mobile,
 		email,
-		password,
 		address,
 		city,
 		state,
@@ -129,6 +128,7 @@ router.post("/cashier/createUser", function (req, res) {
 		docs_hash,
 	} = req.body;
 
+	const password = makeid(10);
 	var userDetails = {
 		name: name,
 		last_name: last_name,
@@ -171,6 +171,31 @@ router.post("/cashier/createUser", function (req, res) {
 						error: "Internal Server Error",
 					});
 				} else {
+					let content =
+						"<p>You are added as a User in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+						config.mainIP +
+						"/user/" +
+						bank +
+						"'>http://" +
+						config.mainIP +
+						"/user/" +
+						bank +
+						"</a></p><p><p>Your username: " +
+						mobile +
+						"</p><p>Your password: " +
+						password +
+						"</p>";
+					sendMail(content, "Ewallet account created", email);
+					let content2 =
+						"You are added as a User in E-Wallet application Login URL: http://" +
+						config.mainIP +
+						"/user/" +
+						bank +
+						" Your username: " +
+						mobile +
+						" Your password: " +
+						password;
+					sendSMS(content2, mobile);
 					res.status(200).json({
 						status: 1,
 						message: "User created",

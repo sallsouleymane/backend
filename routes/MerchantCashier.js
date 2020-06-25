@@ -10,8 +10,11 @@ const MerchantCashier = require("../models/merchant/MerchantCashier");
 const InvoiceGroup = require("../models/merchant/InvoiceGroup");
 const Invoice = require("../models/merchant/Invoice");
 
-router.post("/merchantCashier/deleteInvoice", jwtTokenAuth, function (req, res) {
-	const { invoice_id  } = req.body;
+router.post("/merchantCashier/deleteInvoice", jwtTokenAuth, function (
+	req,
+	res
+) {
+	const { invoice_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantCashier.findOne(
 		{
@@ -34,13 +37,12 @@ router.post("/merchantCashier/deleteInvoice", jwtTokenAuth, function (req, res) 
 							message: "Internal Server Error",
 						});
 					} else {
-				
-				res.status(200).json({
-					status: 1,
-					message: "Invoice deleted",
+						res.status(200).json({
+							status: 1,
+							message: "Invoice deleted",
+						});
+					}
 				});
-			}
-			});
 			}
 		}
 	);
@@ -87,7 +89,7 @@ router.post("/merchantCashier/createInvoiceGroup", jwtTokenAuth, (req, res) => {
 					status: 0,
 					message: "Internal Server error",
 				});
-			} else if (cashier == null){
+			} else if (cashier == null) {
 				res.status(200).json({
 					status: 0,
 					message: "Cashier is blocked",
@@ -103,7 +105,7 @@ router.post("/merchantCashier/createInvoiceGroup", jwtTokenAuth, (req, res) => {
 						return res.status(200).json({
 							status: 0,
 							message: "code already used",
-							err: err
+							err: err,
 						});
 					} else {
 						return res.status(200).json({
@@ -132,15 +134,14 @@ router.post("/merchantCashier/editInvoiceGroup", jwtTokenAuth, (req, res) => {
 					status: 0,
 					message: "Unauthorized",
 				});
-			} else if (cashier == null){
+			} else if (cashier == null) {
 				res.status(200).json({
 					status: 0,
 					message: "Cashier is blocked",
 				});
 			} else {
 				InvoiceGroup.findOneAndUpdate(
-					{ _id: group_id,
-					cashier_id: cashier._id },
+					{ _id: group_id, cashier_id: cashier._id },
 					{ code: code, name: name, description: description },
 					(err, group) => {
 						if (err) {
@@ -179,7 +180,7 @@ router.get("/merchantCashier/listInvoiceGroups", jwtTokenAuth, (req, res) => {
 					status: 0,
 					message: "Unauthorized",
 				});
-			} else if (cashier == null){
+			} else if (cashier == null) {
 				res.status(200).json({
 					status: 0,
 					message: "Cashier is blocked",
@@ -205,124 +206,133 @@ router.get("/merchantCashier/listInvoiceGroups", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
-try {
-	const { group_id, invoices } = req.body;
-	const jwtusername = req.sign_creds.username;
-	MerchantCashier.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, cashier) {
-			if (err) {
-				res.status(200).json({
-					status: 0,
-					message: "Unauthorized",
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Cashier is blocked",
-				});
-			} else {
-				InvoiceGroup.findOne(
-					{ _id: group_id, cashier_id: cashier._id },
-					async (err, group) => {
-						if (err) {
-							console.log(err);
-							res.status(200).json({
-								status: 0,
-								message: "Internal server error",
-							});
-						} else if (group == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Group not found",
-							});
-						} else {
-							var invoicePromises = invoices.map(async (invoice) => {
-								var {
-									number,
-									name,
-									amount,
-									due_date,
-									description,
-									mobile,
-									ccode,
-								} = invoice;
-								var invoiceObj = new Invoice();
-								invoiceObj.number = number;
-								invoiceObj.name = name;
-								invoiceObj.amount = amount;
-								invoiceObj.merchant_id = cashier.merchant_id;
-								invoiceObj.due_date = due_date;
-								invoiceObj.description = description;
-								invoiceObj.mobile = mobile;
-								invoiceObj.ccode = ccode;
-								invoiceObj.group_id = group_id;
-								invoiceObj.cashier_id = cashier._id;
-								invoiceObj.paid = 0;
-								await invoiceObj.save();
-								
-								var branch = await MerchantBranch.findOneAndUpdate(
-									{ _id: cashier.branch_id, status: 1 },
-									{ $inc: { bills_raised: 1, amount_due: amount } }
-								);
-								if (branch == null) { throw new Error("Can not update the MerchantBranch status."); }
+	try {
+		const { group_id, invoices } = req.body;
+		const jwtusername = req.sign_creds.username;
+		MerchantCashier.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, cashier) {
+				if (err) {
+					res.status(200).json({
+						status: 0,
+						message: "Unauthorized",
+					});
+				} else if (cashier == null) {
+					res.status(200).json({
+						status: 0,
+						message: "Cashier is blocked",
+					});
+				} else {
+					InvoiceGroup.findOne(
+						{ _id: group_id, cashier_id: cashier._id },
+						async (err, group) => {
+							if (err) {
+								console.log(err);
+								res.status(200).json({
+									status: 0,
+									message: "Internal server error",
+								});
+							} else if (group == null) {
+								res.status(200).json({
+									status: 0,
+									message: "Group not found",
+								});
+							} else {
+								var invoicePromises = invoices.map(async (invoice) => {
+									var {
+										number,
+										name,
+										amount,
+										due_date,
+										description,
+										mobile,
+										ccode,
+									} = invoice;
+									var invoiceObj = new Invoice();
+									invoiceObj.number = number;
+									invoiceObj.name = name;
+									invoiceObj.amount = amount;
+									invoiceObj.merchant_id = cashier.merchant_id;
+									invoiceObj.due_date = due_date;
+									invoiceObj.description = description;
+									invoiceObj.mobile = mobile;
+									invoiceObj.ccode = ccode;
+									invoiceObj.group_id = group_id;
+									invoiceObj.cashier_id = cashier._id;
+									invoiceObj.paid = 0;
+									await invoiceObj.save();
 
-								var m = await Merchant.findOneAndUpdate(
-									{ _id: branch.merchant_id },
-									{
-										$inc: {
-											bills_raised: 1,
-											amount_due: amount,
-										},
+									var branch = await MerchantBranch.findOneAndUpdate(
+										{ _id: cashier.branch_id, status: 1 },
+										{ $inc: { bills_raised: 1, amount_due: amount } }
+									);
+									if (branch == null) {
+										throw new Error(
+											"Can not update the MerchantBranch status."
+										);
 									}
-								);
-								if (m == null) { throw new Error("Can not update the Merchant status."); }
 
-								var g = await InvoiceGroup.findOneAndUpdate(
-									{ _id: group._id },
-									{
-										$inc: {
-											bills_raised: 1,
-										},
+									var m = await Merchant.findOneAndUpdate(
+										{ _id: branch.merchant_id },
+										{
+											$inc: {
+												bills_raised: 1,
+												amount_due: amount,
+											},
+										}
+									);
+									if (m == null) {
+										throw new Error("Can not update the Merchant status.");
 									}
-								);
-								if (g == null) { throw new Error("Can not update the InvoiceGroup status."); }
 
-								var c = await MerchantCashier.findOneAndUpdate(
-									{ _id: cashier._id },
-									{
-										$inc: {
-											bills_raised: 1,
-										},
+									var g = await InvoiceGroup.findOneAndUpdate(
+										{ _id: group._id },
+										{
+											$inc: {
+												bills_raised: 1,
+											},
+										}
+									);
+									if (g == null) {
+										throw new Error("Can not update the InvoiceGroup status.");
 									}
-								);
-								if (c == null) { throw new Error("Can not update the InvoiceGroup status."); }
 
-								return true;
-								
-							});
-							await Promise.all(invoicePromises);
-							res.status(200).json({
-								status: 1,
-								message: "Invoices uploaded"
-							});
+									var c = await MerchantCashier.findOneAndUpdate(
+										{ _id: cashier._id },
+										{
+											$inc: {
+												bills_raised: 1,
+											},
+										}
+									);
+									if (c == null) {
+										throw new Error("Can not update the InvoiceGroup status.");
+									}
+
+									return true;
+								});
+								await Promise.all(invoicePromises);
+								res.status(200).json({
+									status: 1,
+									message: "Invoices uploaded",
+								});
+							}
 						}
-					}
-				);
+					);
+				}
 			}
+		);
+	} catch (err) {
+		console.log(err);
+		var message = "Internal server error";
+		if (err.message) {
+			message = err.message;
 		}
-	);
-} catch (err) {
-	console.log(err);
-	var message = "Internal server error";
-	if( err.message ) {
-		message = err.message
+		res.status(200).json({ status: 0, message: message, err: err });
 	}
-	res.status(200).json({ status: 0, message: message, err: err});
-}
 });
 
 router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
@@ -380,61 +390,61 @@ router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
 									mobile,
 								},
 								(err, invoice) => {
-									if (err){
+									if (err) {
 										console.log(err);
-												res.status(200).json({
-													status: 0,
-													message: "Internal server error",
-												});
-									}
-									else if (invoice == null){
 										res.status(200).json({
 											status: 0,
-											message: "Invoice might already be paid. Or Does not belong to this group.",
+											message: "Internal server error",
+										});
+									} else if (invoice == null) {
+										res.status(200).json({
+											status: 0,
+											message:
+												"Invoice might already be paid. Or Does not belong to this group.",
 										});
 									} else {
-									var biasAmount = amount - invoice.amount;
-									MerchantBranch.findOneAndUpdate(
-										{ _id: cashier.branch_id, status: 1 },
-										{ $inc: { amount_due: biasAmount } },
-										(err, branch) => {
-											if (err) {
-												console.log(err);
-												res.status(200).json({
-													status: 0,
-													message: "Internal server error",
-												});
-											} else if (branch == null) {
-												res.status(200).json({
-													status: 0,
-													message: "Branch is blocked",
-												});
-											} else {
-												Merchant.findOneAndUpdate(
-													{ _id: branch.merchant_id },
-													{
-														$inc: {
-															amount_due: biasAmount,
+										var biasAmount = amount - invoice.amount;
+										MerchantBranch.findOneAndUpdate(
+											{ _id: cashier.branch_id, status: 1 },
+											{ $inc: { amount_due: biasAmount } },
+											(err, branch) => {
+												if (err) {
+													console.log(err);
+													res.status(200).json({
+														status: 0,
+														message: "Internal server error",
+													});
+												} else if (branch == null) {
+													res.status(200).json({
+														status: 0,
+														message: "Branch is blocked",
+													});
+												} else {
+													Merchant.findOneAndUpdate(
+														{ _id: branch.merchant_id },
+														{
+															$inc: {
+																amount_due: biasAmount,
+															},
 														},
-													},
-													(err, merchant) => {
-														if (err || merchant == null) {
-															console.log(err);
-															res.status(200).json({
-																status: 0,
-																message: "Internal server error",
-															});
-														} else {
-															res.status(200).json({
-																status: 1,
-																message: "Invoice edited successfully",
-															});
+														(err, merchant) => {
+															if (err || merchant == null) {
+																console.log(err);
+																res.status(200).json({
+																	status: 0,
+																	message: "Internal server error",
+																});
+															} else {
+																res.status(200).json({
+																	status: 1,
+																	message: "Invoice edited successfully",
+																});
+															}
 														}
-													}
-												);
+													);
+												}
 											}
-										}
-									);
+										);
 									}
 								}
 							);
@@ -460,7 +470,7 @@ router.post("/merchantCashier/listInvoices", jwtTokenAuth, (req, res) => {
 					status: 0,
 					message: "Unauthorized",
 				});
-			} else if (cashier == null){
+			} else if (cashier == null) {
 				res.status(200).json({
 					status: 0,
 					message: "Cashier is blocked",
