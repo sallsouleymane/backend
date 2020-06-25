@@ -36,7 +36,7 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
 		},
 		function (err, cashier) {
 			if (err) {
-				console.log("1", err);
+				console.log(err);
 				res.status(200).json({
 					status: 0,
 					message: "Internal server error",
@@ -49,7 +49,7 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
 			} else {
 				Invoice.findOne({ number: number }, async (err, invoice) => {
 					if (err) {
-						console.log("2", err);
+						console.log(err);
 						res.status(200).json({
 							status: 0,
 							message: "Internal server error",
