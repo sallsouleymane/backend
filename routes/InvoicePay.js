@@ -374,71 +374,80 @@ router.post("/cashier/payInvoice", (req, res) => {
 });
 
 router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
-try {
-	const username = req.sign_creds.username;
-	User.findOne(
-		{
-			username,
-			status: 1,
-		},
-		function (err, user) {
-			if (err || user == null) {
-				console.log(err);
-				res.status(200).json({
-					status: 0,
-					message: "Internal server error",
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message: "User is not activated.",
-				});
-			} else {
-				Bank.findOne({ name: user.bank }, (err, bank) => {
-					if (err || bank == null) {
-						console.log(err);
-						res.status(200).json({
-							status: 0,
-							message: "Internal server error",
-						});
-					} else {
-						Invoice.find({ mobile: user.mobile }, async (err, invoices) => {
-							if (err) {
-								console.log(err);
-								res.status(200).json({
-									status: 0,
-									message: "Internal server error",
-								});
-							} else {
-								var invoicePromises = invoices.map(async (invoice) => {
-									var merchant = await Merchant.findOne({
-										_id: invoice.merchant_id,
-										status: 1,
+	try {
+		const username = req.sign_creds.username;
+		User.findOne(
+			{
+				username,
+				status: 1,
+			},
+			function (err, user) {
+				if (err) {
+					console.log(err);
+					res.status(200).json({
+						status: 0,
+						message: "Internal server error",
+					});
+				} else if (user == null) {
+					res.status(200).json({
+						status: 0,
+						message: "User is not activated.",
+					});
+				} else {
+					Bank.findOne({ name: user.bank }, (err, bank) => {
+						if (err) {
+							console.log(err);
+							res.status(200).json({
+								status: 0,
+								message: "Internal server error",
+							});
+						} else if (bank == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Internal server error",
+							});
+						} else {
+							Invoice.find({ mobile: user.mobile }, async (err, invoices) => {
+								if (err) {
+									console.log(err);
+									res.status(200).json({
+										status: 0,
+										message: "Internal server error",
 									});
-									if (merchant != null && merchant.bank_id == bank._id) {
-										return invoice;
+								} else {
+									var result = [];
+									if (invoices.length > 0) {
+										var invoicePromises = invoices.map(async (invoice) => {
+											var merchant = await Merchant.findOne({
+												_id: invoice.merchant_id,
+												status: 1,
+											});
+											if (merchant && merchant.bank_id == bank._id) {
+												return invoice;
+											}
+										});
+									
+									result = await Promise.all(invoicePromises);
 									}
-								});
-								var result = await Promise.all(invoicePromises);
-								res.status(200).json({
-									status: 1,
-									invoices: result,
-								});
-							}
-						});
-					}
-				});
+									res.status(200).json({
+										status: 1,
+										invoices: result,
+									});
+								}
+							});
+						}
+					});
+				}
 			}
+		);
+	} catch (err) {
+		console.log("Catch block: ", err);
+		var message = "Internal server error";
+		if (err.message) {
+			message = err.message;
 		}
-	);
-} catch (err) {
-	console.log(err);
-	var message = "Internal server error";
-	if (err.message) {
-		message = err.message;
+		res.status(200).json({ status: 0, message: message, err: err });
 	}
-	res.status(200).json({ status: 0, message: message, err: err });
-}
 });
 
 router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
