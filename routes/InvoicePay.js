@@ -35,7 +35,7 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err || cashier == null) {
+			if (err) {
 				console.log("1", err);
 				res.status(200).json({
 					status: 0,
@@ -44,7 +44,7 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
 			} else if (cashier == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message: "Cashier is not activated.",
 				});
 			} else {
 				Invoice.findOne({ number: number }, async (err, invoice) => {
@@ -387,6 +387,11 @@ try {
 				res.status(200).json({
 					status: 0,
 					message: "Internal server error",
+				});
+			} else if (user == null) {
+				res.status(200).json({
+					status: 0,
+					message: "User is not activated.",
 				});
 			} else {
 				Bank.findOne({ name: user.bank }, (err, bank) => {

@@ -246,6 +246,8 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										number,
 										name,
 										amount,
+										bill_date,
+										bill_period,
 										due_date,
 										description,
 										mobile,
@@ -256,6 +258,8 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 									invoiceObj.name = name;
 									invoiceObj.amount = amount;
 									invoiceObj.merchant_id = cashier.merchant_id;
+									invoiceObj.bill_date = bill_date;
+									invoiceObj.bill_period = bill_period;
 									invoiceObj.due_date = due_date;
 									invoiceObj.description = description;
 									invoiceObj.mobile = mobile;

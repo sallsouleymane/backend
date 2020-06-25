@@ -31,7 +31,7 @@ module.exports.calculateShare = function (
 			return infraShare;
 		case "claimBranch":
 			var branchRule = rule.branch_share;
-			if (rule.specific_branch_share.length > 0) {
+			if (rule.specific_branch_share && rule.specific_branch_share.length > 0) {
 				branchRule = rule.specific_branch_share.filter(
 					(specific_brule) => specific_brule.branch_code == partnerCode
 				)[0];
@@ -42,7 +42,7 @@ module.exports.calculateShare = function (
 			return claimFee;
 		case "sendBranch":
 			var branchRule = rule.branch_share;
-			if (rule.specific_branch_share.length > 0) {
+			if (rule.specific_branch_share && rule.specific_branch_share.length > 0) {
 				branchRule = rule.specific_branch_share.filter(
 					(specific_brule) => specific_brule.branch_code == partnerCode
 				)[0];
@@ -53,7 +53,7 @@ module.exports.calculateShare = function (
 			return sendFee;
 		case "partner":
 			var percent = rule.partner_share_percentage;
-			if (rule.specific_partners_share != null && rule.specific_partners_share.length > 0) {
+			if (rule.specific_partners_share && rule.specific_partners_share.length > 0) {
 				var partnerRule = rule.specific_partners_share.filter(
 					(specific_prule) => specific_prule.code == partnerCode
 				)[0];

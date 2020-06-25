@@ -125,7 +125,7 @@ router.post("/infra/createMerchant", function (req, res) {
 									console.log(result);
 									res.status(200).json({
 										status: 0,
-										message: "Blockchain service is unavailable",
+										message: "Blockchain service was unavailable. Please try again.",
 										result: result,
 									});
 								} else {

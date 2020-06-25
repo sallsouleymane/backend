@@ -104,7 +104,7 @@ router.post("/bank/commission/createRule", function (req, res) {
 							error: "Merchant not found",
 						});
 					} else {
-						Commission.findOne({ merchant_id: merchant_id }, (err, comm) => {
+						Commission.findOne({ merchant_id: merchant_id, type }, (err, comm) => {
 							if (err) {
 								console.log(err);
 								res.status(200).json({

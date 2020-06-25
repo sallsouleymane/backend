@@ -15,7 +15,10 @@ const User = require("../models/User");
 const jwtTokenAuth = require("./JWTTokenAuth");
 
 router.post("/bank/merchantFee/updatePartnersShare", function (req, res) {
-	const { token, fee_id, percentage, specific_partners_share } = req.body;
+	var { token, fee_id, percentage, specific_partners_share } = req.body;
+	if (!specific_partners_share) {
+		specific_partners_share = [];
+	}
 	Bank.findOne(
 		{
 			token,
@@ -269,7 +272,7 @@ router.post("/bank/merchantFee/editRule", function (req, res) {
 							"edited.merchant_approve_status": 0,
 						},
 					},
-					{new: true},
+					{ new: true },
 					(err, fee) => {
 						if (err) {
 							console.log(err);
@@ -309,7 +312,7 @@ router.post("/bank/merchantFee/editRule", function (req, res) {
 									res.status(200).json({
 										status: 1,
 										message: "Merchant Fee Rule edited successfully",
-										fee: fee
+										fee: fee,
 									});
 								}
 							});
@@ -358,7 +361,7 @@ router.post("/bank/merchantFee/editInfraShare", function (req, res) {
 							infra_share_edit_status: 1,
 						},
 					},
-					{new: true},
+					{ new: true },
 					(err, fee) => {
 						if (err) {
 							console.log(err);
@@ -375,7 +378,7 @@ router.post("/bank/merchantFee/editInfraShare", function (req, res) {
 							res.status(200).json({
 								status: 1,
 								message: "Merchant Fee Rule's infra share edited successfully",
-								fee: fee
+								fee: fee,
 							});
 						}
 					}
