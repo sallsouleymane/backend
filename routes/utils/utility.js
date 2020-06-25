@@ -53,7 +53,7 @@ module.exports.calculateShare = function (
 			return sendFee;
 		case "partner":
 			var percent = rule.partner_share_percentage;
-			if (rule.specific_partners_share.length > 0) {
+			if (rule.specific_partners_share != null && rule.specific_partners_share.length > 0) {
 				var partnerRule = rule.specific_partners_share.filter(
 					(specific_prule) => specific_prule.code == partnerCode
 				)[0];
