@@ -206,137 +206,135 @@ router.get("/merchantCashier/listInvoiceGroups", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
-	try {
-		const { group_id, invoices } = req.body;
-		const jwtusername = req.sign_creds.username;
-		MerchantCashier.findOne(
-			{
-				username: jwtusername,
-				status: 1,
-			},
-			function (err, cashier) {
-				if (err) {
-					res.status(200).json({
-						status: 0,
-						message: "Unauthorized",
-					});
-				} else if (cashier == null) {
-					res.status(200).json({
-						status: 0,
-						message: "Cashier is blocked",
-					});
-				} else {
-					InvoiceGroup.findOne(
-						{ _id: group_id, cashier_id: cashier._id },
-						async (err, group) => {
-							if (err) {
-								console.log(err);
-								res.status(200).json({
-									status: 0,
-									message: "Internal server error",
-								});
-							} else if (group == null) {
-								res.status(200).json({
-									status: 0,
-									message: "Group not found",
-								});
-							} else {
-								var invoicePromises = invoices.map(async (invoice) => {
-									var {
-										number,
-										name,
-										amount,
-										bill_date,
-										bill_period,
-										due_date,
-										description,
-										mobile,
-										ccode,
-									} = invoice;
-									var invoiceObj = new Invoice();
-									invoiceObj.number = number;
-									invoiceObj.name = name;
-									invoiceObj.amount = amount;
-									invoiceObj.merchant_id = cashier.merchant_id;
-									invoiceObj.bill_date = bill_date;
-									invoiceObj.bill_period = bill_period;
-									invoiceObj.due_date = due_date;
-									invoiceObj.description = description;
-									invoiceObj.mobile = mobile;
-									invoiceObj.ccode = ccode;
-									invoiceObj.group_id = group_id;
-									invoiceObj.cashier_id = cashier._id;
-									invoiceObj.paid = 0;
-									await invoiceObj.save();
+	const { group_id, invoices } = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		(err, cashier) => {
+			if (err) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Cashier is blocked",
+				});
+			} else {
+				InvoiceGroup.findOne(
+					{ _id: group_id, cashier_id: cashier._id },
+					async (err, group) => {
+						if (err) {
+							console.log(err);
+							res.status(200).json({
+								status: 0,
+								message: "Internal server error",
+							});
+						} else if (group == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Group not found",
+							});
+						} else {
+							var invoicePromises = invoices.map(async (invoice) => {
+								var {
+									number,
+									name,
+									amount,
+									bill_date,
+									bill_period,
+									due_date,
+									description,
+									mobile,
+									ccode,
+								} = invoice;
+								var invoiceObj = new Invoice();
+								invoiceObj.number = number;
+								invoiceObj.name = name;
+								invoiceObj.amount = amount;
+								invoiceObj.merchant_id = cashier.merchant_id;
+								invoiceObj.bill_date = bill_date;
+								invoiceObj.bill_period = bill_period;
+								invoiceObj.due_date = due_date;
+								invoiceObj.description = description;
+								invoiceObj.mobile = mobile;
+								invoiceObj.ccode = ccode;
+								invoiceObj.group_id = group_id;
+								invoiceObj.cashier_id = cashier._id;
+								invoiceObj.paid = 0;
+								await invoiceObj.save();
 
-									var branch = await MerchantBranch.findOneAndUpdate(
-										{ _id: cashier.branch_id, status: 1 },
-										{ $inc: { bills_raised: 1, amount_due: amount } }
-									);
-									if (branch == null) {
-										throw new Error(
-											"Can not update the MerchantBranch status."
-										);
+								var branch = await MerchantBranch.findOneAndUpdate(
+									{ _id: cashier.branch_id, status: 1 },
+									{ $inc: { bills_raised: 1, amount_due: amount } }
+								);
+								if (branch == null) {
+									throw new Error("Can not update the MerchantBranch status.");
+								}
+
+								var m = await Merchant.findOneAndUpdate(
+									{ _id: branch.merchant_id, status: 1 },
+									{
+										$inc: {
+											bills_raised: 1,
+											amount_due: amount,
+										},
 									}
+								);
+								if (m == null) {
+									throw new Error("Can not update the Merchant status.");
+								}
 
-									var m = await Merchant.findOneAndUpdate(
-										{ _id: branch.merchant_id },
-										{
-											$inc: {
-												bills_raised: 1,
-												amount_due: amount,
-											},
-										}
-									);
-									if (m == null) {
-										throw new Error("Can not update the Merchant status.");
+								var g = await InvoiceGroup.findOneAndUpdate(
+									{ _id: group._id },
+									{
+										$inc: {
+											bills_raised: 1,
+										},
 									}
+								);
+								if (g == null) {
+									throw new Error("Can not update the InvoiceGroup status.");
+								}
 
-									var g = await InvoiceGroup.findOneAndUpdate(
-										{ _id: group._id },
-										{
-											$inc: {
-												bills_raised: 1,
-											},
-										}
-									);
-									if (g == null) {
-										throw new Error("Can not update the InvoiceGroup status.");
+								var c = await MerchantCashier.findOneAndUpdate(
+									{ _id: cashier._id, status: 1 },
+									{
+										$inc: {
+											bills_raised: 1,
+										},
 									}
+								);
+								if (c == null) {
+									throw new Error("Can not update the InvoiceGroup status.");
+								}
 
-									var c = await MerchantCashier.findOneAndUpdate(
-										{ _id: cashier._id },
-										{
-											$inc: {
-												bills_raised: 1,
-											},
-										}
-									);
-									if (c == null) {
-										throw new Error("Can not update the InvoiceGroup status.");
-									}
-
-									return true;
-								});
+								return true;
+							});
+							try {
 								await Promise.all(invoicePromises);
 								res.status(200).json({
 									status: 1,
 									message: "Invoices uploaded",
 								});
+							} catch (err) {
+								console.log(err);
+								var message = "Internal server error";
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({ status: 0, message: message });
 							}
 						}
-					);
-				}
+					}
+				);
 			}
-		);
-	} catch (err) {
-		console.log(err);
-		var message = "Internal server error";
-		if (err.message) {
-			message = err.message;
 		}
-		res.status(200).json({ status: 0, message: message, err: err });
-	}
+	);
 });
 
 router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
