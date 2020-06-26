@@ -220,14 +220,22 @@ router.post("/cashier/payInvoice", (req, res) => {
 													} else {
 														// all the users
 														let branch = await Branch.findOne({
-															_id: cashier.branch_id, status: 1
+															_id: cashier.branch_id,
+															status: 1,
 														});
-														if ( branch == null ) { throw new Error("Cashier has invalid branch")}
+														if (branch == null) {
+															throw new Error("Cashier has invalid branch");
+														}
 
 														let bank = await Bank.findOne({
-															_id: branch.bank_id, status: 1
+															_id: branch.bank_id,
+															status: 1,
 														});
-														if ( bank == null ) { throw new Error("Cashier's Branch has invalid bank")}
+														if (bank == null) {
+															throw new Error(
+																"Cashier's Branch has invalid bank"
+															);
+														}
 
 														// check branch operational wallet balance
 														const branchOpWallet =
@@ -246,12 +254,18 @@ router.post("/cashier/payInvoice", (req, res) => {
 															let infra = await Infra.findOne({
 																_id: bank.user_id,
 															});
-															if ( infra == null ) { throw new Error("Cashier's bank has invalid infra") }
+															if (infra == null) {
+																throw new Error(
+																	"Cashier's bank has invalid infra"
+																);
+															}
 
 															let merchant = await Merchant.findOne({
 																_id: invoice.merchant_id,
 															});
-															if ( merchant == null ) { throw new Error("Invoice has invalid merchant") }
+															if (merchant == null) {
+																throw new Error("Invoice has invalid merchant");
+															}
 
 															const today = new Date();
 															await Merchant.findOneAndUpdate(
@@ -278,7 +292,11 @@ router.post("/cashier/payInvoice", (req, res) => {
 																	{ _id: invoice_id },
 																	{ paid: 1 }
 																);
-																if ( i == null ) { throw new Error("Invoice paid status can not be updated") }
+																if (i == null) {
+																	throw new Error(
+																		"Invoice paid status can not be updated"
+																	);
+																}
 
 																var last_paid_at = new Date();
 																var m = await Merchant.updateOne(
@@ -292,7 +310,11 @@ router.post("/cashier/payInvoice", (req, res) => {
 																		},
 																	}
 																);
-																if ( m == null ) { throw new Error("Merchant status can not be updated") }
+																if (m == null) {
+																	throw new Error(
+																		"Merchant status can not be updated"
+																	);
+																}
 
 																var mb = await MerchantBranch.updateOne(
 																	{ _id: branch._id },
@@ -305,7 +327,11 @@ router.post("/cashier/payInvoice", (req, res) => {
 																		},
 																	}
 																);
-																if ( mb == null ) { throw new Error("Merchant branch status can not be updated") }
+																if (mb == null) {
+																	throw new Error(
+																		"Merchant branch status can not be updated"
+																	);
+																}
 
 																var ig = await InvoiceGroup.updateOne(
 																	{ _id: invoice.group_id },
@@ -316,7 +342,11 @@ router.post("/cashier/payInvoice", (req, res) => {
 																		},
 																	}
 																);
-																if ( ig == null ) { throw new Error("Invoice group status can not be updated") }
+																if (ig == null) {
+																	throw new Error(
+																		"Invoice group status can not be updated"
+																	);
+																}
 
 																var mc = await MerchantCashier.updateOne(
 																	{ _id: invoice.cashier_id },
@@ -327,7 +357,11 @@ router.post("/cashier/payInvoice", (req, res) => {
 																		},
 																	}
 																);
-																if ( mc == null ) { throw new Error("Merchant cashier status can not be updated") }
+																if (mc == null) {
+																	throw new Error(
+																		"Merchant cashier status can not be updated"
+																	);
+																}
 
 																bankFee = calculateShare("bank", amount, fee);
 																var c = await Cashier.updateOne(
@@ -338,7 +372,11 @@ router.post("/cashier/payInvoice", (req, res) => {
 																		},
 																	}
 																);
-																if ( c == null ) { throw new Error("Bank cashier's cash in hand can not be updated") }
+																if (c == null) {
+																	throw new Error(
+																		"Bank cashier's cash in hand can not be updated"
+																	);
+																}
 															}
 
 															content =
@@ -416,16 +454,16 @@ router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
 									});
 								} else {
 									var result = [];
-									for(const invoice of invoices) {
-											var merchant = await Merchant.findOne({
-												_id: invoice.merchant_id,
-												bank_id: bank._id,
-												status: 1,
-											});
-											if (merchant){
-												result.push(invoice);
-											}
+									for (const invoice of invoices) {
+										var merchant = await Merchant.findOne({
+											_id: invoice.merchant_id,
+											bank_id: bank._id,
+											status: 1,
+										});
+										if (merchant) {
+											result.push(invoice);
 										}
+									}
 									res.status(200).json({
 										status: 1,
 										invoices: result,
@@ -464,7 +502,7 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 						message: "Internal server error",
 					});
 				} else {
-					Invoice.findOne({ _id: invoice_id }, (err, invoice) => {
+					Invoice.findOne({ _id: invoice_id, paid: 0 }, (err, invoice) => {
 						if (err) {
 							console.log(err);
 							res.status(200).json({
@@ -474,7 +512,7 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 						} else if (invoice == null) {
 							res.status(200).json({
 								status: 0,
-								message: "Invoice is not valid",
+								message: "Invoice is not valid or already paid",
 							});
 						} else {
 							if (invoice.amount != amount) {
@@ -527,7 +565,9 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 																	let bank = await Bank.findOne({
 																		name: user.bank,
 																	});
-																	if ( bank == null ) { throw new Error("User has invalid bank") }
+																	if (bank == null) {
+																		throw new Error("User has invalid bank");
+																	}
 
 																	// check branch operational wallet balance
 																	const userOpWallet =
@@ -545,12 +585,20 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 																		let infra = await Infra.findOne({
 																			_id: bank.user_id,
 																		});
-																		if ( infra == null ) { throw new Error("User's bank has invalid infra") }
+																		if (infra == null) {
+																			throw new Error(
+																				"User's bank has invalid infra"
+																			);
+																		}
 
 																		let merchant = await Merchant.findOne({
 																			_id: invoice.merchant_id,
 																		});
-																		if ( merchant == null ) { throw new Error("Invoice has invalid merchant") }
+																		if (merchant == null) {
+																			throw new Error(
+																				"Invoice has invalid merchant"
+																			);
+																		}
 
 																		const today = new Date();
 																		await Merchant.findOneAndUpdate(
@@ -578,7 +626,11 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 																				{ _id: invoice_id },
 																				{ paid: 1 }
 																			);
-																			if ( i == null ) { throw new Error("Invoice status can not be updated") }
+																			if (i == null) {
+																				throw new Error(
+																					"Invoice status can not be updated"
+																				);
+																			}
 
 																			var last_paid_at = new Date();
 																			var m = await Merchant.updateOne(
@@ -592,7 +644,11 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 																					},
 																				}
 																			);
-																			if ( m == null ) { throw new Error("Merchant status can not be updated") }
+																			if (m == null) {
+																				throw new Error(
+																					"Merchant status can not be updated"
+																				);
+																			}
 
 																			var mc = await MerchantBranch.updateOne(
 																				{ _id: mcashier.branch_id },
@@ -605,7 +661,11 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 																					},
 																				}
 																			);
-																			if ( mc == null ) { throw new Error("Merchant Branch status can not be updated") }
+																			if (mc == null) {
+																				throw new Error(
+																					"Merchant Branch status can not be updated"
+																				);
+																			}
 
 																			var ig = await InvoiceGroup.updateOne(
 																				{ _id: invoice.group_id },
@@ -616,7 +676,11 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 																					},
 																				}
 																			);
-																			if ( ig == null ) { throw new Error("Invoice group status can not be updated") }
+																			if (ig == null) {
+																				throw new Error(
+																					"Invoice group status can not be updated"
+																				);
+																			}
 
 																			var mc = await MerchantCashier.updateOne(
 																				{ _id: mcashier._id },
@@ -627,7 +691,11 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 																					},
 																				}
 																			);
-																			if ( mc == null ) { throw new Error("Merchant cashier status can not be updated") }
+																			if (mc == null) {
+																				throw new Error(
+																					"Merchant cashier status can not be updated"
+																				);
+																			}
 																		}
 
 																		content =
