@@ -1039,6 +1039,7 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 });
 
 router.get("/merchant/listBranches", jwtTokenAuth, function (req, res) {
+	const { zone_id } = req.body;
 	const username = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -1058,7 +1059,7 @@ router.get("/merchant/listBranches", jwtTokenAuth, function (req, res) {
 				});
 			} else {
 				MerchantBranch.find(
-					{ merchant_id: merchant._id },
+					{ merchant_id: merchant._id , zone_id: zone_id},
 					"-password",
 					function (err, branch) {
 						if (err) {
