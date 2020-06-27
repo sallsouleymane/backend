@@ -345,9 +345,10 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 											});
 										} else {
 											let ig = new InvoiceGroup();
-											ig.code = "group-"+name;
+											ig.code = "group-" + name;
 											ig.name = "default";
-											ig.description = "Default invoice group for merchant cashier";
+											ig.description =
+												"Default invoice group for merchant cashier";
 											ig.cashier_id = cashier._id;
 											ig.save((err, group) => {
 												if (err) {
@@ -361,7 +362,7 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 													return res.status(200).json({
 														status: 1,
 														data: cashier,
-														group: group
+														group: group,
 													});
 												}
 											});
@@ -1039,6 +1040,50 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 });
 
 router.get("/merchant/listBranches", jwtTokenAuth, function (req, res) {
+	const username = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				res.status(200).json({
+					status: 0,
+					message: "Internal Server Error",
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				MerchantBranch.find(
+					{ merchant_id: merchant._id },
+					"-password",
+					function (err, branch) {
+						if (err) {
+							res.status(200).json({
+								status: 0,
+								message: err,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								branches: branch,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/merchant/listBranchesByZoneId", jwtTokenAuth, function (
+	req,
+	res
+) {
 	const { zone_id } = req.body;
 	const username = req.sign_creds.username;
 	Merchant.findOne(
@@ -1059,7 +1104,7 @@ router.get("/merchant/listBranches", jwtTokenAuth, function (req, res) {
 				});
 			} else {
 				MerchantBranch.find(
-					{ merchant_id: merchant._id , zone_id: zone_id},
+					{ merchant_id: merchant._id, zone_id: zone_id },
 					"-password",
 					function (err, branch) {
 						if (err) {
