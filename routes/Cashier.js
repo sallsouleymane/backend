@@ -26,6 +26,65 @@ const CashierLedger = require("../models/CashierLedger");
 const CashierTransfer = require("../models/CashierTransfer");
 const Merchant = require("../models/merchant/Merchant");
 
+router.post("/cashier/getTransactionHistory", function (req, res) {
+	const { token } = req.body;
+	Cashier.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, cashier) {
+			if (err) {
+				res.status(200).json({
+					status: 0,
+					message: "Internal server error",
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else {
+				Branch.findOne({ _id: cashier.branch_id }, (err, branch) => {
+					if (err) {
+						res.status(200).json({
+							status: 0,
+							message: "Internal server error",
+						});
+					} else if (branch == null) {
+						res.status(200).json({
+							status: 0,
+							message: "Unauthorized",
+						});
+					} else {
+						Bank.findOne({ _id: branch.bank_id }, async (err, bank) => {
+							if (err) {
+								res.status(200).json({
+									status: 0,
+									message: "Internal server error",
+								});
+							} else if (bank == null) {
+								res.status(200).json({
+									status: 0,
+									message: "Unauthorized",
+								});
+							} else {
+								const wallet = branch.bcode + "_operational@" + bank.name;
+								let result = await blockchain.getStatement(wallet, cashier._id);
+								res.status(200).json({
+									status: 1,
+									message: "get cashier transaction history success",
+									history: result,
+								});
+							}
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
 router.post("/cashier/listMerchants", function (req, res) {
 	var { token } = req.body;
 	Cashier.findOne(
@@ -323,38 +382,38 @@ router.post("/cashier/activateUser", function (req, res) {
 								console.log(result);
 								res.status(200).json({
 									status: 0,
-									message: "Blockchain service was unavailable. Please try again.",
-									result: result
+									message:
+										"Blockchain service was unavailable. Please try again.",
+									result: result,
 								});
 							} else {
-
-							let content =
-								"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-								config.mainIP +
-								"/user";
-							"'>http://" +
-								config.mainIP +
-								"/user" +
-								"</a></p><p><p>Your username: " +
-								mobile +
-								"</p><p>Your password: " +
-								user.password +
-								"</p>";
-							sendMail(content, "Approved Ewallet Account", user.email);
-							let content2 =
-								"Your account is activated. Login URL: http://" +
-								config.mainIP +
-								"/user" +
-								" Your username: " +
-								mobile +
-								" Your password: " +
-								user.password;
-							sendSMS(content2, mobile);
-							res.status(200).json({
-								status: 1,
-								message: result.toString(),
-							});
-						}
+								let content =
+									"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+									config.mainIP +
+									"/user";
+								"'>http://" +
+									config.mainIP +
+									"/user" +
+									"</a></p><p><p>Your username: " +
+									mobile +
+									"</p><p>Your password: " +
+									user.password +
+									"</p>";
+								sendMail(content, "Approved Ewallet Account", user.email);
+								let content2 =
+									"Your account is activated. Login URL: http://" +
+									config.mainIP +
+									"/user" +
+									" Your username: " +
+									mobile +
+									" Your password: " +
+									user.password;
+								sendSMS(content2, mobile);
+								res.status(200).json({
+									status: 1,
+									message: result.toString(),
+								});
+							}
 						}
 					}
 				);

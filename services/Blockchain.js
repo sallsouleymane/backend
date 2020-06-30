@@ -8,15 +8,15 @@ module.exports.createWallet = async (arr) => {
 	console.log("Blockchain service: createWallet " + arr);
 	let err = [];
 	await Promise.all(
-		arr.map(async url => {
+		arr.map(async (url) => {
 			let options = {
 				uri: "http://" + config.blockChainIP + ":8000/createEWallet",
 				method: "POST",
 				json: {
 					wallet_id: url,
 					type: "test",
-					remarks: ""
-				}
+					remarks: "",
+				},
 			};
 			let res = await doRequest(options);
 			if (res.status === 0) {
@@ -28,14 +28,15 @@ module.exports.createWallet = async (arr) => {
 	return err.toString();
 };
 
-module.exports.getStatement = async arr => {
+module.exports.getStatement = async (arr, user_id = "") => {
 	console.log("Blockchain service: getStatement " + arr);
 	let options = {
 		uri: "http://" + config.blockChainIP + ":8000/getEWalletStatement",
-		method: "GET",
+		method: "POST",
 		json: {
-			wallet_id: arr.toString()
-		}
+			wallet_id: arr.toString(),
+			user_id: user_id,
+		},
 	};
 
 	let res = await doRequest(options);
@@ -47,35 +48,39 @@ module.exports.getStatement = async arr => {
 	}
 };
 
-module.exports.rechargeNow = async arr => {
+module.exports.rechargeNow = async (arr) => {
 	console.log("Blockchain service: rechargeNow " + arr);
 	var err = [];
 	await Promise.all(
-		arr.map(async url => {
+		arr.map(async (url) => {
 			var options = {
 				uri: "http://" + config.blockChainIP + ":8000/rechargeEWallet",
 				method: "POST",
 				json: {
 					wallet_id: url.to.toString(),
 					amount: url.amount.toString(),
-					remarks: "recharge"
-				}
+					remarks: "recharge",
+				},
 			};
 			let res = await doRequest(options);
 			if (res.status == 1) {
 				err.push(res.Reason);
-			}
-			else {
+			} else {
 				console.log(res);
 			}
 		})
-	).catch(errr => {
+	).catch((errr) => {
 		return errr;
 	});
 	return err.toString();
 };
 
-module.exports.transferThis = async (t1, t2 = false, t3 = false, t4 = false) => {
+module.exports.transferThis = async (
+	t1,
+	t2 = false,
+	t3 = false,
+	t4 = false
+) => {
 	console.log("Blockchain service: transferThis");
 	var err = [];
 
@@ -88,13 +93,16 @@ module.exports.transferThis = async (t1, t2 = false, t3 = false, t4 = false) => 
 		uri: "http://" + config.blockChainIP + ":8000/transferBtwEWallets",
 		method: "POST",
 		json: {
-			wallet_id1: url.from.toString(),
-			wallet_id2: url.to.toString(),
+			wallet_from: url.from.toString(),
+			wallet_to: url.to.toString(),
+			from_name: "",
+			to_name: "",
+			user_id: "",
 			amount: url.amount.toString(),
 			master_id: mc.toString(),
 			child_id: cc.toString(),
-			remarks: url.note.toString()
-		}
+			remarks: url.note.toString(),
+		},
 	};
 
 	let res = await doRequest(options);
@@ -115,16 +123,26 @@ module.exports.transferThis = async (t1, t2 = false, t3 = false, t4 = false) => 
 		}
 		if (url.email2 && url.email2 != "") {
 			sendMail(
-				"<p>You have received " + url.amount + " from the wallet " + url.from + "</p>",
+				"<p>You have received " +
+					url.amount +
+					" from the wallet " +
+					url.from +
+					"</p>",
 				"Payment Received",
 				url.email2
 			);
 		}
 		if (url.mobile1 && url.mobile1 != "") {
-			sendSMS("You have sent " + url.amount + " to the wallet " + url.to, url.mobile1);
+			sendSMS(
+				"You have sent " + url.amount + " to the wallet " + url.to,
+				url.mobile1
+			);
 		}
 		if (url.mobile2 && url.mobile2 != "") {
-			sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
+			sendSMS(
+				"You have received " + url.amount + " from the wallet " + url.from,
+				url.mobile2
+			);
 		}
 		if (t2) {
 			url = t2;
@@ -134,13 +152,16 @@ module.exports.transferThis = async (t1, t2 = false, t3 = false, t4 = false) => 
 				uri: "http://" + config.blockChainIP + ":8000/transferBtwEWallets",
 				method: "POST",
 				json: {
-					wallet_id1: url.from.toString(),
-					wallet_id2: url.to.toString(),
+					wallet_from: url.from.toString(),
+					wallet_to: url.to.toString(),
 					amount: url.amount.toString(),
+					from_name: "",
+					to_name: "",
+					user_id: "",
 					master_id: mc.toString(),
 					child_id: cc.toString(),
-					remarks: url.note.toString()
-				}
+					remarks: url.note.toString(),
+				},
 			};
 
 			res = await doRequest(options);
@@ -154,23 +175,37 @@ module.exports.transferThis = async (t1, t2 = false, t3 = false, t4 = false) => 
 			} else {
 				if (url.email1 && url.email1 != "") {
 					sendMail(
-						"<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>",
+						"<p>You have sent " +
+							url.amount +
+							" to the wallet " +
+							url.to +
+							"</p>",
 						"Payment Sent",
 						url.email1
 					);
 				}
 				if (url.email2 && url.email2 != "") {
 					sendMail(
-						"<p>You have received " + url.amount + " from the wallet " + url.from + "</p>",
+						"<p>You have received " +
+							url.amount +
+							" from the wallet " +
+							url.from +
+							"</p>",
 						"Payment Received",
 						url.email2
 					);
 				}
 				if (url.mobile1 && url.mobile1 != "") {
-					sendSMS("You have sent " + url.amount + " to the wallet " + url.to, url.mobile1);
+					sendSMS(
+						"You have sent " + url.amount + " to the wallet " + url.to,
+						url.mobile1
+					);
 				}
 				if (url.mobile2 && url.mobile2 != "") {
-					sendSMS("You have received " + url.amount + " from the wallet " + url.from, url.mobile2);
+					sendSMS(
+						"You have received " + url.amount + " from the wallet " + url.from,
+						url.mobile2
+					);
 				}
 
 				if (t3) {
@@ -181,13 +216,16 @@ module.exports.transferThis = async (t1, t2 = false, t3 = false, t4 = false) => 
 						uri: "http://" + config.blockChainIP + ":8000/transferBtwEWallets",
 						method: "POST",
 						json: {
-							wallet_id1: url.from.toString(),
-							wallet_id2: url.to.toString(),
+							wallet_from: url.from.toString(),
+							wallet_to: url.to.toString(),
 							amount: url.amount.toString(),
+							from_name: "",
+							to_name: "",
+							user_id: "",
 							master_id: mc.toString(),
 							child_id: cc.toString(),
-							remarks: url.note.toString()
-						}
+							remarks: url.note.toString(),
+						},
 					};
 
 					res = await doRequest(options);
@@ -201,24 +239,38 @@ module.exports.transferThis = async (t1, t2 = false, t3 = false, t4 = false) => 
 					} else {
 						if (url.email1 && url.email1 != "") {
 							sendMail(
-								"<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>",
+								"<p>You have sent " +
+									url.amount +
+									" to the wallet " +
+									url.to +
+									"</p>",
 								"Payment Sent",
 								url.email1
 							);
 						}
 						if (url.email2 && url.email2 != "") {
 							sendMail(
-								"<p>You have received " + url.amount + " from the wallet " + url.from + "</p>",
+								"<p>You have received " +
+									url.amount +
+									" from the wallet " +
+									url.from +
+									"</p>",
 								"Payment Received",
 								url.email2
 							);
 						}
 						if (url.mobile1 && url.mobile1 != "") {
-							sendSMS("You have sent " + url.amount + " to the wallet " + url.to, url.mobile1);
+							sendSMS(
+								"You have sent " + url.amount + " to the wallet " + url.to,
+								url.mobile1
+							);
 						}
 						if (url.mobile2 && url.mobile2 != "") {
 							sendSMS(
-								"You have received " + url.amount + " from the wallet " + url.from,
+								"You have received " +
+									url.amount +
+									" from the wallet " +
+									url.from,
 								url.mobile2
 							);
 						}
@@ -229,16 +281,20 @@ module.exports.transferThis = async (t1, t2 = false, t3 = false, t4 = false) => 
 							mc = url.master_code ? url.master_code : new Date().getTime();
 							cc = url.child_code ? url.child_code : new Date().getTime();
 							options = {
-								uri: "http://" + config.blockChainIP + ":8000/transferBtwEWallets",
+								uri:
+									"http://" + config.blockChainIP + ":8000/transferBtwEWallets",
 								method: "POST",
 								json: {
-									wallet_id1: url.from.toString(),
-									wallet_id2: url.to.toString(),
+									wallet_from: url.from.toString(),
+									wallet_to: url.to.toString(),
 									amount: url.amount.toString(),
+									from_name: "",
+									to_name: "",
+									user_id: "",
 									master_id: mc.toString(),
 									child_id: cc.toString(),
-									remarks: url.note.toString()
-								}
+									remarks: url.note.toString(),
+								},
 							};
 
 							res = await doRequest(options);
@@ -252,24 +308,38 @@ module.exports.transferThis = async (t1, t2 = false, t3 = false, t4 = false) => 
 							} else {
 								if (url.email1 && url.email1 != "") {
 									sendMail(
-										"<p>You have sent " + url.amount + " to the wallet " + url.to + "</p>",
+										"<p>You have sent " +
+											url.amount +
+											" to the wallet " +
+											url.to +
+											"</p>",
 										"Payment Sent",
 										url.email1
 									);
 								}
 								if (url.email2 && url.email2 != "") {
 									sendMail(
-										"<p>You have received " + url.amount + " from the wallet " + url.from + "</p>",
+										"<p>You have received " +
+											url.amount +
+											" from the wallet " +
+											url.from +
+											"</p>",
 										"Payment Received",
 										url.email2
 									);
 								}
 								if (url.mobile1 && url.mobile1 != "") {
-									sendSMS("You have sent " + url.amount + " to the wallet " + url.to, url.mobile1);
+									sendSMS(
+										"You have sent " + url.amount + " to the wallet " + url.to,
+										url.mobile1
+									);
 								}
 								if (url.mobile2 && url.mobile2 != "") {
 									sendSMS(
-										"You have received " + url.amount + " from the wallet " + url.from,
+										"You have received " +
+											url.amount +
+											" from the wallet " +
+											url.from,
 										url.mobile2
 									);
 								}
@@ -286,14 +356,14 @@ module.exports.transferThis = async (t1, t2 = false, t3 = false, t4 = false) => 
 	return err.toString();
 };
 
-module.exports.getChildStatements = async arr => {
+module.exports.getChildStatements = async (arr) => {
 	console.log("Blockchain service: getChildStatements " + arr);
 	var options = {
 		uri: "http://" + config.blockChainIP + ":8000/getChildIds",
-		method: "GET",
+		method: "POST",
 		json: {
-			master_id: arr.toString()
-		}
+			master_id: arr.toString(),
+		},
 	};
 
 	let res = await doRequest(options);
@@ -305,33 +375,33 @@ module.exports.getChildStatements = async arr => {
 	}
 };
 
-module.exports.getTransactionCount = async arr => {
+module.exports.getTransactionCount = async (arr) => {
 	console.log("Blockchain service: getTransactionCount " + arr);
 	var options = {
 		uri: "http://" + config.blockChainIP + ":8000/getEWalletTransactionCount",
-		method: "GET",
+		method: "POST",
 		json: {
-			wallet_id: arr.toString()
-		}
+			wallet_id: arr.toString(),
+		},
 	};
 
 	let res = await doRequest(options);
-	if ( res.status && res.status == 1) {
-		return res.data
+	if (res.status && res.status == 1) {
+		return res.data;
 	} else {
 		console.log(res);
 		return 0;
 	}
 };
 
-module.exports.getBalance = async arr => {
+module.exports.getBalance = async (arr) => {
 	console.log("Blockchain service: getBalance " + arr);
 	var options = {
 		uri: "http://" + config.blockChainIP + ":8000/showEWalletBalance",
-		method: "GET",
+		method: "POST",
 		json: {
-			wallet_id: arr.toString()
-		}
+			wallet_id: arr.toString(),
+		},
 	};
 
 	let res = await doRequest(options);
@@ -350,9 +420,12 @@ module.exports.initiateTransfer = async function (transaction, tx_id = "") {
 		uri: "http://" + config.blockChainIP + ":8000/transferBtwEWallets",
 		method: "POST",
 		json: {
-			wallet_id1: transaction.from.toString(),
-			wallet_id2: transaction.to.toString(),
+			wallet_from: transaction.from.toString(),
+			wallet_to: transaction.to.toString(),
 			amount: transaction.amount.toString(),
+			from_name: "",
+			to_name: "",
+			user_id: "",
 			remarks: transaction.note.toString(),
 			master_id: transaction.master_code.toString(),
 			child_id: transaction.child_code.toString(),
@@ -361,7 +434,7 @@ module.exports.initiateTransfer = async function (transaction, tx_id = "") {
 	let res = await doRequest(options);
 	if (res.status == 0) {
 		if (tx_id != "") {
-			await FailedTX.findOneAndUpdate({ _id: tx_id }, { status: 2});
+			await FailedTX.findOneAndUpdate({ _id: tx_id }, { status: 2 });
 		}
 		console.log(res);
 		let tx = new FailedTX();
@@ -375,7 +448,7 @@ module.exports.initiateTransfer = async function (transaction, tx_id = "") {
 		});
 	} else {
 		if (tx_id != "") {
-			await FailedTX.findOneAndUpdate({ _id: tx_id }, { status: 1});
+			await FailedTX.findOneAndUpdate({ _id: tx_id }, { status: 1 });
 		}
 		if (transaction.email1 && transaction.email1 != "") {
 			sendMail(
