@@ -103,7 +103,7 @@ router.post("/bank/createMerchant", function (req, res) {
 				} else {
 					const wallet = code + "_operational@" + bank.name;
 					createWallet([wallet]).then((result) => {
-						if (result != "" || !result.contains("wallet already exists")) {
+						if (result != "" && !result.contains("wallet already exists")) {
 							console.log(result);
 							res.status(200).json({
 								status: 0,
@@ -414,7 +414,7 @@ router.post("/bankActivate", function (req, res) {
 					"infra_operational@" + bank.name,
 					"infra_master@" + bank.name,
 				]).then(function (result) {
-					if (result != "" || !result.contains("wallet already exists")) {
+					if (result != "" && !result.contains("wallet already exists")) {
 						console.log(result);
 						res.status(200).json({
 							status: 0,
@@ -614,7 +614,7 @@ router.post("/addBranch", (req, res) => {
 					bcode + "_operational@" + bank.name,
 					bcode + "_master@" + bank.name,
 				]).then(function (result) {
-					if (result != "" || !result.contains("wallet already exists")) {
+					if (result != "" && !result.contains("wallet already exists")) {
 						console.log(result);
 						res.status(200).json({
 							status: 0,
