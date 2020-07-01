@@ -1466,7 +1466,7 @@ router.post("/approveFee", function (req, res) {
 				message: "Unauthorized",
 			});
 		}
-		Fee.findOne(
+		Fee.findOneAndUpdate(
 			{
 				_id: id,
 				status: 2,
