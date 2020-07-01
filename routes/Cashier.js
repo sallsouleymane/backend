@@ -378,7 +378,7 @@ router.post("/cashier/activateUser", function (req, res) {
 						} else {
 							let wallet_id = mobile + "@" + user.bank;
 							let result = await blockchain.createWallet([wallet_id]);
-							if (result != "") {
+							if (result != "" || !result.contains("wallet already exists")) {
 								console.log(result);
 								res.status(200).json({
 									status: 0,

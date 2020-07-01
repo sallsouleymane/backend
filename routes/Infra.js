@@ -121,11 +121,12 @@ router.post("/infra/createMerchant", function (req, res) {
 						} else {
 							const wallet = code + "_operational@" + bank.name;
 							createWallet([wallet]).then((result) => {
-								if (result != "") {
+								if (result != "" || !result.contains("wallet already exists")) {
 									console.log(result);
 									res.status(200).json({
 										status: 0,
-										message: "Blockchain service was unavailable. Please try again.",
+										message:
+											"Blockchain service was unavailable. Please try again.",
 										result: result,
 									});
 								} else {
