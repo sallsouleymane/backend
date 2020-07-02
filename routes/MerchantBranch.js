@@ -42,7 +42,7 @@ router.post("/merchantBranch/editDetails", jwtTokenAuth, (req, res) => {
 			working_to: working_to,
 		},
 		{
-			new: true
+			new: true,
 		},
 		function (err, branch) {
 			if (err) {
@@ -159,7 +159,7 @@ router.post("/merchantBranch/editCashier", jwtTokenAuth, (req, res) => {
 							res.status(200).json({
 								status: 0,
 								message: "Internal server error",
-								err: err
+								err: err,
 							});
 						} else if (cashier == null) {
 							res.status(200).json({
@@ -343,10 +343,12 @@ router.post("/merchantBranch/blockCashier", jwtTokenAuth, (req, res) => {
 					message: "Branch is blocked",
 				});
 			} else {
-				MerchantCashier.findOneAndUpdate({_id: cashier_id, branch_id: branch._id},
-					{ $set: {
-						status: 0
-					}
+				MerchantCashier.findOneAndUpdate(
+					{ _id: cashier_id, branch_id: branch._id },
+					{
+						$set: {
+							status: 0,
+						},
 					},
 					(err, cashier) => {
 						if (err) {
@@ -359,7 +361,7 @@ router.post("/merchantBranch/blockCashier", jwtTokenAuth, (req, res) => {
 								status: 1,
 								data: "Cashier not found",
 							});
-						}else {
+						} else {
 							res.status(200).json({
 								status: 1,
 								data: "blocked cashier",
@@ -392,10 +394,12 @@ router.post("/merchantBranch/unblockCashier", jwtTokenAuth, (req, res) => {
 					message: "Branch is blocked",
 				});
 			} else {
-				MerchantCashier.findOneAndUpdate({_id: cashier_id, branch_id: branch._id},
-					{ $set: {
-						status: 1
-					}
+				MerchantCashier.findOneAndUpdate(
+					{ _id: cashier_id, branch_id: branch._id },
+					{
+						$set: {
+							status: 1,
+						},
 					},
 					(err, cashier) => {
 						if (err) {
@@ -408,7 +412,7 @@ router.post("/merchantBranch/unblockCashier", jwtTokenAuth, (req, res) => {
 								status: 1,
 								data: "Cashier not found",
 							});
-						}else {
+						} else {
 							res.status(200).json({
 								status: 1,
 								data: "Unblocked cashier",

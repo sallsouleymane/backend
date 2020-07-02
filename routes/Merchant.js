@@ -4,6 +4,13 @@ const router = express.Router();
 const config = require("../config.json");
 const jwtTokenAuth = require("./JWTTokenAuth");
 
+//utils
+const sendSMS = require("./utils/sendSMS");
+const sendMail = require("./utils/sendMail");
+const makeid = require("./utils/idGenerator");
+const makeotp = require("./utils/makeotp");
+const blockchain = require("../services/Blockchain");
+
 //models
 const Bank = require("../models/Bank");
 const Merchant = require("../models/merchant/Merchant");
@@ -13,13 +20,346 @@ const MerchantCashier = require("../models/merchant/MerchantCashier");
 const Zone = require("../models/merchant/Zone");
 const InvoiceGroup = require("../models/merchant/InvoiceGroup");
 const FailedTX = require("../models/FailedTXLedger");
+const Offering = require("../models/merchant/Offering");
+const Tax = require("../models/merchant/Tax");
 
-//utils
-const sendSMS = require("./utils/sendSMS");
-const sendMail = require("./utils/sendMail");
-const makeid = require("./utils/idGenerator");
-const makeotp = require("./utils/makeotp");
-const blockchain = require("../services/Blockchain");
+router.post("/merchant/listTaxes", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, merchant) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal Server Error",
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant is not valid",
+				});
+			} else {
+				Tax.find({ merchant_id: merchant._id }, (err, taxes) => {
+					if (err) {
+						console.log(err);
+						res.status(200).json({
+							status: 0,
+							message: "Internal Server Error",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							taxes: taxes,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/merchant/editTax", jwtTokenAuth, function (req, res) {
+	const { tax_id, code, name, value } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal Server Error",
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant is not valid",
+				});
+			} else {
+				Tax.findOneAndUpdate(
+					{ _id: tax_id },
+					{ code, name, value },
+					{ new: true },
+					(err, tax) => {
+						if (err) {
+							console.log(err);
+							res.status(200).json({
+								status: 0,
+								message: "Internal server error",
+							});
+						} else if (tax == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Tax not found",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Tax edited successfully",
+								tax: tax,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/merchant/createTax", jwtTokenAuth, function (req, res) {
+	const { code, name, value } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal Server Error",
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant is not valid",
+				});
+			} else {
+				const tax = new Tax();
+				tax.merchant_id = merchant._id;
+				tax.code = code;
+				tax.name = name;
+				tax.value = value;
+				tax.save((err) => {
+					if (err) {
+						console.log(err);
+						res.status(200).json({
+							status: 0,
+							message: "Internal Server Error",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Tax Created",
+						});
+					}
+				});
+			}
+		}
+	);
+});
+router.post("/merchant/deleteOffering", jwtTokenAuth, function (req, res) {
+	const { offering_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err || merchant == null) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal Server Error",
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant is not valid",
+				});
+			} else {
+				Offering.deleteOne({ _id: offering_id }, (err) => {
+					if (err) {
+						console.log(err);
+						res.status(200).json({
+							status: 0,
+							message: "Internal Server Error",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Offering deleted",
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/merchant/editOffering", jwtTokenAuth, (req, res) => {
+	const {
+		offering_id,
+		code,
+		name,
+		denomination,
+		unit_of_measure,
+		unit_price,
+		type,
+	} = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant is not valid",
+				});
+			} else {
+				Offering.findOneAndUpdate(
+					{ _id: offering_id, merchant_id: merchant._id },
+					{
+						code,
+						name,
+						denomination,
+						unit_of_measure,
+						unit_price,
+						type,
+					},
+					{ new: true },
+					(err, offering) => {
+						if (err) {
+							console.log(err);
+							res.status(200).json({
+								status: 0,
+								message: "Internal server error",
+							});
+						} else if (offering == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Offering not found",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Offering edited successfully",
+								offering: offering,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/merchant/listOfferings", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, merchant) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal Server Error",
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant is not valid",
+				});
+			} else {
+				Offering.find({ merchant_id: merchant._id }, (err, offerings) => {
+					if (err) {
+						console.log(err);
+						res.status(200).json({
+							status: 0,
+							message: "Internal Server Error",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							offerings: offerings,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/merchant/uploadOfferings", jwtTokenAuth, function (req, res) {
+	const { offerings } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, merchant) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal Server Error",
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant is not valid",
+				});
+			} else {
+				var offeringPromises = offerings.map(async (offering) => {
+					var {
+						code,
+						name,
+						denomination,
+						unit_of_measure,
+						unit_price,
+						type,
+					} = offering;
+					var offeringObj = new Offering();
+					offeringObj.merchant_id = merchant._id;
+					offeringObj.code = code;
+					offeringObj.name = name;
+					offeringObj.denomination = denomination;
+					offeringObj.unit_of_measure = unit_of_measure;
+					offeringObj.unit_price = unit_price;
+					offeringObj.type = type;
+					await offeringObj.save();
+					return true;
+				});
+				try {
+					await Promise.all(offeringPromises);
+					res.status(200).json({
+						status: 1,
+						message: "Offerings uploaded",
+					});
+				} catch (err) {
+					console.log(err);
+					var message = "Internal server error";
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({ status: 0, message: message });
+				}
+			}
+		}
+	);
+});
 
 router.get("/merchant/todaysStatus", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -550,6 +890,7 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
 router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 	const {
 		name,

@@ -329,9 +329,16 @@ router.post("/getBanks", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal server error",
+				});
+			} else if (user == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorized",
 				});
 			} else {
 				Bank.find({}, function (err, bank) {
@@ -1084,12 +1091,13 @@ router.post("/getRules", function (req, res) {
 		function (err, user) {
 			if (err) {
 				console.log(err);
-				res.status(500).json({
-					error: "Internal Server Error",
+				res.status(200).json({
+					status: 0,
+					error: err,
 				});
-			}
-			if (user == null) {
+			} else if (user == null) {
 				res.status(401).json({
+					status: 0,
 					error: "Unauthorized",
 				});
 			} else {
@@ -1403,6 +1411,9 @@ router.post("/transferMoney", function (req, res) {
 							data.email2 = infra_email;
 							data.mobile1 = infra_mobile;
 							data.mobile2 = infra_mobile;
+							data.from_name = f.name;
+							data.to_name = f.name;
+							data.user_id = "";
 
 							transferThis(data).then(function (result) {});
 							res.status(200).json({

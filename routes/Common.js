@@ -17,7 +17,7 @@ const {
 	rechargeNow,
 	getChildStatements,
 	getBalance,
-	initiateTransfer
+	initiateTransfer,
 } = require("../services/Blockchain.js");
 
 const Infra = require("../models/Infra");
@@ -108,16 +108,16 @@ router.post("/:user/reinitiateTransfer", jwtTokenAuth, (req, res) => {
 
 router.post("/:user/changePassword", jwtTokenAuth, (req, res) => {
 	const user = req.params.user;
-	const Type = getTypeClass(user)
-    const { password } = req.body;
-    const username = req.sign_creds.username;
+	const Type = getTypeClass(user);
+	const { password } = req.body;
+	const username = req.sign_creds.username;
 	Type.findOneAndUpdate(
 		{
 			username,
 		},
 		{
 			password: password,
-			status: 1
+			status: 1,
 		},
 		function (err, details) {
 			if (err) {
@@ -1689,7 +1689,7 @@ router.get("/clearDb", function (req, res) {
 
 	res.status(200).json({
 		status: "success",
-		matchfound: matchfound
+		matchfound: matchfound,
 	});
 });
 

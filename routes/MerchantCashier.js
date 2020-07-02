@@ -9,6 +9,93 @@ const MerchantBranch = require("../models/merchant/MerchantBranch");
 const MerchantCashier = require("../models/merchant/MerchantCashier");
 const InvoiceGroup = require("../models/merchant/InvoiceGroup");
 const Invoice = require("../models/merchant/Invoice");
+const Offering = require("../models/merchant/Offering");
+const Tax = require("../models/merchant/Tax");
+const { promises } = require("fs-extra");
+
+router.post("/merchantCashier/listOfferings", jwtTokenAuth, function (
+	req,
+	res
+) {
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, cashier) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal Server Error",
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant is not valid",
+				});
+			} else {
+				Offering.find(
+					{ merchant_id: cashier.merchant_id },
+					(err, offerings) => {
+						if (err) {
+							console.log(err);
+							res.status(200).json({
+								status: 0,
+								message: "Internal Server Error",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								offerings: offerings,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/merchantCashier/listTaxes", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, cashier) {
+			if (err) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Internal Server Error",
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant is not valid",
+				});
+			} else {
+				Tax.find({ merchant_id: cashier.merchant_id }, (err, taxes) => {
+					if (err) {
+						console.log(err);
+						res.status(200).json({
+							status: 0,
+							message: "Internal Server Error",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							taxes: taxes,
+						});
+					}
+				});
+			}
+		}
+	);
+});
 
 router.post("/merchantCashier/deleteInvoice", jwtTokenAuth, function (
 	req,
@@ -251,6 +338,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 									description,
 									mobile,
 									ccode,
+									items,
 								} = invoice;
 								var invoiceObj = new Invoice();
 								invoiceObj.number = number;
@@ -266,6 +354,42 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 								invoiceObj.group_id = group_id;
 								invoiceObj.cashier_id = cashier._id;
 								invoiceObj.paid = 0;
+								for (const item of items) {
+									var { item_id, quantity, tax_id, total_amount } = item;
+									var item_desc = await Offering.findOne(
+										{ _id: item_id, merchant_id: cashier.merchant_id },
+										"code name denomination unit_of_measure unit_price"
+									);
+									if (item_desc == null) {
+										throw new Error(
+											"Item not found with id " +
+												item_id +
+												" for invoice number " +
+												number
+										);
+									}
+
+									var tax = await Tax.findOne({
+										_id: tax_id,
+										merchant_id: cashier.merchant_id,
+									});
+									if (tax == null) {
+										throw new Error(
+											"Tax not found with id " +
+												tax_id +
+												" for invoice number " +
+												number
+										);
+									}
+
+									invoiceObj.items.push({
+										item_desc: item_desc,
+										quantity: quantity,
+										tax_id: tax_id,
+										total_amount: total_amount,
+									});
+								}
+								console.log(invoiceObj);
 								await invoiceObj.save();
 
 								var branch = await MerchantBranch.findOneAndUpdate(

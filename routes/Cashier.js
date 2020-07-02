@@ -1281,6 +1281,9 @@ router.post("/cashierSendMoney", function (req, res) {
 																		trans1.email2 = f3.email;
 																		trans1.mobile1 = f2.mobile;
 																		trans1.mobile2 = f3.mobile;
+																		trans1.from_name = f2.name;
+																		trans1.to_name = f3.name;
+																		trans1.user_id = f._id;
 																		trans1.master_code = master_code;
 																		trans1.child_code = child_code + "1";
 
@@ -1293,6 +1296,9 @@ router.post("/cashierSendMoney", function (req, res) {
 																		trans2.email2 = f3.email;
 																		trans2.mobile1 = f2.mobile;
 																		trans2.mobile2 = f3.mobile;
+																		trans2.from_name = f2.name;
+																		trans2.to_name = f3.name;
+																		trans2.user_id = f._id;
 																		trans2.master_code = master_code;
 																		now = new Date().getTime();
 																		child_code = mns + "" + mnr + "" + now;
@@ -1331,6 +1337,9 @@ router.post("/cashierSendMoney", function (req, res) {
 																					trans3.email2 = f4.email;
 																					trans3.mobile1 = f3.mobile;
 																					trans3.mobile2 = f4.mobile;
+																					trans3.from_name = f3.name;
+																					trans3.to_name = f4.name;
+																					trans3.user_id = "";
 																					trans3.master_code = master_code;
 																					mns = f3.mobile.slice(-2);
 																					mnr = f4.mobile.slice(-2);
@@ -1372,6 +1381,9 @@ router.post("/cashierSendMoney", function (req, res) {
 																					trans4.email2 = f3.email;
 																					trans4.mobile1 = f2.mobile;
 																					trans4.mobile2 = f3.mobile;
+																					trans4.from_name = f2.name;
+																					trans4.to_name = f3.name;
+																					trans4.user_id = "";
 																					trans4.master_code = master_code;
 																					now = new Date().getTime();
 																					child_code =
@@ -1749,6 +1761,9 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																						trans1.email2 = receiver.email;
 																						trans1.mobile1 = branch.mobile;
 																						trans1.mobile2 = receiver.mobile;
+																						trans1.from_name = branch.name;
+																						trans1.to_name = receiver.name;
+																						trans1.user_id = cashier._id;
 																						trans1.master_code = master_code;
 																						trans1.child_code =
 																							child_code + "1";
@@ -1763,6 +1778,9 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																						trans2.email2 = bank.email;
 																						trans2.mobile1 = branch.mobile;
 																						trans2.mobile2 = bank.mobile;
+																						trans2.from_name = branch.name;
+																						trans2.to_name = bank.name;
+																						trans2.user_id = cashier._id;
 																						trans2.master_code = master_code;
 																						now = new Date().getTime();
 																						child_code =
@@ -1808,6 +1826,9 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																									trans3.email2 = f4.email;
 																									trans3.mobile1 = bank.mobile;
 																									trans3.mobile2 = f4.mobile;
+																									trans3.from_name = bank.name;
+																									trans3.to_name = f4.name;
+																									trans3.user_id = "";
 																									trans3.master_code = master_code;
 																									mns = bank.mobile.slice(-2);
 																									mnr = f4.mobile.slice(-2);
@@ -1852,11 +1873,15 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																									// trans4.amount = 1 ;
 																									trans4.note =
 																										"Bank Send Revenue Branch for Sending money";
-																									trans4.email1 = branch.email;
-																									trans4.email2 = bank.email;
+																									trans4.email1 = bank.email;
+																									trans4.email2 = branch.email;
 																									trans4.mobile1 =
 																										branch.mobile;
 																									trans4.mobile2 = bank.mobile;
+																									trans4.from_name =
+																										bank.name;
+																									trans4.to_name = branch.name;
+																									trans4.user_id = "";
 																									trans4.master_code = master_code;
 																									now = new Date().getTime();
 																									child_code =
@@ -2375,6 +2400,9 @@ router.post("/cashierClaimMoney", function (req, res) {
 																		trans1.email2 = f2.email;
 																		trans1.mobile1 = f3.mobile;
 																		trans1.mobile2 = f2.mobile;
+																		trans1.from_name = f3.name;
+																		trans1.to_name = f2.name;
+																		trans1.user_id = "";
 																		trans1.master_code = master_code;
 																		trans1.child_code = child_code;
 
@@ -2442,8 +2470,11 @@ router.post("/cashierClaimMoney", function (req, res) {
 																					trans2.email2 = f3.email;
 																					trans2.mobile1 = f2.mobile;
 																					trans2.mobile2 = f3.mobile;
+																					trans2.from_name = f2.name;
+																					trans2.to_name = f3.name;
+																					trans2.user_id = "";
 																					trans2.master_code = master_code;
-																					trans1.child_code =
+																					trans2.child_code =
 																						data.child_code + "2";
 
 																					//End of hatim Code
