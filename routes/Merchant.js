@@ -33,9 +33,13 @@ router.post("/merchant/listTaxes", jwtTokenAuth, function (req, res) {
 		async function (err, merchant) {
 			if (err) {
 				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (merchant == null) {
 				res.status(200).json({
@@ -46,9 +50,13 @@ router.post("/merchant/listTaxes", jwtTokenAuth, function (req, res) {
 				Tax.find({ merchant_id: merchant._id }, (err, taxes) => {
 					if (err) {
 						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
 						res.status(200).json({
 							status: 0,
-							message: "Internal Server Error",
+							message: message,
 						});
 					} else {
 						res.status(200).json({
@@ -73,9 +81,13 @@ router.post("/merchant/editTax", jwtTokenAuth, function (req, res) {
 		function (err, merchant) {
 			if (err) {
 				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (merchant == null) {
 				res.status(200).json({
@@ -90,9 +102,13 @@ router.post("/merchant/editTax", jwtTokenAuth, function (req, res) {
 					(err, tax) => {
 						if (err) {
 							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal server error",
+								message: message,
 							});
 						} else if (tax == null) {
 							res.status(200).json({
@@ -124,9 +140,13 @@ router.post("/merchant/createTax", jwtTokenAuth, function (req, res) {
 		function (err, merchant) {
 			if (err) {
 				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (merchant == null) {
 				res.status(200).json({
@@ -142,9 +162,13 @@ router.post("/merchant/createTax", jwtTokenAuth, function (req, res) {
 				tax.save((err) => {
 					if (err) {
 						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
 						res.status(200).json({
 							status: 0,
-							message: "Internal Server Error",
+							message: message,
 						});
 					} else {
 						res.status(200).json({
@@ -181,9 +205,13 @@ router.post("/merchant/deleteOffering", jwtTokenAuth, function (req, res) {
 				Offering.deleteOne({ _id: offering_id }, (err) => {
 					if (err) {
 						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
 						res.status(200).json({
 							status: 0,
-							message: "Internal Server Error",
+							message: message,
 						});
 					} else {
 						res.status(200).json({
@@ -215,14 +243,20 @@ router.post("/merchant/editOffering", jwtTokenAuth, (req, res) => {
 		},
 		function (err, merchant) {
 			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message: message,
 				});
 			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Merchant is not valid",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Offering.findOneAndUpdate(
@@ -239,9 +273,13 @@ router.post("/merchant/editOffering", jwtTokenAuth, (req, res) => {
 					(err, offering) => {
 						if (err) {
 							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal server error",
+								message: message,
 							});
 						} else if (offering == null) {
 							res.status(200).json({
@@ -272,9 +310,13 @@ router.post("/merchant/listOfferings", jwtTokenAuth, function (req, res) {
 		async function (err, merchant) {
 			if (err) {
 				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (merchant == null) {
 				res.status(200).json({
@@ -285,9 +327,13 @@ router.post("/merchant/listOfferings", jwtTokenAuth, function (req, res) {
 				Offering.find({ merchant_id: merchant._id }, (err, offerings) => {
 					if (err) {
 						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
 						res.status(200).json({
 							status: 0,
-							message: "Internal Server Error",
+							message: message,
 						});
 					} else {
 						res.status(200).json({
@@ -312,9 +358,13 @@ router.post("/merchant/uploadOfferings", jwtTokenAuth, function (req, res) {
 		async function (err, merchant) {
 			if (err) {
 				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (merchant == null) {
 				res.status(200).json({
@@ -389,9 +439,13 @@ router.get("/merchant/todaysStatus", jwtTokenAuth, function (req, res) {
 					(err, merchant2) => {
 						if (err) {
 							console.log(err);
-							return res.status(200).json({
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
 								status: 0,
-								message: "Internal Server error",
+								message: message,
 							});
 						} else if (merchant2 != null) {
 							merchant = merchant2;
@@ -423,7 +477,8 @@ router.get("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 			if (err || merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Bank.findOne(
@@ -432,9 +487,14 @@ router.get("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 					},
 					function (err, bank) {
 						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal server error",
+								message: message,
 							});
 						} else {
 							const wallet = jwtusername + "_operational@" + bank.name;
@@ -442,9 +502,14 @@ router.get("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 							blockchain.getStatement(wallet).then(function (history) {
 								FailedTX.find({ wallet_id: wallet }, (err, failed) => {
 									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
 										res.status(200).json({
 											status: 0,
-											message: "Internal server error",
+											message: message,
 										});
 									} else {
 										res.status(200).json({
@@ -484,14 +549,19 @@ router.post("/merchant/editDetails", jwtTokenAuth, function (req, res) {
 		function (err, merchant) {
 			if (err) {
 				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal error please try again",
+					message: message,
 				});
 			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				res.status(200).json({
@@ -517,7 +587,8 @@ router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 			if (err || merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				data.code = code;
@@ -527,10 +598,13 @@ router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 				data.save((err, zone) => {
 					if (err) {
 						console.log(err);
-						return res.status(200).json({
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
 							status: 0,
-							message: "Zone already exist with this code",
-							err: err,
+							message: message,
 						});
 					} else {
 						return res
@@ -555,7 +629,8 @@ router.post("/merchant/editZone", jwtTokenAuth, (req, res) => {
 			if (err || merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Zone.findOneAndUpdate(
@@ -563,9 +638,14 @@ router.post("/merchant/editZone", jwtTokenAuth, (req, res) => {
 					{ code: code, name: name, description: description },
 					(err, zone) => {
 						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal Server Error",
+								message: message,
 							});
 						} else if (zone == null) {
 							res.status(200).json({
@@ -596,14 +676,20 @@ router.get("/merchant/listZones", jwtTokenAuth, (req, res) => {
 			if (err || merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Zone.find({ merchant_id: merchant._id }, (err, zones) => {
 					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
 						res.status(200).json({
 							status: 0,
-							message: "Internal server error",
+							message: message,
 						});
 					} else {
 						res.status(200).json({
@@ -619,15 +705,7 @@ router.get("/merchant/listZones", jwtTokenAuth, (req, res) => {
 
 router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 	let data = new MerchantCashier();
-	const {
-		name,
-		branch_id,
-		working_from,
-		working_to,
-		per_trans_amt,
-		max_trans_amt,
-		max_trans_count,
-	} = req.body;
+	const { name, branch_id, working_from, working_to } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -638,16 +716,20 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 			if (err || merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantBranch.findOne({ _id: branch_id }, function (err, branch) {
 					if (err) {
 						console.log(err);
-						return res.json({
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
 							status: 0,
-							message: "Internal server error",
-							err: err,
+							message: message,
 						});
 					} else if (branch == null) {
 						return res.json({
@@ -658,18 +740,18 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 						data.name = name;
 						data.working_from = working_from;
 						data.working_to = working_to;
-						data.per_trans_amt = per_trans_amt;
-						data.max_trans_amt = max_trans_amt;
-						data.max_trans_count = max_trans_count;
 						data.merchant_id = merchant._id;
 						data.branch_id = branch_id;
 						data.save((err, cashier) => {
 							if (err) {
 								console.log(err);
-								return res.json({
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
 									status: 0,
-									message: "Cashier name is already used.",
-									err: err,
+									message: message,
 								});
 							} else {
 								MerchantBranch.updateOne(
@@ -693,10 +775,13 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 											ig.save((err, group) => {
 												if (err) {
 													console.log(err);
-													return res.status(200).json({
+													var message = err;
+													if (err.message) {
+														message = err.message;
+													}
+													res.status(200).json({
 														status: 0,
-														message: "code already used",
-														err: err,
+														message: message,
 													});
 												} else {
 													return res.status(200).json({
@@ -719,15 +804,7 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/merchant/editCashier", jwtTokenAuth, (req, res) => {
-	const {
-		cashier_id,
-		name,
-		working_from,
-		working_to,
-		per_trans_amt,
-		max_trans_amt,
-		max_trans_count,
-	} = req.body;
+	const { cashier_id, name, working_from, working_to } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -747,15 +824,17 @@ router.post("/merchant/editCashier", jwtTokenAuth, (req, res) => {
 						name: name,
 						working_from: working_from,
 						working_to: working_to,
-						per_trans_amt: per_trans_amt,
-						max_trans_amt: max_trans_amt,
-						max_trans_count: max_trans_count,
 					},
 					(err, cashier) => {
 						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal server error",
+								message: message,
 							});
 						} else if (cashier == null) {
 							res.status(200).json({
@@ -794,9 +873,14 @@ router.post("/merchant/listCashier", jwtTokenAuth, (req, res) => {
 					{ merchant_id: merchant._id, branch_id: branch_id },
 					(err, cashiers) => {
 						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: err,
+								message: message,
 							});
 						} else {
 							res.status(200).json({
@@ -833,7 +917,8 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 			if (err || user == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				data.name = name;
@@ -849,10 +934,13 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 				data.save((err) => {
 					if (err) {
 						console.log(err);
-						return res.json({
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
 							status: 0,
-							message: "User ID / Email / Mobile already used",
-							err: err,
+							message: message,
 						});
 					} else {
 						let content =
@@ -913,7 +1001,8 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 			if (err || merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantStaff.findOneAndUpdate(
@@ -934,9 +1023,13 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 					(err, staff) => {
 						if (err) {
 							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal Server Error",
+								message: message,
 							});
 						} else if (staff == null) {
 							res.status(200).json({
@@ -967,7 +1060,8 @@ router.get("/merchant/listStaff", jwtTokenAuth, (req, res) => {
 			if (err || merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantStaff.find(
@@ -975,9 +1069,14 @@ router.get("/merchant/listStaff", jwtTokenAuth, (req, res) => {
 					"-password",
 					(err, staffs) => {
 						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: err,
+								message: message,
 							});
 						} else {
 							res.status(200).json({
@@ -1004,7 +1103,8 @@ router.post("/merchant/blockStaff", jwtTokenAuth, (req, res) => {
 			if (err || merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantStaff.findOneAndUpdate(
@@ -1017,9 +1117,13 @@ router.post("/merchant/blockStaff", jwtTokenAuth, (req, res) => {
 					(err, staff) => {
 						if (err) {
 							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal Server Error",
+								message: message,
 							});
 						} else if (staff == null) {
 							res.status(200).json({
@@ -1051,7 +1155,8 @@ router.post("/merchant/unblockStaff", jwtTokenAuth, (req, res) => {
 			if (err || merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantStaff.findOneAndUpdate(
@@ -1062,9 +1167,13 @@ router.post("/merchant/unblockStaff", jwtTokenAuth, (req, res) => {
 					(err, staff) => {
 						if (err) {
 							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal Server Error",
+								message: message,
 							});
 						} else if (staff == null) {
 							res.status(200).json({
@@ -1108,9 +1217,13 @@ router.post("/merchant/blockBranch", jwtTokenAuth, (req, res) => {
 					(err, branch) => {
 						if (err) {
 							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal server error",
+								message: message,
 							});
 						} else if (branch == null) {
 							res.status(200).json({
@@ -1154,9 +1267,13 @@ router.post("/merchant/unblockBranch", jwtTokenAuth, (req, res) => {
 					(err, branch) => {
 						if (err) {
 							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal server error",
+								message: message,
 							});
 						} else if (branch == null) {
 							res.status(200).json({
@@ -1203,14 +1320,20 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 		"-password",
 		function (err, merchant) {
 			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				data.name = name;
@@ -1233,20 +1356,25 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 				Zone.countDocuments({ _id: zone_id }, (err, count) => {
 					if (err) {
 						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
 						res.status(200).json({
 							status: 0,
-							message: "Internal server error",
-							err: err,
+							message: message,
 						});
 					} else if (count == 1) {
 						data.save((err, branch) => {
 							if (err) {
 								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
 								res.status(200).json({
 									status: 0,
-									message:
-										"Any of the fields among name, code, username, mobile and email are already used by another branch",
-									err: err,
+									message: message,
 								});
 							} else {
 								Zone.updateOne(
@@ -1335,14 +1463,20 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 		},
 		function (err, merchant) {
 			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantBranch.findOneAndUpdate(
@@ -1363,9 +1497,14 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 					{ new: true },
 					(err, branch) => {
 						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: err,
+								message: message,
 							});
 						} else {
 							res.status(200).json({
@@ -1389,14 +1528,20 @@ router.get("/merchant/listBranches", jwtTokenAuth, function (req, res) {
 		},
 		function (err, merchant) {
 			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantBranch.find(
@@ -1404,9 +1549,14 @@ router.get("/merchant/listBranches", jwtTokenAuth, function (req, res) {
 					"-password",
 					function (err, branch) {
 						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: err,
+								message: message,
 							});
 						} else {
 							res.status(200).json({
@@ -1434,14 +1584,20 @@ router.post("/merchant/listBranchesByZoneId", jwtTokenAuth, function (
 		},
 		function (err, merchant) {
 			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantBranch.find(
@@ -1449,9 +1605,14 @@ router.post("/merchant/listBranchesByZoneId", jwtTokenAuth, function (
 					"-password",
 					function (err, branch) {
 						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: err,
+								message: message,
 							});
 						} else {
 							res.status(200).json({
@@ -1475,16 +1636,22 @@ router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 		},
 		function (err, merchant) {
 			if (err || merchant == null) {
-				res.status(401).json({
+				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Bank.findOne({ _id: merchant.bank_id }, (err, bank) => {
 					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
 						res.status(200).json({
 							status: 0,
-							error: "Internal Server Error",
+							message: message,
 						});
 					} else {
 						const wallet_id = merchant.username + "_operational@" + bank.name;

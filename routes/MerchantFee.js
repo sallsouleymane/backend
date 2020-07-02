@@ -34,7 +34,8 @@ router.post("/bank/merchantFee/updatePartnersShare", function (req, res) {
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantFee.findOneAndUpdate(
@@ -97,7 +98,8 @@ router.post("/bank/merchantFee/createRule", function (req, res) {
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Merchant.findOne({ _id: merchant_id }, (err, merchant) => {
@@ -193,7 +195,8 @@ router.post("/bank/merchantFee/addInfraShare", function (req, res) {
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantFee.findOneAndUpdate(
@@ -250,7 +253,8 @@ router.post("/bank/merchantFee/editRule", function (req, res) {
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantFee.findOneAndUpdate(
@@ -341,7 +345,8 @@ router.post("/bank/merchantFee/editInfraShare", function (req, res) {
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantFee.findOneAndUpdate(
@@ -405,7 +410,8 @@ router.get("/merchant/merchantFee/getRules", jwtTokenAuth, function (req, res) {
 			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				var excludeFields =
@@ -453,7 +459,8 @@ router.post("/bank/merchantFee/getRules", function (req, res) {
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantFee.find({ merchant_id: merchant_id }, (err, rules) => {
@@ -493,7 +500,8 @@ router.post("/infra/merchantFee/getRules", function (req, res) {
 			} else if (infra == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantFee.find(
@@ -561,80 +569,136 @@ router.post("/merchant/merchantFee/approve", jwtTokenAuth, function (req, res) {
 			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				MerchantFee.findOne(
-					{
-						_id: fee_id,
-						$or: [
-							{ merchant_approve_status: 0 },
-							{ "edited.merchant_approve_status": 0 },
-						],
-					},
-					(err, fee) => {
-						if (err) {
-							console.log(err);
-							res.status(200).json({
-								status: 0,
-								message: "Internal Server Error",
-							});
-						} else if (fee == null) {
-							res.status(200).json({
-								status: 0,
-								message: "MerchantFee not found.",
-							});
-						} else {
-							if (fee.rule_edit_status == 1) {
-								console.log("Condition 1");
-								MerchantFee.updateOne(
-									{
-										_id: fee_id,
-									},
-									{
-										$set: {
-											"edited.merchant_approve_status": 1,
-										},
-									},
-									(err) => {
-										if (err) {
-											console.log(err);
-											res.status(200).json({
-												status: 0,
-												message: "Internal Server Error",
-											});
-										}
+				Bank.findOne({ _id: merchant.bank_id }, (err, bank) => {
+					if (err) {
+						console.log(err);
+						res.status(200).json({
+							status: 0,
+							message: "Internal Server Error",
+						});
+					} else if (bank == null) {
+						res.status(200).json({
+							status: 0,
+							message: "Merchant's bank not found.",
+						});
+					} else {
+						MerchantFee.findOne(
+							{
+								_id: fee_id,
+								$or: [
+									{ merchant_approve_status: 0 },
+									{ "edited.merchant_approve_status": 0 },
+								],
+							},
+							(err, fee) => {
+								if (err) {
+									console.log(err);
+									res.status(200).json({
+										status: 0,
+										message: "Internal Server Error",
+									});
+								} else if (fee == null) {
+									res.status(200).json({
+										status: 0,
+										message: "MerchantFee not found.",
+									});
+								} else {
+									if (fee.rule_edit_status == 1) {
+										console.log("Condition 1");
+										MerchantFee.updateOne(
+											{
+												_id: fee_id,
+											},
+											{
+												$set: {
+													"edited.merchant_approve_status": 1,
+												},
+											},
+											(err) => {
+												if (err) {
+													console.log(err);
+													res.status(200).json({
+														status: 0,
+														message: "Internal Server Error",
+													});
+												} else {
+													var content =
+														"Merchant " +
+														merchant.name +
+														" has approved the fee rule " +
+														fee.name +
+														"in Ewallet Application";
+													sendMail(
+														content,
+														"Fee rule approved by merchant",
+														bank.email
+													);
+													content =
+														"Ewallet: Merchant " +
+														merchant.name +
+														" has approved the fee rule " +
+														fee.name;
+													sendSMS(content, bank.mobile);
+													res.status(200).json({
+														status: 1,
+														message: "Approved",
+													});
+												}
+											}
+										);
+									} else {
+										console.log("Condition 2");
+										MerchantFee.updateOne(
+											{
+												_id: fee_id,
+											},
+											{
+												$set: {
+													merchant_approve_status: 1,
+												},
+											},
+											(err) => {
+												if (err) {
+													console.log(err);
+													res.status(200).json({
+														status: 0,
+														message: "Internal Server Error",
+													});
+												} else {
+													var content =
+														"Merchant " +
+														merchant.name +
+														" has approved the fee rule " +
+														fee.name +
+														"in Ewallet Application";
+													sendMail(
+														content,
+														"Fee rule approved by merchant",
+														bank.email
+													);
+													content =
+														"Ewallet: Merchant " +
+														merchant.name +
+														" has approved the fee rule " +
+														fee.name;
+													sendSMS(content, bank.mobile);
+													res.status(200).json({
+														status: 1,
+														message: "Approved",
+													});
+												}
+											}
+										);
 									}
-								);
-							} else {
-								console.log("Condition 2");
-								MerchantFee.updateOne(
-									{
-										_id: fee_id,
-									},
-									{
-										$set: {
-											merchant_approve_status: 1,
-										},
-									},
-									(err) => {
-										if (err) {
-											console.log(err);
-											res.status(200).json({
-												status: 0,
-												message: "Internal Server Error",
-											});
-										}
-									}
-								);
+								}
 							}
-							res.status(200).json({
-								status: 1,
-								message: "Approved",
-							});
-						}
+						);
 					}
-				);
+				});
 			}
 		}
 	);
@@ -658,7 +722,8 @@ router.post("/merchant/merchantFee/decline", jwtTokenAuth, function (req, res) {
 			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantFee.findOne(
@@ -754,167 +819,163 @@ router.post("/infra/merchantFee/approve", function (req, res) {
 			} else if (infra == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				MerchantFee.findOne(
-					{
-						_id: fee_id,
-						$or: [
-							{ infra_approve_status: 3 },
-							{ "edited.infra_approve_status": 3 },
-						],
-						$or: [
-							{
-								$and: [{ rule_edit_status: 0 }, { merchant_approve_status: 1 }],
-							},
-							{
-								$and: [
-									{ rule_edit_status: 1 },
-									{ "edited.merchant_approve_status": 1 },
-								],
-							},
-						],
-					},
-					(err, fee) => {
-						if (err) {
-							console.log(err);
-							res.status(200).json({
-								status: 0,
-								message: "Internal Server Error",
-							});
-						} else if (fee == null) {
-							res.status(200).json({
-								status: 0,
-								message: "MerchantFee not found.",
-							});
-						} else {
-							if (
-								fee.infra_share_edit_status == 0 &&
-								fee.rule_edit_status == 1
-							) {
-								console.log("Condition 1");
-								MerchantFee.updateOne(
-									{
-										_id: fee_id,
-									},
-									{
-										$set: {
-											active: fee.edited.active,
-											type: fee.edited.type,
-											ranges: fee.edited.ranges,
-											status: 1,
-											infra_approve_status: 1,
-											rule_edit_status: 0,
-										},
-										$unset: { edited: {} },
-									},
-									(err) => {
-										if (err) {
-											console.log(err);
-											return res.status(200).json({
-												status: 0,
-												message: "Internal Server Error",
-											});
-										}
-									}
-								);
-							} else if (
-								fee.infra_share_edit_status == 1 &&
-								fee.rule_edit_status == 1
-							) {
-								console.log("Condition 2");
-								MerchantFee.updateOne(
-									{
-										_id: fee_id,
-									},
-									{
-										$set: {
-											active: fee.edited.active,
-											ranges: fee.edited.ranges,
-											type: fee.edited.type,
-											"infra_share.fixed": fee.edited.infra_share.fixed,
-											"infra_share.percentage":
-												fee.edited.infra_share.percentage,
-											infra_share_edit_status: 0,
-											rule_edit_status: 0,
-											status: 1,
-										},
-										$unset: {
-											edited: {},
-										},
-									},
-									(err) => {
-										if (err) {
-											console.log(err);
-											return res.status(200).json({
-												status: 0,
-												message: "Internal Server Error",
-											});
-										}
-									}
-								);
-							} else if (
-								fee.infra_share_edit_status == 1 &&
-								fee.rule_edit_status == 0
-							) {
-								console.log("Condition 3");
-								MerchantFee.updateOne(
-									{
-										_id: fee_id,
-									},
-									{
-										$set: {
-											"infra_share.fixed": fee.edited.infra_share.fixed,
-											"infra_share.percentage":
-												fee.edited.infra_share.percentage,
-											infra_share_edit_status: 0,
-											status: 1,
-										},
-										$unset: {
-											edited: {},
-										},
-									},
-									(err) => {
-										if (err) {
-											console.log(err);
-											return res.status(200).json({
-												status: 0,
-												message: "Internal Server Error",
-											});
-										}
-									}
-								);
+				try {
+					MerchantFee.findOne(
+						{
+							_id: fee_id,
+							$or: [
+								{ infra_approve_status: 3 },
+								{ "edited.infra_approve_status": 3 },
+							],
+							$or: [
+								{
+									$and: [
+										{ rule_edit_status: 0 },
+										{ merchant_approve_status: 1 },
+									],
+								},
+								{
+									$and: [
+										{ rule_edit_status: 1 },
+										{ "edited.merchant_approve_status": 1 },
+									],
+								},
+							],
+						},
+						async (err, fee) => {
+							if (err) {
+								console.log(err);
+								res.status(200).json({
+									status: 0,
+									message: "Internal Server Error",
+								});
+							} else if (fee == null) {
+								res.status(200).json({
+									status: 0,
+									message: "MerchantFee not found.",
+								});
 							} else {
-								console.log("Condition 4");
-								MerchantFee.updateOne(
-									{
-										_id: fee_id,
-									},
-									{
-										$set: {
-											infra_approve_status: 1,
-											status: 1,
+								var merchant = Merchant.findOne({
+									_id: fee.merchant_id,
+									status: 1,
+								});
+								if (merchant == null) {
+									throw new Error("Fee's Merchant not found");
+								}
+								var bank = Bank.findOne({ _id: merchant.bank_id, status: 1 });
+								if (bank == null) {
+									throw new Error("Merchant's bank not found");
+								}
+								if (
+									fee.infra_share_edit_status == 0 &&
+									fee.rule_edit_status == 1
+								) {
+									console.log("Condition 1");
+									await MerchantFee.updateOne(
+										{
+											_id: fee_id,
 										},
-									},
-									(err) => {
-										if (err) {
-											console.log(err);
-											return res.status(200).json({
-												status: 0,
-												message: "Internal Server Error",
-											});
+										{
+											$set: {
+												active: fee.edited.active,
+												type: fee.edited.type,
+												ranges: fee.edited.ranges,
+												status: 1,
+												infra_approve_status: 1,
+												rule_edit_status: 0,
+											},
+											$unset: { edited: {} },
 										}
-									}
-								);
+									);
+								} else if (
+									fee.infra_share_edit_status == 1 &&
+									fee.rule_edit_status == 1
+								) {
+									console.log("Condition 2");
+									await MerchantFee.updateOne(
+										{
+											_id: fee_id,
+										},
+										{
+											$set: {
+												active: fee.edited.active,
+												ranges: fee.edited.ranges,
+												type: fee.edited.type,
+												"infra_share.fixed": fee.edited.infra_share.fixed,
+												"infra_share.percentage":
+													fee.edited.infra_share.percentage,
+												infra_share_edit_status: 0,
+												rule_edit_status: 0,
+												status: 1,
+											},
+											$unset: {
+												edited: {},
+											},
+										}
+									);
+								} else if (
+									fee.infra_share_edit_status == 1 &&
+									fee.rule_edit_status == 0
+								) {
+									console.log("Condition 3");
+									await MerchantFee.updateOne(
+										{
+											_id: fee_id,
+										},
+										{
+											$set: {
+												"infra_share.fixed": fee.edited.infra_share.fixed,
+												"infra_share.percentage":
+													fee.edited.infra_share.percentage,
+												infra_share_edit_status: 0,
+												status: 1,
+											},
+											$unset: {
+												edited: {},
+											},
+										}
+									);
+								} else {
+									console.log("Condition 4");
+									await MerchantFee.updateOne(
+										{
+											_id: fee_id,
+										},
+										{
+											$set: {
+												infra_approve_status: 1,
+												status: 1,
+											},
+										}
+									);
+								}
+								var content =
+									"Infra has approved the fee rule " +
+									fee.name +
+									"in Ewallet Application";
+								sendMail(content, "Fee rule approved by Infra", bank.email);
+								content =
+									"Ewallet: Infra has approved the fee rule " + fee.name;
+								sendSMS(content, bank.mobile);
+								res.status(200).json({
+									status: 1,
+									message: "Approved",
+								});
 							}
-							res.status(200).json({
-								status: 1,
-								message: "Approved",
-							});
 						}
+					);
+				} catch (err) {
+					console.log(err);
+					var message = "Internal server error";
+					if (err.message) {
+						message = err.message;
 					}
-				);
+					res.status(200).json({ status: 0, message: message });
+				}
 			}
 		}
 	);
@@ -937,7 +998,8 @@ router.post("/infra/merchantFee/decline", function (req, res) {
 			} else if (infra == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantFee.findOne(
@@ -1033,7 +1095,8 @@ router.post("/cashier/checkMerchantFee", (req, res) => {
 			} else if (cashier == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantFee.findOne(
@@ -1061,13 +1124,13 @@ router.post("/cashier/checkMerchantFee", (req, res) => {
 									charge = charge + range.fixed;
 								}
 							});
-							if(range_found) {
+							if (range_found) {
 								res.status(200).json({
 									status: 1,
 									message: "Wallet to Merchant fee",
 									fee: charge,
 								});
-							}else {
+							} else {
 								res.status(200).json({
 									status: 1,
 									message: "The amount is not within any range",
@@ -1100,7 +1163,8 @@ router.post("/user/checkMerchantFee", jwtTokenAuth, (req, res) => {
 			} else if (user == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				MerchantFee.findOne(
@@ -1128,13 +1192,13 @@ router.post("/user/checkMerchantFee", jwtTokenAuth, (req, res) => {
 									charge = charge + range.fixed;
 								}
 							});
-							if(range_found) {
+							if (range_found) {
 								res.status(200).json({
 									status: 1,
 									message: "Wallet to Merchant fee",
 									fee: charge,
 								});
-							}else {
+							} else {
 								res.status(200).json({
 									status: 1,
 									message: "The amount is not within any range",

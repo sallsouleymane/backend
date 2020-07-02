@@ -36,8 +36,9 @@ router.post("/getBranchDashStats", function (req, res) {
 		},
 		function (err, user) {
 			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				console.log({ $gte: new Date(start), $lte: new Date(end) });
@@ -139,8 +140,9 @@ router.post("/addBranchCashier", (req, res) => {
 		},
 		function (err, bank) {
 			if (err || bank == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				data.name = name;
@@ -154,16 +156,23 @@ router.post("/addBranchCashier", (req, res) => {
 				data.bank_id = bank.bank_id;
 
 				data.save((err, d) => {
-					if (err)
-						return res.json({
-							error: "Duplicate entry!",
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
 						});
-
-					// let content = "<p>You are added as Cashier in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/cashier/"+bankName+"'>http://"+config.mainIP+"/cashier/"+bankName+"</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
-					// sendMail(content, "Bank Account Created", email);
-					// let content2 = "You are added as Cashier in E-Wallet application Login URL: http://"+config.mainIP+"/cashier/"+bankName+" Your username: " + data.username + " Your password: " + data.password;
-					// sendSMS.js(content2, mobile);
-					return res.status(200).json(data);
+					} else {
+						// let content = "<p>You are added as Cashier in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/cashier/"+bankName+"'>http://"+config.mainIP+"/cashier/"+bankName+"</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
+						// sendMail(content, "Bank Account Created", email);
+						// let content2 = "You are added as Cashier in E-Wallet application Login URL: http://"+config.mainIP+"/cashier/"+bankName+" Your username: " + data.username + " Your password: " + data.password;
+						// sendSMS.js(content2, mobile);
+						return res.status(200).json(data);
+					}
 				});
 			}
 		}
@@ -189,8 +198,9 @@ router.post("/addOpeningBalance", (req, res) => {
 		},
 		function (err, otpd) {
 			if (err || otpd == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				let data = new CashierLedger();
@@ -208,20 +218,28 @@ router.post("/addOpeningBalance", (req, res) => {
 				data.transaction_details = JSON.stringify(td);
 
 				data.save((err) => {
-					if (err)
-						return res.status(200).json({
-							error: err.toString(),
-						});
-					Cashier.findByIdAndUpdate(
-						cashier_id,
-						{
-							opening_balance: total,
-							cash_in_hand: total,
-						},
-						(err, d) => {
-							return res.status(200).json(true);
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
 						}
-					);
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						Cashier.findByIdAndUpdate(
+							cashier_id,
+							{
+								opening_balance: total,
+								cash_in_hand: total,
+							},
+							(err, d) => {
+								return res.status(200).json(true);
+							}
+						);
+					}
 				});
 			}
 		}
@@ -238,8 +256,9 @@ router.post("/getBranch", function (req, res) {
 		},
 		function (err, user) {
 			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Branch.findOne(
@@ -248,8 +267,14 @@ router.post("/getBranch", function (req, res) {
 					},
 					function (err, branch) {
 						if (err) {
-							res.status(404).json({
-								error: err,
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
 							});
 						} else {
 							res.status(200).json({
@@ -274,8 +299,9 @@ router.post("/getBranchInfo", function (req, res) {
 		},
 		function (err, branch) {
 			if (err || branch == null) {
-				res.status(404).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				BankUser.find(
@@ -303,12 +329,18 @@ router.post("/branchSetupUpdate", function (req, res) {
 		},
 		function (err, bank) {
 			if (err) {
-				res.status(500).json({
-					error: "Internal error please try again",
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
 				});
-			} else if (!bank || bank == null) {
-				res.status(401).json({
-					error: "Incorrect username or password",
+			} else if (!bank) {
+				res.status(200).json({
+					message: "Incorrect username or password",
 				});
 			} else {
 				Branch.findByIdAndUpdate(
@@ -318,13 +350,21 @@ router.post("/branchSetupUpdate", function (req, res) {
 						initial_setup: true,
 					},
 					(err) => {
-						if (err)
-							return res.status(400).json({
-								error: err,
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
 							});
-						res.status(200).json({
-							success: "Updated successfully",
-						});
+						} else {
+							res.status(200).json({
+								success: "Updated successfully",
+							});
+						}
 					}
 				);
 			}
@@ -342,8 +382,8 @@ router.post("/checkBranchFee", function (req, res) {
 		},
 		function (err, f2) {
 			if (err || f2 == null) {
-				res.status(402).json({
-					error: "Not Found",
+				res.status(200).json({
+					message: "Not Found",
 				});
 			} else {
 				Bank.findOne(
@@ -352,8 +392,8 @@ router.post("/checkBranchFee", function (req, res) {
 					},
 					function (err, f3) {
 						if (err || f3 == null) {
-							res.status(402).json({
-								error: "Not Found",
+							res.status(200).json({
+								message: "Not Found",
 							});
 						} else {
 							var oamount = Number(amount);
@@ -406,8 +446,9 @@ router.post("/updateCashierTransferStatus", function (req, res) {
 		},
 		function (err, f) {
 			if (err || f == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				CashierPending.findByIdAndUpdate(
@@ -416,7 +457,7 @@ router.post("/updateCashierTransferStatus", function (req, res) {
 					function (err, d) {
 						if (err || d == null) {
 							res.status(200).json({
-								error: err.toString(),
+								message: err.toString(),
 							});
 						} else {
 							Cashier.findOne({ _id: cashier_id }, function (err, da) {
@@ -449,8 +490,9 @@ router.post("/branchVerifyClaim", function (req, res) {
 		},
 		function (err, f) {
 			if (err || f == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				OTP.findOne(
@@ -460,8 +502,8 @@ router.post("/branchVerifyClaim", function (req, res) {
 					},
 					function (err, otpd) {
 						if (err || otpd == null) {
-							res.status(402).json({
-								error: "OTP Missmatch",
+							res.status(200).json({
+								message: "OTP Missmatch",
 							});
 						} else {
 							res.status(200).json({
@@ -499,8 +541,9 @@ router.post("/branchClaimMoney", function (req, res) {
 		},
 		function (err, f) {
 			if (err || f == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				BranchSend.findOne(
@@ -509,8 +552,8 @@ router.post("/branchClaimMoney", function (req, res) {
 					},
 					function (err, otpd) {
 						if (err || otpd == null) {
-							res.status(402).json({
-								error: "Transaction Not Found",
+							res.status(200).json({
+								message: "Transaction Not Found",
 							});
 						} else {
 							Branch.findOne(
@@ -520,7 +563,7 @@ router.post("/branchClaimMoney", function (req, res) {
 								function (err, f2) {
 									if (err || f2 == null) {
 										res.status(200).json({
-											error: "Branch Not Found",
+											message: "Branch Not Found",
 										});
 									} else {
 										Bank.findOne(
@@ -530,7 +573,7 @@ router.post("/branchClaimMoney", function (req, res) {
 											function (err, f3) {
 												if (err || f3 == null) {
 													res.status(200).json({
-														error: "Bank Not Found",
+														message: "Bank Not Found",
 													});
 												} else {
 													Infra.findOne(
@@ -540,7 +583,7 @@ router.post("/branchClaimMoney", function (req, res) {
 														function (err, f4) {
 															if (err || f4 == null) {
 																res.status(200).json({
-																	error: "Infra Not Found",
+																	message: "Infra Not Found",
 																});
 															} else {
 																let data = new BranchClaim();
@@ -562,81 +605,102 @@ router.post("/branchClaimMoney", function (req, res) {
 
 																const oamount = otpd.amount;
 																data.save((err, d) => {
-																	if (err)
-																		return res.json({
-																			error: err.toString(),
-																		});
-
-																	const branchOpWallet =
-																		f2.bcode + "_operational@" + f3.name;
-																	const bankEsWallet = "escrow@" + f3.name;
-																	let trans1 = {};
-																	trans1.from = bankEsWallet;
-																	trans1.to = branchOpWallet;
-																	trans1.amount = oamount;
-																	trans1.note = "Branch claim Money";
-																	trans1.email1 = f3.email;
-																	trans1.email2 = f2.email;
-																	trans1.mobile1 = f3.mobile;
-																	trans1.mobile2 = f2.mobile;
-																	trans1.from_name = f3.name;
-																	trans1.to_name = f2.name;
-																	trans1.user_id = "";
-																	trans1.master_code = master_code;
-																	trans1.child_code = child_code;
-																	transferThis(trans1).then(function (result) {
-																		if (result.length <= 0) {
-																			BranchClaim.findByIdAndUpdate(
-																				d._id,
-																				{
-																					status: 1,
-																				},
-																				(err) => {
-																					if (err)
-																						return res.status(200).json({
-																							error: err.toString(),
-																						});
-
-																					BranchLedger.findOne(
-																						{
-																							branch_id: f._id,
-																							trans_type: "DR",
-																							created_at: {
-																								$gte: new Date(start),
-																								$lte: new Date(end),
-																							},
-																						},
-																						function (err, c) {
-																							if (err || c == null) {
-																								let data = new BranchLedger();
-																								data.amount = Number(oamount);
-																								data.trans_type = "DR";
-																								data.branch_id = f._id;
-																								data.save(function (err, c) {});
-																							} else {
-																								var amt =
-																									Number(c.amount) +
-																									Number(oamount);
-																								BranchLedger.findByIdAndUpdate(
-																									c._id,
-																									{ amount: amt },
-																									function (err, c) {}
-																								);
-																							}
-																						}
-																					);
-
-																					res.status(200).json({
-																						status: "success",
-																					});
-																				}
-																			);
-																		} else {
-																			res.status(200).json({
-																				error: result.toString(),
-																			});
+																	if (err) {
+																		console.log(err);
+																		var message = err;
+																		if (err.message) {
+																			message = err.message;
 																		}
-																	});
+																		res.status(200).json({
+																			status: 0,
+																			message: message,
+																		});
+																	} else {
+																		const branchOpWallet =
+																			f2.bcode + "_operational@" + f3.name;
+																		const bankEsWallet = "escrow@" + f3.name;
+																		let trans1 = {};
+																		trans1.from = bankEsWallet;
+																		trans1.to = branchOpWallet;
+																		trans1.amount = oamount;
+																		trans1.note = "Branch claim Money";
+																		trans1.email1 = f3.email;
+																		trans1.email2 = f2.email;
+																		trans1.mobile1 = f3.mobile;
+																		trans1.mobile2 = f2.mobile;
+																		trans1.from_name = f3.name;
+																		trans1.to_name = f2.name;
+																		trans1.user_id = "";
+																		trans1.master_code = master_code;
+																		trans1.child_code = child_code;
+																		transferThis(trans1).then(function (
+																			result
+																		) {
+																			if (result.length <= 0) {
+																				BranchClaim.findByIdAndUpdate(
+																					d._id,
+																					{
+																						status: 1,
+																					},
+																					(err) => {
+																						if (err) {
+																							console.log(err);
+																							var message = err;
+																							if (err.message) {
+																								message = err.message;
+																							}
+																							res.status(200).json({
+																								status: 0,
+																								message: message,
+																							});
+																						} else {
+																							BranchLedger.findOne(
+																								{
+																									branch_id: f._id,
+																									trans_type: "DR",
+																									created_at: {
+																										$gte: new Date(start),
+																										$lte: new Date(end),
+																									},
+																								},
+																								function (err, c) {
+																									if (err || c == null) {
+																										let data = new BranchLedger();
+																										data.amount = Number(
+																											oamount
+																										);
+																										data.trans_type = "DR";
+																										data.branch_id = f._id;
+																										data.save(function (
+																											err,
+																											c
+																										) {});
+																									} else {
+																										var amt =
+																											Number(c.amount) +
+																											Number(oamount);
+																										BranchLedger.findByIdAndUpdate(
+																											c._id,
+																											{ amount: amt },
+																											function (err, c) {}
+																										);
+																									}
+																								}
+																							);
+
+																							res.status(200).json({
+																								status: "success",
+																							});
+																						}
+																					}
+																				);
+																			} else {
+																				res.status(200).json({
+																					message: result.toString(),
+																				});
+																			}
+																		});
+																	}
 																}); //save
 															} //infra
 														}
@@ -665,8 +729,9 @@ router.post("/branchVerifyOTPClaim", function (req, res) {
 		},
 		function (err, f) {
 			if (err || f == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				BranchSend.findOne(
@@ -676,8 +741,8 @@ router.post("/branchVerifyOTPClaim", function (req, res) {
 					},
 					function (err, otpd) {
 						if (err || otpd == null) {
-							res.status(402).json({
-								error: "OTP Missmatch",
+							res.status(200).json({
+								message: "OTP Missmatch",
 							});
 						} else {
 							res.status(200).json({
@@ -701,8 +766,9 @@ router.post("/getBranchClaimMoney", function (req, res) {
 		},
 		function (err, f) {
 			if (err || f == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				BranchClaim.findOne(
@@ -718,8 +784,8 @@ router.post("/getBranchClaimMoney", function (req, res) {
 								},
 								function (err, cs) {
 									if (err || cs == null) {
-										res.status(402).json({
-											error: "Record Not Found",
+										res.status(200).json({
+											message: "Record Not Found",
 										});
 									} else {
 										res.status(200).json({
@@ -730,7 +796,7 @@ router.post("/getBranchClaimMoney", function (req, res) {
 							);
 						} else {
 							res.status(200).json({
-								error: "This transaction was already claimed",
+								message: "This transaction was already claimed",
 							});
 						}
 					}
@@ -750,8 +816,9 @@ router.post("/getBranchHistory", function (req, res) {
 		},
 		function (err, b) {
 			if (err || b == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Bank.findOne(

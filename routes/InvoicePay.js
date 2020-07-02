@@ -37,9 +37,13 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
 		function (err, cashier) {
 			if (err) {
 				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal server error",
+					message: message,
 				});
 			} else if (cashier == null) {
 				res.status(200).json({
@@ -50,9 +54,13 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
 				Invoice.findOne({ number: number }, async (err, invoice) => {
 					if (err) {
 						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
 						res.status(200).json({
 							status: 0,
-							message: "Internal server error",
+							message: message,
 						});
 					} else if (invoice == null) {
 						res.status(200).json({
@@ -68,10 +76,14 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
 							},
 							(err, merchant) => {
 								if (err) {
-									console.log("3", err);
+									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
 									res.status(200).json({
 										status: 0,
-										message: "Internal server error",
+										message: message,
 									});
 								} else if (merchant == null) {
 									res.status(200).json({
@@ -112,9 +124,13 @@ router.post("/cashier/getUserInvoices", (req, res) => {
 					Invoice.find({ mobile: mobile }, async (err, invoices) => {
 						if (err) {
 							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal server error",
+								message: message,
 							});
 						} else {
 							console.log(invoices);
@@ -159,22 +175,31 @@ router.post("/cashier/payInvoice", (req, res) => {
 			function (err, cashier) {
 				if (err) {
 					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
 					res.status(200).json({
 						status: 0,
-						message: "Internal server error",
+						message: message,
 					});
 				} else if (cashier == null) {
 					res.status(200).json({
 						status: 0,
-						message: "Unauthorized",
+						message:
+							"Token changed or user not valid. Try to login again or contact system administrator.",
 					});
 				} else {
 					Invoice.findOne({ _id: invoice_id, paid: 0 }, (err, invoice) => {
 						if (err) {
 							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal server error",
+								message: message,
 							});
 						} else if (invoice == null) {
 							res.status(200).json({
@@ -193,9 +218,13 @@ router.post("/cashier/payInvoice", (req, res) => {
 									(err, fee) => {
 										if (err) {
 											console.log(err);
+											var message = err;
+											if (err.message) {
+												message = err.message;
+											}
 											res.status(200).json({
 												status: 0,
-												message: "Internal server error",
+												message: message,
 											});
 										} else if (fee == null) {
 											res.status(200).json({
@@ -208,9 +237,13 @@ router.post("/cashier/payInvoice", (req, res) => {
 												async (err, comm) => {
 													if (err) {
 														console.log(err);
+														var message = err;
+														if (err.message) {
+															message = err.message;
+														}
 														res.status(200).json({
 															status: 0,
-															message: "Internal server error",
+															message: message,
 														});
 													} else if (comm == null) {
 														res.status(200).json({
@@ -422,9 +455,13 @@ router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
 			function (err, user) {
 				if (err) {
 					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
 					res.status(200).json({
 						status: 0,
-						message: "Internal server error",
+						message: message,
 					});
 				} else if (user == null) {
 					res.status(200).json({
@@ -435,9 +472,13 @@ router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
 					Bank.findOne({ name: user.bank }, (err, bank) => {
 						if (err) {
 							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal server error",
+								message: message,
 							});
 						} else if (bank == null) {
 							res.status(200).json({
@@ -448,9 +489,13 @@ router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
 							Invoice.find({ mobile: user.mobile }, async (err, invoices) => {
 								if (err) {
 									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
 									res.status(200).json({
 										status: 0,
-										message: "Internal server error",
+										message: message,
 									});
 								} else {
 									var result = [];
@@ -505,9 +550,13 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 					Invoice.findOne({ _id: invoice_id, paid: 0 }, (err, invoice) => {
 						if (err) {
 							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal server error",
+								message: message,
 							});
 						} else if (invoice == null) {
 							res.status(200).json({
@@ -536,9 +585,13 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 												(err, fee) => {
 													if (err) {
 														console.log(err);
+														var message = err;
+														if (err.message) {
+															message = err.message;
+														}
 														res.status(200).json({
 															status: 0,
-															message: "Internal server error",
+															message: message,
 														});
 													} else if (fee == null) {
 														res.status(200).json({
@@ -551,9 +604,13 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 															async (err, comm) => {
 																if (err) {
 																	console.log(err);
+																	var message = err;
+																	if (err.message) {
+																		message = err.message;
+																	}
 																	res.status(200).json({
 																		status: 0,
-																		message: "Internal server error",
+																		message: message,
 																	});
 																} else if (comm == null) {
 																	res.status(200).json({

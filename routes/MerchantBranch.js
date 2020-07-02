@@ -46,14 +46,20 @@ router.post("/merchantBranch/editDetails", jwtTokenAuth, (req, res) => {
 		},
 		function (err, branch) {
 			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (branch == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				res.status(200).json({
@@ -93,9 +99,13 @@ router.get("/merchantBranch/todaysStatus", jwtTokenAuth, function (req, res) {
 					(err, branch2) => {
 						if (err) {
 							console.log(err);
-							return res.status(200).json({
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
 								status: 0,
-								message: "Internal Server error",
+								message: message,
 							});
 						} else if (branch2 != null) {
 							branch = branch2;
@@ -116,68 +126,68 @@ router.get("/merchantBranch/todaysStatus", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/merchantBranch/editCashier", jwtTokenAuth, (req, res) => {
-	const {
-		cashier_id,
-		name,
-		working_from,
-		working_to,
-		per_trans_amt,
-		max_trans_amt,
-		max_trans_count,
-	} = req.body;
-	const jwtusername = req.sign_creds.username;
-	MerchantBranch.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, branch) {
-			if (err) {
-				res.status(200).json({
-					status: 0,
-					message: "Internal Server Error",
-				});
-			} else if (branch == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Unauthorized",
-				});
-			} else {
-				MerchantCashier.findOneAndUpdate(
-					{ _id: cashier_id, branch_id: branch._id },
-					{
-						name: name,
-						working_from: working_from,
-						working_to: working_to,
-						per_trans_amt: per_trans_amt,
-						max_trans_amt: max_trans_amt,
-						max_trans_count: max_trans_count,
-					},
-					(err, cashier) => {
-						if (err) {
-							res.status(200).json({
-								status: 0,
-								message: "Internal server error",
-								err: err,
-							});
-						} else if (cashier == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Cashier not found",
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								message: "Edited merchant cashier successfully",
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
+// router.post("/merchantBranch/editCashier", jwtTokenAuth, (req, res) => {
+// 	const {
+// 		cashier_id,
+// 		name,
+// 		working_from,
+// 		working_to,
+// 		per_trans_amt,
+// 		max_trans_amt,
+// 		max_trans_count,
+// 	} = req.body;
+// 	const jwtusername = req.sign_creds.username;
+// 	MerchantBranch.findOne(
+// 		{
+// 			username: jwtusername,
+// 			status: 1,
+// 		},
+// 		function (err, branch) {
+// 			if (err) {
+// 				res.status(200).json({
+// 					status: 0,
+// 					message: "Internal Server Error",
+// 				});
+// 			} else if (branch == null) {
+// 				res.status(200).json({
+// 					status: 0,
+// 					message: "Token changed or user not valid. Try to login again or contact system administrator.",
+// 				});
+// 			} else {
+// 				MerchantCashier.findOneAndUpdate(
+// 					{ _id: cashier_id, branch_id: branch._id },
+// 					{
+// 						name: name,
+// 						working_from: working_from,
+// 						working_to: working_to,
+// 						per_trans_amt: per_trans_amt,
+// 						max_trans_amt: max_trans_amt,
+// 						max_trans_count: max_trans_count,
+// 					},
+// 					(err, cashier) => {
+// 						if (err) {
+// 							res.status(200).json({
+// 								status: 0,
+// 								message: "Internal server error",
+// 								err: err,
+// 							});
+// 						} else if (cashier == null) {
+// 							res.status(200).json({
+// 								status: 0,
+// 								message: "Cashier not found",
+// 							});
+// 						} else {
+// 							res.status(200).json({
+// 								status: 1,
+// 								message: "Edited merchant cashier successfully",
+// 							});
+// 						}
+// 					}
+// 				);
+// 			}
+// 		}
+// 	);
+// });
 
 router.get("/merchantBranch/listCashier", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
@@ -189,9 +199,13 @@ router.get("/merchantBranch/listCashier", jwtTokenAuth, (req, res) => {
 		function (err, branch) {
 			if (err) {
 				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (branch == null) {
 				res.status(200).json({
@@ -202,9 +216,13 @@ router.get("/merchantBranch/listCashier", jwtTokenAuth, (req, res) => {
 				MerchantCashier.find({ branch_id: branch._id }, (err, cashiers) => {
 					if (err) {
 						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
 						res.status(200).json({
 							status: 0,
-							message: "Internal Server Error",
+							message: message,
 						});
 					} else {
 						res.status(200).json({
@@ -229,9 +247,13 @@ router.get("/merchantBranch/listStaff", jwtTokenAuth, (req, res) => {
 		function (err, branch) {
 			if (err) {
 				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (branch == null) {
 				res.status(200).json({
@@ -242,9 +264,13 @@ router.get("/merchantBranch/listStaff", jwtTokenAuth, (req, res) => {
 				MerchantStaff.find({ branch_id: branch._id }, (err, staffs) => {
 					if (err) {
 						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
 						res.status(200).json({
 							status: 0,
-							message: "Internal Server Error",
+							message: message,
 						});
 					} else {
 						res.status(200).json({
@@ -269,9 +295,14 @@ router.post("/merchantBranch/assignStaff", jwtTokenAuth, (req, res) => {
 		},
 		function (err, branch) {
 			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (branch == null) {
 				res.status(200).json({
@@ -283,9 +314,14 @@ router.post("/merchantBranch/assignStaff", jwtTokenAuth, (req, res) => {
 					{ _id: staff_id, status: 1, branch_id: branch._id },
 					(err, staff) => {
 						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal Server Error",
+								message: message,
 							});
 						} else if (staff == null) {
 							res.status(200).json({
@@ -298,9 +334,14 @@ router.post("/merchantBranch/assignStaff", jwtTokenAuth, (req, res) => {
 								{ staff_id: staff_id },
 								(err, cashier) => {
 									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
 										res.status(200).json({
 											status: 0,
-											message: "Internal Server Error",
+											message: message,
 										});
 									} else if (cashier == null) {
 										res.status(200).json({
@@ -333,9 +374,14 @@ router.post("/merchantBranch/blockCashier", jwtTokenAuth, (req, res) => {
 		},
 		function (err, branch) {
 			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server error",
+					message: message,
 				});
 			} else if (branch == null) {
 				res.status(200).json({
@@ -352,9 +398,14 @@ router.post("/merchantBranch/blockCashier", jwtTokenAuth, (req, res) => {
 					},
 					(err, cashier) => {
 						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: err,
+								message: message,
 							});
 						} else if (cashier == null) {
 							res.status(200).json({
@@ -384,9 +435,14 @@ router.post("/merchantBranch/unblockCashier", jwtTokenAuth, (req, res) => {
 		},
 		function (err, branch) {
 			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server error",
+					message: message,
 				});
 			} else if (branch == null) {
 				res.status(200).json({
@@ -403,9 +459,14 @@ router.post("/merchantBranch/unblockCashier", jwtTokenAuth, (req, res) => {
 					},
 					(err, cashier) => {
 						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: err,
+								message: message,
 							});
 						} else if (cashier == null) {
 							res.status(200).json({

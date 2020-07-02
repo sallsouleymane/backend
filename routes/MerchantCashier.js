@@ -26,9 +26,13 @@ router.post("/merchantCashier/listOfferings", jwtTokenAuth, function (
 		async function (err, cashier) {
 			if (err) {
 				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (cashier == null) {
 				res.status(200).json({
@@ -41,9 +45,13 @@ router.post("/merchantCashier/listOfferings", jwtTokenAuth, function (
 					(err, offerings) => {
 						if (err) {
 							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal Server Error",
+								message: message,
 							});
 						} else {
 							res.status(200).json({
@@ -68,9 +76,13 @@ router.post("/merchantCashier/listTaxes", jwtTokenAuth, function (req, res) {
 		async function (err, cashier) {
 			if (err) {
 				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (cashier == null) {
 				res.status(200).json({
@@ -81,9 +93,13 @@ router.post("/merchantCashier/listTaxes", jwtTokenAuth, function (req, res) {
 				Tax.find({ merchant_id: cashier.merchant_id }, (err, taxes) => {
 					if (err) {
 						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
 						res.status(200).json({
 							status: 0,
-							message: "Internal Server Error",
+							message: message,
 						});
 					} else {
 						res.status(200).json({
@@ -119,9 +135,13 @@ router.post("/merchantCashier/deleteInvoice", jwtTokenAuth, function (
 				Invoice.deleteOne({ _id: invoice_id }, (err) => {
 					if (err) {
 						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
 						res.status(200).json({
 							status: 0,
-							message: "Internal Server Error",
+							message: message,
 						});
 					} else {
 						res.status(200).json({
@@ -172,9 +192,14 @@ router.post("/merchantCashier/createInvoiceGroup", jwtTokenAuth, (req, res) => {
 		},
 		function (err, cashier) {
 			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server error",
+					message: message,
 				});
 			} else if (cashier == null) {
 				res.status(200).json({
@@ -189,10 +214,13 @@ router.post("/merchantCashier/createInvoiceGroup", jwtTokenAuth, (req, res) => {
 				data.save((err, group) => {
 					if (err) {
 						console.log(err);
-						return res.status(200).json({
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
 							status: 0,
-							message: "code already used",
-							err: err,
+							message: message,
 						});
 					} else {
 						return res.status(200).json({
@@ -217,9 +245,14 @@ router.post("/merchantCashier/editInvoiceGroup", jwtTokenAuth, (req, res) => {
 		},
 		function (err, cashier) {
 			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message: message,
 				});
 			} else if (cashier == null) {
 				res.status(200).json({
@@ -232,9 +265,14 @@ router.post("/merchantCashier/editInvoiceGroup", jwtTokenAuth, (req, res) => {
 					{ code: code, name: name, description: description },
 					(err, group) => {
 						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal Server Error",
+								message: message,
 							});
 						} else if (group == null) {
 							res.status(200).json({
@@ -263,9 +301,14 @@ router.get("/merchantCashier/listInvoiceGroups", jwtTokenAuth, (req, res) => {
 		},
 		function (err, cashier) {
 			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message: message,
 				});
 			} else if (cashier == null) {
 				res.status(200).json({
@@ -275,9 +318,14 @@ router.get("/merchantCashier/listInvoiceGroups", jwtTokenAuth, (req, res) => {
 			} else {
 				InvoiceGroup.find({ cashier_id: cashier._id }, (err, groups) => {
 					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
 						res.status(200).json({
 							status: 0,
-							message: "Internal server error",
+							message: message,
 						});
 					} else {
 						res.status(200).json({
@@ -302,9 +350,14 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 		},
 		(err, cashier) => {
 			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message: message,
 				});
 			} else if (cashier == null) {
 				res.status(200).json({
@@ -317,9 +370,13 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 					async (err, group) => {
 						if (err) {
 							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal server error",
+								message: message,
 							});
 						} else if (group == null) {
 							res.status(200).json({
@@ -480,9 +537,14 @@ router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
 		},
 		function (err, cashier) {
 			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message: message,
 				});
 			} else if (cashier == null) {
 				res.status(200).json({
@@ -494,9 +556,14 @@ router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
 					{ _id: group_id, cashier_id: cashier._id },
 					(err, group) => {
 						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Unauthorized",
+								message: message,
 							});
 						} else if (group == null) {
 							res.status(200).json({
@@ -518,9 +585,13 @@ router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
 								(err, invoice) => {
 									if (err) {
 										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
 										res.status(200).json({
 											status: 0,
-											message: "Internal server error",
+											message: message,
 										});
 									} else if (invoice == null) {
 										res.status(200).json({
@@ -536,9 +607,13 @@ router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
 											(err, branch) => {
 												if (err) {
 													console.log(err);
+													var message = err;
+													if (err.message) {
+														message = err.message;
+													}
 													res.status(200).json({
 														status: 0,
-														message: "Internal server error",
+														message: message,
 													});
 												} else if (branch == null) {
 													res.status(200).json({
@@ -592,9 +667,14 @@ router.post("/merchantCashier/listInvoices", jwtTokenAuth, (req, res) => {
 		},
 		function (err, cashier) {
 			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message: message,
 				});
 			} else if (cashier == null) {
 				res.status(200).json({
@@ -604,9 +684,14 @@ router.post("/merchantCashier/listInvoices", jwtTokenAuth, (req, res) => {
 			} else {
 				Invoice.find({ cashier_id: cashier._id, group_id }, (err, invoices) => {
 					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
 						res.status(200).json({
 							status: 0,
-							message: "Internal server error",
+							message: message,
 						});
 					} else {
 						res.status(200).json({

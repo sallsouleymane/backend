@@ -36,22 +36,31 @@ router.post("/bank/listMerchants", function (req, res) {
 		function (err, bank) {
 			if (err) {
 				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal error please try again",
+					message: message,
 				});
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Merchant.find({ bank_id: bank._id }, "-password", (err, merchants) => {
 					if (err) {
 						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
 						res.status(200).json({
 							status: 0,
-							message: "Internal Server Error",
+							message: message,
 						});
 					} else {
 						res.status(200).json({
@@ -85,14 +94,19 @@ router.post("/bank/createMerchant", function (req, res) {
 		function (err, bank) {
 			if (err) {
 				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal error please try again",
+					message: message,
 				});
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				if (!code) {
@@ -107,9 +121,7 @@ router.post("/bank/createMerchant", function (req, res) {
 							console.log(result);
 							res.status(200).json({
 								status: 0,
-								message:
-									"Blockchain service was unavailable. Please try again.",
-								result: result,
+								message: result,
 							});
 						} else {
 							const data = new Merchant();
@@ -131,7 +143,8 @@ router.post("/bank/createMerchant", function (req, res) {
 									console.log(err);
 									res.status(200).json({
 										status: 0,
-										message: "Either merchant id/ email / mobile aready exist",
+										message:
+											"Either merchant code / email / mobile already exist",
 									});
 								} else {
 									let content =
@@ -192,14 +205,19 @@ router.post("/bank/editMerchant", function (req, res) {
 		function (err, bank) {
 			if (err) {
 				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal error please try again",
+					message: message,
 				});
 			} else if (bank == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Merchant.findOneAndUpdate(
@@ -214,9 +232,13 @@ router.post("/bank/editMerchant", function (req, res) {
 					(err, merchant) => {
 						if (err) {
 							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Email already exist.",
+								message: message,
 							});
 						} else if (merchant == null) {
 							res.status(200).json({
@@ -241,10 +263,12 @@ router.post("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
 		const { token } = req.body;
 		var result = await Bank.findOne({ token: token });
 		if (result == null) {
-			throw { message: "Unauthorized" };
+			throw new Error(
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
 		}
 		const fee = await Fee.findById(req.params.bankFeeId);
-		if (fee == null) throw { message: "No Fee Rule found" };
+		if (fee == null) throw new Error("No Fee Rule found");
 
 		res.send({
 			status: 1,
@@ -252,7 +276,7 @@ router.post("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
 			infra_status: fee.status,
 		});
 	} catch (err) {
-		res.status(403).send({ status: 0, message: err.message });
+		res.status(200).send({ status: 0, message: err.message });
 	}
 });
 
@@ -262,7 +286,7 @@ router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
 		const { id } = req.params;
 		var result = await Bank.findOne({ token: token });
 		if (result == null) {
-			throw { message: "Unauthorized" };
+			throw new Error("Token is invalid");
 		}
 		result = await Fee.updateOne(
 			{ _id: id },
@@ -278,7 +302,7 @@ router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
 			}
 		);
 		if (result == null) {
-			throw { message: "Not Found" };
+			throw new Error("Not Found");
 		}
 
 		res.send({ status: 1 });
@@ -297,14 +321,18 @@ router.post("/bank/sendShareForApproval", function (req, res) {
 		function (err, bank) {
 			if (err) {
 				console.log(err);
-				res.status(500).json({
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: message,
 				});
 			} else if (bank == null) {
-				res.status(403).json({
+				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message: "Token is invalid",
 				});
 			} else {
 				Fee.findOneAndUpdate(
@@ -322,14 +350,19 @@ router.post("/bank/sendShareForApproval", function (req, res) {
 					function (err, fee) {
 						if (err) {
 							console.log(err);
-							res.status(500).json({
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
 								status: 0,
-								error: "Internal Server Error",
+								message: message,
 							});
 						} else if (fee == null) {
-							res.status(403).json({
+							res.status(200).json({
 								status: 0,
-								error: "Rule not found",
+								message:
+									"Bank's fee rule not found of transaction type " + trans_type,
 							});
 						} else {
 							let content =
@@ -359,13 +392,21 @@ router.post("/bankSetupUpdate", function (req, res) {
 			token,
 		},
 		function (err, bank) {
-			if (err || bank == null) {
-				res.status(500).json({
-					error: err.toString(),
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
 				});
-			} else if (!bank) {
-				res.status(401).json({
-					error: "Incorrect username or password",
+			} else if (bank == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Bank.findByIdAndUpdate(
@@ -376,13 +417,21 @@ router.post("/bankSetupUpdate", function (req, res) {
 						initial_setup: true,
 					},
 					(err) => {
-						if (err)
-							return res.status(400).json({
-								error: err,
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
 							});
-						res.status(200).json({
-							success: "Updated successfully",
-						});
+						} else {
+							res.status(200).json({
+								success: "Updated successfully",
+							});
+						}
 					}
 				);
 			}
@@ -398,12 +447,20 @@ router.post("/bankActivate", function (req, res) {
 		},
 		function (err, bank) {
 			if (err) {
-				res.status(500).json({
-					error: "Internal error please try again",
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
 				});
 			} else if (!bank) {
-				res.status(401).json({
-					error: "Account not found",
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				createWallet([
@@ -428,15 +485,22 @@ router.post("/bankActivate", function (req, res) {
 								status: 1,
 							},
 							(err) => {
-								if (err)
-									return res.status(400).json({
-										error: err,
+								if (err) {
+									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message,
 									});
-
-								res.status(200).json({
-									status: "activated",
-									walletStatus: result,
-								});
+								} else {
+									res.status(200).json({
+										status: "activated",
+										walletStatus: result,
+									});
+								}
 							}
 						);
 					}
@@ -455,9 +519,21 @@ router.post("/getBankDashStats", function (req, res) {
 				status: 1,
 			},
 			async function (err, user) {
-				if (err || user == null) {
-					res.status(401).json({
-						error: "Unauthorized",
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else if (user == null) {
+					res.status(200).json({
+						status: 0,
+						message:
+							"Token changed or user not valid. Try to login again or contact system administrator.",
 					});
 				} else {
 					const user_id = user._id;
@@ -477,11 +553,11 @@ router.post("/getBankDashStats", function (req, res) {
 		);
 	} catch (err) {
 		console.log(err);
-		var message = "Internal server error";
+		var message = err;
 		if (err.message) {
 			message = err.message;
 		}
-		res.status(200).json({ status: 0, message: message, err: err });
+		res.status(200).json({ status: 0, message: message });
 	}
 });
 
@@ -495,8 +571,9 @@ router.get("/getBankOperationalBalance", function (req, res) {
 		},
 		function (err, ba) {
 			if (err || ba == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				const wallet_id = "operational@" + ba.name;
@@ -521,16 +598,23 @@ router.post("/getBranches", function (req, res) {
 		},
 		function (err, bank) {
 			if (err || bank == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				const bank_id = bank._id;
 				// if (user.isAdmin) {
 				Branch.find({ bank_id: bank_id }, function (err, branch) {
 					if (err) {
-						res.status(404).json({
-							error: err,
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
 						});
 					} else {
 						res.status(200).json({
@@ -553,8 +637,9 @@ router.post("/getBankUsers", function (req, res) {
 		},
 		function (err, user) {
 			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				const user_id = user._id;
@@ -564,8 +649,14 @@ router.post("/getBankUsers", function (req, res) {
 					},
 					function (err, bank) {
 						if (err) {
-							res.status(404).json({
-								error: err,
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
 							});
 						} else {
 							res.status(200).json({
@@ -606,8 +697,9 @@ router.post("/addBranch", (req, res) => {
 		},
 		function (err, bank) {
 			if (err || bank == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				createWallet([
@@ -645,41 +737,48 @@ router.post("/addBranch", (req, res) => {
 						let bankName = bank.name;
 
 						data.save((err) => {
-							if (err)
-								return res.json({
-									error: err.toString(),
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
 								});
-
-							let content =
-								"<p>Your branch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-								config.mainIP +
-								"/branch/" +
-								bankName +
-								"'>http://" +
-								config.mainIP +
-								"/branch/" +
-								bankName +
-								"</a></p><p><p>Your username: " +
-								data.username +
-								"</p><p>Your password: " +
-								data.password +
-								"</p>";
-							sendMail(content, "Bank Branch Created", email);
-							let content2 =
-								"Your branch is added in E-Wallet application Login URL: http://" +
-								config.mainIP +
-								"/branch/" +
-								bankName +
-								" Your username: " +
-								data.username +
-								" Your password: " +
-								data.password;
-							sendSMS(content2, mobile);
-							// return res.status(200).json(data);
-							res.status(200).json({
-								status: "Branch Created",
-								walletStatus: result.toString(),
-							});
+							} else {
+								let content =
+									"<p>Your branch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+									config.mainIP +
+									"/branch/" +
+									bankName +
+									"'>http://" +
+									config.mainIP +
+									"/branch/" +
+									bankName +
+									"</a></p><p><p>Your username: " +
+									data.username +
+									"</p><p>Your password: " +
+									data.password +
+									"</p>";
+								sendMail(content, "Bank Branch Created", email);
+								let content2 =
+									"Your branch is added in E-Wallet application Login URL: http://" +
+									config.mainIP +
+									"/branch/" +
+									bankName +
+									" Your username: " +
+									data.username +
+									" Your password: " +
+									data.password;
+								sendSMS(content2, mobile);
+								// return res.status(200).json(data);
+								res.status(200).json({
+									status: "Branch Created",
+									walletStatus: result.toString(),
+								});
+							}
 						});
 					}
 				});
@@ -715,8 +814,9 @@ router.post("/editBranch", (req, res) => {
 		},
 		function (err, user) {
 			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Branch.findByIdAndUpdate(
@@ -737,12 +837,19 @@ router.post("/editBranch", (req, res) => {
 						working_to: working_to,
 					},
 					(err) => {
-						if (err)
-							return res.status(400).json({
-								error: err,
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
 							});
-
-						return res.status(200).json(data);
+						} else {
+							return res.status(200).json(data);
+						}
 					}
 				);
 			}
@@ -761,8 +868,9 @@ router.post("/branchStatus", function (req, res) {
 		},
 		function (err, user) {
 			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Branch.findByIdAndUpdate(
@@ -771,13 +879,21 @@ router.post("/branchStatus", function (req, res) {
 						status: status,
 					},
 					(err) => {
-						if (err)
-							return res.status(400).json({
-								error: err,
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
 							});
-						res.status(200).json({
-							status: true,
-						});
+						} else {
+							res.status(200).json({
+								status: true,
+							});
+						}
 					}
 				);
 			}
@@ -804,8 +920,9 @@ router.get("/getWalletBalance", function (req, res) {
 			},
 			function (e, b) {
 				if (e || b == null) {
-					res.status(401).json({
-						error: "Unauthorized",
+					res.status(200).json({
+						message:
+							"Token changed or user not valid. Try to login again or contact system administrator.",
 					});
 				} else {
 					Bank.findOne(
@@ -814,8 +931,8 @@ router.get("/getWalletBalance", function (req, res) {
 						},
 						function (err, ba) {
 							if (err || ba == null) {
-								res.status(404).json({
-									error: "Not found",
+								res.status(200).json({
+									message: "Not found",
 								});
 							} else {
 								let wallet_id = page + "@" + ba.name;
@@ -858,8 +975,9 @@ router.post("/addBankUser", (req, res) => {
 		},
 		function (err, user) {
 			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				data.name = name;
@@ -873,32 +991,40 @@ router.post("/addBankUser", (req, res) => {
 				data.logo = logo;
 
 				data.save((err) => {
-					if (err)
-						return res.json({
-							error: "User ID / Email / Mobile already exists",
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
 						});
-					let content =
-						"<p>Your have been added as a Bank User in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-						config.mainIP +
-						"/cashier/yourBranchName'>http://" +
-						config.mainIP +
-						"/</a></p><p><p>Your username: " +
-						username +
-						"</p><p>Your password: " +
-						password +
-						"</p>";
-					sendMail(content, "Bank User Account Created", email);
-					let content2 =
-						"Your have been added as Bank User in E-Wallet application Login URL: http://" +
-						config.mainIP +
-						"/cashier/yourBranchName Your username: " +
-						username +
-						" Your password: " +
-						password;
-					sendSMS(content2, mobile);
-					return res.status(200).json({
-						success: "True",
-					});
+					} else {
+						let content =
+							"<p>Your have been added as a Bank User in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+							config.mainIP +
+							"/cashier/yourBranchName'>http://" +
+							config.mainIP +
+							"/</a></p><p><p>Your username: " +
+							username +
+							"</p><p>Your password: " +
+							password +
+							"</p>";
+						sendMail(content, "Bank User Account Created", email);
+						let content2 =
+							"Your have been added as Bank User in E-Wallet application Login URL: http://" +
+							config.mainIP +
+							"/cashier/yourBranchName Your username: " +
+							username +
+							" Your password: " +
+							password;
+						sendSMS(content2, mobile);
+						return res.status(200).json({
+							success: "True",
+						});
+					}
 				});
 			}
 		}
@@ -923,8 +1049,9 @@ router.post("/editBankUser", (req, res) => {
 		},
 		function (err, user) {
 			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				BankUser.findOneAndUpdate(
@@ -942,14 +1069,21 @@ router.post("/editBankUser", (req, res) => {
 						logo: logo,
 					},
 					(err) => {
-						if (err)
-							return res.status(400).json({
-								error: err,
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
 							});
-
-						return res.status(200).json({
-							success: true,
-						});
+						} else {
+							return res.status(200).json({
+								success: true,
+							});
+						}
 					}
 				);
 			}
@@ -969,16 +1103,22 @@ router.post("/getBankHistory", function (req, res) {
 			if (err || b == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				const wallet = from + "@" + b.name;
 				getStatement(wallet).then(function (history) {
 					FailedTX.find({ wallet_id: wallet }, (err, failed) => {
 						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Internal server error",
+								message: message,
 							});
 						} else {
 							res.status(200).json({
@@ -1018,8 +1158,9 @@ router.post("/addCashier", (req, res) => {
 		},
 		function (err, bank) {
 			if (err || bank == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				data.name = name;
@@ -1037,56 +1178,83 @@ router.post("/addCashier", (req, res) => {
 				}
 
 				data.save((err, d) => {
-					if (err)
-						return res.json({
-							error: err.toString(),
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
 						});
+					} else {
+						if (cashier_length == 0) {
+							Branch.findOne(
+								{
+									_id: branch_id,
+								},
+								function (err, branch) {
+									let data = new CashierLedger();
+									data.amount = branch.cash_in_hand;
+									data.cashier_id = d._id;
+									data.trans_type = "OB";
+									let td = {};
+									data.transaction_details = JSON.stringify(td);
 
-					if (cashier_length == 0) {
-						Branch.findOne(
-							{
-								_id: branch_id,
-							},
-							function (err, branch) {
-								let data = new CashierLedger();
-								data.amount = branch.cash_in_hand;
-								data.cashier_id = d._id;
-								data.trans_type = "OB";
-								let td = {};
-								data.transaction_details = JSON.stringify(td);
-
-								data.save((err) => {
-									if (err)
-										return res.status(200).json({
-											error: err.toString(),
-										});
-									Cashier.findByIdAndUpdate(
-										d._id,
-										{
-											opening_balance: branch.cash_in_hand,
-											cash_in_hand: branch.cash_in_hand,
-										},
-										(err, d) => {
-											Branch.findByIdAndUpdate(
-												branch_id,
-												{ $inc: { total_cashiers: 1 }, cash_in_hand: 0 },
-												function (e, v) {
-													return res.status(200).json(data);
+									data.save((err) => {
+										if (err) {
+											console.log(err);
+											var message = err;
+											if (err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+											});
+										} else {
+											Cashier.findByIdAndUpdate(
+												d._id,
+												{
+													opening_balance: branch.cash_in_hand,
+													cash_in_hand: branch.cash_in_hand,
+												},
+												(err, d) => {
+													Branch.findByIdAndUpdate(
+														branch_id,
+														{ $inc: { total_cashiers: 1 }, cash_in_hand: 0 },
+														function (err, v) {
+															if (err) {
+																console.log(err);
+																var message = err;
+																if (err.message) {
+																	message = err.message;
+																}
+																res.status(200).json({
+																	status: 0,
+																	message: message,
+																});
+															} else {
+																return res.status(200).json(data);
+															}
+														}
+													);
 												}
 											);
 										}
-									);
-								});
-							}
-						);
-					} else {
-						Branch.findByIdAndUpdate(
-							branch_id,
-							{ $inc: { total_cashiers: 1 } },
-							function (e, v) {
-								return res.status(200).json(data);
-							}
-						);
+									});
+								}
+							);
+						} else {
+							Branch.findByIdAndUpdate(
+								branch_id,
+								{ $inc: { total_cashiers: 1 } },
+								function (e, v) {
+									return res.status(200).json(data);
+								}
+							);
+						}
 					}
 				});
 			}
@@ -1105,14 +1273,19 @@ router.post("/createBankRules", (req, res) => {
 		function (err, bank) {
 			if (err) {
 				console.log(err);
-				res.status(500).json({
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: message,
 				});
 			} else if (bank == null) {
-				res.status(401).json({
+				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				const bank_id = bank._id;
@@ -1140,37 +1313,46 @@ router.post("/createBankRules", (req, res) => {
 					function (err, result) {
 						if (err) {
 							console.log(err);
-							res.status(500).json({
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
 								status: 0,
-								error: "Internal Server Error",
+								message: message,
 							});
 						} else if (result == null) {
 							fee.save((err) => {
 								if (err) {
 									console.log(err);
-									return res.status(500).json({
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
+									res.status(200).json({
 										status: 0,
-										error: "Internal Server Error",
+										message: message,
+									});
+								} else {
+									let content =
+										"<p>New fee rule has been added for users of your bank in E-Wallet application</p><p>&nbsp;</p><p>Fee Name: " +
+										name +
+										"</p>";
+									sendMail(content, "New Rule Added", bank.email);
+									let content2 =
+										"New fee rule has been added for users of your bank in E-Wallet application Fee Name: " +
+										name;
+									sendSMS(content2, bank.mobile);
+									res.status(200).json({
+										status: 1,
+										message: "Rule created successfully",
 									});
 								}
-								let content =
-									"<p>New fee rule has been added for users of your bank in E-Wallet application</p><p>&nbsp;</p><p>Fee Name: " +
-									name +
-									"</p>";
-								sendMail(content, "New Rule Added", bank.email);
-								let content2 =
-									"New fee rule has been added for users of your bank in E-Wallet application Fee Name: " +
-									name;
-								sendSMS(content2, bank.mobile);
-								res.status(200).json({
-									status: 1,
-									message: "Rule created successfully",
-								});
 							});
 						} else {
-							res.status(400).json({
+							res.status(200).json({
 								status: 0,
-								error: "This rule type already exists for this bank",
+								message: "This rule type already exists for this bank",
 							});
 						}
 					}
@@ -1190,15 +1372,19 @@ router.post("/editBankBankRule", (req, res) => {
 		function (err, bank) {
 			if (err) {
 				console.log(err);
-				res.status(500).json({
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: message,
 				});
-			}
-			if (bank == null) {
-				res.status(403).json({
+			} else if (bank == null) {
+				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Fee.findByIdAndUpdate(
@@ -1212,19 +1398,24 @@ router.post("/editBankBankRule", (req, res) => {
 					(err) => {
 						if (err) {
 							console.log(err);
-							res.status(500).json({
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
 								status: 0,
-								error: "Internal Server Error",
+								message: message,
+							});
+						} else {
+							let content =
+								"<p>Rule " + name + " has been updated, check it out</p>";
+							sendMail(content, "Rule Updated", bank.email);
+							let content2 = "Rule " + name + " has been updated, check it out";
+							sendSMS(content2, bank.mobile);
+							res.status(200).json({
+								status: 1,
 							});
 						}
-						let content =
-							"<p>Rule " + name + " has been updated, check it out</p>";
-						sendMail(content, "Rule Updated", bank.email);
-						let content2 = "Rule " + name + " has been updated, check it out";
-						sendSMS(content2, bank.mobile);
-						res.status(200).json({
-							status: 1,
-						});
 					}
 				);
 			}
@@ -1242,8 +1433,9 @@ router.post("/generateBankOTP", function (req, res) {
 		},
 		function (err, user) {
 			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				data.user_id = user._id;
@@ -1251,18 +1443,25 @@ router.post("/generateBankOTP", function (req, res) {
 				data.page = page;
 				data.mobile = mobile;
 				data.save((err, ot) => {
-					if (err)
-						return res.json({
-							error: err,
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
 						});
+					} else {
+						let content = txt + data.otp;
+						sendSMS(content, mobile);
+						sendMail(content, "OTP", email);
 
-					let content = txt + data.otp;
-					sendSMS(content, mobile);
-					sendMail(content, "OTP", email);
-
-					res.status(200).json({
-						id: ot._id,
-					});
+						res.status(200).json({
+							id: ot._id,
+						});
+					}
 				});
 			}
 		}

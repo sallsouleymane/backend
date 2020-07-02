@@ -39,7 +39,8 @@ router.post("/user/getMerchantDetails", jwtTokenAuth, function (req, res) {
 			} else if (user == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Merchant.findOne(
@@ -96,7 +97,8 @@ router.get("/user/listMerchants", jwtTokenAuth, function (req, res) {
 			} else if (user == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Bank.findOne({ name: user.bank }, (err, bank) => {
@@ -146,12 +148,13 @@ router.post("/user/checkWalToWalFee", jwtTokenAuth, function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal error please try again",
+					message: "Internal error please try again",
 				});
 			} else if (user == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Bank.findOne(
@@ -163,12 +166,12 @@ router.post("/user/checkWalToWalFee", jwtTokenAuth, function (req, res) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
-								error: "Internal error please try again",
+								message: "Internal error please try again",
 							});
 						} else if (bank == null) {
 							res.status(200).json({
 								status: 0,
-								error: "Bank not Found",
+								message: "Bank not Found",
 							});
 						} else {
 							const find = {
@@ -182,12 +185,12 @@ router.post("/user/checkWalToWalFee", jwtTokenAuth, function (req, res) {
 									console.log(err);
 									res.status(200).json({
 										status: 0,
-										error: "Internal error please try again",
+										message: "Internal error please try again",
 									});
 								} else if (fe == null) {
 									res.status(200).json({
 										status: 0,
-										error: "Transaction cannot be done at this time",
+										message: "Transaction cannot be done at this time",
 									});
 								} else {
 									amount = Number(amount);
@@ -229,12 +232,13 @@ router.post("/user/checkWalToNonWalFee", jwtTokenAuth, function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal error please try again",
+					message: "Internal error please try again",
 				});
 			} else if (user == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Bank.findOne(
@@ -246,12 +250,12 @@ router.post("/user/checkWalToNonWalFee", jwtTokenAuth, function (req, res) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
-								error: "Internal error please try again",
+								message: "Internal error please try again",
 							});
 						} else if (bank == null) {
 							res.status(200).json({
 								status: 0,
-								error: "Bank not Found",
+								message: "Bank not Found",
 							});
 						} else {
 							const find = {
@@ -265,12 +269,12 @@ router.post("/user/checkWalToNonWalFee", jwtTokenAuth, function (req, res) {
 									console.log(err);
 									res.status(200).json({
 										status: 0,
-										error: "Internal error please try again",
+										message: "Internal error please try again",
 									});
 								} else if (fe == null) {
 									res.status(200).json({
 										status: 0,
-										error: "Transaction cannot be done at this time",
+										message: "Transaction cannot be done at this time",
 									});
 								} else {
 									amount = Number(amount);
@@ -308,12 +312,12 @@ router.post("/user/getUser", jwtTokenAuth, function (req, res) {
 			console.log(err);
 			res.status(200).json({
 				status: 0,
-				error: "Internal Server Error",
+				message: "Internal Server Error",
 			});
 		} else if (result == null) {
 			res.status(200).json({
 				status: 0,
-				error: "You are either not authorised or not logged in.",
+				message: "You are either not authorised or not logged in.",
 			});
 		} else {
 			User.findOne({ mobile }, "-password -docs_hash -contact_list", function (
@@ -324,12 +328,12 @@ router.post("/user/getUser", jwtTokenAuth, function (req, res) {
 					console.log(err);
 					res.status(200).json({
 						status: 0,
-						error: "Internal Server Error",
+						message: "Internal Server Error",
 					});
 				} else if (user == null) {
 					res.status(200).json({
 						status: 0,
-						error: "User not found",
+						message: "User not found",
 					});
 				} else {
 					res.status(200).json({
@@ -350,7 +354,7 @@ router.get("/deleteUser", (req, res) => {
 			console.log(err);
 			res.status(200).json({
 				status: 0,
-				error: "Internal Server Error",
+				message: "Internal Server Error",
 			});
 		} else {
 			res.status(200).json({
@@ -374,12 +378,12 @@ router.get("/user/getBalance", jwtTokenAuth, (req, res) => {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (user == null) {
 				res.status(200).json({
 					status: 0,
-					error: "User not found",
+					message: "User not found",
 				});
 			} else {
 				const wallet_id = user.mobile + "@" + user.bank;
@@ -408,7 +412,7 @@ router.post("/user/updatePassword", (req, res) => {
 			if (err) {
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else {
 				res.status(200).json({
@@ -434,7 +438,7 @@ router.post("/user/updateEmail", jwtTokenAuth, (req, res) => {
 			if (err) {
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else {
 				res.status(200).json({
@@ -460,7 +464,7 @@ router.post("/user/updateName", jwtTokenAuth, (req, res) => {
 			if (err) {
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else {
 				res.status(200).json({
@@ -483,7 +487,7 @@ router.get("/user/getDetails", jwtTokenAuth, (req, res) => {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else {
 				res.status(200).json({
@@ -507,12 +511,12 @@ router.post("/user/verify", (req, res) => {
 			if (err) {
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (user.length > 0) {
 				res.status(200).json({
 					status: 0,
-					error:
+					message:
 						"User already exist with either same email id or mobile number.",
 				});
 			} else {
@@ -524,7 +528,7 @@ router.post("/user/verify", (req, res) => {
 					async (err, result) => {
 						if (err) {
 							res.send(500).json({
-								error: "Internal Server Error",
+								message: "Internal Server Error",
 							});
 						} else {
 							console.log(result);
@@ -565,12 +569,12 @@ router.post("/user/signup", (req, res) => {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (result == null) {
 				res.status(200).json({
 					status: 0,
-					error: "OTP Mismatch",
+					message: "OTP Mismatch",
 				});
 			} else {
 				OTP.deleteOne(result, function (err, obj) {
@@ -578,7 +582,7 @@ router.post("/user/signup", (req, res) => {
 						console.log(err);
 						res.status(200).json({
 							status: 0,
-							error: "Internal Server Error",
+							message: "Internal Server Error",
 						});
 					} else {
 						console.log("document deleted: ", result);
@@ -595,7 +599,7 @@ router.post("/user/signup", (req, res) => {
 							if (err)
 								res.status(200).json({
 									status: 0,
-									error:
+									message:
 										"User already exist with either same email id or mobile number.",
 								});
 							else {
@@ -620,12 +624,12 @@ router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 			console.log(err);
 			res.status(200).json({
 				status: 0,
-				error: "Internal Server Error",
+				message: "Internal Server Error",
 			});
 		} else if (user == null) {
 			res.status(200).json({
 				status: 0,
-				error: "You are not allowed to assign bank.",
+				message: "You are not allowed to assign bank.",
 			});
 		} else {
 			Bank.findOne({ name: bank }, (err, result) => {
@@ -633,12 +637,12 @@ router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 					console.log(err);
 					res.status(200).json({
 						status: 0,
-						error: "Internal Server Error",
+						message: "Internal Server Error",
 					});
 				} else if (result == null) {
 					res.status(200).json({
 						status: 0,
-						error: "This bank do not exist",
+						message: "This bank do not exist",
 					});
 				} else {
 					User.updateOne(
@@ -649,12 +653,12 @@ router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 								console.log(err);
 								res.status(200).json({
 									status: 0,
-									error: "Internal Server Error",
+									message: "Internal Server Error",
 								});
 							} else if (user == null) {
 								res.status(200).json({
 									status: 0,
-									error: "You are either not authorised or not logged in.",
+									message: "You are either not authorised or not logged in.",
 								});
 							} else {
 								res.status(200).json({
@@ -681,12 +685,12 @@ router.post("/user/saveUploadedDocsHash", jwtTokenAuth, (req, res) => {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (result == null) {
 				res.status(200).json({
 					status: 0,
-					error: "You are either not authorised or not logged in.",
+					message: "You are either not authorised or not logged in.",
 				});
 			} else {
 				res.status(200).json({
@@ -709,12 +713,12 @@ router.post("/user/skipDocsUpload", jwtTokenAuth, (req, res) => {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (result == null) {
 				res.status(200).json({
 					status: 0,
-					error:
+					message:
 						"You can not perform this step. Either the docs are already uploaded or you are not authorised,login again and try.",
 				});
 			} else {
@@ -739,12 +743,12 @@ router.get("/user/getBanks", jwtTokenAuth, function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (user == null) {
 				res.status(200).json({
 					status: 0,
-					error: "You are either not authorised or not logged in.",
+					message: "You are either not authorised or not logged in.",
 				});
 			} else {
 				Bank.find({ initial_setup: { $eq: true } }, function (
@@ -755,7 +759,7 @@ router.get("/user/getBanks", jwtTokenAuth, function (req, res) {
 						console.log(err);
 						res.status(200).json({
 							status: 0,
-							error: "Internal Server Error",
+							message: "Internal Server Error",
 						});
 					} else {
 						res.status(200).json({
@@ -782,12 +786,12 @@ router.get("/user/getTransactionHistory", jwtTokenAuth, function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (user == null) {
 				res.status(200).json({
 					status: 0,
-					error: "You are either not authorised or not logged in.",
+					message: "You are either not authorised or not logged in.",
 				});
 			} else {
 				const wallet = user.mobile + "@" + user.bank;
@@ -814,12 +818,12 @@ router.get("/user/getContactList", jwtTokenAuth, function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (user == null) {
 				res.status(200).json({
 					status: 0,
-					error: "You are either not authorised or not logged in.",
+					message: "You are either not authorised or not logged in.",
 				});
 			} else {
 				User.find(
@@ -830,7 +834,7 @@ router.get("/user/getContactList", jwtTokenAuth, function (req, res) {
 							console.log(err);
 							res.status(200).json({
 								status: 0,
-								error: "Internal Server Error",
+								message: "Internal Server Error",
 							});
 						} else {
 							NWUser.find(
@@ -840,7 +844,7 @@ router.get("/user/getContactList", jwtTokenAuth, function (req, res) {
 										console.log(err);
 										res.status(200).json({
 											status: 0,
-											error: "Internal Server Error",
+											message: "Internal Server Error",
 										});
 									} else {
 										res.status(200).json({
@@ -884,12 +888,13 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (sender == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				const senderWallet = sender.mobile + "@" + sender.bank;
@@ -897,7 +902,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 				if (Number(bal) < sending_amount) {
 					res.status(200).json({
 						status: 0,
-						error: "Not enough balance. Recharge Your wallet.",
+						message: "Not enough balance. Recharge Your wallet.",
 					});
 				} else {
 					User.findOne(
@@ -908,7 +913,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 							if (err || receiver == null) {
 								res.status(200).json({
 									status: 0,
-									error: "Receiver's wallet do not exist",
+									message: "Receiver's wallet do not exist",
 								});
 							} else {
 								Bank.findOne(
@@ -919,7 +924,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 										if (err || bank == null) {
 											res.status(200).json({
 												status: 0,
-												error: "Bank Not Found",
+												message: "Bank Not Found",
 											});
 										} else {
 											Infra.findOne(
@@ -930,7 +935,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 													if (err || infra == null) {
 														res.status(200).json({
 															status: 0,
-															error: "Infra Not Found",
+															message: "Infra Not Found",
 														});
 													} else {
 														const find = {
@@ -943,7 +948,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 															if (err || fe == null) {
 																res.status(200).json({
 																	status: 0,
-																	error: "Revenue Rule Not Found",
+																	message: "Revenue Rule Not Found",
 																});
 															} else {
 																var fee = 0;
@@ -1057,7 +1062,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																				} else {
 																					res.status(200).json({
 																						status: 0,
-																						error: result.toString(),
+																						message: result.toString(),
 																					});
 																				}
 																			});
@@ -1117,12 +1122,12 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			} else if (sender == null) {
 				res.status(200).json({
 					status: 0,
-					error: "Sender not found",
+					message: "Sender not found",
 				});
 			} else {
 				receiver = {
@@ -1140,7 +1145,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 				if (Number(bal) < sending_amount) {
 					res.status(200).json({
 						status: 0,
-						error: "Not enough balance. Recharge Your wallet.",
+						message: "Not enough balance. Recharge Your wallet.",
 					});
 				} else {
 					Bank.findOne(
@@ -1151,7 +1156,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 							if (err || bank == null) {
 								res.status(200).json({
 									status: 0,
-									error: "Bank Not Found",
+									message: "Bank Not Found",
 								});
 							} else {
 								Infra.findOne(
@@ -1162,7 +1167,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 										if (err || infra == null) {
 											res.status(200).json({
 												status: 0,
-												error: "Infra Not Found",
+												message: "Infra Not Found",
 											});
 										} else {
 											const find = {
@@ -1175,7 +1180,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 												if (err || fe == null) {
 													res.status(200).json({
 														status: 0,
-														error: "Revenue Rule Not Found",
+														message: "Revenue Rule Not Found",
 													});
 												} else {
 													var fee = 0;
@@ -1250,7 +1255,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																if (err) {
 																	res.json({
 																		status: 0,
-																		error: err.toString(),
+																		message: err.toString(),
 																	});
 																} else {
 																	const bankEsWallet = "escrow@" + bank.name;
@@ -1358,7 +1363,8 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																							console.log(err);
 																							res.status(200).json({
 																								status: 0,
-																								error: "Internal Server Error",
+																								message:
+																									"Internal Server Error",
 																							});
 																						} else {
 																							res.status(200).json({
@@ -1374,7 +1380,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																			} else {
 																				res.status(200).json({
 																					status: 0,
-																					error: result.toString(),
+																					message: result.toString(),
 																				});
 																			}
 																		});

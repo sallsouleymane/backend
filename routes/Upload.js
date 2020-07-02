@@ -25,8 +25,9 @@ router.post("/fileUpload", function (req, res) {
 		},
 		function (err, user) {
 			if (err || user == null) {
-				res.status(401).json({
-					error: "Unauthorized",
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				let form = new IncomingForm();
@@ -37,7 +38,7 @@ router.post("/fileUpload", function (req, res) {
 
 					if (fn !== "jpeg" && fn !== "png" && fn !== "jpg") {
 						res.status(200).json({
-							error: "Only JPG / PNG files are accepted",
+							message: "Only JPG / PNG files are accepted",
 						});
 					} else {
 						if (!fs.existsSync(dir)) {
@@ -49,21 +50,37 @@ router.post("/fileUpload", function (req, res) {
 						let savepath = user._id + "/" + files.file.name;
 
 						fs.readFile(oldpath, function (err, data) {
-							if (err) res.status(402);
-
-							fs.writeFile(newpath, data, function (err) {
-								if (err) {
-									res.status(402).json({
-										error: "File upload error",
-									});
-								} else {
-									res.status(200).json({
-										name: savepath,
-									});
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
 								}
-							});
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else {
+								fs.writeFile(newpath, data, function (err) {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else {
+										res.status(200).json({
+											name: savepath,
+										});
+									}
+								});
 
-							fs.unlink(oldpath, function (err) {});
+								fs.unlink(oldpath, function (err) {});
+							}
 						});
 					}
 				});
@@ -83,14 +100,20 @@ router.post("/:user/imageUpload", jwtTokenAuth, function (req, res) {
 		},
 		function (err, user) {
 			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal server error",
+					message: message,
 				});
 			} else if (user == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Unauthorized",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				let form = new IncomingForm();
@@ -122,9 +145,14 @@ router.post("/:user/imageUpload", jwtTokenAuth, function (req, res) {
 							} else {
 								fs.writeFile(newpath, data, function (err) {
 									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
 										res.status(200).json({
 											status: 0,
-											message: "File upload error",
+											message: message,
 										});
 									} else {
 										res.status(200).json({
@@ -155,7 +183,7 @@ router.post("/ipfsUpload", function (req, res) {
 
 		// if (fn != 'pdf') {
 		//   res.status(200).json({
-		// 	error: 'Only PDF files are accepted'
+		// 	message: 'Only PDF files are accepted'
 		//   })
 		// }
 		// else {
@@ -180,7 +208,7 @@ router.post("/ipfsUpload", function (req, res) {
 			} else {
 				res.status(200).json({
 					status: 0,
-					error: "File Upload Error",
+					message: "File Upload Error",
 				});
 			}
 		});

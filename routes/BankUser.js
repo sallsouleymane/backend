@@ -3,37 +3,51 @@ const router = express.Router();
 
 const BankUser = require("../models/BankUser");
 
-router.post("/cashierSetupUpdate", function(req, res) {
+router.post("/cashierSetupUpdate", function (req, res) {
 	const { username, password, token } = req.body;
 	BankUser.findOne(
 		{
 			token,
-			status: 1
+			status: 1,
 		},
-		function(err, bank) {
+		function (err, bank) {
 			if (err) {
-				res.status(500).json({
-					error: "Internal error please try again"
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
 				});
-			} else if (!bank || bank == null) {
-				res.status(401).json({
-					error: "Incorrect username or password"
+			} else if (!bank) {
+				res.status(200).json({
+					message: "Incorrect username or password",
 				});
 			} else {
 				BankUser.findByIdAndUpdate(
 					bank._id,
 					{
 						password: password,
-						initial_setup: true
+						initial_setup: true,
 					},
-					err => {
-						if (err)
-							return res.status(400).json({
-								error: err
+					(err) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
 							});
-						res.status(200).json({
-							success: "Updated successfully"
-						});
+						} else {
+							res.status(200).json({
+								success: "Updated successfully",
+							});
+						}
 					}
 				);
 			}
