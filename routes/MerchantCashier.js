@@ -125,11 +125,21 @@ router.post("/merchantCashier/deleteInvoice", jwtTokenAuth, function (
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err || cashier == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: "Merchant cashier is not valid",
 				});
 			} else {
 				Invoice.deleteOne({ _id: invoice_id }, (err) => {
@@ -163,11 +173,21 @@ router.get("/merchantCashier/todaysStatus", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err || cashier == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: "Cashier is not valid",
 				});
 			} else {
 				res.status(200).json({
@@ -504,7 +524,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 								});
 							} catch (err) {
 								console.log(err);
-								var message = "Internal server error";
+								var message = err.toString();
 								if (err.message) {
 									message = err.message;
 								}
@@ -629,11 +649,21 @@ router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
 															},
 														},
 														(err, merchant) => {
-															if (err || merchant == null) {
+															if (err) {
+																console.log(err);
+																var message = err;
+																if (err.message) {
+																	message = err.message;
+																}
+																res.status(200).json({
+																	status: 0,
+																	message: message,
+																});
+															} else if (merchant == null) {
 																console.log(err);
 																res.status(200).json({
 																	status: 0,
-																	message: "Internal server error",
+																	message: "Merchant is not valid",
 																});
 															} else {
 																res.status(200).json({

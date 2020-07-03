@@ -505,9 +505,13 @@ router.post("/bank/commission/getRules", function (req, res) {
 		function (err, bank) {
 			if (err) {
 				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (bank == null) {
 				res.status(200).json({
@@ -736,7 +740,7 @@ router.post("/merchant/commission/approve", jwtTokenAuth, function (req, res) {
 							);
 						} catch (err) {
 							console.log(err);
-							var message = "Internal server error";
+							var message = err.toString();
 							if (err.message) {
 								message = err.message;
 							}
@@ -1042,7 +1046,7 @@ router.post("/infra/commission/approve", function (req, res) {
 					);
 				} catch (err) {
 					console.log(err);
-					var message = "Internal server error";
+					var message = err.toString();
 					if (err.message) {
 						message = err.message;
 					}

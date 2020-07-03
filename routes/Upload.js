@@ -24,7 +24,17 @@ router.post("/fileUpload", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",

@@ -1090,7 +1090,7 @@ router.post("/infra/merchantFee/approve", function (req, res) {
 					);
 				} catch (err) {
 					console.log(err);
-					var message = "Internal server error";
+					var message = err.toString();
 					if (err.message) {
 						message = err.message;
 					}

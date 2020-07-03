@@ -570,7 +570,17 @@ router.get("/getBankOperationalBalance", function (req, res) {
 			status: 1,
 		},
 		function (err, ba) {
-			if (err || ba == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (ba == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -597,7 +607,17 @@ router.post("/getBranches", function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err || bank == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (bank == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -636,7 +656,17 @@ router.post("/getBankUsers", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -696,7 +726,17 @@ router.post("/addBranch", (req, res) => {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err || bank == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (bank == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -813,7 +853,17 @@ router.post("/editBranch", (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -867,7 +917,17 @@ router.post("/branchStatus", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -919,8 +979,19 @@ router.get("/getWalletBalance", function (req, res) {
 				status: 1,
 			},
 			function (e, b) {
-				if (e || b == null) {
+				if (e) {
+					console.log(e);
+					var message = e;
+					if (e.message) {
+						message = e.message;
+					}
 					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else if (b == null) {
+					res.status(200).json({
+						status: 0,
 						message:
 							"Token changed or user not valid. Try to login again or contact system administrator.",
 					});
@@ -930,9 +1001,20 @@ router.get("/getWalletBalance", function (req, res) {
 							name: bank,
 						},
 						function (err, ba) {
-							if (err || ba == null) {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
 								res.status(200).json({
-									message: "Not found",
+									status: 0,
+									message: message,
+								});
+							} else if (ba == null) {
+								res.status(200).json({
+									status: 0,
+									message: "Bank not found",
 								});
 							} else {
 								let wallet_id = page + "@" + ba.name;
@@ -974,7 +1056,17 @@ router.post("/addBankUser", (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1048,7 +1140,17 @@ router.post("/editBankUser", (req, res) => {
 			token,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1100,7 +1202,17 @@ router.post("/getBankHistory", function (req, res) {
 			status: 1,
 		},
 		function (err, b) {
-			if (err || b == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (b == null) {
 				res.status(200).json({
 					status: 0,
 					message:
@@ -1157,7 +1269,17 @@ router.post("/addCashier", (req, res) => {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err || bank == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (bank == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1432,7 +1554,17 @@ router.post("/generateBankOTP", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",

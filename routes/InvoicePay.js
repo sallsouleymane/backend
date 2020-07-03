@@ -114,11 +114,21 @@ router.post("/cashier/getUserInvoices", (req, res) => {
 				status: 1,
 			},
 			function (err, cashier) {
-				if (err || cashier == null) {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else if (cashier == null) {
 					console.log(err);
 					res.status(200).json({
 						status: 0,
-						message: "Internal server error",
+						message: "Cashier is not valid",
 					});
 				} else {
 					Invoice.find({ mobile: mobile }, async (err, invoices) => {
@@ -156,7 +166,7 @@ router.post("/cashier/getUserInvoices", (req, res) => {
 		);
 	} catch (err) {
 		console.log(err);
-		var message = "Internal server error";
+		var message = err.toString();
 		if (err.message) {
 			message = err.message;
 		}
@@ -436,7 +446,7 @@ router.post("/cashier/payInvoice", (req, res) => {
 		);
 	} catch (err) {
 		console.log(err);
-		var message = "Internal server error";
+		var message = err.toString();
 		if (err.message) {
 			message = err.message;
 		}
@@ -445,47 +455,47 @@ router.post("/cashier/payInvoice", (req, res) => {
 });
 
 router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
-	try {
-		const username = req.sign_creds.username;
-		User.findOne(
-			{
-				username,
-				status: 1,
-			},
-			function (err, user) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (user == null) {
-					res.status(200).json({
-						status: 0,
-						message: "User is not activated.",
-					});
-				} else {
-					Bank.findOne({ name: user.bank }, (err, bank) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (bank == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Internal server error",
-							});
-						} else {
+	const username = req.sign_creds.username;
+	User.findOne(
+		{
+			username,
+			status: 1,
+		},
+		function (err, user) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
+				res.status(200).json({
+					status: 0,
+					message: "User is not activated.",
+				});
+			} else {
+				Bank.findOne({ name: user.bank }, (err, bank) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (bank == null) {
+						res.status(200).json({
+							status: 0,
+							message: "User's bank not found",
+						});
+					} else {
+						try {
 							Invoice.find({ mobile: user.mobile }, async (err, invoices) => {
 								if (err) {
 									console.log(err);
@@ -515,90 +525,110 @@ router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
 									});
 								}
 							});
-						}
-					});
-				}
-			}
-		);
-	} catch (err) {
-		console.log("Catch block: ", err);
-		var message = "Internal server error";
-		if (err.message) {
-			message = err.message;
-		}
-		res.status(200).json({ status: 0, message: message, err: err });
-	}
-});
-
-router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
-	try {
-		const { invoice_id, amount } = req.body;
-		const username = req.sign_creds.username;
-		User.findOne(
-			{
-				username,
-				status: 1,
-			},
-			function (err, user) {
-				if (err || user == null) {
-					console.log(err);
-					res.status(200).json({
-						status: 0,
-						message: "Internal server error",
-					});
-				} else {
-					Invoice.findOne({ _id: invoice_id, paid: 0 }, (err, invoice) => {
-						if (err) {
-							console.log(err);
-							var message = err;
+						} catch (err) {
+							console.log("Catch block: ", err);
+							var message = err.toString();
 							if (err.message) {
 								message = err.message;
 							}
+							res.status(200).json({ status: 0, message: message, err: err });
+						}
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
+	const { invoice_id, amount } = req.body;
+	const username = req.sign_creds.username;
+	User.findOne(
+		{
+			username,
+			status: 1,
+		},
+		function (err, user) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "User is not valid",
+				});
+			} else {
+				Invoice.findOne({ _id: invoice_id, paid: 0 }, (err, invoice) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (invoice == null) {
+						res.status(200).json({
+							status: 0,
+							message: "Invoice is not valid or already paid",
+						});
+					} else {
+						if (invoice.amount != amount) {
 							res.status(200).json({
 								status: 0,
-								message: message,
-							});
-						} else if (invoice == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Invoice is not valid or already paid",
+								message: "Invoice amount to be paid is " + invoice.amount,
 							});
 						} else {
-							if (invoice.amount != amount) {
-								res.status(200).json({
-									status: 0,
-									message: "Invoice amount to be paid is " + invoice.amount,
-								});
-							} else {
-								MerchantCashier.findOne(
-									{ _id: invoice.cashier_id },
-									(err, mcashier) => {
-										if (err || mcashier == null) {
-											console.log(err);
-											res.status(200).json({
-												status: 0,
-												message: "Internal server error",
-											});
-										} else {
-											MerchantFee.findOne(
-												{ merchant_id: invoice.merchant_id, type: 0 },
-												(err, fee) => {
-													if (err) {
-														console.log(err);
-														var message = err;
-														if (err.message) {
-															message = err.message;
-														}
-														res.status(200).json({
-															status: 0,
-															message: message,
-														});
-													} else if (fee == null) {
-														res.status(200).json({
-															status: 0,
-															message: "Fee rule not found",
-														});
-													} else {
+							MerchantCashier.findOne(
+								{ _id: invoice.cashier_id },
+								(err, mcashier) => {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (mcashier == null) {
+										console.log(err);
+										res.status(200).json({
+											status: 0,
+											message: "Merchant cashier not fount",
+										});
+									} else {
+										MerchantFee.findOne(
+											{ merchant_id: invoice.merchant_id, type: 0 },
+											(err, fee) => {
+												if (err) {
+													console.log(err);
+													var message = err;
+													if (err.message) {
+														message = err.message;
+													}
+													res.status(200).json({
+														status: 0,
+														message: message,
+													});
+												} else if (fee == null) {
+													res.status(200).json({
+														status: 0,
+														message: "Fee rule not found",
+													});
+												} else {
+													try {
 														Commission.findOne(
 															{ merchant_id: invoice.merchant_id, type: 0 },
 															async (err, comm) => {
@@ -768,26 +798,28 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 																}
 															}
 														);
+													} catch (err) {
+														console.log(err);
+														var message = err.toString();
+														if (err.message) {
+															message = err.message;
+														}
+														res
+															.status(200)
+															.json({ status: 0, message: message });
 													}
 												}
-											);
-										}
+											}
+										);
 									}
-								);
-							}
+								}
+							);
 						}
-					});
-				}
+					}
+				});
 			}
-		);
-	} catch (err) {
-		console.log(err);
-		var message = "Internal server error";
-		if (err.message) {
-			message = err.message;
 		}
-		res.status(200).json({ status: 0, message: message, err: err });
-	}
+	);
 });
 
 module.exports = router;

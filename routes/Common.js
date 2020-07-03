@@ -108,7 +108,7 @@ router.post("/:user/reinitiateTransfer", jwtTokenAuth, (req, res) => {
 		);
 	} catch (err) {
 		console.log(err);
-		var message = "Internal server error";
+		var message = err.toString();
 		if (err.message) {
 			message = err.message;
 		}
@@ -159,7 +159,17 @@ router.get("/getBalance", (req, res) => {
 			status: 1,
 		},
 		function (err, result) {
-			if (err || result == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (result == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -194,7 +204,17 @@ router.get("/getWalletBalance", function (req, res) {
 				status: 1,
 			},
 			function (e, b) {
-				if (e || b == null) {
+				if (e) {
+					console.log(e);
+					var message = e;
+					if (e.message) {
+						message = e.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else if (b == null) {
 					res.status(200).json({
 						message:
 							"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -205,7 +225,17 @@ router.get("/getWalletBalance", function (req, res) {
 							name: bank,
 						},
 						function (err, ba) {
-							if (err || ba == null) {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else if (ba == null) {
 								res.status(200).json({
 									message: "Not found",
 								});
@@ -242,7 +272,17 @@ router.post("/getOne", function (req, res) {
 			status: 1,
 		},
 		function (err, t1) {
-			if (err || t1 == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (t1 == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -291,7 +331,17 @@ router.post("/getAll", function (req, res) {
 			status: 1,
 		},
 		function (err, t1) {
-			if (err || t1 == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (t1 == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -394,7 +444,17 @@ router.post("/editBankBank", (req, res) => {
 			otp: otp,
 		},
 		function (err, otpd) {
-			if (err || otpd == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (otpd == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -506,7 +566,17 @@ router.post("/createRules", (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -598,7 +668,17 @@ router.post("/editRule", (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -674,7 +754,17 @@ router.post("/getBankByName", function (req, res) {
 			name: name,
 		},
 		function (err, bank) {
-			if (err || bank == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (bank == null) {
 				res.status(200).json({
 					message: err,
 				});
@@ -761,7 +851,17 @@ router.post("/getBranchByName", function (req, res) {
 			name: name,
 		},
 		function (err, bank) {
-			if (err || bank == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (bank == null) {
 				res.status(200).json({
 					message: "Not found",
 				});
@@ -771,7 +871,17 @@ router.post("/getBranchByName", function (req, res) {
 						_id: bank.bank_id,
 					},
 					function (err, ba) {
-						if (err || ba == null) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (ba == null) {
 							res.status(200).json({
 								message: "Not found",
 							});
@@ -863,7 +973,17 @@ router.post("/updateStatus", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -933,7 +1053,17 @@ router.post("/declineFee", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -979,7 +1109,17 @@ router.put("/updateOne", function (req, res) {
 			status: 1,
 		},
 		function (err, t1) {
-			if (err || t1 == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (t1 == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1013,7 +1153,17 @@ router.put("/updateCashier", function (req, res) {
 			status: 1,
 		},
 		function (err, t1) {
-			if (err || t1 == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (t1 == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1066,7 +1216,17 @@ router.post("/:user/forgotPassword", function (req, res) {
 			mobile: mobile,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					status: 0,
 					message: "Account not found!",
@@ -1116,7 +1276,17 @@ router.post("/:user/verifyForgotPasswordOTP", function (req, res) {
 			page,
 		},
 		function (err, ot) {
-			if (err || ot == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (ot == null) {
 				res.status(200).json({
 					status: 0,
 					message: "Invalid OTP!",
@@ -1195,7 +1365,17 @@ router.post("/bankForgotPassword", function (req, res) {
 			mobile: mobile,
 		},
 		function (err, bank) {
-			if (err || bank == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (bank == null) {
 				res.status(200).json({
 					message: "Account not found!",
 				});
@@ -1241,7 +1421,17 @@ router.post("/branchForgotPassword", function (req, res) {
 			mobile: mobile,
 		},
 		function (err, bank) {
-			if (err || bank == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (bank == null) {
 				res.status(200).json({
 					message: "Account not found!",
 				});
@@ -1287,7 +1477,17 @@ router.post("/cashierForgotPassword", function (req, res) {
 			mobile: mobile,
 		},
 		function (err, bank) {
-			if (err || bank == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (bank == null) {
 				res.status(200).json({
 					message: "Account not found!",
 				});
@@ -1333,7 +1533,17 @@ router.post("/forgotPassword", function (req, res) {
 			mobile: mobile,
 		},
 		function (err, bank) {
-			if (err || bank == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (bank == null) {
 				res.status(200).json({
 					message: "Account not found!",
 				});
@@ -1381,7 +1591,17 @@ router.post("/sendOTP", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1464,7 +1684,17 @@ router.post("/verifyOTP", function (req, res) {
 			otp,
 		},
 		function (err, ot) {
-			if (err || ot == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (ot == null) {
 				res.status(200).json({
 					status: 0,
 					message: "Invalid OTP!",
@@ -1516,7 +1746,17 @@ router.post("/InfraVrifyOTP", function (req, res) {
 			otp,
 		},
 		function (err, ot) {
-			if (err || ot == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (ot == null) {
 				res.status(200).json({
 					message: "Invalid OTP!",
 				});
@@ -1564,7 +1804,17 @@ router.post("/getRule", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1608,7 +1858,17 @@ router.post("/getHistory", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1655,7 +1915,17 @@ router.post("/getCashierHistory", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1694,7 +1964,17 @@ router.post("/getBranchTransHistory", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1740,7 +2020,17 @@ router.post("/getHistoryTotal", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",

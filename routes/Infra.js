@@ -464,7 +464,17 @@ router.post("/setupUpdate", function (req, res) {
 
 router.get("/checkInfra", function (req, res) {
 	Infra.countDocuments({}, function (err, c) {
-		if (err || c == null) {
+		if (err) {
+			console.log(err);
+			var message = err;
+			if (err.message) {
+				message = err.message;
+			}
+			res.status(200).json({
+				status: 0,
+				message: message,
+			});
+		} else if (c == null) {
 			res.status(200).json({
 				message:
 					"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -501,7 +511,17 @@ router.post("/addBank", (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -638,7 +658,17 @@ router.post("/editBank", (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -651,7 +681,17 @@ router.post("/editBank", (req, res) => {
 						otp: otp,
 					},
 					function (err, otpd) {
-						if (err || !otpd) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (otpd == null) {
 							res.status(200).json({
 								message: err,
 							});
@@ -740,7 +780,17 @@ router.post("/getInfraHistory", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
 				res.status(200).json({
 					status: 0,
 					message:
@@ -792,7 +842,17 @@ router.get("/getInfraOperationalBalance", function (req, res) {
 			status: 1,
 		},
 		function (e, b) {
-			if (e || b == null) {
+			if (e) {
+				console.log(e);
+				var message = e;
+				if (e.message) {
+					message = e.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (b == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -803,7 +863,17 @@ router.get("/getInfraOperationalBalance", function (req, res) {
 						_id: bank,
 					},
 					function (err, ba) {
-						if (err || ba == null) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (ba == null) {
 							res.status(200).json({
 								message: "Not found",
 							});
@@ -832,8 +902,19 @@ router.get("/getInfraMasterBalance", function (req, res) {
 			status: 1,
 		},
 		function (e, b) {
-			if (e || b == null) {
+			if (e) {
+				console.log(e);
+				var message = e;
+				if (e.message) {
+					message = e.message;
+				}
 				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (b == null) {
+				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -950,7 +1031,17 @@ router.post("/addProfile", (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1007,8 +1098,19 @@ router.post("/editProfile", (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
+				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1070,8 +1172,19 @@ router.post("/addInfraUser", (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
+				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1142,7 +1255,17 @@ router.post("/editInfraUser", (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1194,7 +1317,17 @@ router.post("/getBank", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1290,7 +1423,17 @@ router.post("/bankStatus", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1333,7 +1476,17 @@ router.post("/getRoles", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1376,7 +1529,17 @@ router.post("/getInfraUsers", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1414,7 +1577,17 @@ router.post("/getProfile", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1436,7 +1609,17 @@ router.post("/editInfraProfile", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1493,7 +1676,17 @@ router.post("/generateOTP", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1590,7 +1783,17 @@ router.post("/transferMoney", function (req, res) {
 				status: 1,
 			},
 			function (err, f) {
-				if (err || f == null) {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else if (f == null) {
 					res.status(200).json({
 						message:
 							"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1648,7 +1851,17 @@ router.post("/checkFee", function (req, res) {
 				status: 1,
 			},
 			function (err, f) {
-				if (err || f == null) {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else if (f == null) {
 					res.status(200).json({
 						message:
 							"Token changed or user not valid. Try to login again or contact system administrator.",

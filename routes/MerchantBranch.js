@@ -79,11 +79,21 @@ router.get("/merchantBranch/todaysStatus", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, branch) {
-			if (err || branch == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (branch == null) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: "Merchant branch is not valid",
 				});
 			} else {
 				const today = new Date();

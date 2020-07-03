@@ -190,11 +190,15 @@ router.post("/merchant/deleteOffering", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err || merchant == null) {
+			if (err) {
 				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
 				});
 			} else if (merchant == null) {
 				res.status(200).json({
@@ -400,7 +404,7 @@ router.post("/merchant/uploadOfferings", jwtTokenAuth, function (req, res) {
 					});
 				} catch (err) {
 					console.log(err);
-					var message = "Internal server error";
+					var message = err.toString();
 					if (err.message) {
 						message = err.message;
 					}
@@ -419,11 +423,21 @@ router.get("/merchant/todaysStatus", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err || merchant == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: "Merchant is not valid",
 				});
 			} else {
 				const today = new Date(); // "2020-06-09T18:30:00.772Z"
@@ -474,7 +488,17 @@ router.get("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err || merchant == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
 					message:
@@ -584,7 +608,17 @@ router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err || merchant == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
 					message:
@@ -626,7 +660,17 @@ router.post("/merchant/editZone", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err || merchant == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
 					message:
@@ -673,7 +717,17 @@ router.get("/merchant/listZones", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err || merchant == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
 					message:
@@ -713,7 +767,17 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err || merchant == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
 					message:
@@ -758,11 +822,21 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 									{ _id: branch_id },
 									{ $inc: { total_cashiers: 1 } },
 									function (err, branch) {
-										if (err || branch == null) {
+										if (err) {
+											console.log(err);
+											var message = err;
+											if (err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+											});
+										} else if (branch == null) {
 											console.log(err);
 											return res.json({
 												status: 0,
-												message: "Internal server error",
+												message: "Branch not found",
 												err: err,
 											});
 										} else {
@@ -812,10 +886,20 @@ router.post("/merchant/editCashier", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err || merchant == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant is not valid",
 				});
 			} else {
 				MerchantCashier.findOneAndUpdate(
@@ -863,10 +947,20 @@ router.post("/merchant/listCashier", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err || merchant == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Internal Server Error",
+					message: message,
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant is not vaid",
 				});
 			} else {
 				MerchantCashier.find(
@@ -914,7 +1008,17 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					status: 0,
 					message:
@@ -998,7 +1102,17 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err || merchant == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
 					message:
@@ -1057,7 +1171,17 @@ router.get("/merchant/listStaff", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err || merchant == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
 					message:
@@ -1100,7 +1224,17 @@ router.post("/merchant/blockStaff", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err || merchant == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
 					message:
@@ -1152,7 +1286,17 @@ router.post("/merchant/unblockStaff", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err || merchant == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
 					message:
@@ -1202,11 +1346,21 @@ router.post("/merchant/blockBranch", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err || merchant == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					message: "Internal server error",
+					message: "Merchant is not valid",
 				});
 			} else {
 				MerchantBranch.findOneAndUpdate(
@@ -1252,11 +1406,21 @@ router.post("/merchant/unblockBranch", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err || merchant == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
 				console.log(err);
 				res.status(200).json({
 					status: 0,
-					message: "Internal server error",
+					message: "Merchant is not valid",
 				});
 			} else {
 				MerchantBranch.findOneAndUpdate(
@@ -1381,11 +1545,21 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 									{ _id: zone_id },
 									{ $inc: { branches_count: 1 } },
 									function (err, zone) {
-										if (err || zone == null) {
+										if (err) {
+											console.log(err);
+											var message = err;
+											if (err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+											});
+										} else if (zone == null) {
 											console.log(err);
 											res.status(200).json({
 												status: 0,
-												message: "Internal server error",
+												message: "Zone not found",
 												err: err,
 											});
 										} else {
@@ -1635,7 +1809,17 @@ router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err || merchant == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
 				res.status(200).json({
 					status: 0,
 					message:

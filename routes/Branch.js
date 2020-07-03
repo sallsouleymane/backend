@@ -35,7 +35,17 @@ router.post("/getBranchDashStats", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -139,7 +149,17 @@ router.post("/addBranchCashier", (req, res) => {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err || bank == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (bank == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -197,7 +217,17 @@ router.post("/addOpeningBalance", (req, res) => {
 			status: 1,
 		},
 		function (err, otpd) {
-			if (err || otpd == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (otpd == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -255,7 +285,17 @@ router.post("/getBranch", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -298,7 +338,17 @@ router.post("/getBranchInfo", function (req, res) {
 			status: 1,
 		},
 		function (err, branch) {
-			if (err || branch == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (branch == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -340,7 +390,8 @@ router.post("/branchSetupUpdate", function (req, res) {
 				});
 			} else if (!bank) {
 				res.status(200).json({
-					message: "Incorrect username or password",
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Branch.findByIdAndUpdate(
@@ -381,9 +432,20 @@ router.post("/checkBranchFee", function (req, res) {
 			status: 1,
 		},
 		function (err, f2) {
-			if (err || f2 == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
-					message: "Not Found",
+					status: 0,
+					message: message,
+				});
+			} else if (f2 == null) {
+				res.status(200).json({
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
 				Bank.findOne(
@@ -391,9 +453,19 @@ router.post("/checkBranchFee", function (req, res) {
 						_id: f2.bank_id,
 					},
 					function (err, f3) {
-						if (err || f3 == null) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
-								message: "Not Found",
+								status: 0,
+								message: message,
+							});
+						} else if (f3 == null) {
+							res.status(200).json({
+								message: "Bank not Found",
 							});
 						} else {
 							var oamount = Number(amount);
@@ -406,9 +478,19 @@ router.post("/checkBranchFee", function (req, res) {
 							};
 							console.log(find);
 							Fee.findOne(find, function (err, fe) {
-								if (err || fe == null) {
+								if (err) {
+									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
 									res.status(200).json({
-										fee: "(Transaction cannot be done at this time)",
+										status: 0,
+										message: message,
+									});
+								} else if (fe == null) {
+									res.status(200).json({
+										fee: "Transaction cannot be done at this time",
 									});
 								} else {
 									let fee = 0;
@@ -445,7 +527,17 @@ router.post("/updateCashierTransferStatus", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -455,7 +547,17 @@ router.post("/updateCashierTransferStatus", function (req, res) {
 					transfer_id,
 					{ status: status },
 					function (err, d) {
-						if (err || d == null) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (d == null) {
 							res.status(200).json({
 								message: err.toString(),
 							});
@@ -489,11 +591,21 @@ router.post("/branchVerifyClaim", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
+			} else if (f == null) {
 			} else {
 				OTP.findOne(
 					{
@@ -501,7 +613,17 @@ router.post("/branchVerifyClaim", function (req, res) {
 						otp: otp,
 					},
 					function (err, otpd) {
-						if (err || otpd == null) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (otpd == null) {
 							res.status(200).json({
 								message: "OTP Missmatch",
 							});
@@ -540,7 +662,17 @@ router.post("/branchClaimMoney", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -551,8 +683,19 @@ router.post("/branchClaimMoney", function (req, res) {
 						transaction_code: transferCode,
 					},
 					function (err, otpd) {
-						if (err || otpd == null) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (otpd == null) {
+							res.status(200).json({
+								status: 0,
 								message: "Transaction Not Found",
 							});
 						} else {
@@ -561,8 +704,19 @@ router.post("/branchClaimMoney", function (req, res) {
 									_id: f._id,
 								},
 								function (err, f2) {
-									if (err || f2 == null) {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
 										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (f2 == null) {
+										res.status(200).json({
+											status: 0,
 											message: "Branch Not Found",
 										});
 									} else {
@@ -571,8 +725,19 @@ router.post("/branchClaimMoney", function (req, res) {
 												_id: f.bank_id,
 											},
 											function (err, f3) {
-												if (err || f3 == null) {
+												if (err) {
+													console.log(err);
+													var message = err;
+													if (err.message) {
+														message = err.message;
+													}
 													res.status(200).json({
+														status: 0,
+														message: message,
+													});
+												} else if (f3 == null) {
+													res.status(200).json({
+														status: 0,
 														message: "Bank Not Found",
 													});
 												} else {
@@ -581,7 +746,17 @@ router.post("/branchClaimMoney", function (req, res) {
 															_id: f3.user_id,
 														},
 														function (err, f4) {
-															if (err || f4 == null) {
+															if (err) {
+																console.log(err);
+																var message = err;
+																if (err.message) {
+																	message = err.message;
+																}
+																res.status(200).json({
+																	status: 0,
+																	message: message,
+																});
+															} else if (f4 == null) {
 																res.status(200).json({
 																	message: "Infra Not Found",
 																});
@@ -664,7 +839,17 @@ router.post("/branchClaimMoney", function (req, res) {
 																									},
 																								},
 																								function (err, c) {
-																									if (err || c == null) {
+																									if (err) {
+																										console.log(err);
+																										var message = err;
+																										if (err.message) {
+																											message = err.message;
+																										}
+																										res.status(200).json({
+																											status: 0,
+																											message: message,
+																										});
+																									} else if (c == null) {
 																										let data = new BranchLedger();
 																										data.amount = Number(
 																											oamount
@@ -728,8 +913,19 @@ router.post("/branchVerifyOTPClaim", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
+				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -740,7 +936,17 @@ router.post("/branchVerifyOTPClaim", function (req, res) {
 						otp: otp,
 					},
 					function (err, otpd) {
-						if (err || otpd == null) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (otpd == null) {
 							res.status(200).json({
 								message: "OTP Missmatch",
 							});
@@ -765,8 +971,19 @@ router.post("/getBranchClaimMoney", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
+				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -777,13 +994,33 @@ router.post("/getBranchClaimMoney", function (req, res) {
 						status: 1,
 					},
 					function (err, cs) {
-						if (err || cs == null) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (cs == null) {
 							BranchSend.findOne(
 								{
 									transaction_code: transferCode,
 								},
 								function (err, cs) {
-									if (err || cs == null) {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (cs == null) {
 										res.status(200).json({
 											message: "Record Not Found",
 										});
@@ -815,8 +1052,19 @@ router.post("/getBranchHistory", function (req, res) {
 			status: 1,
 		},
 		function (err, b) {
-			if (err || b == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (b == null) {
+				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});

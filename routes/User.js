@@ -118,7 +118,17 @@ router.get("/user/listMerchants", jwtTokenAuth, function (req, res) {
 				});
 			} else {
 				Bank.findOne({ name: user.bank }, (err, bank) => {
-					if (err || bank == null) {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (bank == null) {
 						console.log(err);
 						res.status(200).json({
 							status: 0,
@@ -724,9 +734,13 @@ router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 	User.findOne({ username, status: 0 }, (err, user) => {
 		if (err) {
 			console.log(err);
+			var message = err;
+			if (err.message) {
+				message = err.message;
+			}
 			res.status(200).json({
 				status: 0,
-				message: "Internal Server Error",
+				message: message,
 			});
 		} else if (user == null) {
 			res.status(200).json({
@@ -1056,7 +1070,17 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 							mobile: receiverMobile,
 						},
 						(err, receiver) => {
-							if (err || receiver == null) {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else if (receiver == null) {
 								res.status(200).json({
 									status: 0,
 									message: "Receiver's wallet do not exist",
@@ -1067,7 +1091,17 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 										name: sender.bank,
 									},
 									function (err, bank) {
-										if (err || bank == null) {
+										if (err) {
+											console.log(err);
+											var message = err;
+											if (err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+											});
+										} else if (bank == null) {
 											res.status(200).json({
 												status: 0,
 												message: "Bank Not Found",
@@ -1078,7 +1112,17 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 													_id: bank.user_id,
 												},
 												function (err, infra) {
-													if (err || infra == null) {
+													if (err) {
+														console.log(err);
+														var message = err;
+														if (err.message) {
+															message = err.message;
+														}
+														res.status(200).json({
+															status: 0,
+															message: message,
+														});
+													} else if (infra == null) {
 														res.status(200).json({
 															status: 0,
 															message: "Infra Not Found",
@@ -1091,7 +1135,17 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 															active: "Active",
 														};
 														Fee.findOne(find, function (err, fe) {
-															if (err || fe == null) {
+															if (err) {
+																console.log(err);
+																var message = err;
+																if (err.message) {
+																	message = err.message;
+																}
+																res.status(200).json({
+																	status: 0,
+																	message: message,
+																});
+															} else if (fe == null) {
 																res.status(200).json({
 																	status: 0,
 																	message: "Revenue Rule Not Found",
@@ -1303,7 +1357,17 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 							name: sender.bank,
 						},
 						function (err, bank) {
-							if (err || bank == null) {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else if (bank == null) {
 								res.status(200).json({
 									status: 0,
 									message: "Bank Not Found",
@@ -1314,7 +1378,17 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 										_id: bank.user_id,
 									},
 									function (err, infra) {
-										if (err || infra == null) {
+										if (err) {
+											console.log(err);
+											var message = err;
+											if (err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+											});
+										} else if (infra == null) {
 											res.status(200).json({
 												status: 0,
 												message: "Infra Not Found",
@@ -1327,7 +1401,17 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 												active: "Active",
 											};
 											Fee.findOne(find, function (err, fe) {
-												if (err || fe == null) {
+												if (err) {
+													console.log(err);
+													var message = err;
+													if (err.message) {
+														message = err.message;
+													}
+													res.status(200).json({
+														status: 0,
+														message: message,
+													});
+												} else if (fe == null) {
 													res.status(200).json({
 														status: 0,
 														message: "Revenue Rule Not Found",

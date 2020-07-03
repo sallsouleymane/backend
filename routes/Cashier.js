@@ -480,7 +480,7 @@ router.post("/cashier/activateUser", function (req, res) {
 		});
 	} catch (err) {
 		console.log(err);
-		var message = "Internal server error";
+		var message = err.toString();
 		if (err.message) {
 			message = err.message;
 		}
@@ -502,8 +502,19 @@ router.post("/getCashierDashStats", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
+				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -533,7 +544,17 @@ router.post("/getCashierIncomingTransfer", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -563,8 +584,19 @@ router.post("/cashierAcceptIncoming", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
+				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -574,8 +606,19 @@ router.post("/cashierAcceptIncoming", function (req, res) {
 						_id: item.receiver_id,
 					},
 					function (err, u) {
-						if (err || u == null) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (u == null) {
+							res.status(200).json({
+								status: 0,
 								message:
 									"Token changed or user not valid. Try to login again or contact system administrator.",
 							});
@@ -622,7 +665,17 @@ router.post("/getClosingBalance", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err || user == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -657,7 +710,17 @@ router.post("/openCashierBalance", (req, res) => {
 			status: 1,
 		},
 		function (err, ba) {
-			if (err || ba == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (ba == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -710,7 +773,17 @@ router.post("/addClosingBalance", (req, res) => {
 			status: 1,
 		},
 		function (err, otpd) {
-			if (err || otpd == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (otpd == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -765,7 +838,17 @@ router.post("/getCashierTransfers", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -795,7 +878,17 @@ router.post("/cashierCancelTransfer", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -807,7 +900,17 @@ router.post("/cashierCancelTransfer", function (req, res) {
 						otp: otp,
 					},
 					function (err, otpd) {
-						if (err || otpd == null) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (otpd == null) {
 							res.status(200).json({
 								message: "OTP Missmatch",
 							});
@@ -817,7 +920,17 @@ router.post("/cashierCancelTransfer", function (req, res) {
 									_id: transfer_id,
 								},
 								function (err, item) {
-									if (err || item == null) {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (item == null) {
 										res.status(200).json({
 											message:
 												"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -828,7 +941,17 @@ router.post("/cashierCancelTransfer", function (req, res) {
 												_id: item.sender_id,
 											},
 											function (err, u) {
-												if (err || u == null) {
+												if (err) {
+													console.log(err);
+													var message = err;
+													if (err.message) {
+														message = err.message;
+													}
+													res.status(200).json({
+														status: 0,
+														message: message,
+													});
+												} else if (u == null) {
 													res.status(200).json({
 														message:
 															"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -884,7 +1007,17 @@ router.post("/getCashierTransLimit", function (req, res) {
 			status: 1,
 		},
 		function (err, t1) {
-			if (err || t1 == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (t1 == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -943,7 +1076,17 @@ router.post("/getCashier", function (req, res) {
 			status: 1,
 		},
 		function (err, t1) {
-			if (err || t1 == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (t1 == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1085,7 +1228,17 @@ router.post("/cashierVerifyOTPClaim", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1097,7 +1250,17 @@ router.post("/cashierVerifyOTPClaim", function (req, res) {
 						otp: otp,
 					},
 					function (err, otpd) {
-						if (err || otpd == null) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (otpd == null) {
 							res.status(200).json({
 								message: "OTP Missmatch",
 							});
@@ -1254,7 +1417,17 @@ router.post("/cashierSendMoney", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1265,7 +1438,17 @@ router.post("/cashierSendMoney", function (req, res) {
 						_id: f.branch_id,
 					},
 					function (err, f2) {
-						if (err || f2 == null) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (f2 == null) {
 							res.status(200).json({
 								message: "Branch Not Found",
 							});
@@ -1275,7 +1458,17 @@ router.post("/cashierSendMoney", function (req, res) {
 									_id: f.bank_id,
 								},
 								function (err, f3) {
-									if (err || f3 == null) {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (f3 == null) {
 										res.status(200).json({
 											message: "Bank Not Found",
 										});
@@ -1285,7 +1478,17 @@ router.post("/cashierSendMoney", function (req, res) {
 												_id: f3.user_id,
 											},
 											function (err, f4) {
-												if (err || f4 == null) {
+												if (err) {
+													console.log(err);
+													var message = err;
+													if (err.message) {
+														message = err.message;
+													}
+													res.status(200).json({
+														status: 0,
+														message: message,
+													});
+												} else if (f4 == null) {
 													res.status(200).json({
 														message: "Infra Not Found",
 													});
@@ -1384,7 +1587,17 @@ router.post("/cashierSendMoney", function (req, res) {
 
 															const amount = receiverIdentificationAmount;
 															Fee.findOne(find, function (err, fe) {
-																if (err || fe == null) {
+																if (err) {
+																	console.log(err);
+																	var message = err;
+																	if (err.message) {
+																		message = err.message;
+																	}
+																	res.status(200).json({
+																		status: 0,
+																		message: message,
+																	});
+																} else if (fe == null) {
 																	res.status(200).json({
 																		message: "Revenue Rule Not Found",
 																	});
@@ -1815,7 +2028,17 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 															_id: bank.user_id,
 														},
 														function (err, f4) {
-															if (err || f4 == null) {
+															if (err) {
+																console.log(err);
+																var message = err;
+																if (err.message) {
+																	message = err.message;
+																}
+																res.status(200).json({
+																	status: 0,
+																	message: message,
+																});
+															} else if (f4 == null) {
 																res.status(200).json({
 																	message: "Infra Not Found",
 																});
@@ -1905,7 +2128,17 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 
 																		const amount = receiverIdentificationAmount;
 																		Fee.findOne(find, function (err, fe) {
-																			if (err || fe == null) {
+																			if (err) {
+																				console.log(err);
+																				var message = err;
+																				if (err.message) {
+																					message = err.message;
+																				}
+																				res.status(200).json({
+																					status: 0,
+																					message: message,
+																				});
+																			} else if (fe == null) {
 																				res.status(200).json({
 																					message: "Revenue Rule Not Found",
 																				});
@@ -2295,7 +2528,17 @@ router.post("/cashierSendMoneyPending", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -2392,7 +2635,17 @@ router.post("/cashierTransferMoney", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -2404,7 +2657,17 @@ router.post("/cashierTransferMoney", function (req, res) {
 						otp: otp,
 					},
 					function (err, otpd) {
-						if (err || otpd == null) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (otpd == null) {
 							res.status(200).json({
 								message: "OTP Missmatch",
 							});
@@ -2435,6 +2698,7 @@ router.post("/cashierTransferMoney", function (req, res) {
 										function (e, d) {
 											if (e)
 												return res.status(200).json({
+													status: 0,
 													message: e.toString(),
 												});
 											res.status(200).json({
@@ -2461,7 +2725,17 @@ router.post("/cashierVerifyClaim", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
 				res.status(200).json({
 					status: 0,
 					message:
@@ -2474,7 +2748,17 @@ router.post("/cashierVerifyClaim", function (req, res) {
 						otp: otp,
 					},
 					function (err, otpd) {
-						if (err || otpd == null) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (otpd == null) {
 							res.status(200).json({
 								status: 0,
 								message: "OTP Missmatch",
@@ -2516,7 +2800,17 @@ router.post("/cashierClaimMoney", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -2527,7 +2821,17 @@ router.post("/cashierClaimMoney", function (req, res) {
 						transaction_code: transferCode,
 					},
 					function (err, otpd) {
-						if (err || otpd == null) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (otpd == null) {
 							res.status(200).json({
 								message: "Transaction Not Found",
 							});
@@ -2537,7 +2841,17 @@ router.post("/cashierClaimMoney", function (req, res) {
 									_id: f.branch_id,
 								},
 								function (err, f2) {
-									if (err || f2 == null) {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (f2 == null) {
 										res.status(200).json({
 											message: "Branch Not Found",
 										});
@@ -2547,7 +2861,17 @@ router.post("/cashierClaimMoney", function (req, res) {
 												_id: f.bank_id,
 											},
 											function (err, f3) {
-												if (err || f3 == null) {
+												if (err) {
+													console.log(err);
+													var message = err;
+													if (err.message) {
+														message = err.message;
+													}
+													res.status(200).json({
+														status: 0,
+														message: message,
+													});
+												} else if (f3 == null) {
 													res.status(200).json({
 														message: "Bank Not Found",
 													});
@@ -2557,7 +2881,17 @@ router.post("/cashierClaimMoney", function (req, res) {
 															_id: f3.user_id,
 														},
 														function (err, f4) {
-															if (err || f4 == null) {
+															if (err) {
+																console.log(err);
+																var message = err;
+																if (err.message) {
+																	message = err.message;
+																}
+																res.status(200).json({
+																	status: 0,
+																	message: message,
+																});
+															} else if (f4 == null) {
 																res.status(200).json({
 																	message: "Infra Not Found",
 																});
@@ -2625,7 +2959,17 @@ router.post("/cashierClaimMoney", function (req, res) {
 																			active: "Active",
 																		};
 																		Fee.findOne(find, function (err, fe) {
-																			if (err || fe == null) {
+																			if (err) {
+																				console.log(err);
+																				var message = err;
+																				if (err.message) {
+																					message = err.message;
+																				}
+																				res.status(200).json({
+																					status: 0,
+																					message: message,
+																				});
+																			} else if (fe == null) {
 																				res.status(200).json({
 																					message: "Revenue Rule Not Found",
 																				});
@@ -2823,7 +3167,17 @@ router.post("/getClaimMoney", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err || f == null) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (f == null) {
 				res.status(200).json({
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -2835,13 +3189,33 @@ router.post("/getClaimMoney", function (req, res) {
 						status: 1,
 					},
 					function (err, cs) {
-						if (err || cs == null) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (cs == null) {
 							CashierSend.findOne(
 								{
 									transaction_code: transferCode,
 								},
 								function (err, cs) {
-									if (err || cs == null) {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (cs == null) {
 										res.status(200).json({
 											message: "Record Not Found",
 										});
