@@ -147,7 +147,7 @@ router.post("/bank/createMerchant", function (req, res) {
 											"Either merchant code / email / mobile already exist",
 									});
 								} else {
-									Bank.udateOne(
+									Bank.updateOne(
 										{
 											_id: bank._id,
 										},
