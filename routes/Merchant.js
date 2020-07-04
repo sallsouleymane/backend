@@ -1837,6 +1837,11 @@ router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 							status: 0,
 							message: message,
 						});
+					} else if (bank == null) {
+						res.status(200).json({
+							status: 0,
+							message: "Bank not found",
+						});
 					} else {
 						const wallet_id = merchant.username + "_operational@" + bank.name;
 						blockchain.getBalance(wallet_id).then(function (result) {

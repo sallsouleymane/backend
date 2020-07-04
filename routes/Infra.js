@@ -934,6 +934,11 @@ router.get("/getInfraMasterBalance", function (req, res) {
 								status: 0,
 								message: message,
 							});
+						} else if (ba == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Bank not found",
+							});
 						} else {
 							const wallet_id = "infra_master@" + ba.name;
 

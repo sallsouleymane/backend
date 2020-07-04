@@ -147,36 +147,58 @@ router.post("/bank/createMerchant", function (req, res) {
 											"Either merchant code / email / mobile already exist",
 									});
 								} else {
-									let content =
-										"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-										config.mainIP +
-										"/merchant/" +
-										bank.name +
-										"'>http://" +
-										config.mainIP +
-										"/merchant/" +
-										bank.name +
-										"</a></p><p><p>Your username: " +
-										data.username +
-										"</p><p>Your password: " +
-										data.password +
-										"</p>";
-									sendMail(content, "Bank Merchant Created", email);
-									let content2 =
-										"You are added as a Merchant in E-Wallet application Login URL: http://" +
-										config.mainIP +
-										"/merchant/" +
-										bank.name +
-										" Your username: " +
-										data.username +
-										" Your password: " +
-										data.password;
-									sendSMS(content2, mobile);
-									res.status(200).json({
-										status: 1,
-										message: "Merchant created successfully",
-										blockchain_result: result,
-									});
+									Bank.udateOne(
+										{
+											_id: bank._id,
+										},
+										{
+											$inc: { total_partners: 1 },
+										},
+										function (err) {
+											if (err) {
+												console.log(err);
+												var message = err;
+												if (err.message) {
+													message = err.message;
+												}
+												res.status(200).json({
+													status: 0,
+													message: message,
+												});
+											} else {
+												let content =
+													"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+													config.mainIP +
+													"/merchant/" +
+													bank.name +
+													"'>http://" +
+													config.mainIP +
+													"/merchant/" +
+													bank.name +
+													"</a></p><p><p>Your username: " +
+													data.username +
+													"</p><p>Your password: " +
+													data.password +
+													"</p>";
+												sendMail(content, "Bank Merchant Created", email);
+												let content2 =
+													"You are added as a Merchant in E-Wallet application Login URL: http://" +
+													config.mainIP +
+													"/merchant/" +
+													bank.name +
+													" Your username: " +
+													data.username +
+													" Your password: " +
+													data.password;
+												sendSMS(content2, mobile);
+												res.status(200).json({
+													status: 1,
+													message: "Merchant created successfully",
+													blockchain_result: result,
+												});
+											}
+										}
+									);
 								}
 							});
 						}
@@ -788,36 +810,54 @@ router.post("/addBranch", (req, res) => {
 									message: message,
 								});
 							} else {
-								let content =
-									"<p>Your branch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-									config.mainIP +
-									"/branch/" +
-									bankName +
-									"'>http://" +
-									config.mainIP +
-									"/branch/" +
-									bankName +
-									"</a></p><p><p>Your username: " +
-									data.username +
-									"</p><p>Your password: " +
-									data.password +
-									"</p>";
-								sendMail(content, "Bank Branch Created", email);
-								let content2 =
-									"Your branch is added in E-Wallet application Login URL: http://" +
-									config.mainIP +
-									"/branch/" +
-									bankName +
-									" Your username: " +
-									data.username +
-									" Your password: " +
-									data.password;
-								sendSMS(content2, mobile);
-								// return res.status(200).json(data);
-								res.status(200).json({
-									status: "Branch Created",
-									walletStatus: result.toString(),
-								});
+								Bank.updateOne(
+									{ _id: bank._id },
+									{ $inc: { total_branches: 1 } },
+									(err) => {
+										if (err) {
+											console.log(err);
+											var message = err;
+											if (err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+											});
+										} else {
+											let content =
+												"<p>Your branch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+												config.mainIP +
+												"/branch/" +
+												bankName +
+												"'>http://" +
+												config.mainIP +
+												"/branch/" +
+												bankName +
+												"</a></p><p><p>Your username: " +
+												data.username +
+												"</p><p>Your password: " +
+												data.password +
+												"</p>";
+											sendMail(content, "Bank Branch Created", email);
+											let content2 =
+												"Your branch is added in E-Wallet application Login URL: http://" +
+												config.mainIP +
+												"/branch/" +
+												bankName +
+												" Your username: " +
+												data.username +
+												" Your password: " +
+												data.password;
+											sendSMS(content2, mobile);
+											// return res.status(200).json(data);
+											res.status(200).json({
+												status: "Branch Created",
+												walletStatus: result.toString(),
+											});
+										}
+									}
+								);
 							}
 						});
 					}
@@ -1317,63 +1357,131 @@ router.post("/addCashier", (req, res) => {
 									_id: branch_id,
 								},
 								function (err, branch) {
-									let data = new CashierLedger();
-									data.amount = branch.cash_in_hand;
-									data.cashier_id = d._id;
-									data.trans_type = "OB";
-									let td = {};
-									data.transaction_details = JSON.stringify(td);
-
-									data.save((err) => {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
-											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else {
-											Cashier.findByIdAndUpdate(
-												d._id,
-												{
-													opening_balance: branch.cash_in_hand,
-													cash_in_hand: branch.cash_in_hand,
-												},
-												(err, d) => {
-													Branch.findByIdAndUpdate(
-														branch_id,
-														{ $inc: { total_cashiers: 1 }, cash_in_hand: 0 },
-														function (err, v) {
-															if (err) {
-																console.log(err);
-																var message = err;
-																if (err.message) {
-																	message = err.message;
-																}
-																res.status(200).json({
-																	status: 0,
-																	message: message,
-																});
-															} else {
-																return res.status(200).json(data);
-															}
-														}
-													);
-												}
-											);
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
 										}
-									});
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (branch == null) {
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else {
+										let data = new CashierLedger();
+										data.amount = branch.cash_in_hand;
+										data.cashier_id = d._id;
+										data.trans_type = "OB";
+										let td = {};
+										data.transaction_details = JSON.stringify(td);
+
+										data.save((err) => {
+											if (err) {
+												console.log(err);
+												var message = err;
+												if (err.message) {
+													message = err.message;
+												}
+												res.status(200).json({
+													status: 0,
+													message: message,
+												});
+											} else {
+												Bank.updateOne(
+													{ _id: bank._id },
+													{ $inc: { total_cashiers: 1 } },
+													(err) => {
+														if (err) {
+															console.log(err);
+															var message = err;
+															if (err.message) {
+																message = err.message;
+															}
+															res.status(200).json({
+																status: 0,
+																message: message,
+															});
+														} else {
+															Cashier.findByIdAndUpdate(
+																d._id,
+																{
+																	opening_balance: branch.cash_in_hand,
+																	cash_in_hand: branch.cash_in_hand,
+																},
+																(err) => {
+																	if (err) {
+																		console.log(err);
+																		var message = err;
+																		if (err.message) {
+																			message = err.message;
+																		}
+																		res.status(200).json({
+																			status: 0,
+																			message: message,
+																		});
+																	} else {
+																		Branch.findByIdAndUpdate(
+																			branch_id,
+																			{
+																				$inc: { total_cashiers: 1 },
+																				cash_in_hand: 0,
+																			},
+																			function (err) {
+																				if (err) {
+																					console.log(err);
+																					var message = err;
+																					if (err.message) {
+																						message = err.message;
+																					}
+																					res.status(200).json({
+																						status: 0,
+																						message: message,
+																					});
+																				} else {
+																					return res.status(200).json(data);
+																				}
+																			}
+																		);
+																	}
+																}
+															);
+														}
+													}
+												);
+											}
+										});
+									}
 								}
 							);
 						} else {
-							Branch.findByIdAndUpdate(
-								branch_id,
+							Bank.updateOne(
+								{ _id: bank._id },
 								{ $inc: { total_cashiers: 1 } },
-								function (e, v) {
-									return res.status(200).json(data);
+								(err) => {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else {
+										Branch.findByIdAndUpdate(
+											branch_id,
+											{ $inc: { total_cashiers: 1 } },
+											function (e) {
+												return res.status(200).json(data);
+											}
+										);
+									}
 								}
 							);
 						}
