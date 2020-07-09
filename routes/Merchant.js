@@ -70,6 +70,54 @@ router.post("/merchant/listTaxes", jwtTokenAuth, function (req, res) {
 	);
 });
 
+router.post("/merchant/deleteTax", jwtTokenAuth, function (req, res) {
+	const { tax_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant is not valid",
+				});
+			} else {
+				Tax.deleteOne({ _id: tax_id }, (err) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Tax deleted",
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
 router.post("/merchant/editTax", jwtTokenAuth, function (req, res) {
 	const { tax_id, code, name, value } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -181,6 +229,7 @@ router.post("/merchant/createTax", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
 router.post("/merchant/deleteOffering", jwtTokenAuth, function (req, res) {
 	const { offering_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -234,6 +283,7 @@ router.post("/merchant/editOffering", jwtTokenAuth, (req, res) => {
 		offering_id,
 		code,
 		name,
+		description,
 		denomination,
 		unit_of_measure,
 		unit_price,
@@ -268,6 +318,7 @@ router.post("/merchant/editOffering", jwtTokenAuth, (req, res) => {
 					{
 						code,
 						name,
+						description,
 						denomination,
 						unit_of_measure,
 						unit_price,
@@ -380,6 +431,7 @@ router.post("/merchant/uploadOfferings", jwtTokenAuth, function (req, res) {
 					var {
 						code,
 						name,
+						description,
 						denomination,
 						unit_of_measure,
 						unit_price,
@@ -389,6 +441,7 @@ router.post("/merchant/uploadOfferings", jwtTokenAuth, function (req, res) {
 					offeringObj.merchant_id = merchant._id;
 					offeringObj.code = code;
 					offeringObj.name = name;
+					offeringObj.description = description;
 					offeringObj.denomination = denomination;
 					offeringObj.unit_of_measure = unit_of_measure;
 					offeringObj.unit_price = unit_price;

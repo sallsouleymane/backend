@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const uniqueValidator = require("mongoose-unique-validator");
 const InvoiceSchema = new mongoose.Schema({
 	number: { type: String, required: true, unique: true },
 	name: { type: String, required: true },
@@ -24,4 +25,8 @@ const InvoiceSchema = new mongoose.Schema({
 		},
 	],
 });
+InvoiceSchema.plugin(uniqueValidator, {
+	message: "Expected to be unique.",
+});
+
 module.exports = mongoose.model("Invoice", InvoiceSchema);
