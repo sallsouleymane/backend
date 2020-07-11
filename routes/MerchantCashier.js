@@ -404,132 +404,160 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 								message: "Group not found",
 							});
 						} else {
+							let failed = [];
 							var invoicePromises = invoices.map(async (invoice) => {
-								var {
-									number,
-									name,
-									amount,
-									bill_date,
-									bill_period,
-									due_date,
-									description,
-									mobile,
-									ccode,
-									items,
-								} = invoice;
-								var invoiceObj = new Invoice();
-								invoiceObj.number = number;
-								invoiceObj.name = name;
-								invoiceObj.amount = amount;
-								invoiceObj.merchant_id = cashier.merchant_id;
-								invoiceObj.bill_date = bill_date;
-								invoiceObj.bill_period = bill_period;
-								invoiceObj.due_date = due_date;
-								invoiceObj.description = description;
-								invoiceObj.mobile = mobile;
-								invoiceObj.ccode = ccode;
-								invoiceObj.group_id = group_id;
-								invoiceObj.cashier_id = cashier._id;
-								invoiceObj.paid = 0;
-								for (const item of items) {
-									var { item_id, quantity, tax_id, total_amount } = item;
-									var item_desc = await Offering.findOne(
-										{ _id: item_id, merchant_id: cashier.merchant_id },
-										"code name denomination unit_of_measure unit_price"
-									);
-									if (item_desc == null) {
-										throw new Error(
-											"Item not found with id " +
-												item_id +
-												" for invoice number " +
-												number
-										);
+								try {
+									var {
+										number,
+										name,
+										amount,
+										bill_date,
+										bill_period,
+										due_date,
+										description,
+										mobile,
+										ccode,
+										items,
+										paid,
+									} = invoice;
+									if (paid != 1) {
+										paid = 0;
 									}
+									var updatedItems = [];
+									for (const item of items) {
+										var { item_id, quantity, tax_id, total_amount } = item;
+										var item_desc = await Offering.findOne(
+											{ _id: item_id, merchant_id: cashier.merchant_id },
+											"code name denomination unit_of_measure unit_price"
+										);
+										if (item_desc == null) {
+											throw new Error("Item not found with id " + item_id);
+										}
 
-									var tax = await Tax.findOne({
-										_id: tax_id,
+										var tax = await Tax.findOne({
+											_id: tax_id,
+											merchant_id: cashier.merchant_id,
+										});
+										if (tax == null) {
+											throw new Error("Tax not found with id " + tax_id);
+										}
+
+										updatedItems.push({
+											item_desc: item_desc,
+											quantity: quantity,
+											tax_id: tax_id,
+											total_amount: total_amount,
+										});
+									}
+									var invoiceFound = await Invoice.findOne({
+										number,
 										merchant_id: cashier.merchant_id,
 									});
-									if (tax == null) {
-										throw new Error(
-											"Tax not found with id " +
-												tax_id +
-												" for invoice number " +
-												number
+									if (invoiceFound) {
+										await Invoice.updateOne(
+											{ _id: invoiceFound._id },
+											{
+												name,
+												amount,
+												bill_date,
+												bill_period,
+												due_date,
+												description,
+												mobile,
+												ccode,
+												items: updatedItems,
+												paid,
+											}
 										);
+									} else {
+										var invoiceObj = new Invoice();
+										invoiceObj.number = number;
+										invoiceObj.name = name;
+										invoiceObj.amount = amount;
+										invoiceObj.merchant_id = cashier.merchant_id;
+										invoiceObj.bill_date = bill_date;
+										invoiceObj.bill_period = bill_period;
+										invoiceObj.due_date = due_date;
+										invoiceObj.description = description;
+										invoiceObj.mobile = mobile;
+										invoiceObj.ccode = ccode;
+										invoiceObj.group_id = group_id;
+										invoiceObj.cashier_id = cashier._id;
+										invoiceObj.paid = paid;
+										invoiceObj.items = updatedItems;
+
+										await invoiceObj.save();
+
+										var branch = await MerchantBranch.findOneAndUpdate(
+											{ _id: cashier.branch_id },
+											{ $inc: { bills_raised: 1, amount_due: amount } }
+										);
+										if (branch == null) {
+											throw new Error(
+												"Can not update the MerchantBranch status."
+											);
+										}
+
+										var m = await Merchant.findOneAndUpdate(
+											{ _id: branch.merchant_id },
+											{
+												$inc: {
+													bills_raised: 1,
+													amount_due: amount,
+												},
+											}
+										);
+										if (m == null) {
+											throw new Error("Can not update the Merchant status.");
+										}
+
+										var g = await InvoiceGroup.findOneAndUpdate(
+											{ _id: group._id },
+											{
+												$inc: {
+													bills_raised: 1,
+												},
+											}
+										);
+										if (g == null) {
+											throw new Error(
+												"Can not update the InvoiceGroup status."
+											);
+										}
+
+										var c = await MerchantCashier.findOneAndUpdate(
+											{ _id: cashier._id },
+											{
+												$inc: {
+													bills_raised: 1,
+												},
+											}
+										);
+										if (c == null) {
+											throw new Error(
+												"Can not update the InvoiceGroup status."
+											);
+										}
 									}
 
-									invoiceObj.items.push({
-										item_desc: item_desc,
-										quantity: quantity,
-										tax_id: tax_id,
-										total_amount: total_amount,
-									});
-								}
-								console.log(invoiceObj);
-								await invoiceObj.save();
-
-								var branch = await MerchantBranch.findOneAndUpdate(
-									{ _id: cashier.branch_id, status: 1 },
-									{ $inc: { bills_raised: 1, amount_due: amount } }
-								);
-								if (branch == null) {
-									throw new Error("Can not update the MerchantBranch status.");
-								}
-
-								var m = await Merchant.findOneAndUpdate(
-									{ _id: branch.merchant_id, status: 1 },
-									{
-										$inc: {
-											bills_raised: 1,
-											amount_due: amount,
-										},
+									return true;
+								} catch (err) {
+									console.log(err);
+									var message = err.toString();
+									if (err.message) {
+										message = err.message;
 									}
-								);
-								if (m == null) {
-									throw new Error("Can not update the Merchant status.");
+									invoice.failure_reason = message;
+									console.log(failed);
+									failed.push(invoice);
 								}
-
-								var g = await InvoiceGroup.findOneAndUpdate(
-									{ _id: group._id },
-									{
-										$inc: {
-											bills_raised: 1,
-										},
-									}
-								);
-								if (g == null) {
-									throw new Error("Can not update the InvoiceGroup status.");
-								}
-
-								var c = await MerchantCashier.findOneAndUpdate(
-									{ _id: cashier._id, status: 1 },
-									{
-										$inc: {
-											bills_raised: 1,
-										},
-									}
-								);
-								if (c == null) {
-									throw new Error("Can not update the InvoiceGroup status.");
-								}
-
-								return true;
 							});
-							try {
-								await Promise.all(invoicePromises);
-								res.status(200).json({
-									status: 1,
-									message: "Invoices uploaded",
-								});
-							} catch (err) {
-								console.log(err);
-								var message = err.toString();
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({ status: 0, message: message });
-							}
+							await Promise.all(invoicePromises);
+							res.status(200).json({
+								status: 1,
+								message: "Invoices uploaded",
+								failed: failed,
+							});
 						}
 					}
 				);
