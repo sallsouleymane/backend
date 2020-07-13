@@ -36,6 +36,7 @@ router.post("/fileUpload", function (req, res) {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -48,6 +49,7 @@ router.post("/fileUpload", function (req, res) {
 
 					if (fn !== "jpeg" && fn !== "png" && fn !== "jpg") {
 						res.status(200).json({
+							status: 0,
 							message: "Only JPG / PNG files are accepted",
 						});
 					} else {

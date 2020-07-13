@@ -23,6 +23,7 @@ router.post("/cashierSetupUpdate", function (req, res) {
 				});
 			} else if (!bank) {
 				res.status(200).json({
+					status: 0,
 					message: "Incorrect username or password",
 				});
 			} else {

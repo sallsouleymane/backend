@@ -556,6 +556,7 @@ router.post("/getCashierIncomingTransfer", function (req, res) {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -677,6 +678,7 @@ router.post("/getClosingBalance", function (req, res) {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -722,6 +724,7 @@ router.post("/openCashierBalance", (req, res) => {
 				});
 			} else if (ba == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -785,6 +788,7 @@ router.post("/addClosingBalance", (req, res) => {
 				});
 			} else if (otpd == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -850,6 +854,7 @@ router.post("/getCashierTransfers", function (req, res) {
 				});
 			} else if (f == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -858,7 +863,7 @@ router.post("/getCashierTransfers", function (req, res) {
 					$or: [{ sender_id: f._id }, { receiver_id: f._id }],
 				}).exec(function (err, b) {
 					res.status(200).json({
-						status: "success",
+						status: 1,
 						history: b,
 					});
 				});
@@ -890,6 +895,7 @@ router.post("/cashierCancelTransfer", function (req, res) {
 				});
 			} else if (f == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -912,6 +918,7 @@ router.post("/cashierCancelTransfer", function (req, res) {
 							});
 						} else if (otpd == null) {
 							res.status(200).json({
+								status: 0,
 								message: "OTP Missmatch",
 							});
 						} else {
@@ -932,6 +939,7 @@ router.post("/cashierCancelTransfer", function (req, res) {
 										});
 									} else if (item == null) {
 										res.status(200).json({
+											status: 0,
 											message:
 												"Token changed or user not valid. Try to login again or contact system administrator.",
 										});
@@ -953,6 +961,7 @@ router.post("/cashierCancelTransfer", function (req, res) {
 													});
 												} else if (u == null) {
 													res.status(200).json({
+														status: 0,
 														message:
 															"Token changed or user not valid. Try to login again or contact system administrator.",
 													});
@@ -1019,6 +1028,7 @@ router.post("/getCashierTransLimit", function (req, res) {
 				});
 			} else if (t1 == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1088,6 +1098,7 @@ router.post("/getCashier", function (req, res) {
 				});
 			} else if (t1 == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1150,6 +1161,7 @@ router.post("/checkCashierFee", function (req, res) {
 				});
 			} else if (cashier == null) {
 				return res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1171,6 +1183,7 @@ router.post("/checkCashierFee", function (req, res) {
 							});
 						} else if (bank == null) {
 							return res.status(200).json({
+								status: 0,
 								message: "Bank not Found",
 							});
 						}
@@ -1240,6 +1253,7 @@ router.post("/cashierVerifyOTPClaim", function (req, res) {
 				});
 			} else if (f == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1262,11 +1276,13 @@ router.post("/cashierVerifyOTPClaim", function (req, res) {
 							});
 						} else if (otpd == null) {
 							res.status(200).json({
+								status: 0,
 								message: "OTP Missmatch",
 							});
 						} else {
 							res.status(200).json({
-								status: "success",
+								status: 1,
+								message: "Claim OTP verified",
 							});
 						}
 					}
@@ -1297,6 +1313,7 @@ router.post("/cashier/checkNonWaltoWalFee", function (req, res) {
 				});
 			} else if (cashier == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1318,6 +1335,7 @@ router.post("/cashier/checkNonWaltoWalFee", function (req, res) {
 							});
 						} else if (bank == null) {
 							res.status(200).json({
+								status: 0,
 								message: "Bank not Found",
 							});
 						} else {
@@ -1340,6 +1358,7 @@ router.post("/cashier/checkNonWaltoWalFee", function (req, res) {
 									});
 								} else if (fe == null) {
 									res.status(200).json({
+										status: 0,
 										message: "Transaction cannot be done at this time",
 									});
 								} else {
@@ -1429,6 +1448,7 @@ router.post("/cashierSendMoney", function (req, res) {
 				});
 			} else if (f == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1450,6 +1470,7 @@ router.post("/cashierSendMoney", function (req, res) {
 							});
 						} else if (f2 == null) {
 							res.status(200).json({
+								status: 0,
 								message: "Branch Not Found",
 							});
 						} else {
@@ -1470,6 +1491,7 @@ router.post("/cashierSendMoney", function (req, res) {
 										});
 									} else if (f3 == null) {
 										res.status(200).json({
+											status: 0,
 											message: "Bank Not Found",
 										});
 									} else {
@@ -1490,6 +1512,7 @@ router.post("/cashierSendMoney", function (req, res) {
 													});
 												} else if (f4 == null) {
 													res.status(200).json({
+														status: 0,
 														message: "Infra Not Found",
 													});
 												} else {
@@ -1599,6 +1622,7 @@ router.post("/cashierSendMoney", function (req, res) {
 																	});
 																} else if (fe == null) {
 																	res.status(200).json({
+																		status: 0,
 																		message: "Revenue Rule Not Found",
 																	});
 																} else {
@@ -1879,12 +1903,14 @@ router.post("/cashierSendMoney", function (req, res) {
 																												}
 																											);
 																											res.status(200).json({
-																												status: "success",
+																												status: 1,
+																												message: "success",
 																											});
 																										}
 																									);
 																								} else {
 																									res.status(200).json({
+																										status: 0,
 																										message: result.toString(),
 																									});
 																								}
@@ -1959,6 +1985,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 				});
 			} else if (cashier == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1980,6 +2007,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 							});
 						} else if (receiver == null) {
 							res.status(200).json({
+								status: 0,
 								message: "Receiver Not Found",
 							});
 						} else {
@@ -2000,6 +2028,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 										});
 									} else if (branch == null) {
 										res.status(200).json({
+											status: 0,
 											message: "Branch Not Found",
 										});
 									} else {
@@ -2020,6 +2049,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 													});
 												} else if (bank == null) {
 													res.status(200).json({
+														status: 0,
 														message: "Bank Not Found",
 													});
 												} else {
@@ -2040,6 +2070,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																});
 															} else if (f4 == null) {
 																res.status(200).json({
+																	status: 0,
 																	message: "Infra Not Found",
 																});
 															} else {
@@ -2140,6 +2171,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																				});
 																			} else if (fe == null) {
 																				res.status(200).json({
+																					status: 0,
 																					message: "Revenue Rule Not Found",
 																				});
 																			} else {
@@ -2458,6 +2490,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																												);
 																											} else {
 																												res.status(200).json({
+																													status: 0,
 																													message: result.toString(),
 																												});
 																											}
@@ -2540,6 +2573,7 @@ router.post("/cashierSendMoneyPending", function (req, res) {
 				});
 			} else if (f == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -2601,11 +2635,13 @@ router.post("/cashierSendMoneyPending", function (req, res) {
 							function (e, d) {
 								if (e && d == null) {
 									res.status(200).json({
+										status: 0,
 										message: e.toString(),
 									});
 								} else {
 									res.status(200).json({
-										status: "success",
+										status: 1,
+										message: "Pending to send money record saved.",
 									});
 								}
 							}
@@ -2647,6 +2683,7 @@ router.post("/cashierTransferMoney", function (req, res) {
 				});
 			} else if (f == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -2669,6 +2706,7 @@ router.post("/cashierTransferMoney", function (req, res) {
 							});
 						} else if (otpd == null) {
 							res.status(200).json({
+								status: 0,
 								message: "OTP Missmatch",
 							});
 						} else {
@@ -2702,7 +2740,8 @@ router.post("/cashierTransferMoney", function (req, res) {
 													message: e.toString(),
 												});
 											res.status(200).json({
-												status: "success",
+												status: 1,
+												message: "Money transferred record saved",
 											});
 										}
 									);
@@ -2812,6 +2851,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 				});
 			} else if (f == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -2833,6 +2873,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 							});
 						} else if (otpd == null) {
 							res.status(200).json({
+								status: 0,
 								message: "Transaction Not Found",
 							});
 						} else {
@@ -2853,6 +2894,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 										});
 									} else if (f2 == null) {
 										res.status(200).json({
+											status: 0,
 											message: "Branch Not Found",
 										});
 									} else {
@@ -2873,6 +2915,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 													});
 												} else if (f3 == null) {
 													res.status(200).json({
+														status: 0,
 														message: "Bank Not Found",
 													});
 												} else {
@@ -2893,6 +2936,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 																});
 															} else if (f4 == null) {
 																res.status(200).json({
+																	status: 0,
 																	message: "Infra Not Found",
 																});
 															} else {
@@ -2971,6 +3015,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 																				});
 																			} else if (fe == null) {
 																				res.status(200).json({
+																					status: 0,
 																					message: "Revenue Rule Not Found",
 																				});
 																			} else {
@@ -3179,6 +3224,7 @@ router.post("/getClaimMoney", function (req, res) {
 				});
 			} else if (f == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -3217,6 +3263,7 @@ router.post("/getClaimMoney", function (req, res) {
 										});
 									} else if (cs == null) {
 										res.status(200).json({
+											status: 0,
 											message: "Record Not Found",
 										});
 									} else {
@@ -3228,6 +3275,7 @@ router.post("/getClaimMoney", function (req, res) {
 							);
 						} else {
 							res.status(200).json({
+								status: 0,
 								message: "This transaction was already claimed",
 							});
 						}

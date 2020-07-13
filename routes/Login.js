@@ -198,6 +198,7 @@ router.post("/login", function (req, res) {
 				});
 			} else if (!user) {
 				res.status(200).json({
+					status: 0,
 					message: "Incorrect username or password",
 				});
 			} else {
@@ -281,10 +282,12 @@ router.post("/bankLogin", function (req, res) {
 				});
 			} else if (!bank) {
 				res.status(200).json({
+					status: 0,
 					message: "Incorrect username or password",
 				});
 			} else if (bank.status == -1) {
 				res.status(200).json({
+					status: 0,
 					message: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
@@ -345,10 +348,12 @@ router.post("/branchLogin", function (req, res) {
 				});
 			} else if (!bank) {
 				res.status(200).json({
+					status: 0,
 					message: "Incorrect username or password",
 				});
 			} else if (bank.status == -1) {
 				res.status(200).json({
+					status: 0,
 					message: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
@@ -417,10 +422,12 @@ router.post("/cashierLogin", function (req, res) {
 				});
 			} else if (bank == null) {
 				res.status(200).json({
+					status: 0,
 					message: "Incorrect username or password",
 				});
 			} else if (bank.status == -1) {
 				res.status(200).json({
+					status: 0,
 					message: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
@@ -443,6 +450,7 @@ router.post("/cashierLogin", function (req, res) {
 							});
 						} else if (cashier == null) {
 							return res.status(200).json({
+								status: 0,
 								message: "This user is not assigned as a cashier.",
 							});
 						} else {

@@ -47,6 +47,7 @@ router.post("/getBranchDashStats", function (req, res) {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -161,6 +162,7 @@ router.post("/addBranchCashier", (req, res) => {
 				});
 			} else if (bank == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -229,6 +231,7 @@ router.post("/addOpeningBalance", (req, res) => {
 				});
 			} else if (otpd == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -297,6 +300,7 @@ router.post("/getBranch", function (req, res) {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -350,6 +354,7 @@ router.post("/getBranchInfo", function (req, res) {
 				});
 			} else if (branch == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -390,6 +395,7 @@ router.post("/branchSetupUpdate", function (req, res) {
 				});
 			} else if (!bank) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -444,6 +450,7 @@ router.post("/checkBranchFee", function (req, res) {
 				});
 			} else if (f2 == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -465,6 +472,7 @@ router.post("/checkBranchFee", function (req, res) {
 							});
 						} else if (f3 == null) {
 							res.status(200).json({
+								status: 0,
 								message: "Bank not Found",
 							});
 						} else {
@@ -539,6 +547,7 @@ router.post("/updateCashierTransferStatus", function (req, res) {
 				});
 			} else if (f == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -559,6 +568,7 @@ router.post("/updateCashierTransferStatus", function (req, res) {
 							});
 						} else if (d == null) {
 							res.status(200).json({
+								status: 0,
 								message: err.toString(),
 							});
 						} else {
@@ -602,10 +612,15 @@ router.post("/branchVerifyClaim", function (req, res) {
 					message: message,
 				});
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else if (f == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Branch not found",
+				});
 			} else {
 				OTP.findOne(
 					{
@@ -625,11 +640,13 @@ router.post("/branchVerifyClaim", function (req, res) {
 							});
 						} else if (otpd == null) {
 							res.status(200).json({
+								status: 0,
 								message: "OTP Missmatch",
 							});
 						} else {
 							res.status(200).json({
-								status: "success",
+								status: 1,
+								message: "Claim verified",
 							});
 						}
 					}
@@ -674,6 +691,7 @@ router.post("/branchClaimMoney", function (req, res) {
 				});
 			} else if (f == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -758,6 +776,7 @@ router.post("/branchClaimMoney", function (req, res) {
 																});
 															} else if (f4 == null) {
 																res.status(200).json({
+																	status: 0,
 																	message: "Infra Not Found",
 																});
 															} else {
@@ -874,13 +893,15 @@ router.post("/branchClaimMoney", function (req, res) {
 																							);
 
 																							res.status(200).json({
-																								status: "success",
+																								status: 1,
+																								message: "Money claimed",
 																							});
 																						}
 																					}
 																				);
 																			} else {
 																				res.status(200).json({
+																					status: 0,
 																					message: result.toString(),
 																				});
 																			}
@@ -948,11 +969,13 @@ router.post("/branchVerifyOTPClaim", function (req, res) {
 							});
 						} else if (otpd == null) {
 							res.status(200).json({
+								status: 0,
 								message: "OTP Missmatch",
 							});
 						} else {
 							res.status(200).json({
-								status: "success",
+								status: 1,
+								message: "Claim otp verified",
 							});
 						}
 					}
@@ -1022,6 +1045,7 @@ router.post("/getBranchClaimMoney", function (req, res) {
 										});
 									} else if (cs == null) {
 										res.status(200).json({
+											status: 0,
 											message: "Record Not Found",
 										});
 									} else {
@@ -1033,6 +1057,7 @@ router.post("/getBranchClaimMoney", function (req, res) {
 							);
 						} else {
 							res.status(200).json({
+								status: 0,
 								message: "This transaction was already claimed",
 							});
 						}
@@ -1078,7 +1103,7 @@ router.post("/getBranchHistory", function (req, res) {
 						console.log(wallet);
 						getStatement(wallet).then(function (result) {
 							res.status(200).json({
-								status: "success",
+								status: 1,
 								history: result,
 							});
 						});

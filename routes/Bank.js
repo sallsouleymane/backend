@@ -398,6 +398,7 @@ router.post("/bank/sendShareForApproval", function (req, res) {
 							sendSMS(content2, bank.mobile);
 							res.status(200).json({
 								status: 1,
+								message: "Share is sent for approval to infra",
 							});
 						}
 					}
@@ -604,6 +605,7 @@ router.get("/getBankOperationalBalance", function (req, res) {
 				});
 			} else if (ba == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -612,7 +614,7 @@ router.get("/getBankOperationalBalance", function (req, res) {
 
 				getBalance(wallet_id).then(function (result) {
 					res.status(200).json({
-						status: "success",
+						status: 1,
 						balance: result,
 					});
 				});
@@ -641,6 +643,7 @@ router.post("/getBranches", function (req, res) {
 				});
 			} else if (bank == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -690,6 +693,7 @@ router.post("/getBankUsers", function (req, res) {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -760,6 +764,7 @@ router.post("/addBranch", (req, res) => {
 				});
 			} else if (bank == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -905,6 +910,7 @@ router.post("/editBranch", (req, res) => {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -969,6 +975,7 @@ router.post("/branchStatus", function (req, res) {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1007,7 +1014,7 @@ router.get("/getWalletBalance", function (req, res) {
 	if (wallet_id != null && wallet_id !== "") {
 		getBalance(wallet_id).then(function (result) {
 			res.status(200).json({
-				status: "success",
+				status: 1,
 				balance: result,
 			});
 		});
@@ -1064,7 +1071,7 @@ router.get("/getWalletBalance", function (req, res) {
 
 								getBalance(wallet_id).then(function (result) {
 									res.status(200).json({
-										status: "success",
+										status: 1,
 										balance: result,
 									});
 								});
@@ -1108,6 +1115,7 @@ router.post("/addBankUser", (req, res) => {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1192,6 +1200,7 @@ router.post("/editBankUser", (req, res) => {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1321,6 +1330,7 @@ router.post("/addCashier", (req, res) => {
 				});
 			} else if (bank == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1644,6 +1654,7 @@ router.post("/editBankBankRule", (req, res) => {
 							sendSMS(content2, bank.mobile);
 							res.status(200).json({
 								status: 1,
+								message: "Bank fee rule edited successfully",
 							});
 						}
 					}
@@ -1674,6 +1685,7 @@ router.post("/generateBankOTP", function (req, res) {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});

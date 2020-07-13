@@ -353,6 +353,7 @@ router.post("/infraSetupUpdate", function (req, res) {
 				});
 			} else if (infra == null) {
 				res.status(200).json({
+					status: 0,
 					message: "Incorrect username or password",
 				});
 			} else {
@@ -476,6 +477,7 @@ router.get("/checkInfra", function (req, res) {
 			});
 		} else if (c == null) {
 			res.status(200).json({
+				status: 0,
 				message:
 					"Token changed or user not valid. Try to login again or contact system administrator.",
 			});
@@ -523,6 +525,7 @@ router.post("/addBank", (req, res) => {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -547,6 +550,7 @@ router.post("/addBank", (req, res) => {
 						} else {
 							if (!otpd) {
 								res.status(200).json({
+									status: 0,
 									message: "OTP Missmatch",
 								});
 							} else {
@@ -559,6 +563,7 @@ router.post("/addBank", (req, res) => {
 										email === ""
 									) {
 										return res.status(200).json({
+											status: 0,
 											message: "Please provide valid inputs",
 										});
 									}
@@ -620,6 +625,7 @@ router.post("/addBank", (req, res) => {
 									});
 								} else {
 									res.status(200).json({
+										status: 0,
 										message: "OTP Missmatch",
 									});
 								}
@@ -670,6 +676,7 @@ router.post("/editBank", (req, res) => {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -693,6 +700,7 @@ router.post("/editBank", (req, res) => {
 							});
 						} else if (otpd == null) {
 							res.status(200).json({
+								status: 0,
 								message: err,
 							});
 						} else {
@@ -705,6 +713,7 @@ router.post("/editBank", (req, res) => {
 									email === ""
 								) {
 									return res.status(200).json({
+										status: 0,
 										message: "Please provide valid inputs",
 									});
 								}
@@ -760,6 +769,7 @@ router.post("/editBank", (req, res) => {
 								);
 							} else {
 								res.status(200).json({
+									status: 0,
 									message: "OTP Missmatch",
 								});
 							}
@@ -854,6 +864,7 @@ router.get("/getInfraOperationalBalance", function (req, res) {
 				});
 			} else if (b == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -875,6 +886,7 @@ router.get("/getInfraOperationalBalance", function (req, res) {
 							});
 						} else if (ba == null) {
 							res.status(200).json({
+								status: 0,
 								message: "Not found",
 							});
 						} else {
@@ -882,7 +894,7 @@ router.get("/getInfraOperationalBalance", function (req, res) {
 
 							getBalance(wallet_id).then(function (result) {
 								res.status(200).json({
-									status: "success",
+									status: 1,
 									balance: result,
 								});
 							});
@@ -944,7 +956,7 @@ router.get("/getInfraMasterBalance", function (req, res) {
 
 							getBalance(wallet_id).then(function (result) {
 								res.status(200).json({
-									status: "success",
+									status: 1,
 									balance: result,
 								});
 							});
@@ -977,6 +989,7 @@ router.post("/getPermission", function (req, res) {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message: "Incorrect username or password",
 				});
 			} else {
@@ -1048,6 +1061,7 @@ router.post("/addProfile", (req, res) => {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1272,6 +1286,7 @@ router.post("/editInfraUser", (req, res) => {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1334,6 +1349,7 @@ router.post("/getBank", function (req, res) {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1440,6 +1456,7 @@ router.post("/bankStatus", function (req, res) {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1493,6 +1510,7 @@ router.post("/getRoles", function (req, res) {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1546,6 +1564,7 @@ router.post("/getInfraUsers", function (req, res) {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1594,6 +1613,7 @@ router.post("/getProfile", function (req, res) {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1626,6 +1646,7 @@ router.post("/editInfraProfile", function (req, res) {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1693,6 +1714,7 @@ router.post("/generateOTP", function (req, res) {
 				});
 			} else if (user == null) {
 				res.status(200).json({
+					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
@@ -1767,6 +1789,7 @@ router.post("/generateOTP", function (req, res) {
 								});
 							} else {
 								res.status(200).json({
+									status: 0,
 									message: "Duplicate Entry",
 								});
 							}
@@ -1800,6 +1823,7 @@ router.post("/transferMoney", function (req, res) {
 					});
 				} else if (f == null) {
 					res.status(200).json({
+						status: 0,
 						message:
 							"Token changed or user not valid. Try to login again or contact system administrator.",
 					});
@@ -1832,7 +1856,8 @@ router.post("/transferMoney", function (req, res) {
 
 							transferThis(data).then(function (result) {});
 							res.status(200).json({
-								status: "success",
+								status: 1,
+								message: "Money transferred successfully!",
 							});
 						}
 					);
@@ -1868,6 +1893,7 @@ router.post("/checkFee", function (req, res) {
 					});
 				} else if (f == null) {
 					res.status(200).json({
+						status: 0,
 						message:
 							"Token changed or user not valid. Try to login again or contact system administrator.",
 					});
@@ -1928,6 +1954,7 @@ router.post("/approveFee", function (req, res) {
 					});
 				} else if (fee == null) {
 					return res.status(200).json({
+						status: 0,
 						message: "Infra share not updated",
 					});
 				}
