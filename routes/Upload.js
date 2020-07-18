@@ -42,7 +42,7 @@ router.post("/fileUpload", function (req, res) {
 				});
 			} else {
 				let form = new IncomingForm();
-				const dir = path.resolve("./public/uploads/" + user._id);
+				const dir = path.resolve(config.uploadPath + user._id);
 				form.parse(req, function (err, fields, files) {
 					let fn = files.file.name.split(".").pop();
 					fn = fn.toLowerCase();
@@ -129,7 +129,7 @@ router.post("/:user/imageUpload", jwtTokenAuth, function (req, res) {
 				});
 			} else {
 				let form = new IncomingForm();
-				const dir = path.resolve("./public/uploads/" + user._id);
+				const dir = path.resolve(config.uploadPath + user._id);
 				form.parse(req, function (err, fields, files) {
 					let fn = files.file.name.split(".").pop();
 					fn = fn.toLowerCase();
