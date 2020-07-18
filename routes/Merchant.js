@@ -202,29 +202,54 @@ router.post("/merchant/createTax", jwtTokenAuth, function (req, res) {
 					message: "Merchant is not valid",
 				});
 			} else {
-				const tax = new Tax();
-				tax.merchant_id = merchant._id;
-				tax.code = code;
-				tax.name = name;
-				tax.value = value;
-				tax.save((err) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Tax.findOne(
+					{
+						code,
+						merchant_id: merchant._id,
+					},
+					(err, tax) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (tax) {
+							res.status(200).json({
+								status: 0,
+								message: "Tax with this code already exist",
+							});
+						} else {
+							const tax = new Tax();
+							tax.merchant_id = merchant._id;
+							tax.code = code;
+							tax.name = name;
+							tax.value = value;
+							tax.save((err) => {
+								if (err) {
+									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message,
+									});
+								} else {
+									res.status(200).json({
+										status: 1,
+										message: "Tax Created",
+									});
+								}
+							});
 						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							message: "Tax Created",
-						});
 					}
-				});
+				);
 			}
 		}
 	);
@@ -427,42 +452,54 @@ router.post("/merchant/uploadOfferings", jwtTokenAuth, function (req, res) {
 					message: "Merchant is not valid",
 				});
 			} else {
+				let failed = [];
 				var offeringPromises = offerings.map(async (offering) => {
-					var {
-						code,
-						name,
-						description,
-						denomination,
-						unit_of_measure,
-						unit_price,
-						type,
-					} = offering;
-					var offeringObj = new Offering();
-					offeringObj.merchant_id = merchant._id;
-					offeringObj.code = code;
-					offeringObj.name = name;
-					offeringObj.description = description;
-					offeringObj.denomination = denomination;
-					offeringObj.unit_of_measure = unit_of_measure;
-					offeringObj.unit_price = unit_price;
-					offeringObj.type = type;
-					await offeringObj.save();
-					return true;
-				});
-				try {
-					await Promise.all(offeringPromises);
-					res.status(200).json({
-						status: 1,
-						message: "Offerings uploaded",
-					});
-				} catch (err) {
-					console.log(err);
-					var message = err.toString();
-					if (err.message) {
-						message = err.message;
+					try {
+						var {
+							code,
+							name,
+							description,
+							denomination,
+							unit_of_measure,
+							unit_price,
+							type,
+						} = offering;
+						var offeringFound = await Offering.findOne({
+							code,
+							merchant_id: merchant._id,
+						});
+						if (offeringFound) {
+							throw new Error("Offering with this code already exist");
+						} else {
+							var offeringObj = new Offering();
+							offeringObj.merchant_id = merchant._id;
+							offeringObj.code = code;
+							offeringObj.name = name;
+							offeringObj.description = description;
+							offeringObj.denomination = denomination;
+							offeringObj.unit_of_measure = unit_of_measure;
+							offeringObj.unit_price = unit_price;
+							offeringObj.type = type;
+							await offeringObj.save();
+						}
+						return true;
+					} catch (err) {
+						console.log(err);
+						var message = err.toString();
+						if (err.message) {
+							message = err.message;
+						}
+						offering.failure_reason = message;
+						console.log(failed);
+						failed.push(offering);
 					}
-					res.status(200).json({ status: 0, message: message });
-				}
+				});
+				await Promise.all(offeringPromises);
+				res.status(200).json({
+					status: 1,
+					message: "Offerings uploaded",
+					failed: failed,
+				});
 			}
 		}
 	);

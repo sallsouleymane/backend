@@ -425,9 +425,9 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 									}
 									var updatedItems = [];
 									for (const item of items) {
-										var { item_id, quantity, tax_id, total_amount } = item;
+										var { item_code, quantity, tax_code, total_amount } = item;
 										var item_desc = await Offering.findOne(
-											{ _id: item_id, merchant_id: cashier.merchant_id },
+											{ code: item_code, merchant_id: cashier.merchant_id },
 											"code name denomination unit_of_measure unit_price"
 										);
 										if (item_desc == null) {
@@ -435,7 +435,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										}
 
 										var tax = await Tax.findOne({
-											_id: tax_id,
+											code: tax_code,
 											merchant_id: cashier.merchant_id,
 										});
 										if (tax == null) {
