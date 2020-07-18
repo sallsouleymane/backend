@@ -6,5 +6,6 @@
   "defaultFee": 0,
   "defaultAmt": 0,
   "blockChainIP": "beyondewallet-app-clusterip",
-  "mainIP": "91d90ac373dc.sn.mynetname.net:2020"
+  "mainIP": "91d90ac373dc.sn.mynetname.net:2020",
+  "uploadPath": "/var/app/uploads"
 }
