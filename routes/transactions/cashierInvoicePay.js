@@ -31,6 +31,8 @@ module.exports = async function (
 		email2: merchant.email,
 		mobile1: branch.mobile,
 		mobile2: merchant.mobile,
+		fromName: branch.name,
+		toName: merchant.name,
 		master_code: master_code,
 		child_code: master_code + "1",
 	};
@@ -45,7 +47,6 @@ module.exports = async function (
 			blockchain_message: result.message,
 		};
 	} else {
-        
 		result = {
 			status: 1,
 			message: "Transaction success!",
@@ -66,7 +67,7 @@ module.exports = async function (
 };
 
 async function distributeRevenue(
-    amount,
+	amount,
 	infra,
 	bank,
 	branch,
@@ -78,8 +79,8 @@ async function distributeRevenue(
 	const branchOpWallet = branch.bcode + "_operational@" + bank.name;
 	const merchantOpWallet = merchant.username + "_operational@" + bank.name;
 	const bankOpWallet = "operational@" + bank.name;
-    const infraOpWallet = "infra_operational@" + bank.name;
-    
+	const infraOpWallet = "infra_operational@" + bank.name;
+
 	//second transaction
 	bankFee = calculateShare("bank", amount, fee);
 	console.log("Bank Fee: ", bankFee);
@@ -93,6 +94,8 @@ async function distributeRevenue(
 		email2: bank.email,
 		mobile1: branch.mobile,
 		mobile2: bank.mobile,
+		fromName: branch.name,
+		toName: bank.name,
 		master_code: master_code,
 		child_code: getTransactionCode(branch.mobile, bank.mobile) + "2",
 	};
@@ -111,6 +114,8 @@ async function distributeRevenue(
 		email2: infra.email,
 		mobile1: bank.mobile,
 		mobile2: infra.mobile,
+		fromName: bank.name,
+		toName: infra.name,
 		master_code: master_code,
 		child_code: getTransactionCode(bank.mobile, infra.mobile) + "3",
 	};
@@ -129,6 +134,8 @@ async function distributeRevenue(
 		email2: branch.email,
 		mobile1: bank.mobile,
 		mobile2: branch.mobile,
+		fromName: bank.name,
+		toName: branch.name,
 		master_code: master_code,
 		child_code: getTransactionCode(bank.mobile, branch.mobile) + "4",
 	};
@@ -146,6 +153,8 @@ async function distributeRevenue(
 		email2: bank.email,
 		mobile1: merchant.mobile,
 		mobile2: bank.mobile,
+		fromName: merchant.name,
+		toName: bank.name,
 		master_code: master_code,
 		child_code: getTransactionCode(merchant.mobile, bank.mobile) + "5",
 	};
@@ -163,6 +172,8 @@ async function distributeRevenue(
 		email2: infra.email,
 		mobile1: bank.mobile,
 		mobile2: infra.mobile,
+		fromName: bank.name,
+		toName: infra.name,
 		master_code: master_code,
 		child_code: getTransactionCode(bank.mobile, infra.mobile) + "6",
 	};
@@ -180,6 +191,8 @@ async function distributeRevenue(
 		email2: branch.email,
 		mobile1: bank.mobile,
 		mobile2: branch.mobile,
+		fromName: branch.name,
+		toName: bank.name,
 		master_code: master_code,
 		child_code: getTransactionCode(bank.mobile, branch.mobile) + "7",
 	};
