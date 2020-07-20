@@ -492,7 +492,4 @@ module.exports.initiateTransfer = async function (transaction, tx_id = "") {
 		}
 	}
 	return res;
-	// })
-	// );
-	// return status;
 };

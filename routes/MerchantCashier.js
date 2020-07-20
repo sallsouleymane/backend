@@ -431,7 +431,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 											"code name denomination unit_of_measure unit_price"
 										);
 										if (item_desc == null) {
-											throw new Error("Item not found with id " + item_id);
+											throw new Error("Item not found with code " + item_code);
 										}
 
 										var tax = await Tax.findOne({
@@ -439,13 +439,13 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 											merchant_id: cashier.merchant_id,
 										});
 										if (tax == null) {
-											throw new Error("Tax not found with id " + tax_id);
+											throw new Error("Tax not found with code " + tax_code);
 										}
 
 										updatedItems.push({
 											item_desc: item_desc,
 											quantity: quantity,
-											tax_id: tax_id,
+											tax_code: tax_code,
 											total_amount: total_amount,
 										});
 									}
