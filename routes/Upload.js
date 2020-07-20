@@ -10,9 +10,23 @@ const path = require("path");
 const jwtTokenAuth = require("./JWTTokenAuth");
 const getTypeClass = require("./utils/getTypeClass");
 
-router.get("/uploads/:filePath", (req, res) => {
+router.get("/uploads/:id/:filePath", (req, res) => {
+	const id = req.params.id;
 	const file_path = req.params.filePath;
-	res.sendFile(config.uploadPath + file_path);
+	console.log(file_path);
+	try {
+		res.sendFile(config.uploadPath + id + "/" + file_path);
+	} catch (err) {
+		console.log(err);
+		var message = err;
+		if (err.message) {
+			message = err.message;
+		}
+		res.status(200).json({
+			status: 0,
+			message: message,
+		});
+	}
 });
 
 router.post("/fileUpload", function (req, res) {
