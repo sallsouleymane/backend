@@ -10,8 +10,9 @@ const path = require("path");
 const jwtTokenAuth = require("./JWTTokenAuth");
 const getTypeClass = require("./utils/getTypeClass");
 
-router.get("/uploads/:path", (req, res) => {
-	res.sendFile(config.uploadPath + path);
+router.get("/uploads/:filePath", (req, res) => {
+	const file_path = req.params.filePath;
+	res.sendFile(config.uploadPath + file_path);
 });
 
 router.post("/fileUpload", function (req, res) {
