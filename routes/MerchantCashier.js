@@ -428,7 +428,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										var { item_code, quantity, tax_code, total_amount } = item;
 										var item_desc = await Offering.findOne(
 											{ code: item_code, merchant_id: cashier.merchant_id },
-											"code name denomination unit_of_measure unit_price"
+											"code name denomination unit_of_measure unit_price description"
 										);
 										if (item_desc == null) {
 											throw new Error("Item not found with code " + item_code);
