@@ -20,7 +20,7 @@ const InvoiceSchema = new mongoose.Schema({
 		{
 			item_desc: { type: Object, required: false },
 			quantity: { type: Number, required: false },
-			tax_code: { type: String, required: false },
+			tax_desc: { type: Object, required: false },
 			total_amount: { type: Number, required: false },
 		},
 	],
