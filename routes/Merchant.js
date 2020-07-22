@@ -688,7 +688,7 @@ router.post("/merchant/editDetails", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/merchant/editZone", jwtTokenAuth, (req, res) => {
-	const { zone_id, code, name, type, description } = req.body;
+	const { zone_id, code, name, type, description, subzone_type } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -715,7 +715,7 @@ router.post("/merchant/editZone", jwtTokenAuth, (req, res) => {
 			} else {
 				Zone.findOneAndUpdate(
 					{ _id: zone_id },
-					{ code: code, name: name, description: description, type: type },
+					{ code: code, name: name, description: description, type: type, subzone_type:subzone_type },
 					(err, zone) => {
 						if (err) {
 							console.log(err);

@@ -153,6 +153,7 @@ router.post("/bank/createMerchant", function (req, res) {
 										type: "type",
 										description: "description",
 										code: "code",
+										subzone_type: "subzone",
 										merchant_id: merchant._id,
 									});
 									newZone.save((err,zone) => {
