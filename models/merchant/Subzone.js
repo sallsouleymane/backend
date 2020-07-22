@@ -7,4 +7,4 @@ const SubzoneSchema = new mongoose.Schema({
     branch_count: { type: Number, required: false},
     type: { type: String, required: false }
 });
-module.exports = mongoose.model("Zone", ZoneSchema);
+module.exports = mongoose.model("Subzone", SubzoneSchema);
