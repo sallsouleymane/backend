@@ -839,7 +839,7 @@ router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 					} else {
 						return res
 							.status(200)
-							.json({ status: 1, message: "Zone Created", zone: zone });
+							.json({ status: 1, message: "Zone Created", zones: zone });
 					}
 				});
 			}
@@ -902,11 +902,15 @@ router.post("/merchant/createSubzone", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.get("/merchant/listSubzones", jwtTokenAuth, (req, res) => {
-	const jwtusername = req.sign_creds.username;
+router.post("/merchant/listSubzonesByZoneId", jwtTokenAuth, function (
+	req,
+	res
+) {
+	const { zone_id } = req.body;
+	const username = req.sign_creds.username;
 	Merchant.findOne(
 		{
-			username: jwtusername,
+			username,
 			status: 1,
 		},
 		function (err, merchant) {
@@ -927,24 +931,28 @@ router.get("/merchant/listSubzones", jwtTokenAuth, (req, res) => {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				Subzone.find({ merchant_id: merchant._id }, (err, subzones) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Subzone.find(
+					{ merchant_id: merchant._id, zone_id: zone_id },
+					"-password",
+					function (err, subzone) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								subzones: subzone,
+							});
 						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							subzones: subzones,
-						});
 					}
-				});
+				);
 			}
 		}
 	);
