@@ -25,6 +25,7 @@ const Fee = require("../models/Fee");
 const CashierLedger = require("../models/CashierLedger");
 const Merchant = require("../models/merchant/Merchant");
 const FailedTX = require("../models/FailedTXLedger");
+const Zone = require("../models/merchant/Zone");
 
 router.post("/bank/listMerchants", function (req, res) {
 	var { token } = req.body;
@@ -138,7 +139,7 @@ router.post("/bank/createMerchant", function (req, res) {
 							data.status = 0;
 							data.creator = 0;
 
-							data.save((err) => {
+							data.save((err,merchant) => {
 								if (err) {
 									console.log(err);
 									res.status(200).json({
@@ -147,6 +148,23 @@ router.post("/bank/createMerchant", function (req, res) {
 											"Either merchant code / email / mobile already exist",
 									});
 								} else {
+									const newZone = new Zone({
+										name: "zone",
+										type: "type",
+										description: "description",
+										code: "code",
+										merchant_id: merchant._id,
+									});
+									newZone.save((err,zone) => {
+										if (err) {
+											console.log(err);
+											res.status(200).json({
+												status: 0,
+												message:
+													"Either merchant code / email / mobile already exist",
+											});
+										}
+									});
 									Bank.updateOne(
 										{
 											_id: bank._id,
