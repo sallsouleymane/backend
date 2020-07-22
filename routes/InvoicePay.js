@@ -143,7 +143,6 @@ router.post("/cashier/getUserInvoices", (req, res) => {
 								message: message,
 							});
 						} else {
-							console.log(invoices);
 							var invoicePromises = invoices.map(async (invoice) => {
 								var merchant = await Merchant.findOne({
 									_id: invoice.merchant_id,
@@ -533,6 +532,117 @@ router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
 							}
 							res.status(200).json({ status: 0, message: message, err: err });
 						}
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/user/getInvoicesForMobile", jwtTokenAuth, (req, res) => {
+	const { mobile } = req.body;
+	const username = req.sign_creds.username;
+	User.findOne(
+		{
+			username,
+			status: 1,
+		},
+		function (err, payer) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (payer == null) {
+				res.status(200).json({
+					status: 0,
+					message: "User is not valid",
+				});
+			} else {
+				User.findOne({ mobile: mobile, bank: payer.bank }, (err, payee) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (payee == null) {
+						res.status(200).json({
+							status: 0,
+							message: "Payee does not belong to " + payer.bank,
+						});
+					} else {
+						Bank.findOne({ name: payee.bank }, (err, bank) => {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else if (bank == null) {
+								res.status(200).json({
+									status: 0,
+									message: "User's bank not found",
+								});
+							} else {
+								try {
+									Invoice.find(
+										{ mobile: payee.mobile },
+										async (err, invoices) => {
+											if (err) {
+												console.log(err);
+												var message = err;
+												if (err.message) {
+													message = err.message;
+												}
+												res.status(200).json({
+													status: 0,
+													message: message,
+												});
+											} else {
+												var result = [];
+												for (const invoice of invoices) {
+													var merchant = await Merchant.findOne({
+														_id: invoice.merchant_id,
+														bank_id: bank._id,
+														status: 1,
+													});
+													if (merchant) {
+														result.push(invoice);
+													}
+												}
+												res.status(200).json({
+													status: 1,
+													invoices: result,
+												});
+											}
+										}
+									);
+								} catch (err) {
+									console.log("Catch block: ", err);
+									var message = err.toString();
+									if (err.message) {
+										message = err.message;
+									}
+									res
+										.status(200)
+										.json({ status: 0, message: message, err: err });
+								}
+							}
+						});
 					}
 				});
 			}

@@ -454,7 +454,7 @@ router.post("/merchant/uploadOfferings", jwtTokenAuth, function (req, res) {
 				});
 			} else {
 				let failed = [];
-				var offeringPromises = offerings.map(async (offering) => {
+				for (offering of offerings) {
 					try {
 						var {
 							code,
@@ -483,7 +483,6 @@ router.post("/merchant/uploadOfferings", jwtTokenAuth, function (req, res) {
 							offeringObj.type = type;
 							await offeringObj.save();
 						}
-						return true;
 					} catch (err) {
 						console.log(err);
 						var message = err.toString();
@@ -494,8 +493,7 @@ router.post("/merchant/uploadOfferings", jwtTokenAuth, function (req, res) {
 						console.log(failed);
 						failed.push(offering);
 					}
-				});
-				await Promise.all(offeringPromises);
+				}
 				res.status(200).json({
 					status: 1,
 					message: "Offerings uploaded",
