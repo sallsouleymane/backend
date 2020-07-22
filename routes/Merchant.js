@@ -688,7 +688,7 @@ router.post("/merchant/editDetails", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/merchant/editZone", jwtTokenAuth, (req, res) => {
-	const { zone_id, code, name, type, description, subzone_type } = req.body;
+	const { zone_id, code, name, type, description } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -715,7 +715,7 @@ router.post("/merchant/editZone", jwtTokenAuth, (req, res) => {
 			} else {
 				Zone.findOneAndUpdate(
 					{ _id: zone_id },
-					{ code: code, name: name, description: description, type: type, subzone_type:subzone_type },
+					{ code: code, name: name, description: description, type: type },
 					(err, zone) => {
 						if (err) {
 							console.log(err);
@@ -745,7 +745,7 @@ router.post("/merchant/editZone", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.get("/merchant/getZone", jwtTokenAuth, (req, res) => {
+router.get("/merchant/getZoneList", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -770,7 +770,7 @@ router.get("/merchant/getZone", jwtTokenAuth, (req, res) => {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				Zone.findOne({ merchant_id: merchant._id }, (err, zone) => {
+				Zone.find({ merchant_id: merchant._id }, (err, zone) => {
 					if (err) {
 						console.log(err);
 						var message = err;
@@ -793,9 +793,9 @@ router.get("/merchant/getZone", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/merchant/createSubzone", jwtTokenAuth, (req, res) => {
-	let data = new Subzone();
-	const { code, name, description } = req.body;
+router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
+	let data = new Zone();
+	const { code, name, description, type } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -824,6 +824,62 @@ router.post("/merchant/createSubzone", jwtTokenAuth, (req, res) => {
 				data.name = name;
 				data.description = description;
 				data.merchant_id = merchant._id;
+				data.type =  type;
+				data.save((err, zone) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						return res
+							.status(200)
+							.json({ status: 1, message: "Zone Created", zone: zone });
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/merchant/createSubzone", jwtTokenAuth, (req, res) => {
+	let data = new Subzone();
+	const { code, name, description, type, zone_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				data.code = code;
+				data.name = name;
+				data.description = description;
+				data.merchant_id = merchant._id;
+				data.type = type;
+				data.zone_id = zone_id,
 				data.save((err, subzone) => {
 					if (err) {
 						console.log(err);

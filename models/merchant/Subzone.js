@@ -5,6 +5,8 @@ const SubzoneSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: { type: String, required: false },
     branch_count: { type: Number, required: false},
-    type: { type: String, required: false }
+    type: { type: String, required: false },
+    zone_id: { type: String, required: true },
+    
 });
 module.exports = mongoose.model("Subzone", SubzoneSchema);
