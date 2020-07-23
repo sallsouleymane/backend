@@ -7,7 +7,7 @@ const MerchantSettings = new mongoose.Schema({
         {
             start_date: { type: Date, required: false},
             end_date: { type: Date, required: false}, 
-            period_name: { type: Date, required: false},
+            period_name: { type: String, required: false},
         }
     ],
     bill_term: [
