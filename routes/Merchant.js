@@ -357,15 +357,15 @@ router.post("/merchant/getSettings", jwtTokenAuth, function (req, res) {
 							status: 0,
 							message: message,
 						});
-					} else if (settings == null) {
+					} else if (!settings) {
 						res.status(200).json({
 							status: 0,
-							message: "Settting Not found",
+							message: "Setting Not found",
 						});
 					} else {
 						res.status(200).json({
 							status: 1,
-							settings: settings,
+							setting: setting,
 						});
 					}
 				});
