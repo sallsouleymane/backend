@@ -23,6 +23,356 @@ const InvoiceGroup = require("../models/merchant/InvoiceGroup");
 const FailedTX = require("../models/FailedTXLedger");
 const Offering = require("../models/merchant/Offering");
 const Tax = require("../models/merchant/Tax");
+const MerchantSettings = require("../models/merchant/MerchantSettings");
+
+router.post("/merchant/zoneSetting", jwtTokenAuth, (req, res) => {
+	const { zone_name, subzone_name } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				MerchantSettings.countDocuments({ merchant_id: merchant._id }, (err, count) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (count == 1) {
+						MerchantSettings.findOneAndUpdate(
+							{ merchant_id: merchant._id },
+							{ zone_name: zone_name, subzone_name:subzone_name },
+							{ new: true },
+							function (err, setting) {
+								if (err) {
+									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message,
+									});
+								} else if (setting == null) {
+									console.log(err);
+									res.status(200).json({
+										status: 0,
+										message: "Setting not found",
+										err: err,
+									});
+								} else {
+									res.status(200).json({
+										status: 1,
+										message: "Zone Settings Edited",
+									});
+								}
+							}
+						);
+					} else {
+						const data = new MerchantSettings();
+						data.merchant_id = merchant._id;
+						data.zone_name = zone_name;
+						data.subzone_name = subzone_name;
+						data.save((err) => {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else {
+								res.status(200).json({
+									status: 1,
+									message: "Zone Settings Created",
+								});
+							}
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/merchant/addBillPeriod", jwtTokenAuth, (req, res) => {
+	const billperiod  = { 
+		start_date: req.body.start_date,
+		end_date: req.body.end_date,
+		period_name: req.body.period_name,
+	}
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				MerchantSettings.countDocuments({ merchant_id: merchant._id }, (err, count) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (count == 1) {
+						MerchantSettings.update(
+							{ merchant_id: merchant._id }, 
+							{ $push: { bill_period: billperiod } },
+							function (err, setting) {
+								if (err) {
+									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message,
+									});
+								} else if (setting == null) {
+									console.log(err);
+									res.status(200).json({
+										status: 0,
+										message: "Setting not found",
+										err: err,
+									});
+								} else {
+									res.status(200).json({
+										status: 1,
+										message: "Bill Period Added",
+									});
+								}
+							}
+						);
+					} else {
+						const data = new MerchantSettings();
+						data.merchant_id = merchant._id;
+						data.bill_period = [billperiod];
+						data.save((err) => {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else {
+								res.status(200).json({
+									status: 1,
+									message: "Bill Periad Added",
+								});
+							}
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/merchant/addBillTerm", jwtTokenAuth, (req, res) => {
+	const billterm= { 
+		days: req.body.days,
+		name: req.body.name
+	}
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				MerchantSettings.countDocuments({ merchant_id: merchant._id }, (err, count) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (count == 1) {
+						MerchantSettings.update(
+							{ merchant_id: merchant._id }, 
+							{ $push: { bill_term: billterm } },
+							function (err, setting) {
+								if (err) {
+									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message,
+									});
+								} else if (setting == null) {
+									console.log(err);
+									res.status(200).json({
+										status: 0,
+										message: "Setting not found",
+										err: err,
+									});
+								} else {
+									res.status(200).json({
+										status: 1,
+										message: "Bill Term Added",
+									});
+								}
+							}
+						);
+					} else {
+						const data = new MerchantSettings();
+						data.merchant_id = merchant._id;
+						data.bill_term = [billterm];
+						data.save((err) => {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else {
+								res.status(200).json({
+									status: 1,
+									message: "Bill Term Added",
+								});
+							}
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/merchant/getSettings", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, merchant) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant is not valid",
+				});
+			} else {
+				MerchantSettings.find({ merchant_id: merchant._id }, (err, settings) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (settings == null) {
+						res.status(200).json({
+							status: 0,
+							message: "Settting Not found",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							settings: settings,
+						});
+					}
+				});
+			}
+		}
+	);
+});
 
 router.post("/merchant/listTaxes", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -770,7 +1120,7 @@ router.get("/merchant/getZoneList", jwtTokenAuth, (req, res) => {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				Zone.find({ merchant_id: merchant._id }, (err, zone) => {
+				Zone.find({ merchant_id: merchant._id }, (err, zones) => {
 					if (err) {
 						console.log(err);
 						var message = err;
@@ -784,7 +1134,7 @@ router.get("/merchant/getZoneList", jwtTokenAuth, (req, res) => {
 					} else {
 						res.status(200).json({
 							status: 1,
-							zone: zone,
+							zones: zones,
 						});
 					}
 				});
