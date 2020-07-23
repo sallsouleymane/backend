@@ -14,49 +14,55 @@ const User = require("../models/User");
 const Tax = require("../models/merchant/Tax");
 const { promises } = require("fs-extra");
 
-router.post("/cashier/getUserFromMobile", function (req, res) {
-	const { token, mobile } = req.body;
-	MerchantCashier.findOne({ token }, function (err, cashier) {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else if (cashier == null) {
-			res.status(200).json({
-				status: 0,
-				message: "You are either not authorised or not logged in.",
-			});
-		} else {
-			User.findOne({ mobile }, "-password", function (err, user) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (user == null) {
-					res.status(200).json({
-						status: 0,
-						message: "User not found",
-					});
-				} else {
-					res.status(200).json({
+router.post("/cashier/getUserFromMobile", jwtTokenAuth, function (req, res) {
+	const { mobile } = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant is not valid",
+				});
+			} else {
+				User.findOne({ mobile }, "-password", function (err, user) {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (user == null) {
+						res.status(200).json({
+							status: 0,
+							message: "User not found",
+						});
+					} else {
+						res.status(200).json({
 						status: 1,
 						data: user,
-					});
-				}
-			});
-		}
+						});
+					}
+				});
+			}
 	});
 });
 
