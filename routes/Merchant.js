@@ -346,7 +346,7 @@ router.post("/merchant/getSettings", jwtTokenAuth, function (req, res) {
 					message: "Merchant is not valid",
 				});
 			} else {
-				MerchantSettings.findOne({ merchant_id: merchant._id }, (err, settings) => {
+				MerchantSettings.findOne({ merchant_id: merchant._id }, (err, setting) => {
 					if (err) {
 						console.log(err);
 						var message = err;
@@ -357,7 +357,7 @@ router.post("/merchant/getSettings", jwtTokenAuth, function (req, res) {
 							status: 0,
 							message: message,
 						});
-					} else if (!settings) {
+					} else if (!setting) {
 						res.status(200).json({
 							status: 0,
 							message: "Setting Not found",
