@@ -880,6 +880,7 @@ router.post("/merchant/createSubzone", jwtTokenAuth, (req, res) => {
 				data.merchant_id = merchant._id;
 				data.type = type;
 				data.zone_id = zone_id,
+				data.branch_count = 0,
 				data.save((err, subzone) => {
 					if (err) {
 						console.log(err);
