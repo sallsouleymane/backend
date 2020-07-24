@@ -12,6 +12,7 @@ const Invoice = require("../models/merchant/Invoice");
 const Offering = require("../models/merchant/Offering");
 const User = require("../models/User");
 const Tax = require("../models/merchant/Tax");
+const MerchantSettings = require("../models/merchant/MerchantSettings");
 const { promises } = require("fs-extra");
 
 router.post("/cashier/getUserFromMobile", jwtTokenAuth, function (req, res) {
@@ -405,6 +406,58 @@ router.get("/merchantCashier/listInvoiceGroups", jwtTokenAuth, (req, res) => {
 							status: 1,
 							message: "Invoice Groups list",
 							groups: groups,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/merchantCashier/getSettings", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant staff is not valid",
+				});
+			} else {
+				MerchantSettings.findOne({ merchant_id: cashier.merchant_id }, (err, setting) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (!setting) {
+						res.status(200).json({
+							status: 0,
+							message: "Setting Not found",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							setting: setting,
 						});
 					}
 				});
