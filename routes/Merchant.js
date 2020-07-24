@@ -2153,7 +2153,7 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 							} else {
 								Subzone.updateOne(
 									{ _id: subzone_id },
-									{ $inc: { branches_count: 1 } },
+									{ $inc: { branch_count: 1 } },
 									function (err, subzone) {
 										if (err) {
 											console.log(err);
