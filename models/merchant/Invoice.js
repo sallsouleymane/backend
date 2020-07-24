@@ -6,7 +6,11 @@ const InvoiceSchema = new mongoose.Schema({
 	merchant_id: { type: String, required: true },
 	amount: { type: Number, required: false },
 	bill_date: { type: String, required: false },
-	bill_period: { type: String, required: false },
+	bill_period: {
+		start_date: { type: Date, required: false},
+		end_date: { type: Date, required: false}, 
+		period_name: { type: String, required: false},
+	},
 	due_date: { type: String, required: false },
 	description: { type: String, required: false },
 	mobile: { type: String, required: true },
