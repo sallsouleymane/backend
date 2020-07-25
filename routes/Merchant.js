@@ -268,7 +268,7 @@ router.post("/merchant/setDefaultBillPeriod", jwtTokenAuth, (req, res) => {
 								status: 0,
 								message: message,
 							});
-						} else if (tax == null) {
+						} else if (setting == null) {
 							res.status(200).json({
 								status: 0,
 								message: "Setting not found",
@@ -330,7 +330,7 @@ router.post("/merchant/setDefaultBillterm", jwtTokenAuth, (req, res) => {
 								status: 0,
 								message: message,
 							});
-						} else if (tax == null) {
+						} else if (setting == null) {
 							res.status(200).json({
 								status: 0,
 								message: "Setting not found",
