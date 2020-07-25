@@ -223,6 +223,131 @@ router.post("/merchant/addBillPeriod", jwtTokenAuth, (req, res) => {
 	);
 });
 
+router.post("/merchant/setDefaultBillPeriod", jwtTokenAuth, (req, res) => {
+	const period  = { 
+		start_date: req.body.start_date,
+		end_date: req.body.end_date,
+		period_name: req.body.period_name,
+	}
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				MerchantSettings.findOneAndUpdate(
+					{ merchant_id: merchant._id },
+					{ default_bill_period: period},
+					{ new: true },
+					(err, setting) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (tax == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Setting not found",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Default bill period updated",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/merchant/setDefaultBillterm", jwtTokenAuth, (req, res) => {
+	const term  = { 
+		days: req.body.days,
+		name: req.body.name,
+	}
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				MerchantSettings.findOneAndUpdate(
+					{ merchant_id: merchant._id },
+					{ default_bill_term: term},
+					{ new: true },
+					(err, setting) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (tax == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Setting not found",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Default bill term updated",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/merchant/addBillTerm", jwtTokenAuth, (req, res) => {
 	const billterm= { 
 		days: req.body.days,
