@@ -1482,7 +1482,7 @@ router.post("/merchant/editSubzone", jwtTokenAuth, (req, res) => {
 						} else {
 							res.status(200).json({
 								status: 1,
-								message: "Subzone edited successfully",
+								message: "subzone edited successfully",
 							});
 						}
 					}
