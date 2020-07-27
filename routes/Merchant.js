@@ -1492,64 +1492,6 @@ router.post("/merchant/listSubzonesByZoneId", jwtTokenAuth, function (
 	);
 });
 
-router.post("/merchant/editSubzone", jwtTokenAuth, (req, res) => {
-	const { subzone_id, code, name, type, description } = req.body;
-	const jwtusername = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				Subzone.findOneAndUpdate(
-					{ _id: subzone_id },
-					{ code: code, name: name, description: description, type: type },
-					(err, zone) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (zone == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Subzone not found",
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								message: "Subzone edited successfully",
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
-
 router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 	let data = new MerchantCashier();
 	const { name, branch_id, working_from, working_to } = req.body;
