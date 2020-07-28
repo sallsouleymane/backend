@@ -31,6 +31,10 @@ const MerchantSettings = new mongoose.Schema({
             name: { type: String, required: false},
         },
     ],
+    default_country: {
+        ccode: { type: String, required: false},
+        name: { type: String, required: false},
+    },
 });
 
 module.exports = mongoose.model("MerchantSettings", MerchantSettings);
