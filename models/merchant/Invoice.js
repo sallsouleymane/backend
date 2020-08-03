@@ -7,9 +7,9 @@ const InvoiceSchema = new mongoose.Schema({
 	amount: { type: Number, required: false },
 	bill_date: { type: String, required: false },
 	bill_period: {
-		start_date: { type: Date, required: false},
-		end_date: { type: Date, required: false}, 
-		period_name: { type: String, required: false},
+		start_date: { type: Date, required: false },
+		end_date: { type: Date, required: false },
+		period_name: { type: String, required: false },
 	},
 	due_date: { type: String, required: false },
 	description: { type: String, required: false },
@@ -19,6 +19,8 @@ const InvoiceSchema = new mongoose.Schema({
 	paid_desc: { type: String, required: false, default: "0-not paid 1-paid" },
 	group_id: { type: String, required: false },
 	cashier_id: { type: String, required: true },
+	is_created: { type: Number, required: true, default: 0 },
+	is_validated: { type: Number, required: true, default: 1 },
 	created_at: { type: Date, required: true, default: Date.now },
 	items: [
 		{
@@ -26,6 +28,13 @@ const InvoiceSchema = new mongoose.Schema({
 			quantity: { type: Number, required: false },
 			tax_desc: { type: Object, required: false },
 			total_amount: { type: Number, required: false },
+		},
+	],
+	counter_invoices: [
+		{
+			number: { type: String, required: false },
+			description: { type: String, required: false },
+			amount: { type: Number, required: false },
 		},
 	],
 });

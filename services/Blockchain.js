@@ -35,7 +35,7 @@ module.exports.getStatement = async (arr, user_id = "") => {
 		method: "POST",
 		json: {
 			wallet_id: arr.toString(),
-			user_id: user_id,
+			user_id: "",
 		},
 	};
 

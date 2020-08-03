@@ -51,55 +51,58 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
 					message: "Cashier is not activated.",
 				});
 			} else {
-				Invoice.findOne({ number: number }, async (err, invoice) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (invoice == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Invoice not found",
-						});
-					} else {
-						Merchant.findOne(
-							{
-								_id: invoice.merchant_id,
-								bank_id: cashier.bank_id,
-								status: 1,
-							},
-							(err, merchant) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (merchant == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Invalid Merchant",
-									});
-								} else {
-									res.status(200).json({
-										status: 1,
-										invoice: invoice,
-									});
-								}
+				Invoice.findOne(
+					{ number: number, is_validated: 1 },
+					async (err, invoice) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
 							}
-						);
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (invoice == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Invoice not found",
+							});
+						} else {
+							Merchant.findOne(
+								{
+									_id: invoice.merchant_id,
+									bank_id: cashier.bank_id,
+									status: 1,
+								},
+								(err, merchant) => {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (merchant == null) {
+										res.status(200).json({
+											status: 0,
+											message: "Invalid Merchant",
+										});
+									} else {
+										res.status(200).json({
+											status: 1,
+											invoice: invoice,
+										});
+									}
+								}
+							);
+						}
 					}
-				});
+				);
 			}
 		}
 	);
@@ -131,35 +134,38 @@ router.post("/cashier/getUserInvoices", (req, res) => {
 						message: "Cashier is not valid",
 					});
 				} else {
-					Invoice.find({ mobile: mobile }, async (err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else {
-							var invoicePromises = invoices.map(async (invoice) => {
-								var merchant = await Merchant.findOne({
-									_id: invoice.merchant_id,
-									bank_id: cashier.bank_id,
-									status: 1,
-								});
-								if (merchant != null) {
-									return invoice;
+					Invoice.find(
+						{ mobile: mobile, is_validated: 1 },
+						async (err, invoices) => {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
 								}
-							});
-							var result = await Promise.all(invoicePromises);
-							res.status(200).json({
-								status: 1,
-								invoices: result,
-							});
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else {
+								var invoicePromises = invoices.map(async (invoice) => {
+									var merchant = await Merchant.findOne({
+										_id: invoice.merchant_id,
+										bank_id: cashier.bank_id,
+										status: 1,
+									});
+									if (merchant != null) {
+										return invoice;
+									}
+								});
+								var result = await Promise.all(invoicePromises);
+								res.status(200).json({
+									status: 1,
+									invoices: result,
+								});
+							}
 						}
-					});
+					);
 				}
 			}
 		);
@@ -174,32 +180,33 @@ router.post("/cashier/getUserInvoices", (req, res) => {
 });
 
 router.post("/cashier/payInvoice", (req, res) => {
-	try {
-		const { token, invoice_id, amount } = req.body;
-		Cashier.findOne(
-			{
-				token,
-				status: 1,
-			},
-			function (err, cashier) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (cashier == null) {
-					res.status(200).json({
-						status: 0,
-						message:
-							"Token changed or user not valid. Try to login again or contact system administrator.",
-					});
-				} else {
-					Invoice.findOne({ _id: invoice_id, paid: 0 }, (err, invoice) => {
+	const { token, invoice_ids, merchant_id, amount } = req.body;
+	Cashier.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				MerchantFee.findOne(
+					{ merchant_id: merchant_id, type: 1 },
+					(err, fee) => {
 						if (err) {
 							console.log(err);
 							var message = err;
@@ -210,247 +217,238 @@ router.post("/cashier/payInvoice", (req, res) => {
 								status: 0,
 								message: message,
 							});
-						} else if (invoice == null) {
+						} else if (fee == null) {
 							res.status(200).json({
 								status: 0,
-								message: "Invoice is not valid or already paid",
+								message: "Fee rule not found",
 							});
 						} else {
-							if (invoice.amount != amount) {
-								res.status(200).json({
-									status: 0,
-									message: "Invoice amount to be paid is " + invoice.amount,
-								});
-							} else {
-								MerchantFee.findOne(
-									{ merchant_id: invoice.merchant_id, type: 1 },
-									(err, fee) => {
-										if (err) {
+							Commission.findOne(
+								{ merchant_id: merchant_id, type: 1 },
+								async (err, comm) => {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (comm == null) {
+										res.status(200).json({
+											status: 0,
+											message: "Commission rule not found",
+										});
+									} else {
+										try {
+											var invoice;
+											var total_amount = 0;
+											var counter_amount = 0;
+											for (invoice_id of invoice_ids) {
+												invoice = await Invoice.findOne({
+													_id: invoice_id,
+													merchant_id: merchant_id,
+													paid: 0,
+													is_validated: 1,
+												});
+												if (invoice == null) {
+													throw new Error(
+														"Invoice id " +
+															invoice_id +
+															" is already paid or it belongs to different merchant"
+													);
+												}
+												if (invoice.counter_invoices.length > 0) {
+													for (cninvoice of invoice.counter_invoices) {
+														counter_amount += cninvoice.amount;
+													}
+												}
+												total_amount += invoice.amount - counter_amount;
+											}
+
+											// all the users
+											let branch = await Branch.findOne({
+												_id: cashier.branch_id,
+												status: 1,
+											});
+											if (branch == null) {
+												throw new Error("Cashier has invalid branch");
+											}
+
+											let bank = await Bank.findOne({
+												_id: branch.bank_id,
+												status: 1,
+											});
+											if (bank == null) {
+												throw new Error("Cashier's Branch has invalid bank");
+											}
+
+											// check branch operational wallet balance
+											const branchOpWallet =
+												branch.bcode + "_operational@" + bank.name;
+											var bal = await blockchain.getBalance(branchOpWallet);
+											console.log(branchOpWallet);
+											if (Number(bal) < total_amount) {
+												res.status(200).json({
+													status: 0,
+													message: "Not enough balance. Recharge Your wallet.",
+												});
+											} else {
+												let infra = await Infra.findOne({
+													_id: bank.user_id,
+												});
+												if (infra == null) {
+													throw new Error("Cashier's bank has invalid infra");
+												}
+
+												let merchant = await Merchant.findOne({
+													_id: merchant_id,
+												});
+												if (merchant == null) {
+													throw new Error("Invoice has invalid merchant");
+												}
+
+												const today = new Date();
+												await Merchant.findOneAndUpdate(
+													{
+														_id: merchant._id,
+														last_paid_at: {
+															$lte: new Date(today.setHours(00, 00, 00)),
+														},
+													},
+													{ amount_collected: 0 }
+												);
+
+												var result = await cashierInvoicePay(
+													total_amount,
+													infra,
+													bank,
+													branch,
+													merchant,
+													fee,
+													comm
+												);
+												var status_update_feedback;
+												if (result.status == 1) {
+													for (invoice_id of invoice_ids) {
+														var i = await Invoice.findOneAndUpdate(
+															{ _id: invoice_id },
+															{ paid: 1 }
+														);
+														if (i == null) {
+															status_update_feedback =
+																"Invoice paid status can not be updated";
+														}
+
+														var last_paid_at = new Date();
+														var m = await Merchant.updateOne(
+															{ _id: merchant._id },
+															{
+																last_paid_at: last_paid_at,
+																$inc: {
+																	amount_collected: total_amount,
+																	amount_due: -total_amount,
+																	bills_paid: 1,
+																},
+															}
+														);
+														if (m == null) {
+															status_update_feedback =
+																"Merchant status can not be updated";
+														}
+
+														var mb = await MerchantBranch.updateOne(
+															{ _id: branch._id },
+															{
+																last_paid_at: last_paid_at,
+																$inc: {
+																	amount_collected: total_amount,
+																	amount_due: -total_amount,
+																	bills_paid: 1,
+																},
+															}
+														);
+														if (mb == null) {
+															status_update_feedback =
+																"Merchant branch status can not be updated";
+														}
+
+														var ig = await InvoiceGroup.updateOne(
+															{ _id: i.group_id },
+															{
+																last_paid_at: last_paid_at,
+																$inc: {
+																	bills_paid: 1,
+																},
+															}
+														);
+														if (ig == null) {
+															status_update_feedback =
+																"Invoice group status can not be updated";
+														}
+
+														var mc = await MerchantCashier.updateOne(
+															{ _id: i.cashier_id },
+															{
+																last_paid_at: last_paid_at,
+																$inc: {
+																	bills_paid: 1,
+																},
+															}
+														);
+														if (mc == null) {
+															status_update_feedback =
+																"Merchant cashier status can not be updated";
+														}
+
+														bankFee = calculateShare("bank", total_amount, fee);
+														var c = await Cashier.updateOne(
+															{ _id: cashier._id },
+															{
+																$inc: {
+																	cash_in_hand: total_amount + bankFee,
+																},
+															}
+														);
+														if (c == null) {
+															status_update_feedback =
+																"Bank cashier's cash in hand can not be updated";
+														}
+
+														content =
+															"E-Wallet:  Amount " +
+															i.amount +
+															" is paid for invoice nummber " +
+															i.number +
+															" for purpose " +
+															i.description;
+														sendSMS(content, invoice.mobile);
+													}
+												}
+												result.status_update_feedback = status_update_feedback;
+												res.status(200).json(result);
+											}
+										} catch (err) {
 											console.log(err);
-											var message = err;
+											var message = err.toString();
 											if (err.message) {
 												message = err.message;
 											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else if (fee == null) {
-											res.status(200).json({
-												status: 0,
-												message: "Fee rule not found",
-											});
-										} else {
-											Commission.findOne(
-												{ merchant_id: invoice.merchant_id, type: 1 },
-												async (err, comm) => {
-													if (err) {
-														console.log(err);
-														var message = err;
-														if (err.message) {
-															message = err.message;
-														}
-														res.status(200).json({
-															status: 0,
-															message: message,
-														});
-													} else if (comm == null) {
-														res.status(200).json({
-															status: 0,
-															message: "Commission rule not found",
-														});
-													} else {
-														// all the users
-														let branch = await Branch.findOne({
-															_id: cashier.branch_id,
-															status: 1,
-														});
-														if (branch == null) {
-															throw new Error("Cashier has invalid branch");
-														}
-
-														let bank = await Bank.findOne({
-															_id: branch.bank_id,
-															status: 1,
-														});
-														if (bank == null) {
-															throw new Error(
-																"Cashier's Branch has invalid bank"
-															);
-														}
-
-														// check branch operational wallet balance
-														const branchOpWallet =
-															branch.bcode + "_operational@" + bank.name;
-														var bal = await blockchain.getBalance(
-															branchOpWallet
-														);
-														console.log(branchOpWallet);
-														if (Number(bal) < amount) {
-															res.status(200).json({
-																status: 0,
-																message:
-																	"Not enough balance. Recharge Your wallet.",
-															});
-														} else {
-															let infra = await Infra.findOne({
-																_id: bank.user_id,
-															});
-															if (infra == null) {
-																throw new Error(
-																	"Cashier's bank has invalid infra"
-																);
-															}
-
-															let merchant = await Merchant.findOne({
-																_id: invoice.merchant_id,
-															});
-															if (merchant == null) {
-																throw new Error("Invoice has invalid merchant");
-															}
-
-															const today = new Date();
-															await Merchant.findOneAndUpdate(
-																{
-																	_id: merchant._id,
-																	last_paid_at: {
-																		$lte: new Date(today.setHours(00, 00, 00)),
-																	},
-																},
-																{ amount_collected: 0 }
-															);
-
-															var result = await cashierInvoicePay(
-																amount,
-																infra,
-																bank,
-																branch,
-																merchant,
-																fee,
-																comm
-															);
-															if (result.status == 1) {
-																var i = await Invoice.updateOne(
-																	{ _id: invoice_id },
-																	{ paid: 1 }
-																);
-																if (i == null) {
-																	throw new Error(
-																		"Invoice paid status can not be updated"
-																	);
-																}
-
-																var last_paid_at = new Date();
-																var m = await Merchant.updateOne(
-																	{ _id: merchant._id },
-																	{
-																		last_paid_at: last_paid_at,
-																		$inc: {
-																			amount_collected: amount,
-																			amount_due: -amount,
-																			bills_paid: 1,
-																		},
-																	}
-																);
-																if (m == null) {
-																	throw new Error(
-																		"Merchant status can not be updated"
-																	);
-																}
-
-																var mb = await MerchantBranch.updateOne(
-																	{ _id: branch._id },
-																	{
-																		last_paid_at: last_paid_at,
-																		$inc: {
-																			amount_collected: amount,
-																			amount_due: -amount,
-																			bills_paid: 1,
-																		},
-																	}
-																);
-																if (mb == null) {
-																	throw new Error(
-																		"Merchant branch status can not be updated"
-																	);
-																}
-
-																var ig = await InvoiceGroup.updateOne(
-																	{ _id: invoice.group_id },
-																	{
-																		last_paid_at: last_paid_at,
-																		$inc: {
-																			bills_paid: 1,
-																		},
-																	}
-																);
-																if (ig == null) {
-																	throw new Error(
-																		"Invoice group status can not be updated"
-																	);
-																}
-
-																var mc = await MerchantCashier.updateOne(
-																	{ _id: invoice.cashier_id },
-																	{
-																		last_paid_at: last_paid_at,
-																		$inc: {
-																			bills_paid: 1,
-																		},
-																	}
-																);
-																if (mc == null) {
-																	throw new Error(
-																		"Merchant cashier status can not be updated"
-																	);
-																}
-
-																bankFee = calculateShare("bank", amount, fee);
-																var c = await Cashier.updateOne(
-																	{ _id: cashier._id },
-																	{
-																		$inc: {
-																			cash_in_hand: amount + bankFee,
-																		},
-																	}
-																);
-																if (c == null) {
-																	throw new Error(
-																		"Bank cashier's cash in hand can not be updated"
-																	);
-																}
-															}
-
-															content =
-																"E-Wallet:  Due amount " +
-																invoice.amount +
-																" is paid for invoice nummber " +
-																invoice.number +
-																" for purpose " +
-																invoice.description;
-															sendSMS(content, invoice.mobile);
-															res.status(200).json(result);
-														}
-													}
-												}
-											);
+											res
+												.status(200)
+												.json({ status: 0, message: message, err: err });
 										}
 									}
-								);
-							}
+								}
+							);
 						}
-					});
-				}
+					}
+				);
 			}
-		);
-	} catch (err) {
-		console.log(err);
-		var message = err.toString();
-		if (err.message) {
-			message = err.message;
 		}
-		res.status(200).json({ status: 0, message: message, err: err });
-	}
+	);
 });
 
 router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
@@ -495,35 +493,38 @@ router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
 						});
 					} else {
 						try {
-							Invoice.find({ mobile: user.mobile }, async (err, invoices) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else {
-									var result = [];
-									for (const invoice of invoices) {
-										var merchant = await Merchant.findOne({
-											_id: invoice.merchant_id,
-											bank_id: bank._id,
-											status: 1,
-										});
-										if (merchant) {
-											result.push(invoice);
+							Invoice.find(
+								{ mobile: user.mobile, is_validated: 1 },
+								async (err, invoices) => {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
 										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else {
+										var result = [];
+										for (const invoice of invoices) {
+											var merchant = await Merchant.findOne({
+												_id: invoice.merchant_id,
+												bank_id: bank._id,
+												status: 1,
+											});
+											if (merchant) {
+												result.push(invoice);
+											}
+										}
+										res.status(200).json({
+											status: 1,
+											invoices: result,
+										});
 									}
-									res.status(200).json({
-										status: 1,
-										invoices: result,
-									});
 								}
-							});
+							);
 						} catch (err) {
 							console.log("Catch block: ", err);
 							var message = err.toString();
@@ -600,7 +601,7 @@ router.post("/user/getInvoicesForMobile", jwtTokenAuth, (req, res) => {
 							} else {
 								try {
 									Invoice.find(
-										{ mobile: payee.mobile },
+										{ mobile: payee.mobile, is_validated: 1 },
 										async (err, invoices) => {
 											if (err) {
 												console.log(err);
@@ -651,7 +652,7 @@ router.post("/user/getInvoicesForMobile", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
-	const { invoice_id, amount } = req.body;
+	const { invoice_ids, merchant_id } = req.body;
 	const username = req.sign_creds.username;
 	User.findOne(
 		{
@@ -676,32 +677,28 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 					message: "User is not valid",
 				});
 			} else {
-				Invoice.findOne({ _id: invoice_id, paid: 0 }, (err, invoice) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (invoice == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Invoice is not valid or already paid",
-						});
-					} else {
-						if (invoice.amount != amount) {
+				MerchantFee.findOne(
+					{ merchant_id: merchant_id, type: 0 },
+					(err, fee) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
 							res.status(200).json({
 								status: 0,
-								message: "Invoice amount to be paid is " + invoice.amount,
+								message: message,
+							});
+						} else if (fee == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Fee rule not found",
 							});
 						} else {
-							MerchantCashier.findOne(
-								{ _id: invoice.cashier_id },
-								(err, mcashier) => {
+							Commission.findOne(
+								{ merchant_id: merchant_id, type: 0 },
+								async (err, comm) => {
 									if (err) {
 										console.log(err);
 										var message = err;
@@ -712,221 +709,189 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 											status: 0,
 											message: message,
 										});
-									} else if (mcashier == null) {
-										console.log(err);
+									} else if (comm == null) {
 										res.status(200).json({
 											status: 0,
-											message: "Merchant cashier not fount",
+											message: "Commission rule not found",
 										});
 									} else {
-										MerchantFee.findOne(
-											{ merchant_id: invoice.merchant_id, type: 0 },
-											(err, fee) => {
-												if (err) {
-													console.log(err);
-													var message = err;
-													if (err.message) {
-														message = err.message;
-													}
-													res.status(200).json({
-														status: 0,
-														message: message,
-													});
-												} else if (fee == null) {
-													res.status(200).json({
-														status: 0,
-														message: "Fee rule not found",
-													});
-												} else {
-													try {
-														Commission.findOne(
-															{ merchant_id: invoice.merchant_id, type: 0 },
-															async (err, comm) => {
-																if (err) {
-																	console.log(err);
-																	var message = err;
-																	if (err.message) {
-																		message = err.message;
-																	}
-																	res.status(200).json({
-																		status: 0,
-																		message: message,
-																	});
-																} else if (comm == null) {
-																	res.status(200).json({
-																		status: 0,
-																		message: "Commission rule not found",
-																	});
-																} else {
-																	// all the users
-																	let bank = await Bank.findOne({
-																		name: user.bank,
-																	});
-																	if (bank == null) {
-																		throw new Error("User has invalid bank");
-																	}
-
-																	// check branch operational wallet balance
-																	const userOpWallet =
-																		user.mobile + "@" + bank.name;
-																	var bal = await blockchain.getBalance(
-																		userOpWallet
-																	);
-																	if (Number(bal) < amount) {
-																		res.status(200).json({
-																			status: 0,
-																			message:
-																				"Not enough balance. Recharge Your wallet.",
-																		});
-																	} else {
-																		let infra = await Infra.findOne({
-																			_id: bank.user_id,
-																		});
-																		if (infra == null) {
-																			throw new Error(
-																				"User's bank has invalid infra"
-																			);
-																		}
-
-																		let merchant = await Merchant.findOne({
-																			_id: invoice.merchant_id,
-																		});
-																		if (merchant == null) {
-																			throw new Error(
-																				"Invoice has invalid merchant"
-																			);
-																		}
-
-																		const today = new Date();
-																		await Merchant.findOneAndUpdate(
-																			{
-																				_id: merchant._id,
-																				last_paid_at: {
-																					$lte: new Date(
-																						today.setHours(00, 00, 00)
-																					),
-																				},
-																			},
-																			{ amount_collected: 0 }
-																		);
-																		var result = await userInvoicePay(
-																			amount,
-																			infra,
-																			bank,
-																			user,
-																			merchant,
-																			fee,
-																			comm
-																		);
-																		if (result.status == 1) {
-																			var i = await Invoice.updateOne(
-																				{ _id: invoice_id },
-																				{ paid: 1 }
-																			);
-																			if (i == null) {
-																				throw new Error(
-																					"Invoice status can not be updated"
-																				);
-																			}
-
-																			var last_paid_at = new Date();
-																			var m = await Merchant.updateOne(
-																				{ _id: merchant._id },
-																				{
-																					last_paid_at: last_paid_at,
-																					$inc: {
-																						amount_collected: amount,
-																						amount_due: -amount,
-																						bills_paid: 1,
-																					},
-																				}
-																			);
-																			if (m == null) {
-																				throw new Error(
-																					"Merchant status can not be updated"
-																				);
-																			}
-
-																			var mc = await MerchantBranch.updateOne(
-																				{ _id: mcashier.branch_id },
-																				{
-																					last_paid_at: last_paid_at,
-																					$inc: {
-																						amount_collected: amount,
-																						amount_due: -amount,
-																						bills_paid: 1,
-																					},
-																				}
-																			);
-																			if (mc == null) {
-																				throw new Error(
-																					"Merchant Branch status can not be updated"
-																				);
-																			}
-
-																			var ig = await InvoiceGroup.updateOne(
-																				{ _id: invoice.group_id },
-																				{
-																					last_paid_at: last_paid_at,
-																					$inc: {
-																						bills_paid: 1,
-																					},
-																				}
-																			);
-																			if (ig == null) {
-																				throw new Error(
-																					"Invoice group status can not be updated"
-																				);
-																			}
-
-																			var mc = await MerchantCashier.updateOne(
-																				{ _id: mcashier._id },
-																				{
-																					last_paid_at: last_paid_at,
-																					$inc: {
-																						bills_paid: 1,
-																					},
-																				}
-																			);
-																			if (mc == null) {
-																				throw new Error(
-																					"Merchant cashier status can not be updated"
-																				);
-																			}
-																		}
-
-																		content =
-																			"E-Wallet:: Due amount " +
-																			invoice.amount +
-																			" is paid for invoice nummber " +
-																			invoice.number +
-																			" for purpose " +
-																			invoice.description;
-																		sendSMS(content, invoice.mobile);
-																		res.status(200).json(result);
-																	}
-																}
-															}
-														);
-													} catch (err) {
-														console.log(err);
-														var message = err.toString();
-														if (err.message) {
-															message = err.message;
-														}
-														res
-															.status(200)
-															.json({ status: 0, message: message });
+										try {
+											var invoice;
+											var total_amount = 0;
+											var counter_amount = 0;
+											for (invoice_id of invoice_ids) {
+												invoice = await Invoice.findOne({
+													_id: invoice_id,
+													merchant_id: merchant_id,
+													paid: 0,
+													is_validated: 1,
+												});
+												if (invoice == null) {
+													throw new Error(
+														"Invoice id " +
+															invoice_id +
+															" is already paid or it belongs to different merchant"
+													);
+												}
+												if (invoice.counter_invoices.length > 0) {
+													for (cninvoice of invoice.counter_invoices) {
+														counter_amount += cninvoice.amount;
 													}
 												}
+												total_amount += invoice.amount - counter_amount;
 											}
-										);
+											console.log(total_amount);
+											// all the users
+											let bank = await Bank.findOne({
+												name: user.bank,
+											});
+											if (bank == null) {
+												throw new Error("User has invalid bank");
+											}
+
+											// check branch operational wallet balance
+											const userOpWallet = user.mobile + "@" + bank.name;
+											var bal = await blockchain.getBalance(userOpWallet);
+											console.log(bal);
+											if (Number(bal) < total_amount) {
+												res.status(200).json({
+													status: 0,
+													message: "Not enough balance. Recharge Your wallet.",
+												});
+											} else {
+												let infra = await Infra.findOne({
+													_id: bank.user_id,
+												});
+												if (infra == null) {
+													throw new Error("User's bank has invalid infra");
+												}
+
+												let merchant = await Merchant.findOne({
+													_id: merchant_id,
+												});
+												if (merchant == null) {
+													throw new Error("Invoice has invalid merchant");
+												}
+
+												const today = new Date();
+												await Merchant.findOneAndUpdate(
+													{
+														_id: merchant._id,
+														last_paid_at: {
+															$lte: new Date(today.setHours(00, 00, 00)),
+														},
+													},
+													{ amount_collected: 0 }
+												);
+												var result = await userInvoicePay(
+													total_amount,
+													infra,
+													bank,
+													user,
+													merchant,
+													fee,
+													comm
+												);
+												var status_update_feedback;
+												if (result.status == 1) {
+													for (invoice_id of invoice_ids) {
+														var i = await Invoice.findOneAndUpdate(
+															{ _id: invoice_id },
+															{ paid: 1 }
+														);
+														if (i == null) {
+															status_update_feedback =
+																"Invoice status can not be updated";
+														}
+
+														var last_paid_at = new Date();
+														var m = await Merchant.updateOne(
+															{ _id: merchant._id },
+															{
+																last_paid_at: last_paid_at,
+																$inc: {
+																	amount_collected: total_amount,
+																	amount_due: -total_amount,
+																	bills_paid: 1,
+																},
+															}
+														);
+														if (m == null) {
+															status_update_feedback =
+																"Merchant status can not be updated";
+														}
+
+														var mc = await MerchantBranch.updateOne(
+															{ _id: mcashier.branch_id },
+															{
+																last_paid_at: last_paid_at,
+																$inc: {
+																	amount_collected: total_amount,
+																	amount_due: -total_amount,
+																	bills_paid: 1,
+																},
+															}
+														);
+														if (mc == null) {
+															status_update_feedback =
+																"Merchant Branch status can not be updated";
+														}
+
+														var ig = await InvoiceGroup.updateOne(
+															{ _id: i.group_id },
+															{
+																last_paid_at: last_paid_at,
+																$inc: {
+																	bills_paid: 1,
+																},
+															}
+														);
+														if (ig == null) {
+															status_update_feedback =
+																"Invoice group status can not be updated";
+														}
+
+														var mc = await MerchantCashier.updateOne(
+															{ _id: mcashier._id },
+															{
+																last_paid_at: last_paid_at,
+																$inc: {
+																	bills_paid: 1,
+																},
+															}
+														);
+														if (mc == null) {
+															status_update_feedback =
+																"Merchant cashier status can not be updated";
+														}
+
+														content =
+															"E-Wallet:: Due amount " +
+															i.amount +
+															" is paid for invoice nummber " +
+															i.number +
+															" for purpose " +
+															i.description;
+														sendSMS(content, invoice.mobile);
+													}
+												}
+												result.status_update_feedback = status_update_feedback;
+												res.status(200).json(result);
+											}
+										} catch (err) {
+											console.log(err);
+											var message = err;
+											if (err && err.message) {
+												message = err.message;
+											}
+											res.status(200).json({ status: 0, message: message });
+										}
 									}
 								}
 							);
 						}
 					}
-				});
+				);
 			}
 		}
 	);
