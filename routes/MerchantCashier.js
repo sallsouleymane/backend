@@ -299,7 +299,7 @@ router.post("/merchantCashier/createInvoiceGroup", jwtTokenAuth, (req, res) => {
 					} else {
 						return res.status(200).json({
 							status: 1,
-							message: "Invoice Group Created",
+							message: "Invoice Category Created",
 							group: group,
 						});
 					}
