@@ -955,7 +955,12 @@ router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
 								}
 
 								Invoice.findOneAndUpdate(
-									{ _id: invoice_id, cashier_id: cashier._id, paid: 0 },
+									{
+										_id: invoice_id,
+										cashier_id: cashier._id,
+										paid: 0,
+										is_validated: 0,
+									},
 									{
 										group_id,
 										number,
@@ -986,7 +991,7 @@ router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
 											res.status(200).json({
 												status: 0,
 												message:
-													"Invoice might already be paid. Or Does not belong to this group.",
+													"Invoice might already be paid or validated. Or Does not belong to this group.",
 											});
 										} else {
 											var biasAmount = amount - invoice.amount;

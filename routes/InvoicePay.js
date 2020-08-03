@@ -51,55 +51,58 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
 					message: "Cashier is not activated.",
 				});
 			} else {
-				Invoice.findOne({ number: number }, async (err, invoice) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (invoice == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Invoice not found",
-						});
-					} else {
-						Merchant.findOne(
-							{
-								_id: invoice.merchant_id,
-								bank_id: cashier.bank_id,
-								status: 1,
-							},
-							(err, merchant) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (merchant == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Invalid Merchant",
-									});
-								} else {
-									res.status(200).json({
-										status: 1,
-										invoice: invoice,
-									});
-								}
+				Invoice.findOne(
+					{ number: number, is_validated: 1 },
+					async (err, invoice) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
 							}
-						);
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (invoice == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Invoice not found",
+							});
+						} else {
+							Merchant.findOne(
+								{
+									_id: invoice.merchant_id,
+									bank_id: cashier.bank_id,
+									status: 1,
+								},
+								(err, merchant) => {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (merchant == null) {
+										res.status(200).json({
+											status: 0,
+											message: "Invalid Merchant",
+										});
+									} else {
+										res.status(200).json({
+											status: 1,
+											invoice: invoice,
+										});
+									}
+								}
+							);
+						}
 					}
-				});
+				);
 			}
 		}
 	);
@@ -131,35 +134,38 @@ router.post("/cashier/getUserInvoices", (req, res) => {
 						message: "Cashier is not valid",
 					});
 				} else {
-					Invoice.find({ mobile: mobile }, async (err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else {
-							var invoicePromises = invoices.map(async (invoice) => {
-								var merchant = await Merchant.findOne({
-									_id: invoice.merchant_id,
-									bank_id: cashier.bank_id,
-									status: 1,
-								});
-								if (merchant != null) {
-									return invoice;
+					Invoice.find(
+						{ mobile: mobile, is_validated: 1 },
+						async (err, invoices) => {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
 								}
-							});
-							var result = await Promise.all(invoicePromises);
-							res.status(200).json({
-								status: 1,
-								invoices: result,
-							});
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else {
+								var invoicePromises = invoices.map(async (invoice) => {
+									var merchant = await Merchant.findOne({
+										_id: invoice.merchant_id,
+										bank_id: cashier.bank_id,
+										status: 1,
+									});
+									if (merchant != null) {
+										return invoice;
+									}
+								});
+								var result = await Promise.all(invoicePromises);
+								res.status(200).json({
+									status: 1,
+									invoices: result,
+								});
+							}
 						}
-					});
+					);
 				}
 			}
 		);
@@ -244,6 +250,7 @@ router.post("/cashier/payInvoice", (req, res) => {
 													_id: invoice_id,
 													merchant_id: merchant_id,
 													paid: 0,
+													is_validated: 1,
 												});
 												if (invoice == null) {
 													throw new Error(
@@ -480,35 +487,38 @@ router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
 						});
 					} else {
 						try {
-							Invoice.find({ mobile: user.mobile }, async (err, invoices) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else {
-									var result = [];
-									for (const invoice of invoices) {
-										var merchant = await Merchant.findOne({
-											_id: invoice.merchant_id,
-											bank_id: bank._id,
-											status: 1,
-										});
-										if (merchant) {
-											result.push(invoice);
+							Invoice.find(
+								{ mobile: user.mobile, is_validated: 1 },
+								async (err, invoices) => {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
 										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else {
+										var result = [];
+										for (const invoice of invoices) {
+											var merchant = await Merchant.findOne({
+												_id: invoice.merchant_id,
+												bank_id: bank._id,
+												status: 1,
+											});
+											if (merchant) {
+												result.push(invoice);
+											}
+										}
+										res.status(200).json({
+											status: 1,
+											invoices: result,
+										});
 									}
-									res.status(200).json({
-										status: 1,
-										invoices: result,
-									});
 								}
-							});
+							);
 						} catch (err) {
 							console.log("Catch block: ", err);
 							var message = err.toString();
@@ -585,7 +595,7 @@ router.post("/user/getInvoicesForMobile", jwtTokenAuth, (req, res) => {
 							} else {
 								try {
 									Invoice.find(
-										{ mobile: payee.mobile },
+										{ mobile: payee.mobile, is_validated: 1 },
 										async (err, invoices) => {
 											if (err) {
 												console.log(err);
@@ -707,6 +717,7 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 													_id: invoice_id,
 													merchant_id: merchant_id,
 													paid: 0,
+													is_validated: 1,
 												});
 												if (invoice == null) {
 													throw new Error(
