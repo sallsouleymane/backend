@@ -245,6 +245,7 @@ router.post("/cashier/payInvoice", (req, res) => {
 										try {
 											var invoice;
 											var total_amount = 0;
+											var counter_amount = 0;
 											for (invoice_id of invoice_ids) {
 												invoice = await Invoice.findOne({
 													_id: invoice_id,
@@ -259,7 +260,12 @@ router.post("/cashier/payInvoice", (req, res) => {
 															" is already paid or it belongs to different merchant"
 													);
 												}
-												total_amount += invoice.amount;
+												if (invoice.counter_invoices.length > 0) {
+													for (cninvoice of invoice.counter_invoices) {
+														counter_amount += cninvoice.amount;
+													}
+												}
+												total_amount += invoice.amount - counter_amount;
 											}
 
 											// all the users
@@ -712,6 +718,7 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 										try {
 											var invoice;
 											var total_amount = 0;
+											var counter_amount = 0;
 											for (invoice_id of invoice_ids) {
 												invoice = await Invoice.findOne({
 													_id: invoice_id,
@@ -726,7 +733,12 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 															" is already paid or it belongs to different merchant"
 													);
 												}
-												total_amount += invoice.amount;
+												if (invoice.counter_invoices.length > 0) {
+													for (cninvoice of invoice.counter_invoices) {
+														counter_amount += cninvoice.amount;
+													}
+												}
+												total_amount += invoice.amount - counter_amount;
 											}
 											console.log(total_amount);
 											// all the users

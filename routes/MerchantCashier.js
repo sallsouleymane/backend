@@ -15,7 +15,74 @@ const Tax = require("../models/merchant/Tax");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
 const { promises } = require("fs-extra");
 
-router.post("/cashier/getUserFromMobile", jwtTokenAuth, function (req, res) {
+router.post("/merchantCashier/createCounterInvoice", jwtTokenAuth, function (
+	req,
+	res
+) {
+	const { invoice_id, counter_invoice_number, description, amount } = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant is not valid",
+				});
+			} else {
+				const counter_invoice = {
+					number: counter_invoice_number,
+					description: description,
+					amount: amount,
+				};
+				Invoice.findOneAndUpdate(
+					{ _id: invoice_id, is_validated: 1 },
+					{ $push: { counter_invoices: counter_invoice } },
+					(err, invoice) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (invoice == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Invoice is not uploaded or validated yet.",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "A Counter invoice created successfully",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+router.post("/merchantCashier/getUserFromMobile", jwtTokenAuth, function (
+	req,
+	res
+) {
 	const { mobile } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantCashier.findOne(
@@ -197,7 +264,7 @@ router.post("/merchantCashier/deleteInvoice", jwtTokenAuth, function (
 					message: "Merchant cashier is not valid",
 				});
 			} else {
-				Invoice.deleteOne({ _id: invoice_id }, (err) => {
+				Invoice.deleteOne({ _id: invoice_id, is_created: 1 }, (err) => {
 					if (err) {
 						console.log(err);
 						var message = err;
@@ -960,6 +1027,7 @@ router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
 										cashier_id: cashier._id,
 										paid: 0,
 										is_validated: 0,
+										is_created: 1,
 									},
 									{
 										group_id,
