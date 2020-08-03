@@ -58,13 +58,14 @@ router.post("/cashier/getUserFromMobile", jwtTokenAuth, function (req, res) {
 						});
 					} else {
 						res.status(200).json({
-						status: 1,
-						data: user,
+							status: 1,
+							data: user,
 						});
 					}
 				});
 			}
-	});
+		}
+	);
 });
 
 router.post("/merchantCashier/listOfferings", jwtTokenAuth, function (
@@ -438,29 +439,211 @@ router.post("/merchantCashier/getSettings", jwtTokenAuth, function (req, res) {
 					message: "Merchant staff is not valid",
 				});
 			} else {
-				MerchantSettings.findOne({ merchant_id: cashier.merchant_id }, (err, setting) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				MerchantSettings.findOne(
+					{ merchant_id: cashier.merchant_id },
+					(err, setting) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (!setting) {
+							res.status(200).json({
+								status: 0,
+								message: "Setting Not found",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								setting: setting,
+							});
 						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (!setting) {
-						res.status(200).json({
-							status: 0,
-							message: "Setting Not found",
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							setting: setting,
-						});
 					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/merchantCashier/createInvoice", jwtTokenAuth, (req, res) => {
+	var {
+		group_id,
+		number,
+		name,
+		amount,
+		bill_date,
+		bill_period,
+		due_date,
+		description,
+		mobile,
+		ccode,
+		items,
+		paid,
+		is_validated,
+	} = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async (err, cashier) => {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
 				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Cashier is blocked",
+				});
+			} else {
+				InvoiceGroup.findOne(
+					{ _id: group_id, cashier_id: cashier._id },
+					async (err, group) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (group == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Group not found",
+							});
+						} else {
+							try {
+								if (paid != 1) {
+									paid = 0;
+								}
+								var updatedItems = [];
+								for (const item of items) {
+									var { item_code, quantity, tax_code, total_amount } = item;
+									var item_desc = await Offering.findOne(
+										{ code: item_code, merchant_id: cashier.merchant_id },
+										"code name denomination unit_of_measure unit_price description"
+									);
+									if (item_desc == null) {
+										throw new Error("Item not found with code " + item_code);
+									}
+
+									var tax_desc = await Tax.findOne(
+										{
+											code: tax_code,
+											merchant_id: cashier.merchant_id,
+										},
+										"code value"
+									);
+									if (tax_desc == null) {
+										throw new Error("Tax not found with code " + tax_code);
+									}
+
+									updatedItems.push({
+										item_desc: item_desc,
+										quantity: quantity,
+										tax_desc: tax_desc,
+										total_amount: total_amount,
+									});
+								}
+								var invoiceObj = new Invoice();
+								invoiceObj.number = number;
+								invoiceObj.name = name;
+								invoiceObj.amount = amount;
+								invoiceObj.merchant_id = cashier.merchant_id;
+								invoiceObj.bill_date = bill_date;
+								invoiceObj.bill_period = bill_period;
+								invoiceObj.due_date = due_date;
+								invoiceObj.description = description;
+								invoiceObj.mobile = mobile;
+								invoiceObj.ccode = ccode;
+								invoiceObj.group_id = group_id;
+								invoiceObj.cashier_id = cashier._id;
+								invoiceObj.paid = paid;
+								invoiceObj.is_created = 1;
+								invoiceObj.is_validated = is_validated;
+								invoiceObj.items = updatedItems;
+
+								await invoiceObj.save();
+								var branch = await MerchantBranch.findOneAndUpdate(
+									{ _id: cashier.branch_id },
+									{ $inc: { bills_raised: 1, amount_due: amount } }
+								);
+								if (branch == null) {
+									throw new Error("Can not update the MerchantBranch status.");
+								}
+
+								var m = await Merchant.findOneAndUpdate(
+									{ _id: branch.merchant_id },
+									{
+										$inc: {
+											bills_raised: 1,
+											amount_due: amount,
+										},
+									}
+								);
+								if (m == null) {
+									throw new Error("Can not update the Merchant status.");
+								}
+
+								var g = await InvoiceGroup.findOneAndUpdate(
+									{ _id: group._id },
+									{
+										$inc: {
+											bills_raised: 1,
+										},
+									}
+								);
+								if (g == null) {
+									throw new Error("Can not update the Invoice Group status.");
+								}
+
+								var c = await MerchantCashier.findOneAndUpdate(
+									{ _id: cashier._id },
+									{
+										$inc: {
+											bills_raised: 1,
+										},
+									}
+								);
+								if (c == null) {
+									throw new Error(
+										"Can not update the Merchant Cashier status."
+									);
+								}
+								res.status(200).json({
+									status: 1,
+									message: "Invoice created",
+								});
+							} catch (err) {
+								console.log(err);
+								var message = err;
+								if (err && err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							}
+						}
+					}
+				);
 			}
 		}
 	);
@@ -562,7 +745,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										number,
 										merchant_id: cashier.merchant_id,
 									});
-									if (invoiceFound) {
+									if (invoiceFound && invoiceFound.is_created == 0) {
 										await Invoice.updateOne(
 											{ _id: invoiceFound._id },
 											{
@@ -577,6 +760,10 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 												items: updatedItems,
 												paid,
 											}
+										);
+									} else if (invoiceFound && invoiceFound.is_created == 1) {
+										throw new Error(
+											"This Invoice number is in created state, so can not upload"
 										);
 									} else {
 										var invoiceObj = new Invoice();
@@ -594,6 +781,8 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										invoiceObj.cashier_id = cashier._id;
 										invoiceObj.paid = paid;
 										invoiceObj.items = updatedItems;
+										invoiceObj.is_created = 0;
+										invoiceObj.is_validated = 1;
 
 										await invoiceObj.save();
 
@@ -603,7 +792,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										);
 										if (branch == null) {
 											throw new Error(
-												"Can not update the MerchantBranch status."
+												"Can not update the Merchant Branch status."
 											);
 										}
 
@@ -630,7 +819,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										);
 										if (g == null) {
 											throw new Error(
-												"Can not update the InvoiceGroup status."
+												"Can not update the Invoice Group status."
 											);
 										}
 
@@ -644,7 +833,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										);
 										if (c == null) {
 											throw new Error(
-												"Can not update the InvoiceGroup status."
+												"Can not update the Merchant Cashier status."
 											);
 										}
 									}
@@ -677,14 +866,20 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 
 router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
 	const {
-		group_id,
 		invoice_id,
+		group_id,
 		number,
 		name,
 		amount,
+		bill_date,
+		bill_period,
 		due_date,
 		description,
 		mobile,
+		ccode,
+		items,
+		paid,
+		is_validated,
 	} = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantCashier.findOne(
@@ -711,7 +906,7 @@ router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
 			} else {
 				InvoiceGroup.findOne(
 					{ _id: group_id, cashier_id: cashier._id },
-					(err, group) => {
+					async (err, group) => {
 						if (err) {
 							console.log(err);
 							var message = err;
@@ -728,94 +923,142 @@ router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
 								message: "Group not found",
 							});
 						} else {
-							Invoice.findOneAndUpdate(
-								{ _id: invoice_id, cashier_id: cashier._id, paid: 0 },
-								{
-									group_id,
-									number,
-									name,
-									amount,
-									due_date,
-									description,
-									mobile,
-								},
-								(err, invoice) => {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (invoice == null) {
-										res.status(200).json({
-											status: 0,
-											message:
-												"Invoice might already be paid. Or Does not belong to this group.",
-										});
-									} else {
-										var biasAmount = amount - invoice.amount;
-										MerchantBranch.findOneAndUpdate(
-											{ _id: cashier.branch_id, status: 1 },
-											{ $inc: { amount_due: biasAmount } },
-											(err, branch) => {
-												if (err) {
-													console.log(err);
-													var message = err;
-													if (err.message) {
-														message = err.message;
-													}
-													res.status(200).json({
-														status: 0,
-														message: message,
-													});
-												} else if (branch == null) {
-													res.status(200).json({
-														status: 0,
-														message: "Branch is blocked",
-													});
-												} else {
-													Merchant.findOneAndUpdate(
-														{ _id: branch.merchant_id },
-														{
-															$inc: {
-																amount_due: biasAmount,
-															},
-														},
-														(err, merchant) => {
-															if (err) {
-																console.log(err);
-																var message = err;
-																if (err.message) {
-																	message = err.message;
-																}
-																res.status(200).json({
-																	status: 0,
-																	message: message,
-																});
-															} else if (merchant == null) {
-																console.log(err);
-																res.status(200).json({
-																	status: 0,
-																	message: "Merchant is not valid",
-																});
-															} else {
-																res.status(200).json({
-																	status: 1,
-																	message: "Invoice edited successfully",
-																});
-															}
-														}
-													);
-												}
-											}
-										);
+							var updatedItems = [];
+							try {
+								for (const item of items) {
+									var { item_code, quantity, tax_code, total_amount } = item;
+									var item_desc = await Offering.findOne(
+										{ code: item_code, merchant_id: cashier.merchant_id },
+										"code name denomination unit_of_measure unit_price description"
+									);
+									if (item_desc == null) {
+										throw new Error("Item not found with code " + item_code);
 									}
+
+									var tax_desc = await Tax.findOne(
+										{
+											code: tax_code,
+											merchant_id: cashier.merchant_id,
+										},
+										"code value"
+									);
+									if (tax_desc == null) {
+										throw new Error("Tax not found with code " + tax_code);
+									}
+
+									updatedItems.push({
+										item_desc: item_desc,
+										quantity: quantity,
+										tax_desc: tax_desc,
+										total_amount: total_amount,
+									});
 								}
-							);
+
+								Invoice.findOneAndUpdate(
+									{ _id: invoice_id, cashier_id: cashier._id, paid: 0 },
+									{
+										group_id,
+										number,
+										name,
+										amount,
+										bill_date,
+										bill_period,
+										due_date,
+										description,
+										mobile,
+										ccode,
+										items: updatedItems,
+										paid,
+										is_validated,
+									},
+									(err, invoice) => {
+										if (err) {
+											console.log(err);
+											var message = err;
+											if (err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+											});
+										} else if (invoice == null) {
+											res.status(200).json({
+												status: 0,
+												message:
+													"Invoice might already be paid. Or Does not belong to this group.",
+											});
+										} else {
+											var biasAmount = amount - invoice.amount;
+											MerchantBranch.findOneAndUpdate(
+												{ _id: cashier.branch_id, status: 1 },
+												{ $inc: { amount_due: biasAmount } },
+												(err, branch) => {
+													if (err) {
+														console.log(err);
+														var message = err;
+														if (err.message) {
+															message = err.message;
+														}
+														res.status(200).json({
+															status: 0,
+															message: message,
+														});
+													} else if (branch == null) {
+														res.status(200).json({
+															status: 0,
+															message: "Branch is blocked",
+														});
+													} else {
+														Merchant.findOneAndUpdate(
+															{ _id: branch.merchant_id },
+															{
+																$inc: {
+																	amount_due: biasAmount,
+																},
+															},
+															(err, merchant) => {
+																if (err) {
+																	console.log(err);
+																	var message = err;
+																	if (err.message) {
+																		message = err.message;
+																	}
+																	res.status(200).json({
+																		status: 0,
+																		message: message,
+																	});
+																} else if (merchant == null) {
+																	console.log(err);
+																	res.status(200).json({
+																		status: 0,
+																		message: "Merchant is not valid",
+																	});
+																} else {
+																	res.status(200).json({
+																		status: 1,
+																		message: "Invoice edited successfully",
+																	});
+																}
+															}
+														);
+													}
+												}
+											);
+										}
+									}
+								);
+							} catch (err) {
+								console.log(err);
+								var message = err;
+								if (err && err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							}
 						}
 					}
 				);
