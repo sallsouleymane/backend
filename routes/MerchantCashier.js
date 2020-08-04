@@ -13,7 +13,142 @@ const Offering = require("../models/merchant/Offering");
 const User = require("../models/User");
 const Tax = require("../models/merchant/Tax");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
+const Customer = require("../models/merchant/Customer");
 const { promises } = require("fs-extra");
+
+router.post("/merchantCashier/listCustomers", jwtTokenAuth, function (
+	req,
+	res
+) {
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant is not valid",
+				});
+			} else {
+				Customer.find(
+					{ merchant_id: cashier.merchant_id },
+					(err, customers) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								customers: customers,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/merchantCashier/createCustomer", jwtTokenAuth, (req, res) => {
+	const {
+		customer_code,
+		name,
+		last_name,
+		mobile,
+		email,
+		address,
+		city,
+		state,
+		country,
+		id_type,
+		id_name,
+		valid_till,
+		id_number,
+		dob,
+		gender,
+		docs_hash,
+	} = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne({ username: jwtusername, status: 1 }, async function (
+		err,
+		cashier
+	) {
+		if (err) {
+			console.log(err);
+			var message = err;
+			if (err.message) {
+				message = err.message;
+			}
+			res.status(200).json({
+				status: 0,
+				message: message,
+			});
+		} else if (cashier == null) {
+			res.status(200).json({
+				status: 0,
+				message: "You are either not authorised or not logged in.",
+			});
+		} else {
+			var customerDetails = {
+				customer_code: customer_code,
+				merchant_id: cashier.merchant_id,
+				name: name,
+				last_name: last_name,
+				mobile: mobile,
+				email: email,
+				address: address,
+				city: city,
+				state: state,
+				country: country,
+				id_type: id_type,
+				id_name: id_name,
+				valid_till: valid_till,
+				id_number: id_number,
+				dob: dob,
+				gender: gender,
+				docs_hash: docs_hash,
+			};
+			Customer.create(customerDetails, (err) => {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err && err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else {
+					res.status(200).json({
+						status: 1,
+						message: "created customer successfully",
+					});
+				}
+			});
+		}
+	});
+});
 
 router.post("/merchantCashier/createCounterInvoice", jwtTokenAuth, function (
 	req,
@@ -552,6 +687,7 @@ router.post("/merchantCashier/createInvoice", jwtTokenAuth, (req, res) => {
 		items,
 		paid,
 		is_validated,
+		customer_code,
 	} = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantCashier.findOne(
@@ -645,6 +781,7 @@ router.post("/merchantCashier/createInvoice", jwtTokenAuth, (req, res) => {
 								invoiceObj.is_created = 1;
 								invoiceObj.is_validated = is_validated;
 								invoiceObj.items = updatedItems;
+								invoiceObj.customer_code = customer_code;
 
 								await invoiceObj.save();
 								var branch = await MerchantBranch.findOneAndUpdate(
@@ -775,6 +912,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										ccode,
 										items,
 										paid,
+										customer_code,
 									} = invoice;
 									if (paid != 1) {
 										paid = 0;
@@ -826,6 +964,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 												ccode,
 												items: updatedItems,
 												paid,
+												customer_code,
 											}
 										);
 									} else if (invoiceFound && invoiceFound.is_created == 1) {
@@ -850,6 +989,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										invoiceObj.items = updatedItems;
 										invoiceObj.is_created = 0;
 										invoiceObj.is_validated = 1;
+										invoiceObj.customer_code = customer_code;
 
 										await invoiceObj.save();
 

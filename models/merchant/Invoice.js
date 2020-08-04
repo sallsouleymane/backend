@@ -4,6 +4,7 @@ const InvoiceSchema = new mongoose.Schema({
 	number: { type: String, required: true, unique: true },
 	name: { type: String, required: true },
 	merchant_id: { type: String, required: true },
+	customer_code: { type: String, required: false },
 	amount: { type: Number, required: false },
 	bill_date: { type: String, required: false },
 	bill_period: {
