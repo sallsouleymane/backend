@@ -13,8 +13,109 @@ const Offering = require("../models/merchant/Offering");
 const User = require("../models/User");
 const Tax = require("../models/merchant/Tax");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
+const MerchantCashierSettings = require("../models/merchant/MerchantCashierSettings");
 const Customer = require("../models/merchant/Customer");
 const { promises } = require("fs-extra");
+
+router.post("/merchantCashier/billNumberSetting", jwtTokenAuth, (req, res) => {
+	const { counter } = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				MerchantCashierSettings.countDocuments(
+					{ cashier_id: cashier._id },
+					(err, count) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (count == 1) {
+							MerchantCashierSettings.findOneAndUpdate(
+								{ cashier_id: cashier._id },
+								{ counter: counter },
+								{ new: true },
+								function (err, setting) {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (setting == null) {
+										console.log(err);
+										res.status(200).json({
+											status: 0,
+											message: "Setting not found",
+											err: err,
+										});
+									} else {
+										res.status(200).json({
+											status: 1,
+											message: "Counter Edited",
+										});
+									}
+								}
+							);
+						} else {
+							const data = new MerchantCashierSettings();
+							data.cashier_id = cashier._id;
+							data.counter = counter;
+							data.save((err) => {
+								if (err) {
+									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message,
+									});
+								} else {
+									res.status(200).json({
+										status: 1,
+										message: "Counter Created",
+									});
+								}
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
 
 router.post("/merchantCashier/getCustomerForMobile", jwtTokenAuth, function (
 	req,
@@ -515,7 +616,7 @@ router.post("/merchantCashier/increaseCounter", jwtTokenAuth, function (
 					message: "Merchant cashier is not valid",
 				});
 			} else {
-				MerchantSettings.findOneAndUpdate(
+				MerchantCashierSettings.findOneAndUpdate(
 					{ merchant_id: merchant._id },
 					{ $inc: { counter: 1 } },
 					{ new: true },
@@ -771,6 +872,61 @@ router.post("/merchantCashier/getSettings", jwtTokenAuth, function (req, res) {
 			} else {
 				MerchantSettings.findOne(
 					{ merchant_id: cashier.merchant_id },
+					(err, setting) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (!setting) {
+							res.status(200).json({
+								status: 0,
+								message: "Setting Not found",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								setting: setting,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/merchantCashier/getCashierSettings", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant staff is not valid",
+				});
+			} else {
+				MerchantCashierSettings.findOne(
+					{ cashier_id: cashier._id },
 					(err, setting) => {
 						if (err) {
 							console.log(err);
