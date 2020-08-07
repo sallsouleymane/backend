@@ -16,10 +16,11 @@ const MerchantSettings = require("../models/merchant/MerchantSettings");
 const Customer = require("../models/merchant/Customer");
 const { promises } = require("fs-extra");
 
-router.post("/merchantCashier/listCustomers", jwtTokenAuth, function (
+router.post("/merchantCashier/getCustomerForMobile", jwtTokenAuth, function (
 	req,
 	res
 ) {
+	const { mobile } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantCashier.findOne(
 		{
@@ -40,12 +41,12 @@ router.post("/merchantCashier/listCustomers", jwtTokenAuth, function (
 			} else if (cashier == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Merchant is not valid",
+					message: "Merchant Cashier is not valid",
 				});
 			} else {
-				Customer.find(
-					{ merchant_id: cashier.merchant_id },
-					(err, customers) => {
+				Customer.findOne(
+					{ merchant_id: cashier.merchant_id, mobile: mobile },
+					(err, customer) => {
 						if (err) {
 							console.log(err);
 							var message = err;
@@ -56,10 +57,74 @@ router.post("/merchantCashier/listCustomers", jwtTokenAuth, function (
 								status: 0,
 								message: message,
 							});
+						} else if (customer == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Customer not found",
+							});
 						} else {
 							res.status(200).json({
 								status: 1,
-								customers: customers,
+								customer: customer,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/merchantCashier/getCustomerForCode", jwtTokenAuth, function (
+	req,
+	res
+) {
+	const { customer_code } = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Merchant Cashier is not valid",
+				});
+			} else {
+				Customer.findOne(
+					{ merchant_id: cashier.merchant_id, customer_code: customer_code },
+					(err, customer) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (customer == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Customer not found",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								customer: customer,
 							});
 						}
 					}
@@ -175,7 +240,7 @@ router.post("/merchantCashier/createCounterInvoice", jwtTokenAuth, function (
 			} else if (cashier == null) {
 				res.status(200).json({
 					status: 0,
-					message: "Merchant is not valid",
+					message: "Merchant Cashier is not valid",
 				});
 			} else {
 				const counter_invoice = {
