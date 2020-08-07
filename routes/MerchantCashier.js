@@ -422,6 +422,69 @@ router.post("/merchantCashier/deleteInvoice", jwtTokenAuth, function (
 	);
 });
 
+router.post("/merchantCashier/increaseCounter", jwtTokenAuth, function (
+	req,
+	res
+) {
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				console.log(err);
+				res.status(200).json({
+					status: 0,
+					message: "Merchant cashier is not valid",
+				});
+			} else {
+				MerchantSettings.findOneAndUpdate(
+					{ merchant_id: merchant._id },
+					{ $inc: { counter: 1 } },
+					{ new: true },
+					function (err, setting) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (setting == null) {
+							console.log(err);
+							res.status(200).json({
+								status: 0,
+								message: "Setting not found",
+								err: err,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Counter Increased",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.get("/merchantCashier/todaysStatus", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	MerchantCashier.findOne(

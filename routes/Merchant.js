@@ -239,6 +239,107 @@ router.post("/merchant/zoneSetting", jwtTokenAuth, (req, res) => {
 	);
 });
 
+router.post("/merchant/billNumberSetting", jwtTokenAuth, (req, res) => {
+	const { pattern, counter } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (merchant == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				MerchantSettings.countDocuments(
+					{ merchant_id: merchant._id },
+					(err, count) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (count == 1) {
+							MerchantSettings.findOneAndUpdate(
+								{ merchant_id: merchant._id },
+								{ pattern: pattern, counter: counter },
+								{ new: true },
+								function (err, setting) {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (setting == null) {
+										console.log(err);
+										res.status(200).json({
+											status: 0,
+											message: "Setting not found",
+											err: err,
+										});
+									} else {
+										res.status(200).json({
+											status: 1,
+											message: "Bill Number Settings Edited",
+										});
+									}
+								}
+							);
+						} else {
+							const data = new MerchantSettings();
+							data.merchant_id = merchant._id;
+							data.counter = counter;
+							data.pattern = pattern;
+							data.save((err) => {
+								if (err) {
+									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message,
+									});
+								} else {
+									res.status(200).json({
+										status: 1,
+										message: "Bill Number Settings Created",
+									});
+								}
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/merchant/addCountry", jwtTokenAuth, (req, res) => {
 	const country = {
 		ccode: req.body.ccode,
