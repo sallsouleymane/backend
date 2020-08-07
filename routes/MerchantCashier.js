@@ -939,9 +939,25 @@ router.post("/merchantCashier/getCashierSettings", jwtTokenAuth, function (req, 
 								message: message,
 							});
 						} else if (!setting) {
-							res.status(200).json({
-								status: 0,
-								message: "Setting Not found",
+							const data = new MerchantCashierSettings();
+							data.cashier_id = cashier._id;
+							data.save((err, setting) => {
+								if (err) {
+									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message,
+									});
+								} else {
+									res.status(200).json({
+										status: 1,
+										setting: setting,
+									});
+								}
 							});
 						} else {
 							res.status(200).json({
