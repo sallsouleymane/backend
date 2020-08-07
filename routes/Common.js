@@ -34,6 +34,7 @@ const CashierClaim = require("../models/CashierClaim");
 const BranchSend = require("../models/BranchSend");
 const BranchClaim = require("../models/BranchClaim");
 const CurrencyModel = require("../models/Currency");
+const CountryModel = require("../models/Country");
 const FailedTX = require("../models/FailedTXLedger");
 
 router.get("/testGet", function (req, res) {
@@ -2239,9 +2240,82 @@ router.post("/save-currency", async (req, res) => {
 	}
 });
 
+router.post("/save-country", async (req, res) => {
+	try {
+		const country = {
+			ccode: req.body.ccode,
+			name: req.body.name,
+		};
+		const countryData = await CountryModel.find({});
+		if (countryData.length == 0) {
+			const data = new CountryModel();
+				data.country_list = [country];
+				data.save((err) => {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else {
+					res.status(200).json({
+						status: 1,
+						message: "Country Added",
+					});
+				}
+			});
+		} else {
+			CountryModel.update(
+				{},
+				{ $push: { country_list: country } },
+				function (err, model) {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (model == null) {
+						console.log(err);
+						res.status(200).json({
+							status: 0,
+							message: "Not found",
+							err: err,
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Country Added",
+						});
+					}
+				}
+			);
+		}
+	} catch (err) {
+		res.status(200).json({ message: err.message });
+	}
+});
+
 router.get("/get-currency", async (req, res) => {
 	try {
 		const data = await CurrencyModel.find({});
+		res.status(200).json(data);
+	} catch (err) {
+		res.status(200).json({ message: err.message });
+	}
+});
+
+router.get("/get-country", async (req, res) => {
+	try {
+		const data = await CountryModel.find({});
 		res.status(200).json(data);
 	} catch (err) {
 		res.status(200).json({ message: err.message });
