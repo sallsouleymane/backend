@@ -99,26 +99,36 @@ router.post("/merchant/uploadCustomers", jwtTokenAuth, (req, res) => {
 			let failed = [];
 			for (customer of customers) {
 				try {
-					var customerDetails = {
-						customer_code: customer.customer_code,
+					var customerFound = await Customer.findOne({
 						merchant_id: merchant._id,
-						name: customer.name,
-						last_name: customer.last_name,
-						mobile: customer.mobile,
-						email: customer.email,
-						address: customer.address,
-						city: customer.city,
-						state: customer.state,
-						country: customer.country,
-						id_type: customer.id_type,
-						id_name: customer.id_name,
-						valid_till: customer.valid_till,
-						id_number: customer.id_number,
-						dob: customer.dob,
-						gender: customer.gender,
-						docs_hash: customer.docs_hash,
-					};
-					await Customer.create(customerDetails);
+						customer_code: customer.customer_code,
+					});
+					if (customerFound) {
+						throw new Error(
+							"Customer with the same customer code already exist"
+						);
+					} else {
+						var customerDetails = {
+							customer_code: customer.customer_code,
+							merchant_id: merchant._id,
+							name: customer.name,
+							last_name: customer.last_name,
+							mobile: customer.mobile,
+							email: customer.email,
+							address: customer.address,
+							city: customer.city,
+							state: customer.state,
+							country: customer.country,
+							id_type: customer.id_type,
+							id_name: customer.id_name,
+							valid_till: customer.valid_till,
+							id_number: customer.id_number,
+							dob: customer.dob,
+							gender: customer.gender,
+							docs_hash: customer.docs_hash,
+						};
+						await Customer.create(customerDetails);
+					}
 				} catch (err) {
 					console.log(err);
 					var message = err;

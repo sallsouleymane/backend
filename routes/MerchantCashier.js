@@ -174,43 +174,68 @@ router.post("/merchantCashier/createCustomer", jwtTokenAuth, (req, res) => {
 				message: "You are either not authorised or not logged in.",
 			});
 		} else {
-			var customerDetails = {
-				customer_code: customer_code,
-				merchant_id: cashier.merchant_id,
-				name: name,
-				last_name: last_name,
-				mobile: mobile,
-				email: email,
-				address: address,
-				city: city,
-				state: state,
-				country: country,
-				id_type: id_type,
-				id_name: id_name,
-				valid_till: valid_till,
-				id_number: id_number,
-				dob: dob,
-				gender: gender,
-				docs_hash: docs_hash,
-			};
-			Customer.create(customerDetails, (err) => {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err && err.message) {
-						message = err.message;
+			Customer.findOne(
+				{
+					merchant_id: cashier.merchant_id,
+					customer_code: customer_code,
+				},
+				(err, customer) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (customer) {
+						res.status(200).json({
+							status: 0,
+							message: "Customer with the same customer code already exist",
+						});
+					} else {
+						var customerDetails = {
+							customer_code: customer_code,
+							merchant_id: cashier.merchant_id,
+							name: name,
+							last_name: last_name,
+							mobile: mobile,
+							email: email,
+							address: address,
+							city: city,
+							state: state,
+							country: country,
+							id_type: id_type,
+							id_name: id_name,
+							valid_till: valid_till,
+							id_number: id_number,
+							dob: dob,
+							gender: gender,
+							docs_hash: docs_hash,
+						};
+						Customer.create(customerDetails, (err) => {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err && err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else {
+								res.status(200).json({
+									status: 1,
+									message: "created customer successfully",
+								});
+							}
+						});
 					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else {
-					res.status(200).json({
-						status: 1,
-						message: "created customer successfully",
-					});
 				}
-			});
+			);
 		}
 	});
 });
