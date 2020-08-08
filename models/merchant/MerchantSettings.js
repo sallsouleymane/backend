@@ -3,8 +3,6 @@ const MerchantSettings = new mongoose.Schema({
     merchant_id: { type: String, required: true },
 	zone_name: { type: String, required: false, default: 'Zone' },
     subzone_name: { type: String, required: false, default: 'Sub zone' },
-    pattern: { type: String, required: false, default: 'xyz'},
-    counter: { type: Number, required: false, default: 0 },
     bill_period: [
         {
             start_date: { type: Date, required: false},
