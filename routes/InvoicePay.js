@@ -405,17 +405,31 @@ router.post("/cashier/payInvoice", (req, res) => {
 														}
 
 														bankFee = calculateShare("bank", total_amount, fee);
+														partnerFeeShare = calculateShare(
+															"partner",
+															total_amount,
+															fee
+														);
+														partnerCommShare = calculateShare(
+															"partner",
+															total_amount,
+															comm
+														);
 														var c = await Cashier.updateOne(
 															{ _id: cashier._id },
 															{
 																$inc: {
+																	cash_received: total_amount + bankFee,
 																	cash_in_hand: total_amount + bankFee,
+																	fee_generated: partnerFeeShare,
+																	commission_generated: partnerCommShare,
+																	total_trans: 1,
 																},
 															}
 														);
 														if (c == null) {
 															status_update_feedback =
-																"Bank cashier's cash in hand can not be updated";
+																"Bank cashier's status can not be updated";
 														}
 
 														content =

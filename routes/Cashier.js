@@ -489,12 +489,6 @@ router.post("/cashier/activateUser", function (req, res) {
 });
 
 router.post("/getCashierDashStats", function (req, res) {
-	var today = new Date();
-	today = today.toISOString();
-	var s = today.split("T");
-	var start = s[0] + "T00:00:00.000Z";
-	var end = s[0] + "T23:59:59.999Z";
-
 	const { token } = req.body;
 	Cashier.findOne(
 		{
@@ -526,6 +520,7 @@ router.post("/getCashierDashStats", function (req, res) {
 					cashReceived: user.cash_received,
 					cashInHand: user.cash_in_hand,
 					feeGenerated: user.fee_generated,
+					commissionGenerated: user.commission_generated,
 					closingTime: user.closing_time,
 					transactionStarted: user.transaction_started,
 					branchId: user.branch_id,
