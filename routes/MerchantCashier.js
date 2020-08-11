@@ -1018,6 +1018,7 @@ router.post("/merchantCashier/createInvoice", jwtTokenAuth, (req, res) => {
 		customer_code,
 		is_counter,
 		reference_invoice,
+		term,
 	} = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantCashier.findOne(
@@ -1123,6 +1124,7 @@ router.post("/merchantCashier/createInvoice", jwtTokenAuth, (req, res) => {
 								invoiceObj.customer_code = customer_code;
 								invoiceObj.is_counter = is_counter;
 								invoiceObj.reference_invoice = reference_invoice;
+								invoiceObj.term = term;
 								await invoiceObj.save();
 
 								var branch = await MerchantBranch.findOneAndUpdate(
@@ -1256,6 +1258,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										customer_code,
 										is_counter,
 										reference_invoice,
+										term,
 									} = invoice;
 									if (is_counter) {
 										var referenceFound = await Invoice.findOne({
@@ -1319,6 +1322,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 												customer_code,
 												is_counter,
 												reference_invoice,
+												term,
 											}
 										);
 									} else if (invoiceFound && invoiceFound.is_created == 1) {
@@ -1346,6 +1350,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										invoiceObj.customer_code = customer_code;
 										invoiceObj.is_counter = is_counter;
 										invoiceObj.reference_invoice = reference_invoice;
+										invoiceObj.term = term;
 										await invoiceObj.save();
 
 										var branch = await MerchantBranch.findOneAndUpdate(
