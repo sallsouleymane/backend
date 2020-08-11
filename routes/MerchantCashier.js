@@ -1123,14 +1123,7 @@ router.post("/merchantCashier/createInvoice", jwtTokenAuth, (req, res) => {
 								invoiceObj.customer_code = customer_code;
 								invoiceObj.is_counter = is_counter;
 								invoiceObj.reference_invoice = reference_invoice;
-								var saved_invoice = await invoiceObj.save();
-
-								if (is_counter) {
-									await Invoice.updateOne(
-										{ _id: referenceFound._id },
-										{ counter_invoice: saved_invoice._id }
-									);
-								}
+								await invoiceObj.save();
 
 								var branch = await MerchantBranch.findOneAndUpdate(
 									{ _id: cashier.branch_id },
@@ -1353,14 +1346,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										invoiceObj.customer_code = customer_code;
 										invoiceObj.is_counter = is_counter;
 										invoiceObj.reference_invoice = reference_invoice;
-										var saved_invoice = await invoiceObj.save();
-										console.log(saved_invoice);
-										if (is_invoice) {
-											await Invoice.updateOne(
-												{ _id: referenceFound._id },
-												{ counter_invoice: saved_invoice._id }
-											);
-										}
+										await invoiceObj.save();
 
 										var branch = await MerchantBranch.findOneAndUpdate(
 											{ _id: cashier.branch_id },

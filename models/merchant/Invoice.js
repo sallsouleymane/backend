@@ -32,7 +32,6 @@ const InvoiceSchema = new mongoose.Schema({
 		},
 	],
 	is_counter: { type: Boolean, required: false, default: false },
-	counter_invoice: { type: String, required: false },
 	reference_invoice: { type: String, required: false },
 });
 InvoiceSchema.plugin(uniqueValidator, {
