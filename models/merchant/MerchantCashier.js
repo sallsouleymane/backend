@@ -13,6 +13,7 @@ const MerchantCashierSchema = new mongoose.Schema({
 	branch_id: { type: String, required: true },
 	staff_id: { type: String, required: false, default: null },
 	status: { type: Number, required: true, default: 1 },
+	counter_invoice_access: { type: Boolean, required: false, default: false },
 	bills_paid: { type: Number, required: false, default: 0 },
 	bills_raised: { type: Number, required: false, default: 0 },
 	last_paid_at: { type: Date, required: false, default: null},

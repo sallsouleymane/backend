@@ -145,6 +145,7 @@ router.post("/merchantBranch/editCashier", jwtTokenAuth, (req, res) => {
 		per_trans_amt,
 		max_trans_amt,
 		max_trans_count,
+		counter_invoice_access,
 	} = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantBranch.findOne(
@@ -174,6 +175,7 @@ router.post("/merchantBranch/editCashier", jwtTokenAuth, (req, res) => {
 						per_trans_amt: per_trans_amt,
 						max_trans_amt: max_trans_amt,
 						max_trans_count: max_trans_count,
+						counter_invoice_access: counter_invoice_access,
 					},
 					(err, cashier) => {
 						if (err) {
@@ -190,7 +192,7 @@ router.post("/merchantBranch/editCashier", jwtTokenAuth, (req, res) => {
 						} else {
 							res.status(200).json({
 								status: 1,
-								message: "Edited merchant cashier successfully",
+								message: "Edited merchant staff successfully",
 							});
 						}
 					}
