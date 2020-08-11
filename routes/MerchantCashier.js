@@ -642,7 +642,7 @@ router.post("/merchantCashier/increaseCounter", jwtTokenAuth, function (
 				});
 			} else {
 				MerchantCashierSettings.findOneAndUpdate(
-					{ merchant_id: merchant._id },
+					{ cashier_id: cashier._id },
 					{ $inc: { counter: 1 } },
 					{ new: true },
 					function (err, setting) {
