@@ -341,70 +341,70 @@ router.post("/merchantCashier/createCustomer", jwtTokenAuth, (req, res) => {
 	});
 });
 
-router.post("/merchantCashier/createCounterInvoice", jwtTokenAuth, function (
-	req,
-	res
-) {
-	const { invoice_id, counter_invoice_number, description, amount } = req.body;
-	const jwtusername = req.sign_creds.username;
-	MerchantCashier.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		async function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Merchant Cashier is not valid",
-				});
-			} else {
-				const counter_invoice = {
-					number: counter_invoice_number,
-					description: description,
-					amount: amount,
-				};
-				Invoice.findOneAndUpdate(
-					{ _id: invoice_id, is_validated: 1 },
-					{ $push: { counter_invoices: counter_invoice } },
-					(err, invoice) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (invoice == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Invoice is not uploaded or validated yet.",
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								message: "A Counter invoice created successfully",
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
+// router.post("/merchantCashier/createCounterInvoice", jwtTokenAuth, function (
+// 	req,
+// 	res
+// ) {
+// 	const { invoice_id, counter_invoice_number, description, amount } = req.body;
+// 	const jwtusername = req.sign_creds.username;
+// 	MerchantCashier.findOne(
+// 		{
+// 			username: jwtusername,
+// 			status: 1,
+// 		},
+// 		async function (err, cashier) {
+// 			if (err) {
+// 				console.log(err);
+// 				var message = err;
+// 				if (err.message) {
+// 					message = err.message;
+// 				}
+// 				res.status(200).json({
+// 					status: 0,
+// 					message: message,
+// 				});
+// 			} else if (cashier == null) {
+// 				res.status(200).json({
+// 					status: 0,
+// 					message: "Merchant Cashier is not valid",
+// 				});
+// 			} else {
+// 				const counter_invoice = {
+// 					number: counter_invoice_number,
+// 					description: description,
+// 					amount: amount,
+// 				};
+// 				Invoice.findOneAndUpdate(
+// 					{ _id: invoice_id, is_validated: 1 },
+// 					{ $push: { counter_invoices: counter_invoice } },
+// 					(err, invoice) => {
+// 						if (err) {
+// 							console.log(err);
+// 							var message = err;
+// 							if (err.message) {
+// 								message = err.message;
+// 							}
+// 							res.status(200).json({
+// 								status: 0,
+// 								message: message,
+// 							});
+// 						} else if (invoice == null) {
+// 							res.status(200).json({
+// 								status: 0,
+// 								message: "Invoice is not uploaded or validated yet.",
+// 							});
+// 						} else {
+// 							res.status(200).json({
+// 								status: 1,
+// 								message: "A Counter invoice created successfully",
+// 							});
+// 						}
+// 					}
+// 				);
+// 			}
+// 		}
+// 	);
+// });
 router.post("/merchantCashier/getUserFromMobile", jwtTokenAuth, function (
 	req,
 	res
@@ -926,7 +926,10 @@ router.post("/merchantCashier/getSettings", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/merchantCashier/getCashierSettings", jwtTokenAuth, function (req, res) {
+router.post("/merchantCashier/getCashierSettings", jwtTokenAuth, function (
+	req,
+	res
+) {
 	const jwtusername = req.sign_creds.username;
 	MerchantCashier.findOne(
 		{
@@ -1013,6 +1016,8 @@ router.post("/merchantCashier/createInvoice", jwtTokenAuth, (req, res) => {
 		paid,
 		is_validated,
 		customer_code,
+		is_counter,
+		reference_invoice,
 	} = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantCashier.findOne(
@@ -1057,6 +1062,15 @@ router.post("/merchantCashier/createInvoice", jwtTokenAuth, (req, res) => {
 							});
 						} else {
 							try {
+								if (is_counter) {
+									var referenceFound = await Invoice.findOne({
+										number: reference_invoice,
+										merchant_id: cashier.merchant_id,
+									});
+									if (!referenceFound) {
+										throw new Error("Referenced Invoice not found");
+									}
+								}
 								if (paid != 1) {
 									paid = 0;
 								}
@@ -1107,8 +1121,17 @@ router.post("/merchantCashier/createInvoice", jwtTokenAuth, (req, res) => {
 								invoiceObj.is_validated = is_validated;
 								invoiceObj.items = updatedItems;
 								invoiceObj.customer_code = customer_code;
+								invoiceObj.is_counter = is_counter;
+								invoiceObj.reference_invoice = reference_invoice;
+								var saved_invoice = await invoiceObj.save();
 
-								await invoiceObj.save();
+								if (is_counter) {
+									await Invoice.updateOne(
+										{ _id: referenceFound._id },
+										{ counter_invoice: saved_invoice._id }
+									);
+								}
+
 								var branch = await MerchantBranch.findOneAndUpdate(
 									{ _id: cashier.branch_id },
 									{ $inc: { bills_raised: 1, amount_due: amount } }
@@ -1223,7 +1246,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 							});
 						} else {
 							let failed = [];
-							var invoicePromises = invoices.map(async (invoice) => {
+							for (invoice of invoices) {
 								try {
 									var {
 										number,
@@ -1238,7 +1261,18 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										items,
 										paid,
 										customer_code,
+										is_counter,
+										reference_invoice,
 									} = invoice;
+									if (is_counter) {
+										var referenceFound = await Invoice.findOne({
+											number: reference_invoice,
+											merchant_id: cashier.merchant_id,
+										});
+										if (!referenceFound) {
+											throw new Error("Referenced Invoice not found");
+										}
+									}
 									if (paid != 1) {
 										paid = 0;
 									}
@@ -1271,7 +1305,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 											total_amount: total_amount,
 										});
 									}
-									var invoiceFound = await Invoice.findOne({
+									invoiceFound = await Invoice.findOne({
 										number,
 										merchant_id: cashier.merchant_id,
 									});
@@ -1290,6 +1324,8 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 												items: updatedItems,
 												paid,
 												customer_code,
+												is_counter,
+												reference_invoice,
 											}
 										);
 									} else if (invoiceFound && invoiceFound.is_created == 1) {
@@ -1315,8 +1351,16 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										invoiceObj.is_created = 0;
 										invoiceObj.is_validated = 1;
 										invoiceObj.customer_code = customer_code;
-
-										await invoiceObj.save();
+										invoiceObj.is_counter = is_counter;
+										invoiceObj.reference_invoice = reference_invoice;
+										var saved_invoice = await invoiceObj.save();
+										console.log(saved_invoice);
+										if (is_invoice) {
+											await Invoice.updateOne(
+												{ _id: referenceFound._id },
+												{ counter_invoice: saved_invoice._id }
+											);
+										}
 
 										var branch = await MerchantBranch.findOneAndUpdate(
 											{ _id: cashier.branch_id },
@@ -1369,8 +1413,6 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 											);
 										}
 									}
-
-									return true;
 								} catch (err) {
 									console.log(err);
 									var message = err.toString();
@@ -1381,8 +1423,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 									console.log(failed);
 									failed.push(invoice);
 								}
-							});
-							await Promise.all(invoicePromises);
+							}
 							res.status(200).json({
 								status: 1,
 								message: "Invoices uploaded",

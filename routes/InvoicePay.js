@@ -28,7 +28,7 @@ const InvoiceGroup = require("../models/merchant/InvoiceGroup");
 const jwtTokenAuth = require("./JWTTokenAuth");
 
 router.post("/cashier/getInvoiceDetails", (req, res) => {
-	const { token, number } = req.body;
+	const { token, number, merchant_id } = req.body;
 	Cashier.findOne(
 		{
 			token,
@@ -51,9 +51,13 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
 					message: "Cashier is not activated.",
 				});
 			} else {
-				Invoice.findOne(
-					{ number: number, is_validated: 1 },
-					async (err, invoice) => {
+				Invoice.find(
+					{
+						is_validated: 1,
+						merchant_id: merchant_id,
+						$or: [{ number: number }, { reference_invoice: number }],
+					},
+					async (err, invoices) => {
 						if (err) {
 							console.log(err);
 							var message = err;
@@ -64,7 +68,7 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
 								status: 0,
 								message: message,
 							});
-						} else if (invoice == null) {
+						} else if (invoices.length == 0) {
 							res.status(200).json({
 								status: 0,
 								message: "Invoice not found",
@@ -72,7 +76,7 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
 						} else {
 							Merchant.findOne(
 								{
-									_id: invoice.merchant_id,
+									_id: merchant_id,
 									bank_id: cashier.bank_id,
 									status: 1,
 								},
@@ -95,7 +99,7 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
 									} else {
 										res.status(200).json({
 											status: 1,
-											invoice: invoice,
+											invoice: invoices,
 										});
 									}
 								}
@@ -245,7 +249,6 @@ router.post("/cashier/payInvoice", (req, res) => {
 										try {
 											var invoice;
 											var total_amount = 0;
-											var counter_amount = 0;
 											for (invoice_id of invoice_ids) {
 												invoice = await Invoice.findOne({
 													_id: invoice_id,
@@ -260,12 +263,10 @@ router.post("/cashier/payInvoice", (req, res) => {
 															" is already paid or it belongs to different merchant"
 													);
 												}
-												if (invoice.counter_invoices.length > 0) {
-													for (cninvoice of invoice.counter_invoices) {
-														counter_amount += cninvoice.amount;
-													}
-												}
-												total_amount += invoice.amount - counter_amount;
+												total_amount += invoice.amount;
+											}
+											if (total_amount < 0) {
+												throw new Error("Amount is a negative value");
 											}
 
 											// all the users
@@ -718,7 +719,6 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 										try {
 											var invoice;
 											var total_amount = 0;
-											var counter_amount = 0;
 											for (invoice_id of invoice_ids) {
 												invoice = await Invoice.findOne({
 													_id: invoice_id,
@@ -733,14 +733,12 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 															" is already paid or it belongs to different merchant"
 													);
 												}
-												if (invoice.counter_invoices.length > 0) {
-													for (cninvoice of invoice.counter_invoices) {
-														counter_amount += cninvoice.amount;
-													}
-												}
-												total_amount += invoice.amount - counter_amount;
+												total_amount += invoice.amount;
 											}
-											console.log(total_amount);
+											if (total_amount < 0) {
+												throw new Error("Amount is a negative value");
+											}
+											console.log("Total Amount", total_amount);
 											// all the users
 											let bank = await Bank.findOne({
 												name: user.bank,
