@@ -136,68 +136,69 @@ router.get("/merchantBranch/todaysStatus", jwtTokenAuth, function (req, res) {
 	);
 });
 
-// router.post("/merchantBranch/editCashier", jwtTokenAuth, (req, res) => {
-// 	const {
-// 		cashier_id,
-// 		name,
-// 		working_from,
-// 		working_to,
-// 		per_trans_amt,
-// 		max_trans_amt,
-// 		max_trans_count,
-// 	} = req.body;
-// 	const jwtusername = req.sign_creds.username;
-// 	MerchantBranch.findOne(
-// 		{
-// 			username: jwtusername,
-// 			status: 1,
-// 		},
-// 		function (err, branch) {
-// 			if (err) {
-// 				res.status(200).json({
-// 					status: 0,
-// 					message: "Internal Server Error",
-// 				});
-// 			} else if (branch == null) {
-// 				res.status(200).json({
-// 					status: 0,
-// 					message: "Token changed or user not valid. Try to login again or contact system administrator.",
-// 				});
-// 			} else {
-// 				MerchantCashier.findOneAndUpdate(
-// 					{ _id: cashier_id, branch_id: branch._id },
-// 					{
-// 						name: name,
-// 						working_from: working_from,
-// 						working_to: working_to,
-// 						per_trans_amt: per_trans_amt,
-// 						max_trans_amt: max_trans_amt,
-// 						max_trans_count: max_trans_count,
-// 					},
-// 					(err, cashier) => {
-// 						if (err) {
-// 							res.status(200).json({
-// 								status: 0,
-// 								message: "Internal server error",
-// 								err: err,
-// 							});
-// 						} else if (cashier == null) {
-// 							res.status(200).json({
-// 								status: 0,
-// 								message: "Cashier not found",
-// 							});
-// 						} else {
-// 							res.status(200).json({
-// 								status: 1,
-// 								message: "Edited merchant cashier successfully",
-// 							});
-// 						}
-// 					}
-// 				);
-// 			}
-// 		}
-// 	);
-// });
+router.post("/merchantBranch/editCashier", jwtTokenAuth, (req, res) => {
+	const {
+		cashier_id,
+		name,
+		working_from,
+		working_to,
+		per_trans_amt,
+		max_trans_amt,
+		max_trans_count,
+	} = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantBranch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, branch) {
+			if (err) {
+				res.status(200).json({
+					status: 0,
+					message: "Internal Server Error",
+				});
+			} else if (branch == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				MerchantCashier.findOneAndUpdate(
+					{ _id: cashier_id, branch_id: branch._id },
+					{
+						name: name,
+						working_from: working_from,
+						working_to: working_to,
+						per_trans_amt: per_trans_amt,
+						max_trans_amt: max_trans_amt,
+						max_trans_count: max_trans_count,
+					},
+					(err, cashier) => {
+						if (err) {
+							res.status(200).json({
+								status: 0,
+								message: "Internal server error",
+								err: err,
+							});
+						} else if (cashier == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Cashier not found",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Edited merchant cashier successfully",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
 
 router.get("/merchantBranch/listCashier", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
