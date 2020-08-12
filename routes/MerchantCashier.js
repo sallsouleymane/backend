@@ -17,6 +17,54 @@ const MerchantCashierSettings = require("../models/merchant/MerchantCashierSetti
 const Customer = require("../models/merchant/Customer");
 const { promises } = require("fs-extra");
 
+router.post("/merchantCashier/listAllInvoices", jwtTokenAuth, (req, res) => {
+	const { group_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Cashier is blocked",
+				});
+			} else {
+				Invoice.find({ group_id }, (err, invoices) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							invoices: invoices,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
 router.post("/merchantCashier/billNumberSetting", jwtTokenAuth, (req, res) => {
 	const { counter } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -341,70 +389,6 @@ router.post("/merchantCashier/createCustomer", jwtTokenAuth, (req, res) => {
 	});
 });
 
-// router.post("/merchantCashier/createCounterInvoice", jwtTokenAuth, function (
-// 	req,
-// 	res
-// ) {
-// 	const { invoice_id, counter_invoice_number, description, amount } = req.body;
-// 	const jwtusername = req.sign_creds.username;
-// 	MerchantCashier.findOne(
-// 		{
-// 			username: jwtusername,
-// 			status: 1,
-// 		},
-// 		async function (err, cashier) {
-// 			if (err) {
-// 				console.log(err);
-// 				var message = err;
-// 				if (err.message) {
-// 					message = err.message;
-// 				}
-// 				res.status(200).json({
-// 					status: 0,
-// 					message: message,
-// 				});
-// 			} else if (cashier == null) {
-// 				res.status(200).json({
-// 					status: 0,
-// 					message: "Merchant Cashier is not valid",
-// 				});
-// 			} else {
-// 				const counter_invoice = {
-// 					number: counter_invoice_number,
-// 					description: description,
-// 					amount: amount,
-// 				};
-// 				Invoice.findOneAndUpdate(
-// 					{ _id: invoice_id, is_validated: 1 },
-// 					{ $push: { counter_invoices: counter_invoice } },
-// 					(err, invoice) => {
-// 						if (err) {
-// 							console.log(err);
-// 							var message = err;
-// 							if (err.message) {
-// 								message = err.message;
-// 							}
-// 							res.status(200).json({
-// 								status: 0,
-// 								message: message,
-// 							});
-// 						} else if (invoice == null) {
-// 							res.status(200).json({
-// 								status: 0,
-// 								message: "Invoice is not uploaded or validated yet.",
-// 							});
-// 						} else {
-// 							res.status(200).json({
-// 								status: 1,
-// 								message: "A Counter invoice created successfully",
-// 							});
-// 						}
-// 					}
-// 				);
-// 			}
-// 		}
-// 	);
-// });
 router.post("/merchantCashier/getUserFromMobile", jwtTokenAuth, function (
 	req,
 	res
@@ -1304,6 +1288,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 									invoiceFound = await Invoice.findOne({
 										number,
 										merchant_id: cashier.merchant_id,
+										paid: 0,
 									});
 									if (invoiceFound && invoiceFound.is_created == 0) {
 										await Invoice.updateOne(
@@ -1317,6 +1302,8 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 												description,
 												mobile,
 												ccode,
+												group_id: group_id,
+												cashier_id: cashier_.id,
 												items: updatedItems,
 												paid,
 												customer_code,
@@ -1664,24 +1651,51 @@ router.post("/merchantCashier/listInvoices", jwtTokenAuth, (req, res) => {
 					message: "Cashier is blocked",
 				});
 			} else {
-				Invoice.find({ cashier_id: cashier._id, group_id }, (err, invoices) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				if (cashier.counter_invoice_access) {
+					Invoice.find(
+						{ merchant_id: cashier.merchant.id, group_id },
+						(err, invoices) => {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else {
+								res.status(200).json({
+									status: 1,
+									invoices: invoices,
+								});
+							}
 						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							invoices: invoices,
-						});
-					}
-				});
+					);
+				} else {
+					Invoice.find(
+						{ cashier_id: cashier._id, group_id },
+						(err, invoices) => {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else {
+								res.status(200).json({
+									status: 1,
+									invoices: invoices,
+								});
+							}
+						}
+					);
+				}
 			}
 		}
 	);

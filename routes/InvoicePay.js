@@ -184,7 +184,7 @@ router.post("/cashier/getUserInvoices", (req, res) => {
 });
 
 router.post("/cashier/payInvoice", (req, res) => {
-	const { token, invoice_ids, merchant_id, amount } = req.body;
+	const { token, invoice_ids, merchant_id } = req.body;
 	Cashier.findOne(
 		{
 			token,
