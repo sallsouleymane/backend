@@ -1444,6 +1444,7 @@ router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
 		items,
 		paid,
 		is_validated,
+		term,
 	} = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantCashier.findOne(
@@ -1540,6 +1541,7 @@ router.post("/merchantCashier/editInvoice", jwtTokenAuth, (req, res) => {
 										items: updatedItems,
 										paid,
 										is_validated,
+										term,
 									},
 									(err, invoice) => {
 										if (err) {
