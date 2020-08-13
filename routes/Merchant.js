@@ -425,14 +425,12 @@ router.post("/merchant/deleteCountry", jwtTokenAuth, (req, res) => {
 								status: 0,
 								message: "Setting not found",
 							});
-
-						});
+						}
+					}
+				);
 			}
 		}
 	);
-}
-		}
-);
 });
 
 router.post("/merchant/setDefaultCountry", jwtTokenAuth, (req, res) => {
