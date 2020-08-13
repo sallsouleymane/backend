@@ -27,6 +27,91 @@ const InvoiceGroup = require("../models/merchant/InvoiceGroup");
 
 const jwtTokenAuth = require("./JWTTokenAuth");
 
+router.post("/cashier/getInvoicesForCustomerCode", (req, res) => {
+	const { token, customer_code, merchant_id } = req.body;
+	Cashier.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Cashier is not activated.",
+				});
+			} else {
+				Invoice.find(
+					{
+						is_validated: 1,
+						merchant_id: merchant_id,
+						customer_code: customer_code,
+					},
+					async (err, invoices) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (invoices.length == 0) {
+							res.status(200).json({
+								status: 0,
+								message: "Invoice not found",
+							});
+						} else {
+							Merchant.findOne(
+								{
+									_id: merchant_id,
+									bank_id: cashier.bank_id,
+									status: 1,
+								},
+								(err, merchant) => {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (merchant == null) {
+										res.status(200).json({
+											status: 0,
+											message: "Invalid Merchant",
+										});
+									} else {
+										res.status(200).json({
+											status: 1,
+											invoice: invoices,
+										});
+									}
+								}
+							);
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/cashier/getInvoiceDetails", (req, res) => {
 	const { token, number, merchant_id } = req.body;
 	Cashier.findOne(
@@ -259,8 +344,8 @@ router.post("/cashier/payInvoice", (req, res) => {
 												if (invoice == null) {
 													throw new Error(
 														"Invoice id " +
-															invoice_id +
-															" is already paid or it belongs to different merchant"
+														invoice_id +
+														" is already paid or it belongs to different merchant"
 													);
 												}
 												total_amount += invoice.amount;
@@ -743,8 +828,8 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 												if (invoice == null) {
 													throw new Error(
 														"Invoice id " +
-															invoice_id +
-															" is already paid or it belongs to different merchant"
+														invoice_id +
+														" is already paid or it belongs to different merchant"
 													);
 												}
 												total_amount += invoice.amount;
