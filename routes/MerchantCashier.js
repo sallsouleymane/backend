@@ -1653,7 +1653,7 @@ router.post("/merchantCashier/listInvoices", jwtTokenAuth, (req, res) => {
 			} else {
 				if (cashier.counter_invoice_access) {
 					Invoice.find(
-						{ merchant_id: cashier.merchant_id, group_id },
+						{ merchant_id: cashier.merchant_id },
 						(err, invoices) => {
 							if (err) {
 								console.log(err);

@@ -174,24 +174,25 @@ router.post("/bank/merchantFee/createRule", function (req, res) {
 											status: 0,
 											message: message,
 										});
-									}
-									let content =
-										"<p>New fee rule has been added for merchant " +
-										merchant.name +
-										" for your bank in E-Wallet application</p><p>&nbsp;</p>";
-									sendMail(content, "New Fee Rule Added", bank.email);
-									sendMail(content, "New Fee Rule Added", merchant.email);
-									let content2 =
-										" E-Wallet: New fee rule rule has been added for merchant " +
-										merchant.name;
-									sendSMS(content2, bank.mobile);
-									sendSMS(content2, merchant.mobile);
+									} else {
+										let content =
+											"<p>New fee rule has been added for merchant " +
+											merchant.name +
+											" for your bank in E-Wallet application</p><p>&nbsp;</p>";
+										sendMail(content, "New Fee Rule Added", bank.email);
+										sendMail(content, "New Fee Rule Added", merchant.email);
+										let content2 =
+											" E-Wallet: New fee rule rule has been added for merchant " +
+											merchant.name;
+										sendSMS(content2, bank.mobile);
+										sendSMS(content2, merchant.mobile);
 
-									res.status(200).json({
-										status: 1,
-										message: "Merchant Fee Rule created successfully",
-										rule: merchantFee,
-									});
+										res.status(200).json({
+											status: 1,
+											message: "Merchant Fee Rule created successfully",
+											rule: merchantFee,
+										});
+									}
 								});
 							}
 						});
