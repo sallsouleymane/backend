@@ -17,6 +17,39 @@ const MerchantCashierSettings = require("../models/merchant/MerchantCashierSetti
 const Customer = require("../models/merchant/Customer");
 const { promises } = require("fs-extra");
 
+router.post("/merchantCashier/getDetails", jwtTokenAuth, (req, res) => {
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Cashier is blocked",
+				});
+			} else {
+				res.status(200).json({
+					status: 1,
+					cashier: cashier,
+				});
+			}
+		}
+	);
+});
+
 router.post("/merchantCashier/listAllInvoices", jwtTokenAuth, (req, res) => {
 	const { group_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -1111,6 +1144,11 @@ router.post("/merchantCashier/createInvoice", jwtTokenAuth, (req, res) => {
 								invoiceObj.term = term;
 								await invoiceObj.save();
 
+								if (is_counter) {
+									await Invoice.updateOne({
+										_id: referenceFound._id,
+									}, { has_counter_invoice: true });
+								}
 								var branch = await MerchantBranch.findOneAndUpdate(
 									{ _id: cashier.branch_id },
 									{ $inc: { bills_raised: 1, amount_due: amount } }
@@ -1312,6 +1350,11 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 												term,
 											}
 										);
+										if (is_counter) {
+											await Invoice.updateOne({
+												_id: referenceFound._id,
+											}, { has_counter_invoice: true });
+										}
 									} else if (invoiceFound && invoiceFound.is_created == 1) {
 										throw new Error(
 											"This Invoice number is in created state, so can not upload"
@@ -1339,6 +1382,12 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										invoiceObj.reference_invoice = reference_invoice;
 										invoiceObj.term = term;
 										await invoiceObj.save();
+
+										if (is_counter) {
+											await Invoice.updateOne({
+												_id: referenceFound._id,
+											}, { has_counter_invoice: true });
+										}
 
 										var branch = await MerchantBranch.findOneAndUpdate(
 											{ _id: cashier.branch_id },

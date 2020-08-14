@@ -12,9 +12,7 @@ const makeotp = require("./utils/makeotp");
 const {
 	getStatement,
 	createWallet,
-	rechargeNow,
 	transferThis,
-	getTransactionCount,
 	getBalance,
 } = require("../services/Blockchain.js");
 
@@ -25,10 +23,68 @@ const OTP = require("../models/OTP");
 const Profile = require("../models/Profile");
 const Document = require("../models/Document");
 const Merchant = require("../models/merchant/Merchant");
+const Country = require("../models/Country");
 
 const mainFee = config.mainFee;
-const defaultFee = config.defaultFee;
-const defaultAmt = config.defaultAmt;
+
+router.post("/infra/deleteCountry", (req, res) => {
+	const { token, ccode } = req.body;
+	Infra.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, infra) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (infra == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				Country.update(
+					{},
+					{ country_list: { $pull: { ccode: ccode } } },
+					function (err, country) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (country == null) {
+							console.log(err);
+							res.status(200).json({
+								status: 0,
+								message: "Setting not found",
+								err: err,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Country Deleted",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
 
 router.post("/infra/bank/listMerchants", function (req, res) {
 	var { token, bank_id } = req.body;
@@ -314,8 +370,8 @@ router.post("/getDashStats", function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				var totalBanks = await Bank.countDocuments({}, () => {});
-				var totalmerchants = await Merchant.countDocuments({}, () => {});
+				var totalBanks = await Bank.countDocuments({}, () => { });
+				var totalmerchants = await Merchant.countDocuments({}, () => { });
 
 				res.status(200).json({
 					status: 1,
@@ -598,7 +654,7 @@ router.post("/addBank", (req, res) => {
 											let data2 = new Document();
 											data2.bank_id = d._id;
 											data2.contract = contract;
-											data2.save((err) => {});
+											data2.save((err) => { });
 
 											let content =
 												"<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
@@ -762,7 +818,7 @@ router.post("/editBank", (req, res) => {
 											let data2 = new Document();
 											data2.bank_id = bank_id;
 											data2.contract = contract;
-											data2.save((err) => {});
+											data2.save((err) => { });
 											return res.status(200).json(data);
 										}
 									}
@@ -1854,7 +1910,7 @@ router.post("/transferMoney", function (req, res) {
 							data.to_name = f.name;
 							data.user_id = "";
 
-							transferThis(data).then(function (result) {});
+							transferThis(data).then(function (result) { });
 							res.status(200).json({
 								status: 1,
 								message: "Money transferred successfully!",
