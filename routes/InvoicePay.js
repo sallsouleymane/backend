@@ -445,8 +445,22 @@ router.post("/cashier/payInvoice", (req, res) => {
 																"Merchant status can not be updated";
 														}
 
+														var mc = await MerchantCashier.updateOne(
+															{ _id: i.cashier_id },
+															{
+																last_paid_at: last_paid_at,
+																$inc: {
+																	bills_paid: 1,
+																},
+															}
+														);
+														if (mc == null) {
+															status_update_feedback =
+																"Merchant cashier status can not be updated";
+														}
+
 														var mb = await MerchantBranch.updateOne(
-															{ _id: branch._id },
+															{ _id: mc.branch_id },
 															{
 																last_paid_at: last_paid_at,
 																$inc: {
@@ -473,20 +487,6 @@ router.post("/cashier/payInvoice", (req, res) => {
 														if (ig == null) {
 															status_update_feedback =
 																"Invoice group status can not be updated";
-														}
-
-														var mc = await MerchantCashier.updateOne(
-															{ _id: i.cashier_id },
-															{
-																last_paid_at: last_paid_at,
-																$inc: {
-																	bills_paid: 1,
-																},
-															}
-														);
-														if (mc == null) {
-															status_update_feedback =
-																"Merchant cashier status can not be updated";
 														}
 
 														bankFee = calculateShare("bank", total_amount, fee);
