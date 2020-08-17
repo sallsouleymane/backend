@@ -918,8 +918,22 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 																"Merchant status can not be updated";
 														}
 
-														var mc = await MerchantBranch.updateOne(
-															{ _id: mcashier.branch_id },
+														var mc = await MerchantCashier.updateOne(
+															{ _id: i.cashier_id },
+															{
+																last_paid_at: last_paid_at,
+																$inc: {
+																	bills_paid: 1,
+																},
+															}
+														);
+														if (mc == null) {
+															status_update_feedback =
+																"Merchant cashier status can not be updated";
+														}
+
+														var mb = await MerchantBranch.updateOne(
+															{ _id: mc.branch_id },
 															{
 																last_paid_at: last_paid_at,
 																$inc: {
@@ -929,7 +943,7 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 																},
 															}
 														);
-														if (mc == null) {
+														if (mb == null) {
 															status_update_feedback =
 																"Merchant Branch status can not be updated";
 														}
@@ -946,20 +960,6 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 														if (ig == null) {
 															status_update_feedback =
 																"Invoice group status can not be updated";
-														}
-
-														var mc = await MerchantCashier.updateOne(
-															{ _id: mcashier._id },
-															{
-																last_paid_at: last_paid_at,
-																$inc: {
-																	bills_paid: 1,
-																},
-															}
-														);
-														if (mc == null) {
-															status_update_feedback =
-																"Merchant cashier status can not be updated";
 														}
 
 														content =
