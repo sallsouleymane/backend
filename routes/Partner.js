@@ -13,26 +13,14 @@ const blockchain = require("../services/Blockchain");
 
 //models
 const Bank = require("../models/Bank");
-const Merchant = require("../models/merchant/Merchant");
-const MerchantBranch = require("../models/merchant/MerchantBranch");
-const MerchantStaff = require("../models/merchant/MerchantStaff");
-const MerchantCashier = require("../models/merchant/MerchantCashier");
-const Zone = require("../models/merchant/Zone");
-const Subzone = require("../models/merchant/Subzone");
-const InvoiceGroup = require("../models/merchant/InvoiceGroup");
-const FailedTX = require("../models/FailedTXLedger");
-const Offering = require("../models/merchant/Offering");
-const Tax = require("../models/merchant/Tax");
-const MerchantSettings = require("../models/merchant/MerchantSettings");
-const Customer = require("../models/merchant/Customer");
+const Partner = require("../models/partner/Partner");
 
-router.post("/partner/activate", function (req, res) {
-    const { token } = req.body;
-    Bank.findOne(
+router.post("/partner/activate", jwtTokenAuth, function (req, res) {
+    Partner.findOne(
         {
-            token,
+            username,
         },
-        function (err, bank) {
+        function (err, partner) {
             if (err) {
                 console.log(err);
                 var message = err;
@@ -43,7 +31,7 @@ router.post("/partner/activate", function (req, res) {
                     status: 0,
                     message: message,
                 });
-            } else if (!bank) {
+            } else if (!partner) {
                 res.status(200).json({
                     status: 0,
                     message:
@@ -51,12 +39,8 @@ router.post("/partner/activate", function (req, res) {
                 });
             } else {
                 createWallet([
-                    "testuser@" + bank.name,
-                    "operational@" + bank.name,
-                    "escrow@" + bank.name,
-                    "master@" + bank.name,
-                    "infra_operational@" + bank.name,
-                    "infra_master@" + bank.name,
+                    "_partner_operational@" + bank.name,
+                    "_partner_master@" + bank.name,
                 ]).then(function (result) {
                     if (result != "" && !result.includes("wallet already exists")) {
                         console.log(result);

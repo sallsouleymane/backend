@@ -104,7 +104,7 @@ router.post("/bank/createMerchant", function (req, res) {
                         message: "Code is a required field",
                     });
                 } else {
-                    const wallet = code + "_operational@" + bank.name;
+                    const wallet = code + "_merchant_operational@" + bank.name;
                     createWallet([wallet]).then((result) => {
                         if (result != "" && !result.includes("wallet already exists")) {
                             console.log(result);
