@@ -28,8 +28,9 @@ const FailedTX = require("../models/FailedTXLedger");
 const Partner = require("../models/partner/Partner")
 const Document = require("../models/Document");
 
-router.post("/bank/getPartner", function (req, res) {
-	const { token, partner_id } = req.body;
+router.post("/bank/generateOTP", function (req, res) {
+	let data = new OTP();
+	const { token, username, page, name, email, mobile, code } = req.body;
 	Bank.findOne(
 		{
 			token,
@@ -53,565 +54,85 @@ router.post("/bank/getPartner", function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				Partner.findOne(
-					{
-						_id: partner_id,
-					},
-					function (err, partner) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (partner == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Partner not found",
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								partners: partner,
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
-
-router.post("/bank/editPartner", (req, res) => {
-	const {
-		partner_id,
-		name,
-		bcode,
-		address,
-		state,
-		zip,
-		country,
-		ccode,
-		mobile,
-		email,
-		token,
-		logo,
-		contract,
-		otp_id,
-		otp,
-	} = req.body;
-
-	Bank.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				OTP.findOne(
-					{
-						_id: otp_id,
-						otp: otp,
-					},
-					function (err, otpd) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (otpd == null) {
-							res.status(200).json({
-								status: 0,
-								message: err,
-							});
-						} else {
-							if (otpd.otp === otp) {
-								if (
-									name === "" ||
-									address === "" ||
-									state === "" ||
-									mobile === "" ||
-									email === ""
-								) {
-									return res.status(200).json({
-										status: 0,
-										message: "Please provide valid inputs",
-									});
-								}
-								Partner.findByIdAndUpdate(
-									partner_id,
-									{
-										name: name,
-										address: address,
-										state: state,
-										zip: zip,
-										ccode: ccode,
-										bcode: bcode,
-										country: country,
-										mobile: mobile,
-										email: email,
-										logo: logo,
-										contract: contract,
-									},
-									{ new: true },
-									(err, partner) => {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
-											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else if (!partner) {
-											res.status(200).json({
-												status: 0,
-												message: "partner not found"
-											})
-										} else {
-											Document.update({ partner_id: partner_id }, { contract: contract }, (err) => { });
-											return res.status(200).json({ status: 1, partner: partner });
-										}
-									}
-								);
-							} else {
-								res.status(200).json({
-									status: 0,
-									message: "OTP Missmatch",
-								});
-							}
-						}
-					}
-				);
-			}
-		}
-	);
-});
-
-router.post("/bank/addPartner", (req, res) => {
-	let data = new Partner();
-	const {
-		name,
-		code,
-		address,
-		state,
-		zip,
-		country,
-		ccode,
-		mobile,
-		email,
-		token,
-		logo,
-		contract,
-		otp_id,
-		otp,
-	} = req.body;
-	Bank.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				OTP.findOne(
-					{
-						_id: otp_id,
-						otp: otp,
-					},
-					function (err, otpd) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else {
-							if (!otpd) {
-								res.status(200).json({
-									status: 0,
-									message: "OTP Missmatch",
-								});
-							} else {
-								if (otpd.otp === otp) {
-									if (
-										name === "" ||
-										address === "" ||
-										state === "" ||
-										mobile === "" ||
-										email === ""
-									) {
-										return res.status(200).json({
-											status: 0,
-											message: "Please provide valid inputs",
-										});
-									}
-
-									data.name = name;
-									data.code = code;
-									data.address = address;
-									data.state = state;
-									data.country = country;
-									data.zip = zip;
-									data.ccode = ccode;
-									data.mobile = mobile;
-									data.username = mobile;
-									data.email = email;
-									data.bank_id = bank._id;
-									data.logo = logo;
-									data.contract = contract;
-									data.password = makeid(10);
-
-									data.save((err, partner) => {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
-											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else {
-											let data2 = new Document();
-											data2.partner_id = partner._id;
-											data2.contract = contract;
-											data2.save((err) => { });
-
-											let content =
-												"<p>Your partner is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-												config.mainIP +
-												"/partner'>http://" +
-												config.mainIP +
-												"/partner</a></p><p><p>Your username: " +
-												data.username +
-												"</p><p>Your password: " +
-												data.password +
-												"</p>";
-											sendMail(content, "Partner Account Created", email);
-											let content2 =
-												"Your partner is added in E-Wallet application Login URL: http://" +
-												config.mainIP +
-												"/partner Your username: " +
-												data.username +
-												" Your password: " +
-												data.password;
-											sendSMS(content2, mobile);
-
-											return res.status(200).json({ status: 1, partner: data });
-										}
-									});
-								} else {
-									res.status(200).json({
-										status: 0,
-										message: "OTP Missmatch",
-									});
-								}
-							}
-						}
-					}
-				);
-			}
-		}
-	);
-});
-
-router.post("/bank/listMerchants", function (req, res) {
-	var { token } = req.body;
-	Bank.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				Merchant.find({ bank_id: bank._id }, "-password", (err, merchants) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							message: "Merchant List",
-							list: merchants,
-						});
-					}
-				});
-			}
-		}
-	);
-});
-
-router.post("/bank/createMerchant", function (req, res) {
-	var {
-		token,
-		code,
-		name,
-		logo,
-		description,
-		document_hash,
-		email,
-		mobile,
-	} = req.body;
-	Bank.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				if (!code) {
-					res.status(200).json({
-						status: 0,
-						message: "Code is a required field",
-					});
-				} else {
-					const wallet = code + "_operational@" + bank.name;
-					createWallet([wallet]).then((result) => {
-						if (result != "" && !result.includes("wallet already exists")) {
-							console.log(result);
-							res.status(200).json({
-								status: 0,
-								message: result,
-							});
-						} else {
-							const data = new Merchant();
-							data.name = name;
-							data.logo = logo;
-							data.description = description;
-							data.document_hash = document_hash;
-							data.email = email;
-							data.mobile = mobile;
-							data.code = code;
-							data.username = code;
-							data.password = makeid(8);
-							data.bank_id = bank._id;
-							data.status = 0;
-							data.creator = 0;
-
-							data.save((err, merchant) => {
+				data.user_id = bank._id;
+				data.otp = makeotp(6);
+				data.page = page;
+				if (page == "editPartner") {
+					Partner.findOne(
+						{
+							username,
+						},
+						function (err, partner) {
+							data.mobile = partner.mobile;
+							data.save((err, ot) => {
 								if (err) {
 									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
 									res.status(200).json({
 										status: 0,
-										message:
-											"Either merchant code / email / mobile already exist",
+										message: message,
 									});
 								} else {
-									Bank.updateOne(
-										{
-											_id: bank._id,
-										},
-										{
-											$inc: { total_partners: 1 },
-										},
-										function (err) {
-											if (err) {
-												console.log(err);
-												var message = err;
-												if (err.message) {
-													message = err.message;
-												}
-												res.status(200).json({
-													status: 0,
-													message: message,
-												});
-											} else {
-												let content =
-													"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-													config.mainIP +
-													"/merchant/" +
-													bank.name +
-													"'>http://" +
-													config.mainIP +
-													"/merchant/" +
-													bank.name +
-													"</a></p><p><p>Your username: " +
-													data.username +
-													"</p><p>Your password: " +
-													data.password +
-													"</p>";
-												sendMail(content, "Bank Merchant Created", email);
-												let content2 =
-													"You are added as a Merchant in E-Wallet application Login URL: http://" +
-													config.mainIP +
-													"/merchant/" +
-													bank.name +
-													" Your username: " +
-													data.username +
-													" Your password: " +
-													data.password;
-												sendSMS(content2, mobile);
-												res.status(200).json({
-													status: 1,
-													message: "Merchant created successfully",
-													blockchain_result: result,
-												});
-											}
-										}
-									);
+									let content = "Your OTP to edit Partner is " + data.otp;
+									sendSMS(content, partner.mobile);
+									sendMail(content, "OTP", partner.email);
+
+									res.status(200).json({
+										status: 1,
+										id: ot._id,
+									});
 								}
 							});
 						}
-					});
-				}
-			}
-		}
-	);
-});
+					);
+				} else {
+					Partner.find(
+						{
+							$or: [
+								{ name: name },
+								{ email: email },
+								{ mobile: mobile },
+								{ code: code },
+							],
+						},
+						function (err, partner) {
+							if (partner == null || partner == undefined || partner.length == 0) {
+								data.mobile = bank.mobile;
 
-router.post("/bank/editMerchant", function (req, res) {
-	var {
-		token,
-		merchant_id,
-		name,
-		logo,
-		description,
-		document_hash,
-		email,
-	} = req.body;
-	Bank.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				Merchant.findOneAndUpdate(
-					{ _id: merchant_id, creator: 0, bank_id: bank._id },
-					{
-						name: name,
-						logo: logo,
-						description: description,
-						document_hash: document_hash,
-						email: email,
-					},
-					(err, merchant) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+								data.save((err, ot) => {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else {
+										let content = "Your OTP to add Partner is " + data.otp;
+										sendSMS(content, bank.mobile);
+										sendMail(content, "OTP", bank.email);
+
+										res.status(200).json({
+											status: 1,
+											id: ot._id,
+										});
+									}
+								});
+							} else {
+								res.status(200).json({
+									status: 0,
+									message: "Duplicate Entry",
+								});
 							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (merchant == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Merchant not found.",
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								message: "Merchant edited successfully",
-							});
 						}
-					}
-				);
+					);
+				}
 			}
 		}
 	);
