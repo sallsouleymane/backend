@@ -28,6 +28,64 @@ const FailedTX = require("../models/FailedTXLedger");
 const Partner = require("../models/partner/Partner")
 const Document = require("../models/Document");
 
+router.post("/bank/getPartner", function (req, res) {
+	const { token, partner_id } = req.body;
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (bank == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				Partner.findOne(
+					{
+						_id: partner_id,
+					},
+					function (err, partner) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (partner == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Partner not found",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								partners: partner,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/bank/editPartner", (req, res) => {
 	const {
 		partner_id,
