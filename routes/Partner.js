@@ -14,11 +14,624 @@ const blockchain = require("../services/Blockchain");
 //models
 const Bank = require("../models/Bank");
 const Partner = require("../models/partner/Partner");
+const PartnerBranch = require("../models/partner/Branch")
+const PartnerCashier = require("../models/partner/Cashier")
+const PartnerUser = require("../models/partner/User")
 
-router.post("/partner/activate", jwtTokenAuth, function (req, res) {
+router.post("/partner/addUser", jwtTokenAuth, (req, res) => {
+    let data = new PartnerUser();
+    const {
+        name,
+        email,
+        ccode,
+        mobile,
+        username,
+        password,
+        branch_id,
+        logo
+    } = req.body;
+    const jwtusername = req.sign_creds.username;
     Partner.findOne(
         {
-            username,
+            username: jwtusername,
+            status: 1,
+        },
+        function (err, partner) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (partner == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                data.name = name;
+                data.email = email;
+                data.mobile = mobile;
+                data.username = username;
+                data.password = password;
+                data.branch_id = branch_id;
+                data.partner_id = partner._id;
+                data.ccode = ccode;
+                data.logo = logo;
+
+                data.save((err, partner) => {
+                    if (err) {
+                        console.log(err);
+                        var message = err;
+                        if (err.message) {
+                            message = err.message;
+                        }
+                        res.status(200).json({
+                            status: 0,
+                            message: message,
+                        });
+                    } else {
+                        let content =
+                            "<p>Your have been added as a Partner User in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+                            config.mainIP +
+                            "/partner/cashier/yourBranchName'>http://" +
+                            config.mainIP +
+                            "/</a></p><p><p>Your username: " +
+                            username +
+                            "</p><p>Your password: " +
+                            password +
+                            "</p>";
+                        sendMail(content, "Partner User Account Created", email);
+                        let content2 =
+                            "Your have been added as Partner User in E-Wallet application Login URL: http://" +
+                            config.mainIP +
+                            "/partner/cashier/yourBranchName Your username: " +
+                            username +
+                            " Your password: " +
+                            password;
+                        sendSMS(content2, mobile);
+                        return res.status(200).json({
+                            success: 1,
+                            data: partner
+                        });
+                    }
+                });
+            }
+        }
+    );
+});
+router.post("/partner/editUser", jwtTokenAuth, (req, res) => {
+    const {
+        name,
+        email,
+        ccode,
+        mobile,
+        username,
+        password,
+        branch_id,
+        logo,
+        user_id,
+    } = req.body;
+    const jwtusername = req.sign_creds.username;
+    Partner.findOne(
+        {
+            username: jwtusername,
+            status: 1
+        },
+        function (err, partner) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (partner == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                PartnerUser.findOneAndUpdate(
+                    {
+                        _id: user_id,
+                    },
+                    {
+                        name: name,
+                        email: email,
+                        ccode: ccode,
+                        mobile: mobile,
+                        username: username,
+                        password: password,
+                        branch_id: branch_id,
+                        logo: logo,
+                    },
+                    { new: true },
+                    (err, user) => {
+                        if (err) {
+                            console.log(err);
+                            var message = err;
+                            if (err.message) {
+                                message = err.message;
+                            }
+                            res.status(200).json({
+                                status: 0,
+                                message: message,
+                            });
+                        } else if (user == null) {
+                            res.status(200).json({
+                                status: 0,
+                                message: "user not found",
+                            });
+                        } else {
+                            return res.status(200).json({
+                                success: 1,
+                                data: user
+                            });
+                        }
+                    }
+                );
+            }
+        }
+    );
+});
+
+router.post("/partner/editCashier", jwtTokenAuth, (req, res) => {
+    const {
+        cashier_id,
+        name,
+        code,
+        working_from,
+        working_to,
+        per_trans_amt,
+        max_trans_amt,
+        max_trans_count,
+    } = req.body;
+    const jwtusername = req.sign_creds.username;
+    Partner.findOne(
+        {
+            username: jwtusername,
+            status: 1,
+        },
+        function (err, partner) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (partner == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                PartnerCashier.findByIdAndUpdate(
+                    cashier_id,
+                    {
+                        name: name,
+                        working_from: working_from,
+                        working_to: working_to,
+                        per_trans_amt: per_trans_amt,
+                        code: code,
+                        max_trans_count: max_trans_count,
+                        max_trans_amt: max_trans_amt,
+                    },
+                    { new: true },
+                    (err, cashier) => {
+                        if (err) {
+                            console.log(err);
+                            var message = err;
+                            if (err.message) {
+                                message = err.message;
+                            }
+                            res.status(200).json({
+                                status: 0,
+                                message: message,
+                            });
+                        } else {
+                            return res.status(200).json({ status: 1, data: cashier, message: "Cashier edited successfully" });
+                        }
+                    }
+                );
+            }
+        });
+});
+
+router.post("/partner/addCashier", jwtTokenAuth, (req, res) => {
+    let data = new PartnerCashier();
+    const {
+        name,
+        branch_id,
+        credit_limit,
+        code,
+        working_from,
+        working_to,
+        per_trans_amt,
+        max_trans_amt,
+        max_trans_count,
+        cashier_length,
+    } = req.body;
+    const jwtusername = req.sign_creds.username;
+    Partner.findOne(
+        {
+            username: jwtusername,
+            status: 1,
+        },
+        function (err, partner) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (partner == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                data.name = name;
+                data.code = code;
+                data.credit_limit = credit_limit;
+                data.working_from = working_from;
+                data.working_to = working_to;
+                data.per_trans_amt = per_trans_amt;
+                data.max_trans_amt = max_trans_amt;
+                data.max_trans_count = max_trans_count;
+                data.partner_id = partner._id;
+                data.branch_id = branch_id;
+                if (cashier_length == 0) {
+                    data.central = true;
+                }
+
+                data.save((err, d) => {
+                    if (err) {
+                        console.log(err);
+                        var message = err;
+                        if (err.message) {
+                            message = err.message;
+                        }
+                        res.status(200).json({
+                            status: 0,
+                            message: message,
+                        });
+                    } else {
+
+                        Partner.updateOne(
+                            { _id: partner._id },
+                            { $inc: { total_cashiers: 1 } },
+                            (err) => {
+                                if (err) {
+                                    console.log(err);
+                                    var message = err;
+                                    if (err.message) {
+                                        message = err.message;
+                                    }
+                                    res.status(200).json({
+                                        status: 0,
+                                        message: message,
+                                    });
+                                } else {
+                                    PartnerBranch.findByIdAndUpdate(
+                                        branch_id,
+                                        { $inc: { total_cashiers: 1 } },
+                                        function (e) {
+                                            return res.status(200).json({ status: 1, data: data });
+                                        }
+                                    );
+
+                                }
+
+                            });
+                    }
+                });
+            }
+        }
+    );
+});
+
+router.post("/partner/listBranches", jwtTokenAuth, function (req, res) {
+    const jwtusername = req.sign_creds.username;
+    Partner.findOne(
+        {
+            username: jwtusername,
+            status: 1,
+        },
+        function (err, partner) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (partner == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                const partner_id = partner._id;
+                // if (user.isAdmin) {
+                PartnerBranch.find({ partner_id: partner_id }, function (err, branch) {
+                    if (err) {
+                        console.log(err);
+                        var message = err;
+                        if (err.message) {
+                            message = err.message;
+                        }
+                        res.status(200).json({
+                            status: 0,
+                            message: message,
+                        });
+                    } else {
+                        res.status(200).json({
+                            status: 1,
+                            branches: branch,
+                        });
+                    }
+                });
+            }
+        }
+    );
+});
+
+router.post("/partner/addBranch", jwtTokenAuth, (req, res) => {
+    let data = new PartnerBranch();
+    const {
+        name,
+        code,
+        username,
+        credit_limit,
+        cash_in_hand,
+        address,
+        state,
+        zip,
+        country,
+        ccode,
+        mobile,
+        email,
+        working_from,
+        working_to,
+    } = req.body;
+    const jwtusername = req.sign_creds.username;
+    Partner.findOne(
+        {
+            username: jwtusername,
+            status: 1
+        },
+        function (err, partner) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (partner == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
+                    blockchain.createWallet([
+                        code + "_partnerbranch_operational@" + bank.name,
+                        code + "_partnerbranch_master@" + bank.name,
+                    ]).then(function (result) {
+                        if (result != "" && !result.includes("wallet already exists")) {
+                            console.log(result);
+                            res.status(200).json({
+                                status: 0,
+                                message: "Blockchain service was unavailable. Please try again.",
+                                result: result,
+                            });
+                        } else {
+                            data.name = name;
+                            data.code = code;
+                            if (credit_limit !== "" && credit_limit != null) {
+                                data.credit_limit = credit_limit;
+                            }
+                            if (cash_in_hand !== "" && cash_in_hand != null) {
+                                data.cash_in_hand = cash_in_hand;
+                            }
+                            data.username = username;
+                            data.address = address;
+                            data.state = state;
+                            data.country = country;
+                            data.zip = zip;
+                            data.ccode = ccode;
+                            data.mobile = mobile;
+                            data.email = email;
+                            data.partner_id = partner._id;
+                            data.password = makeid(10);
+                            data.working_from = working_from;
+                            data.working_to = working_to;
+                            let partnerName = partner.name;
+
+                            data.save((err) => {
+                                if (err) {
+                                    console.log(err);
+                                    var message = err;
+                                    if (err.message) {
+                                        message = err.message;
+                                    }
+                                    res.status(200).json({
+                                        status: 0,
+                                        message: message,
+                                    });
+                                } else {
+                                    Partner.updateOne(
+                                        { _id: partner._id },
+                                        { $inc: { total_branches: 1 } },
+                                        (err) => {
+                                            if (err) {
+                                                console.log(err);
+                                                var message = err;
+                                                if (err.message) {
+                                                    message = err.message;
+                                                }
+                                                res.status(200).json({
+                                                    status: 0,
+                                                    message: message,
+                                                });
+                                            } else {
+                                                let content =
+                                                    "<p>Your branch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+                                                    config.mainIP +
+                                                    "/branch/" +
+                                                    partnerName +
+                                                    "'>http://" +
+                                                    config.mainIP +
+                                                    "/branch/" +
+                                                    partnerName +
+                                                    "</a></p><p><p>Your username: " +
+                                                    data.username +
+                                                    "</p><p>Your password: " +
+                                                    data.password +
+                                                    "</p>";
+                                                sendMail(content, "Partner Branch Created", email);
+                                                let content2 =
+                                                    "Your branch is added in E-Wallet application Login URL: http://" +
+                                                    config.mainIP +
+                                                    "/branch/" +
+                                                    partnerName +
+                                                    " Your username: " +
+                                                    data.username +
+                                                    " Your password: " +
+                                                    data.password;
+                                                sendSMS(content2, mobile);
+                                                // return res.status(200).json(data);
+                                                res.status(200).json({
+                                                    status: "Partner Branch Created",
+                                                    walletStatus: result.toString(),
+                                                });
+                                            }
+                                        }
+                                    );
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+        }
+    );
+});
+
+router.post("/partner/editBranch", jwtTokenAuth, (req, res) => {
+    let data = new PartnerBranch();
+    const {
+        branch_id,
+        name,
+        code,
+        username,
+        credit_limit,
+        address,
+        state,
+        zip,
+        country,
+        ccode,
+        mobile,
+        email,
+        working_from,
+        working_to,
+    } = req.body;
+    const jwtusername = req.sign_creds.username;
+    Partner.findOne(
+        {
+            username: jwtusername,
+            status: 1,
+        },
+        function (err, user) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (user == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                PartnerBranch.findByIdAndUpdate(
+                    branch_id,
+                    {
+                        name: name,
+                        ode: code,
+                        credit_limit: credit_limit,
+                        username: username,
+                        address: address,
+                        state: state,
+                        zip: zip,
+                        ccode: ccode,
+                        country: country,
+                        mobile: mobile,
+                        email: email,
+                        working_from: working_from,
+                        working_to: working_to,
+                    },
+                    (err) => {
+                        if (err) {
+                            console.log(err);
+                            var message = err;
+                            if (err.message) {
+                                message = err.message;
+                            }
+                            res.status(200).json({
+                                status: 0,
+                                message: message,
+                            });
+                        } else {
+                            return res.status(200).json({ status: 1, data: data });
+                        }
+                    }
+                );
+            }
+        }
+    );
+});
+
+router.post("/partner/activate", jwtTokenAuth, function (req, res) {
+    const jwtusername = req.sign_creds.username;
+    Partner.findOne(
+        {
+            username: jwtusername,
         },
         function (err, partner) {
             if (err) {
@@ -38,44 +651,47 @@ router.post("/partner/activate", jwtTokenAuth, function (req, res) {
                         "Token changed or user not valid. Try to login again or contact system administrator.",
                 });
             } else {
-                createWallet([
-                    "_partner_operational@" + bank.name,
-                    "_partner_master@" + bank.name,
-                ]).then(function (result) {
-                    if (result != "" && !result.includes("wallet already exists")) {
-                        console.log(result);
-                        res.status(200).json({
-                            status: 0,
-                            message: "Blockchain service was unavailable. Please try again.",
-                            result: result,
-                        });
-                    } else {
-                        Bank.findByIdAndUpdate(
-                            bank._id,
-                            {
-                                status: 1,
-                            },
-                            (err) => {
-                                if (err) {
-                                    console.log(err);
-                                    var message = err;
-                                    if (err.message) {
-                                        message = err.message;
+                Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
+                    blockchain.createWallet([
+                        partner.code + "_partner_operational@" + bank.name,
+                        partner.code + "_partner_master@" + bank.name,
+                    ]).then(function (result) {
+                        console.log("result", result)
+                        if (result != "" && !result.includes("wallet already exists")) {
+                            console.log(result);
+                            res.status(200).json({
+                                status: 0,
+                                message: "Blockchain service was unavailable. Please try again.",
+                                result: result,
+                            });
+                        } else {
+                            Partner.findByIdAndUpdate(
+                                partner._id,
+                                {
+                                    status: 1,
+                                },
+                                (err) => {
+                                    if (err) {
+                                        console.log(err);
+                                        var message = err;
+                                        if (err.message) {
+                                            message = err.message;
+                                        }
+                                        res.status(200).json({
+                                            status: 0,
+                                            message: message,
+                                        });
+                                    } else {
+                                        res.status(200).json({
+                                            status: "activated",
+                                            walletStatus: result,
+                                        });
                                     }
-                                    res.status(200).json({
-                                        status: 0,
-                                        message: message,
-                                    });
-                                } else {
-                                    res.status(200).json({
-                                        status: "activated",
-                                        walletStatus: result,
-                                    });
                                 }
-                            }
-                        );
-                    }
-                });
+                            );
+                        }
+                    });
+                })
             }
         }
     );

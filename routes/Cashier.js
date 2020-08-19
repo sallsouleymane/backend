@@ -817,7 +817,7 @@ router.post("/addClosingBalance", (req, res) => {
 								closing_time: new Date(),
 								is_closed: true,
 							},
-							function (e, v) {}
+							function (e, v) { }
 						);
 
 						return res.status(200).json(true);
@@ -1673,7 +1673,7 @@ router.post("/cashierSendMoney", function (req, res) {
 																				.then(function (bal) {
 																					if (
 																						Number(bal) +
-																							Number(f2.credit_limit) >=
+																						Number(f2.credit_limit) >=
 																						oamount + fee
 																					) {
 																						console.log(fe);
@@ -1844,7 +1844,7 @@ router.post("/cashierSendMoney", function (req, res) {
 																																f.total_trans
 																															) + 1,
 																													},
-																													function (e, v) {}
+																													function (e, v) { }
 																												);
 																											}
 
@@ -1880,7 +1880,7 @@ router.post("/cashierSendMoney", function (req, res) {
 																														data.save(function (
 																															err,
 																															c
-																														) {});
+																														) { });
 																													} else {
 																														var amt =
 																															Number(c.amount) +
@@ -1892,7 +1892,7 @@ router.post("/cashierSendMoney", function (req, res) {
 																															function (
 																																err,
 																																c
-																															) {}
+																															) { }
 																														);
 																													}
 																												}
@@ -2228,9 +2228,9 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																							.then(function (bal) {
 																								if (
 																									Number(bal) +
-																										Number(
-																											branch.credit_limit
-																										) >=
+																									Number(
+																										branch.credit_limit
+																									) >=
 																									oamount + fee
 																								) {
 																									console.log(fe);
@@ -2399,7 +2399,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																																function (
 																																	e,
 																																	v
-																																) {}
+																																) { }
 																															);
 
 																															CashierLedger.findOne(
@@ -2446,7 +2446,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																																			function (
 																																				err,
 																																				c
-																																			) {}
+																																			) { }
 																																		);
 																																	} else {
 																																		var amt =
@@ -2467,7 +2467,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																																			function (
 																																				err,
 																																				c
-																																			) {}
+																																			) { }
 																																		);
 																																	}
 																																}
@@ -3111,7 +3111,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 																															f.total_trans
 																														) + 1,
 																												},
-																												function (e, v) {}
+																												function (e, v) { }
 																											);
 																											CashierLedger.findOne(
 																												{
@@ -3140,7 +3140,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 																														data.save(function (
 																															err,
 																															c
-																														) {});
+																														) { });
 																													} else {
 																														var amt =
 																															Number(c.amount) +
