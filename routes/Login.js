@@ -17,6 +17,7 @@ const Profile = require("../models/Profile");
 const Branch = require("../models/Branch");
 const BankUser = require("../models/BankUser");
 const Cashier = require("../models/Cashier");
+const Partner = require("../models/partner/Partner");
 
 function jwtsign(sign_creds) {
 	var token = jwt.sign(
@@ -30,6 +31,55 @@ function jwtsign(sign_creds) {
 	);
 	return token;
 }
+
+router.post("/partner/login", function (req, res) {
+	const { username, password } = req.body;
+	Partner.findOne(
+		{
+			username,
+			password,
+		},
+		function (err, partner) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (!partner) {
+				res.status(200).json({
+					status: 0,
+					message: "Incorrect username or password",
+				});
+			} else if (partner.status == -1) {
+				res.status(200).json({
+					status: 0,
+					message: "Your account has been blocked, pls contact the admin!",
+				});
+			} else {
+				let sign_creds = { username: username, password: password };
+				const token = jwtsign(sign_creds);
+
+				res.status(200).json({
+					token: token,
+					name: partner.name,
+					initial_setup: partner.initial_setup,
+					username: partner.username,
+					mobile: partner.mobile,
+					status: partner.status,
+					contract: partner.contract,
+					logo: partner.logo,
+					id: partner._id,
+				});
+
+			}
+		}
+	);
+});
 
 router.post("/merchantBranch/login", (req, res) => {
 	const { username, password } = req.body;
