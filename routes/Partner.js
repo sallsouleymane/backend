@@ -18,6 +18,45 @@ const PartnerBranch = require("../models/partner/Branch")
 const PartnerCashier = require("../models/partner/Cashier")
 const PartnerUser = require("../models/partner/User")
 
+router.post("/partner/setupUpdate", jwtTokenAuth, (req, res) => {
+    const { username, password } = req.body;
+    const jwtusername = req.sign_creds.username;
+    Partner.findOneAndUpdate(
+        {
+            username: jwtusername,
+        },
+        {
+            username: username,
+            password: password,
+            initial_setup: true,
+        },
+        function (err, partner) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (partner == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                res.status(200).json({
+                    status: 1,
+                    message: "Updated successfully",
+                });
+            }
+        }
+    );
+});
+
 router.post("/partner/addUser", jwtTokenAuth, (req, res) => {
     let data = new PartnerUser();
     const {

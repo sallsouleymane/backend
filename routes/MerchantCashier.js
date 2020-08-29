@@ -1022,6 +1022,8 @@ router.post("/merchantCashier/createInvoice", jwtTokenAuth, (req, res) => {
 		group_id,
 		number,
 		name,
+		last_name,
+		address,
 		amount,
 		bill_date,
 		bill_period,
@@ -1124,6 +1126,8 @@ router.post("/merchantCashier/createInvoice", jwtTokenAuth, (req, res) => {
 								var invoiceObj = new Invoice();
 								invoiceObj.number = number;
 								invoiceObj.name = name;
+								invoiceObj.last_name = last_name;
+								invoiceObj.address = address;
 								invoiceObj.amount = amount;
 								invoiceObj.merchant_id = cashier.merchant_id;
 								invoiceObj.bill_date = bill_date;
@@ -1268,6 +1272,8 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 									var {
 										number,
 										name,
+										last_name,
+										address,
 										amount,
 										bill_date,
 										bill_period,
@@ -1333,6 +1339,8 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 											{ _id: invoiceFound._id },
 											{
 												name,
+												last_name,
+												address,
 												amount,
 												bill_date,
 												bill_period,
@@ -1341,7 +1349,7 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 												mobile,
 												ccode,
 												group_id: group_id,
-												cashier_id: cashier_.id,
+												cashier_id: cashier._id,
 												items: updatedItems,
 												paid,
 												customer_code,
@@ -1363,6 +1371,8 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										var invoiceObj = new Invoice();
 										invoiceObj.number = number;
 										invoiceObj.name = name;
+										invoiceObj.last_name = last_name;
+										invoiceObj.address = address;
 										invoiceObj.amount = amount;
 										invoiceObj.merchant_id = cashier.merchant_id;
 										invoiceObj.bill_date = bill_date;

@@ -3,6 +3,8 @@ const uniqueValidator = require("mongoose-unique-validator");
 const InvoiceSchema = new mongoose.Schema({
 	number: { type: String, required: true, unique: true },
 	name: { type: String, required: true },
+	last_name: { type: String, required: false },
+	address: { type: String, required: false },
 	merchant_id: { type: String, required: true },
 	customer_code: { type: String, required: false },
 	amount: { type: Number, required: false },
