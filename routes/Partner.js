@@ -16,7 +16,198 @@ const Bank = require("../models/Bank");
 const Partner = require("../models/partner/Partner");
 const PartnerBranch = require("../models/partner/Branch")
 const PartnerCashier = require("../models/partner/Cashier")
-const PartnerUser = require("../models/partner/User")
+const PartnerUser = require("../models/partner/User");
+const FailedTX = require("../models/FailedTXLedger");
+
+router.post("/partner/getHistory", jwtTokenAuth, function (req, res) {
+    const { from } = req.body;
+    const jwtusername = req.sign_creds.username;
+    Partner.findOne(
+        {
+            username: jwtusername,
+            status: 1,
+        },
+        function (err, partner) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (partner == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
+                    if (err) {
+                        console.log(err);
+                        var message = err;
+                        if (err.message) {
+                            message = err.message;
+                        }
+                        res.status(200).json({
+                            status: 0,
+                            message: message,
+                        });
+                    } else if (bank == null) {
+                        res.status(200).json({
+                            status: 0,
+                            message:
+                                "Bank of the partner is not valid.",
+                        });
+                    } else {
+                        const wallet = partner.code + "_partner_" + from + "@" + bank.name;
+                        blockchain.getStatement(wallet).then(function (history) {
+                            FailedTX.find({ wallet_id: wallet }, (err, failed) => {
+                                if (err) {
+                                    console.log(err);
+                                    var message = err;
+                                    if (err.message) {
+                                        message = err.message;
+                                    }
+                                    res.status(200).json({
+                                        status: 0,
+                                        message: message,
+                                    });
+                                } else {
+                                    res.status(200).json({
+                                        status: 1,
+                                        history: history,
+                                        failed: failed,
+                                    });
+                                }
+                            });
+                        });
+                    }
+                });
+            }
+        }
+    );
+});
+
+router.get("/partner/getOperationalBalance", jwtTokenAuth, function (req, res) {
+
+    const jwtusername = req.sign_creds.username;
+    Partner.findOne(
+        {
+            username: jwtusername,
+            status: 1,
+        },
+        function (err, partner) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (partner == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
+                    if (err) {
+                        console.log(err);
+                        var message = err;
+                        if (err.message) {
+                            message = err.message;
+                        }
+                        res.status(200).json({
+                            status: 0,
+                            message: message,
+                        });
+                    } else if (bank == null) {
+                        res.status(200).json({
+                            status: 0,
+                            message:
+                                "Bank of the partner is not valid.",
+                        });
+                    } else {
+
+                        const wallet_id = partner.code + "_partner_operational@" + bank.name;
+
+                        blockchain.getBalance(wallet_id).then(function (result) {
+                            res.status(200).json({
+                                status: 1,
+                                balance: result,
+                            });
+                        })
+                    }
+                });
+
+            }
+        }
+    );
+});
+
+router.post("/partner/dashStats", jwtTokenAuth, function (req, res) {
+    try {
+        const jwtusername = req.sign_creds.username;
+        Partner.findOne(
+            {
+                username: jwtusername,
+                status: 1,
+            },
+            async function (err, partner) {
+                if (err) {
+                    console.log(err);
+                    var message = err;
+                    if (err.message) {
+                        message = err.message;
+                    }
+                    res.status(200).json({
+                        status: 0,
+                        message: message,
+                    });
+                } else if (partner == null) {
+                    res.status(200).json({
+                        status: 0,
+                        message:
+                            "Token changed or user not valid. Try to login again or contact system administrator.",
+                    });
+                } else {
+                    const user_id = partner._id;
+                    var branchCount = await PartnerBranch.countDocuments({
+                        partner_id: user_id,
+                    });
+
+                    var cashierCount = await PartnerCashier.countDocuments({
+                        partner_id: user_id,
+                    });
+                    var userCount = await PartnerUser.countDocuments({
+                        partner_id: user_id,
+                    });
+
+                    res.status(200).json({
+                        totalBranches: branchCount,
+                        totalCashiers: cashierCount,
+                        totalUsers: userCount
+                    });
+                }
+            }
+        );
+    } catch (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+            message = err.message;
+        }
+        res.status(200).json({ status: 0, message: message });
+    }
+});
 
 router.post("/partner/setupUpdate", jwtTokenAuth, (req, res) => {
     const { username, password } = req.body;
@@ -415,7 +606,6 @@ router.post("/partner/listBranches", jwtTokenAuth, function (req, res) {
                 });
             } else {
                 const partner_id = partner._id;
-                // if (user.isAdmin) {
                 PartnerBranch.find({ partner_id: partner_id }, function (err, branch) {
                     if (err) {
                         console.log(err);
