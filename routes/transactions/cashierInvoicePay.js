@@ -13,7 +13,7 @@ module.exports = async function (
 ) {
 	// receiver's wallet names
 	const branchOpWallet = branch.bcode + "_operational@" + bank.name;
-	const merchantOpWallet = merchant.username + "_operational@" + bank.name;
+	const merchantOpWallet = merchant.username + "_merchant_operational@" + bank.name;
 	// const bankOpWallet = "operational@" + bank.name;
 	// const infraOpWallet = "infra_operational@" + bank.name;
 
@@ -77,7 +77,7 @@ async function distributeRevenue(
 	master_code
 ) {
 	const branchOpWallet = branch.bcode + "_operational@" + bank.name;
-	const merchantOpWallet = merchant.username + "_operational@" + bank.name;
+	const merchantOpWallet = merchant.username + "_merchant_operational@" + bank.name;
 	const bankOpWallet = "operational@" + bank.name;
 	const infraOpWallet = "infra_operational@" + bank.name;
 
