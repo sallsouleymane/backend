@@ -18,7 +18,7 @@ const merchantBranchRouter = require("./routes/MerchantBranch");
 const bankPartnerRouter = require("./routes/bank/Partner")
 const bankMerchantRouter = require("./routes/bank/Merchant")
 const invoicePayRouter = require("./routes/InvoicePay");
-const partnerRouter = require("./routes/Partner");
+const partnerRouter = require("./routes/partner/Partner");
 
 var cors = require("cors");
 const bodyParser = require("body-parser");

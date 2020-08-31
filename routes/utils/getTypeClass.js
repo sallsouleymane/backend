@@ -10,47 +10,59 @@ const User = require('../../models/User')
 const Merchant = require('../../models/merchant/Merchant')
 const MerchantBranch = require('../../models/merchant/MerchantBranch')
 const MerchantStaff = require('../../models/merchant/MerchantStaff')
+const Partner = require('../../models/partner/Partner')
+const PartnerBranch = require('../../models/partner/Branch')
+const PartnerUser = require('../../models/partner/User')
 
 module.exports = (key) => {
-  switch (key) {
-	case 'cashier':
-	  return Cashier
-	  break
-	case 'bank':
-	  return Bank
-	  break
-	case 'infra':
-	  return Infra
-	  break
-	case 'branch':
-	  return Branch
-	  break
-	case 'bankuser':
-	  return BankUser
-	  break
-	case 'bankfee':
-	  return Fee
-	  break
-	case 'cashierledger':
-	  return CashierLedger
-	  break
-	case 'cashierpending':
-	  return CashierPending
-	  break
-	case 'user':
-		return User
-		break
-	case 'merchant':
-		return Merchant
-		break
-	case 'merchantBranch':
-		return MerchantBranch
-		break
-	case 'merchantCashier':
-		return MerchantStaff
-		break
-	default:
-	  return null
-	  break
-  }
+	switch (key) {
+		case 'cashier':
+			return Cashier
+			break
+		case 'bank':
+			return Bank
+			break
+		case 'infra':
+			return Infra
+			break
+		case 'branch':
+			return Branch
+			break
+		case 'bankuser':
+			return BankUser
+			break
+		case 'bankfee':
+			return Fee
+			break
+		case 'cashierledger':
+			return CashierLedger
+			break
+		case 'cashierpending':
+			return CashierPending
+			break
+		case 'user':
+			return User
+			break
+		case 'merchant':
+			return Merchant
+			break
+		case 'merchantBranch':
+			return MerchantBranch
+			break
+		case 'merchantCashier':
+			return MerchantStaff
+			break
+		case 'partner':
+			return Partner
+			break
+		case 'partnerBranch':
+			return PartnerBranch
+			break
+		case 'partnerCashier':
+			return PartnerUser
+			break
+		default:
+			return null
+			break
+	}
 }
