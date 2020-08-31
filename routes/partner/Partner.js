@@ -578,6 +578,102 @@ router.post("/partner/editUser", jwtTokenAuth, (req, res) => {
     );
 });
 
+router.post("/partner/listCashiers", jwtTokenAuth, function (req, res) {
+    const jwtusername = req.sign_creds.username;
+    Partner.findOne(
+        {
+            username: jwtusername,
+            status: 1,
+        },
+        function (err, partner) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (partner == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                const partner_id = partner._id;
+                PartnerCashier.find({ partner_id: partner_id }, function (err, cashiers) {
+                    if (err) {
+                        console.log(err);
+                        var message = err;
+                        if (err.message) {
+                            message = err.message;
+                        }
+                        res.status(200).json({
+                            status: 0,
+                            message: message,
+                        });
+                    } else {
+                        res.status(200).json({
+                            status: 1,
+                            cashiers: cashiers,
+                        });
+                    }
+                });
+            }
+        }
+    );
+});
+router.post("/partner/getCashier", jwtTokenAuth, function (req, res) {
+    const { cashier_id } = req.body;
+    const jwtusername = req.sign_creds.username;
+    Partner.findOne(
+        {
+            username: jwtusername,
+            status: 1,
+        },
+        function (err, partner) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (partner == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                PartnerCashier.findOne({ _id: cashier_id }, function (err, cashier) {
+                    if (err) {
+                        console.log(err);
+                        var message = err;
+                        if (err.message) {
+                            message = err.message;
+                        }
+                        res.status(200).json({
+                            status: 0,
+                            message: message,
+                        });
+                    } else {
+                        res.status(200).json({
+                            status: 1,
+                            cashier: cashier,
+                        });
+                    }
+                });
+            }
+        }
+    );
+});
 router.post("/partner/editCashier", jwtTokenAuth, (req, res) => {
     const {
         cashier_id,
@@ -769,7 +865,7 @@ router.post("/partner/listBranches", jwtTokenAuth, function (req, res) {
                 });
             } else {
                 const partner_id = partner._id;
-                PartnerBranch.find({ partner_id: partner_id }, function (err, branch) {
+                PartnerBranch.find({ partner_id: partner_id }, function (err, branches) {
                     if (err) {
                         console.log(err);
                         var message = err;
@@ -783,7 +879,56 @@ router.post("/partner/listBranches", jwtTokenAuth, function (req, res) {
                     } else {
                         res.status(200).json({
                             status: 1,
-                            branches: branch,
+                            branches: branches,
+                        });
+                    }
+                });
+            }
+        }
+    );
+});
+
+router.post("/partner/getBranch", jwtTokenAuth, function (req, res) {
+    const { branch_id } = req.body;
+    const jwtusername = req.sign_creds.username;
+    Partner.findOne(
+        {
+            username: jwtusername,
+            status: 1,
+        },
+        function (err, partner) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (partner == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                PartnerBranch.findOne({ _id: branch_id }, function (err, branch) {
+                    if (err) {
+                        console.log(err);
+                        var message = err;
+                        if (err.message) {
+                            message = err.message;
+                        }
+                        res.status(200).json({
+                            status: 0,
+                            message: message,
+                        });
+                    } else {
+                        res.status(200).json({
+                            status: 1,
+                            branch: branch,
                         });
                     }
                 });
