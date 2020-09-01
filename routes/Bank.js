@@ -812,7 +812,6 @@ router.post("/editBranch", (req, res) => {
 });
 
 router.post("/branchStatus", function (req, res) {
-	//res.send("hi");
 	const { token, status, branch_id } = req.body;
 
 	Bank.findOne(
@@ -1028,6 +1027,7 @@ router.post("/addBankUser", (req, res) => {
 		}
 	);
 });
+
 router.post("/editBankUser", (req, res) => {
 	const {
 		name,

@@ -19,6 +19,7 @@ const bankPartnerRouter = require("./routes/bank/Partner")
 const bankMerchantRouter = require("./routes/bank/Merchant")
 const invoicePayRouter = require("./routes/InvoicePay");
 const partnerRouter = require("./routes/partner/Partner");
+const partnerBranchRouter = require("./routes/partner/Branch");
 
 var cors = require("cors");
 const bodyParser = require("body-parser");
@@ -65,4 +66,5 @@ app.use("/api", invoicePayRouter);
 app.use("/api", bankPartnerRouter);
 app.use("/api", bankMerchantRouter);
 app.use("/api", partnerRouter);
+app.use("/api", partnerBranchRouter);
 app.listen(API_PORT, () => console.log("Backend Started"));

@@ -132,6 +132,77 @@ router.post("/partner/getBalance", jwtTokenAuth, function (req, res) {
     );
 });
 
+router.post("/partner/getHistoryTotal", jwtTokenAuth, function (req, res) {
+    const { from } = req.body;
+    const jwtusername = req.sign_creds.username;
+    Partner.findOne(
+        {
+            username: jwtusername,
+            status: 1,
+        },
+        function (err, partner) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (partner == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
+                    if (err) {
+                        console.log(err);
+                        var message = err;
+                        if (err.message) {
+                            message = err.message;
+                        }
+                        res.status(200).json({
+                            status: 0,
+                            message: message,
+                        });
+                    } else if (bank == null) {
+                        res.status(200).json({
+                            status: 0,
+                            message:
+                                "Bank of the partner is not valid.",
+                        });
+                    } else {
+                        const wallet = partner.code + "_partner_" + from + "@" + bank.name;
+                        blockchain.getTransactionCount(wallet).then(function (count) {
+                            if (err) {
+                                console.log(err);
+                                var message = err;
+                                if (err.message) {
+                                    message = err.message;
+                                }
+                                res.status(200).json({
+                                    status: 0,
+                                    message: message,
+                                });
+                            } else {
+                                res.status(200).json({
+                                    status: 1,
+                                    count: count
+                                });
+                            }
+                        });
+
+                    }
+                });
+            }
+        }
+    );
+});
+
 router.post("/partner/getHistory", jwtTokenAuth, function (req, res) {
     const { from } = req.body;
     const jwtusername = req.sign_creds.username;
@@ -626,54 +697,7 @@ router.post("/partner/listCashiers", jwtTokenAuth, function (req, res) {
         }
     );
 });
-router.post("/partner/getCashier", jwtTokenAuth, function (req, res) {
-    const { cashier_id } = req.body;
-    const jwtusername = req.sign_creds.username;
-    Partner.findOne(
-        {
-            username: jwtusername,
-            status: 1,
-        },
-        function (err, partner) {
-            if (err) {
-                console.log(err);
-                var message = err;
-                if (err.message) {
-                    message = err.message;
-                }
-                res.status(200).json({
-                    status: 0,
-                    message: message,
-                });
-            } else if (partner == null) {
-                res.status(200).json({
-                    status: 0,
-                    message:
-                        "Token changed or user not valid. Try to login again or contact system administrator.",
-                });
-            } else {
-                PartnerCashier.findOne({ _id: cashier_id }, function (err, cashier) {
-                    if (err) {
-                        console.log(err);
-                        var message = err;
-                        if (err.message) {
-                            message = err.message;
-                        }
-                        res.status(200).json({
-                            status: 0,
-                            message: message,
-                        });
-                    } else {
-                        res.status(200).json({
-                            status: 1,
-                            cashier: cashier,
-                        });
-                    }
-                });
-            }
-        }
-    );
-});
+
 router.post("/partner/editCashier", jwtTokenAuth, (req, res) => {
     const {
         cashier_id,

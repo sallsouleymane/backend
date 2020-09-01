@@ -43,6 +43,61 @@ router.get("/testGet", function (req, res) {
 	});
 });
 
+router.post("/:user/updateById", jwtTokenAuth, (req, res) => {
+	const user = req.params.user;
+	const Type = getTypeClass(user);
+	const { page, page_id, update_data } = req.body;
+	const username = req.sign_creds.username;
+	Type.findOne(
+		{
+			username,
+			status: 1,
+		},
+		function (err, details) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (details == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Unauthorised",
+				});
+			} else {
+				const Page = getTypeClass(page);
+				Page.findByIdAndUpdate(page_id, update_data, { new: true }, (err, row) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (row == null) {
+						res.status(200).json({
+							status: 0,
+							message: Page + " not found",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							row: row
+						});
+					}
+				})
+			}
+		});
+});
+
 router.post("/:user/getAll", jwtTokenAuth, (req, res) => {
 	const user = req.params.user;
 	const Type = getTypeClass(user);

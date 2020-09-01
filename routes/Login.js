@@ -18,6 +18,7 @@ const Branch = require("../models/Branch");
 const BankUser = require("../models/BankUser");
 const Cashier = require("../models/Cashier");
 const Partner = require("../models/partner/Partner");
+const PartnerBranch = require("../models/partner/Branch");
 
 function jwtsign(sign_creds) {
 	var token = jwt.sign(
@@ -31,6 +32,74 @@ function jwtsign(sign_creds) {
 	);
 	return token;
 }
+
+router.post("/partnerBranch/login", function (req, res) {
+	const { username, password } = req.body;
+	PartnerBranch.findOne(
+		{
+			username,
+			password,
+		},
+		function (err, branch) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (!branch) {
+				res.status(200).json({
+					status: 0,
+					message: "Incorrect username or password",
+				});
+			} else if (branch.status == -1) {
+				res.status(200).json({
+					status: 0,
+					message: "Your account has been blocked, pls contact the admin!",
+				});
+			} else {
+				Partner.findOne(
+					{
+						_id: branch.partner_id,
+					},
+					function (err, partner) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							let logo = partner.logo;
+							let sign_creds = { username: username, password: password };
+							const token = jwtsign(sign_creds);
+
+							res.status(200).json({
+								token: token,
+								name: branch.name,
+								initial_setup: branch.initial_setup,
+								username: branch.username,
+								status: branch.status,
+								email: branch.email,
+								mobile: branch.mobile,
+								logo: logo,
+								id: branch._id,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
 
 router.post("/partner/login", function (req, res) {
 	const { username, password } = req.body;

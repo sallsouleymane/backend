@@ -113,7 +113,7 @@ router.post("/fileUpload", function (req, res) {
 									}
 								});
 
-								fs.unlink(oldpath, function (err) {});
+								fs.unlink(oldpath, function (err) { });
 							}
 						});
 					}
@@ -200,7 +200,7 @@ router.post("/:user/imageUpload", jwtTokenAuth, function (req, res) {
 								});
 							}
 
-							fs.unlink(oldpath, function (err) {});
+							fs.unlink(oldpath, function (err) { });
 						});
 					}
 				});
