@@ -13,7 +13,8 @@ module.exports = async function (
 ) {
 	// receiver's wallet names
 	const userWallet = user.mobile + "@" + bank.name;
-	const merchantOpWallet = merchant.username + "_merchant_operational@" + bank.name;
+	var creator = (merchant.creator == 1) ? "inframerchant" : "merchant";
+	const merchantOpWallet = merchant.username + "_" + creator + "_operational@" + bank.name;
 
 	let master_code = getTransactionCode(user.mobile, merchant.mobile);
 
@@ -75,7 +76,8 @@ async function distributeRevenue(
 	master_code
 ) {
 	const userWallet = user.mobile + "@" + bank.name;
-	const merchantOpWallet = merchant.username + "_merchant_operational@" + bank.name;
+	var creator = (merchant.creator == 1) ? "inframerchant" : "merchant";
+	const merchantOpWallet = merchant.username + "_" + creator + "_operational@" + bank.name;
 	const bankOpWallet = "operational@" + bank.name;
 	const infraOpWallet = "infra_operational@" + bank.name;
 
