@@ -9,9 +9,11 @@ const CashierLedger = require('../../models/CashierLedger')
 const User = require('../../models/User')
 const Merchant = require('../../models/merchant/Merchant')
 const MerchantBranch = require('../../models/merchant/MerchantBranch')
-const MerchantStaff = require('../../models/merchant/MerchantStaff')
+const MerchantCashier = require('../../models/merchant/MerchantCashier')
+const MerchantUser = require('../../models/merchant/MerchantStaff')
 const Partner = require('../../models/partner/Partner')
 const PartnerBranch = require('../../models/partner/Branch')
+const PartnerCashier = require('../../models/partner/Cashier')
 const PartnerUser = require('../../models/partner/User')
 
 module.exports = (key) => {
@@ -50,7 +52,10 @@ module.exports = (key) => {
 			return MerchantBranch
 			break
 		case 'merchantCashier':
-			return MerchantStaff
+			return MerchantCashier
+			break
+		case 'merchantUser':
+			return MerchantUser
 			break
 		case 'partner':
 			return Partner
@@ -59,6 +64,9 @@ module.exports = (key) => {
 			return PartnerBranch
 			break
 		case 'partnerCashier':
+			return PartnerCashier
+			break
+		case 'partnerUser':
 			return PartnerUser
 			break
 		default:
