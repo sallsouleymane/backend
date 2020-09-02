@@ -19,6 +19,8 @@ const BankUser = require("../models/BankUser");
 const Cashier = require("../models/Cashier");
 const Partner = require("../models/partner/Partner");
 const PartnerBranch = require("../models/partner/Branch");
+const PartnerCashier = require("../models/partner/Cashier");
+const PartnerUser = require("../models/partner/User");
 
 function jwtsign(sign_creds) {
 	var token = jwt.sign(
@@ -32,6 +34,77 @@ function jwtsign(sign_creds) {
 	);
 	return token;
 }
+
+router.post("/partnerCashier/login", function (req, res) {
+	const { username, password } = req.body;
+	PartnerUser.findOne(
+		{
+			username,
+			password,
+		},
+		function (err, user) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Incorrect username or password",
+				});
+			} else if (user.status == -1) {
+				res.status(200).json({
+					status: 0,
+					message: "Your account has been blocked, pls contact the admin!",
+				});
+			} else {
+				let sign_creds = { username: username, password: password };
+				const token = jwtsign(sign_creds);
+				PartnerCashier.findOneAndUpdate(
+					{
+						partner_user_id: user._id,
+					},
+					{ $set: { username: user.username } },
+					function (err, cashier) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (cashier == null) {
+							return res.status(200).json({
+								status: 0,
+								message: "This user is not assigned as a cashier.",
+							});
+						} else {
+							res.status(200).json({
+								token: token,
+								name: cashier.name,
+								username: user.username,
+								status: cashier.status,
+								email: user.email,
+								mobile: user.mobile,
+								cashier_id: cashier._id,
+								id: user._id,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
 
 router.post("/partnerBranch/login", function (req, res) {
 	const { username, password } = req.body;

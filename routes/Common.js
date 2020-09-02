@@ -43,6 +43,66 @@ router.get("/testGet", function (req, res) {
 	});
 });
 
+router.post("/:user/sendOTP", jwtTokenAuth, function (req, res) {
+	let data = new OTP();
+	const user = req.params.user;
+	const Type = getTypeClass(user);
+	const jwtusername = req.sign_creds.username;
+	const { page, email, mobile, txt } = req.body;
+	Type.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, user) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				data.user_id = user._id;
+				data.otp = makeotp(6);
+				data.page = page;
+				data.mobile = mobile;
+				data.save((err, ot) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						let content = txt + data.otp;
+						sendSMS(content, mobile);
+						sendMail(content, "OTP", email);
+
+						res.status(200).json({
+							status: 1,
+							id: ot._id,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
 router.post("/:user/updateById", jwtTokenAuth, (req, res) => {
 	const user = req.params.user;
 	const Type = getTypeClass(user);
@@ -1017,7 +1077,6 @@ router.post("/get-branch-details-by-id/:id", async (req, res) => {
 });
 
 router.post("/getBranchByName", function (req, res) {
-	//res.send("hi");
 	const { name } = req.body;
 
 	Branch.findOne(
@@ -1110,7 +1169,6 @@ router.post("/getWalletsOperational", function (req, res) {
 });
 
 router.post("/getWalletsMaster", function (req, res) {
-	//res.send("hi");
 	const { bank_id } = req.body;
 
 	Bank.findOne(
@@ -1710,7 +1768,6 @@ router.post("/cashierForgotPassword", function (req, res) {
 });
 
 router.post("/forgotPassword", function (req, res) {
-	//res.send("hi");
 	let data = new OTP();
 	const { mobile } = req.body;
 	Infra.findOne(
