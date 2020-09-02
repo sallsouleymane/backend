@@ -19,65 +19,6 @@ const PartnerCashier = require("../../models/partner/Cashier")
 const PartnerUser = require("../../models/partner/User");
 const FailedTX = require("../../models/FailedTXLedger");
 
-router.post("/partnerBranch/getPartnerByName", jwtTokenAuth, function (req, res) {
-    const { name } = req.body;
-    const jwtusername = req.sign_creds.username;
-    PartnerBranch.findOne(
-        {
-            username: jwtusername,
-            status: 1,
-        },
-        function (err, branch) {
-            if (err) {
-                console.log(err);
-                var message = err;
-                if (err.message) {
-                    message = err.message;
-                }
-                res.status(200).json({
-                    status: 0,
-                    message: message,
-                });
-            } else if (!branch) {
-                res.status(200).json({
-                    status: 0,
-                    message:
-                        "Token changed or user not valid. Try to login again or contact system administrator.",
-                });
-            } else {
-                Partner.findOne(
-                    {
-                        name: name,
-                    },
-                    "-password",
-                    function (err, partner) {
-                        if (err) {
-                            console.log(err);
-                            var message = err;
-                            if (err.message) {
-                                message = err.message;
-                            }
-                            res.status(200).json({
-                                status: 0,
-                                message: message,
-                            });
-                        } else if (partner == null) {
-                            res.status(200).json({
-                                status: 0,
-                                message: err,
-                            });
-                        } else {
-                            res.status(200).json({
-                                status: 1,
-                                partner: partner,
-                            });
-                        }
-                    }
-                );
-            }
-        });
-});
-
 router.post("/partnerBranch/SetupUpdate", jwtTokenAuth, function (req, res) {
     const { password } = req.body;
     const jwtusername = req.sign_creds.username;

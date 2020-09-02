@@ -36,11 +36,45 @@ const BranchClaim = require("../models/BranchClaim");
 const CurrencyModel = require("../models/Currency");
 const CountryModel = require("../models/Country");
 const FailedTX = require("../models/FailedTXLedger");
+const Partner = require("../models/partner/Partner")
 
 router.get("/testGet", function (req, res) {
 	return res.status(200).json({
 		status: "Internal error please try again",
 	});
+});
+
+router.post("/getPartnerByName", function (req, res) {
+	const { name } = req.body;
+	Partner.findOne(
+		{
+			name: name,
+		},
+		function (err, partner) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (partner == null) {
+				res.status(200).json({
+					status: 0,
+					message: err,
+				});
+			} else {
+				res.status(200).json({
+					status: 1,
+					logo: partner.logo,
+					name: partner.name
+				});
+			}
+		}
+	);
 });
 
 router.post("/:user/sendOTP", jwtTokenAuth, function (req, res) {
