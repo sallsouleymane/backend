@@ -18,6 +18,436 @@ const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
 const PartnerUser = require("../../models/partner/User");
 const FailedTX = require("../../models/FailedTXLedger");
+const Fee = require("../../models/Fee");
+const CashierSend = require("../../models/CashierSend");
+const CashierPending = require("../../models/CashierPending");
+const CashierClaim = require("../../models/CashierClaim");
+const CashierLedger = require("../../models/CashierLedger");
+const CashierTransfer = require("../../models/CashierTransfer");
+const OTP = require("../../models/OTP");
+
+router.post("/partnerCashier/verifyOTPClaim", jwtTokenAuth, function (req, res) {
+  const { transferCode, otp } = req.body;
+  const jwtusername = req.sign_creds.username;
+  PartnerCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        res.status(200).json({
+          status: 0,
+          message:
+            "Token changed or user not valid. Try to login again or contact system administrator.",
+        });
+      } else {
+        CashierSend.findOne(
+          {
+            transaction_code: transferCode,
+            otp: otp,
+          },
+          function (err, otpd) {
+            if (err) {
+              console.log(err);
+              var message = err;
+              if (err.message) {
+                message = err.message;
+              }
+              res.status(200).json({
+                status: 0,
+                message: message,
+              });
+            } else if (otpd == null) {
+              res.status(200).json({
+                status: 0,
+                message: "OTP Missmatch",
+              });
+            } else {
+              res.status(200).json({
+                status: 1,
+                message: "Claim OTP verified",
+              });
+            }
+          }
+        );
+      }
+    }
+  );
+});
+
+router.post("/partnerCashier/verifyClaim", jwtTokenAuth, function (req, res) {
+  const { otpId, otp } = req.body;
+  const jwtusername = req.sign_creds.username;
+  PartnerCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        res.status(200).json({
+          status: 0,
+          message:
+            "Token changed or user not valid. Try to login again or contact system administrator.",
+        });
+      } else {
+        OTP.findOne(
+          {
+            _id: otpId,
+            otp: otp,
+          },
+          function (err, otpd) {
+            if (err) {
+              console.log(err);
+              var message = err;
+              if (err.message) {
+                message = err.message;
+              }
+              res.status(200).json({
+                status: 0,
+                message: message,
+              });
+            } else if (otpd == null) {
+              res.status(200).json({
+                status: 0,
+                message: "OTP Missmatch",
+              });
+            } else {
+              res.status(200).json({
+                status: 1,
+                message: "Cashier verify claim success",
+              });
+            }
+          }
+        );
+      }
+    }
+  );
+});
+
+
+router.post("/partnerCashier/sendMoneyPending", jwtTokenAuth, function (req, res) {
+  const {
+    givenname,
+    familyname,
+    note,
+    senderIdentificationCountry,
+    senderIdentificationType,
+    senderIdentificationNumber,
+    senderIdentificationValidTill,
+    address1,
+    state,
+    zip,
+    ccode,
+    country,
+    email,
+    mobile,
+    livefee,
+    withoutID,
+    requireOTP,
+    receiverMobile,
+    receiverccode,
+    receiverGivenName,
+    receiverFamilyName,
+    receiverCountry,
+    receiverEmail,
+    receiverIdentificationCountry,
+    receiverIdentificationType,
+    receiverIdentificationNumber,
+    receiverIdentificationValidTill,
+    receiverIdentificationAmount,
+  } = req.body;
+
+  const jwtusername = req.sign_creds.username;
+  PartnerCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        res.status(200).json({
+          status: 0,
+          message:
+            "Token changed or user not valid. Try to login again or contact system administrator.",
+        });
+      } else {
+        let data = new CashierPending();
+        let temp = {
+          givenname,
+          familyname,
+          note,
+          senderIdentificationCountry,
+          senderIdentificationType,
+          senderIdentificationNumber,
+          senderIdentificationValidTill,
+          address1,
+          state,
+          zip,
+          ccode,
+          country,
+          email,
+          mobile,
+          livefee,
+          withoutID,
+          requireOTP,
+          receiverMobile,
+          receiverccode,
+          receiverGivenName,
+          receiverFamilyName,
+          receiverCountry,
+          receiverEmail,
+          receiverIdentificationCountry,
+          receiverIdentificationType,
+          receiverIdentificationNumber,
+          receiverIdentificationValidTill,
+          receiverIdentificationAmount,
+        };
+        data.sender_name = givenname + " " + familyname;
+        data.receiver_name = receiverGivenName + " " + receiverFamilyName;
+        data.amount = receiverIdentificationAmount;
+        data.transaction_details = JSON.stringify(temp);
+        data.cashier_id = cashier._id;
+
+        let pending = Number(cashier.pending_trans) + 1;
+
+        data.save((err, d) => {
+          if (err) {
+            console.log(err);
+            var message = err;
+            if (err.message) {
+              message = err.message;
+            }
+            res.status(200).json({
+              status: 0,
+              message: message,
+            });
+          } else {
+            PartnerCashier.findByIdAndUpdate(
+              cashier._id,
+              { pending_trans: pending },
+              function (e, d) {
+                if (e && d == null) {
+                  res.status(200).json({
+                    status: 0,
+                    message: e.toString(),
+                  });
+                } else {
+                  res.status(200).json({
+                    status: 1,
+                    message: "Pending to send money record saved.",
+                  });
+                }
+              }
+            );
+          }
+        }); //save
+      }
+    }
+  );
+});
+
+router.post("/partnerCashier/getClaimMoney", jwtTokenAuth, function (req, res) {
+  const { transferCode } = req.body;
+  const jwtusername = req.sign_creds.username;
+  PartnerCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        res.status(200).json({
+          status: 0,
+          message:
+            "Token changed or user not valid. Try to login again or contact system administrator.",
+        });
+      } else {
+        CashierClaim.findOne(
+          {
+            transaction_code: transferCode,
+            status: 1,
+          },
+          function (err, cs) {
+            if (err) {
+              console.log(err);
+              var message = err;
+              if (err.message) {
+                message = err.message;
+              }
+              res.status(200).json({
+                status: 0,
+                message: message,
+              });
+            } else if (cs == null) {
+              CashierSend.findOne(
+                {
+                  transaction_code: transferCode,
+                },
+                function (err, cs) {
+                  if (err) {
+                    console.log(err);
+                    var message = err;
+                    if (err.message) {
+                      message = err.message;
+                    }
+                    res.status(200).json({
+                      status: 0,
+                      message: message,
+                    });
+                  } else if (cs == null) {
+                    res.status(200).json({
+                      status: 0,
+                      message: "Record Not Found",
+                    });
+                  } else {
+                    res.status(200).json({
+                      row: cs,
+                    });
+                  }
+                }
+              );
+            } else {
+              res.status(200).json({
+                status: 0,
+                message: "This transaction was already claimed",
+              });
+            }
+          }
+        );
+      }
+    }
+  );
+});
+
+router.post("/partnerCashier/checkFee", jwtTokenAuth, function (req, res) {
+  var { amount } = req.body;
+  const jwtusername = req.sign_creds.username;
+  PartnerCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        return res.status(200).json({
+          status: 0,
+          message:
+            "Token changed or user not valid. Try to login again or contact system administrator.",
+        });
+      } else {
+        Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
+          if (err) {
+            console.log(err);
+            var message = err;
+            if (err.message) {
+              message = err.message;
+            }
+            res.status(200).json({
+              status: 0,
+              message: message,
+            });
+          } else if (partner == null) {
+            return res.status(200).json({
+              status: 0,
+              message: "Bank not Found",
+            });
+          }
+          const find = {
+            bank_id: partner.bank_id,
+            trans_type: "Non Wallet to Non Wallet",
+            status: 1,
+            active: "Active",
+          };
+          Fee.findOne(find, function (err, fe) {
+            if (err) {
+              console.log(err);
+              var message = err;
+              if (err.message) {
+                message = err.message;
+              }
+              res.status(200).json({
+                status: 0,
+                message: message,
+              });
+            } else if (fe == null) {
+              return res.status(200).json({
+                status: 0,
+                message: "Transaction cannot be done at this time",
+              });
+            } else {
+              amount = Number(amount);
+              var temp;
+              fe.ranges.map((range) => {
+                console.log(range);
+                if (amount >= range.trans_from && amount <= range.trans_to) {
+                  temp = (amount * range.percentage) / 100;
+                  fee = temp + range.fixed_amount;
+                  res.status(200).json({
+                    status: 1,
+                    fee: fee,
+                  });
+                }
+              });
+            }
+          });
+
+        })
+      }
+    }
+  );
+});
 
 router.post("/partnerCashier/getHistory", jwtTokenAuth, function (req, res) {
   const { from } = req.body;
@@ -216,7 +646,7 @@ router.post("/partnerCashier/getDashStats", jwtTokenAuth, function (req, res) {
   );
 });
 
-router.post("/partnerCashier/openCashierBalance", jwtTokenAuth, (req, res) => {
+router.post("/partnerCashier/openBalance", jwtTokenAuth, (req, res) => {
   const jwtusername = req.sign_creds.username;
   PartnerCashier.findOne(
     {
