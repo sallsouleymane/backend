@@ -44,6 +44,107 @@ router.get("/testGet", function (req, res) {
 	});
 });
 
+router.post("/:user/getWalletBalance", jwtTokenAuth, function (req, res) {
+	const { partner, page, wallet_id } = req.query;
+
+	if (wallet_id != null && wallet_id != undefined && wallet_id != "") {
+		console.log("wal", wallet_id)
+		getBalance(wallet_id).then(function (result) {
+			res.status(200).json({
+				status: 1,
+				balance: result,
+			});
+		});
+	} else {
+		const user = req.params.user;
+		const jwtusername = req.sign_creds.username;
+		const Type = getTypeClass(user);
+		console.log(partner);
+		Type.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (e, b) {
+				if (e) {
+					console.log(e);
+					var message = e;
+					if (e.message) {
+						message = e.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else if (b == null) {
+					res.status(200).json({
+						status: 0,
+						message:
+							"Token changed or user not valid. Try to login again or contact system administrator.",
+					});
+				} else {
+					Partner.findOne(
+						{
+							name: partner,
+						},
+						function (err, partner) {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else if (partner == null) {
+								res.status(200).json({
+									status: 0,
+									message: "Partner not found",
+								});
+							} else {
+								Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (bank == null) {
+										res.status(200).json({
+											status: 0,
+											message: "Partner not found",
+										});
+									} else {
+										let wallet_id = b.code + "_partner_" + page + "@" + bank.name;
+										if (user == "partnerBranch") {
+											wallet_id = b.code + "_partnerbranch_" + page + "@" + bank.name;
+										}
+
+										getBalance(wallet_id).then(function (result) {
+											res.status(200).json({
+												status: 1,
+												balance: result,
+											});
+										});
+									}
+								});
+
+							}
+						}
+					);
+				}
+			}
+		);
+	}
+});
+
+
 router.post("/getPartnerByName", function (req, res) {
 	const { name } = req.body;
 	Partner.findOne(
