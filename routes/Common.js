@@ -36,12 +36,78 @@ const BranchClaim = require("../models/BranchClaim");
 const CurrencyModel = require("../models/Currency");
 const CountryModel = require("../models/Country");
 const FailedTX = require("../models/FailedTXLedger");
-const Partner = require("../models/partner/Partner")
+const Partner = require("../models/partner/Partner");
+const PartnerBranch = require("../models/partner/Branch")
 
 router.get("/testGet", function (req, res) {
 	return res.status(200).json({
 		status: "Internal error please try again",
 	});
+});
+
+router.post("/getPartnerBranchByName", function (req, res) {
+	const { name } = req.body;
+
+	PartnerBranch.findOne(
+		{
+			name: name,
+		},
+		function (err, branch) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (branch == null) {
+				res.status(200).json({
+					status: 0,
+					message: "Not found",
+				});
+			} else {
+				Partner.findOne(
+					{
+						_id: branch.partner_id,
+					},
+					function (err, partner) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (partner == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Not found",
+							});
+						} else {
+							var obj = {};
+							obj["logo"] = partner.logo;
+							obj["partnerName"] = partner.name;
+							obj["name"] = branch.name;
+							obj["mobile"] = branch.mobile;
+							obj["branch_id"] = branch._id;
+							obj["partnerCode"] = partner.code;
+
+							res.status(200).json({
+								status: 1,
+								branch: obj,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
 });
 
 router.post("/:user/getWalletBalance", jwtTokenAuth, function (req, res) {
