@@ -25,6 +25,251 @@ const CashierClaim = require("../../models/CashierClaim");
 const CashierLedger = require("../../models/CashierLedger");
 const CashierTransfer = require("../../models/CashierTransfer");
 const OTP = require("../../models/OTP");
+const Merchant = require("../../models/merchant/Merchant");
+
+router.post("/partnerCashier/listMerchants", jwtTokenAuth, function (req, res) {
+  const jwtusername = req.sign_creds.username;
+  PartnerCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        res.status(200).json({
+          status: 0,
+          message:
+            "Token changed or user not valid. Try to login again or contact system administrator.",
+        });
+      } else {
+        Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
+          Merchant.find(
+            { bank_id: partner.bank_id, status: 1 },
+            "-password",
+            (err, merchants) => {
+              if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                  message = err.message;
+                }
+                res.status(200).json({
+                  status: 0,
+                  message: message,
+                });
+              } else {
+                res.status(200).json({
+                  status: 1,
+                  message: "Merchants List",
+                  list: merchants,
+                });
+              }
+            }
+          );
+        });
+      }
+    }
+  );
+});
+
+router.post("/partnerCashier/addClosingBalance", jwtTokenAuth, (req, res) => {
+  const { denomination, total, note } = req.body;
+  const jwtusername = req.sign_creds.username;
+  PartnerCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        res.status(200).json({
+          status: 0,
+          message:
+            "Token changed or user not valid. Try to login again or contact system administrator.",
+        });
+      } else {
+        let data = new CashierLedger();
+        data.amount = total;
+        data.cashier_id = cashier._id;
+        data.trans_type = "CB";
+        let td = {
+          denomination,
+          note,
+        };
+        data.transaction_details = JSON.stringify(td);
+
+        data.save((err) => {
+          if (err) {
+            console.log(err);
+            var message = err;
+            if (err.message) {
+              message = err.message;
+            }
+            res.status(200).json({
+              status: 0,
+              message: message,
+            });
+          } else {
+            PartnerCashier.findByIdAndUpdate(
+              cashier._id,
+              {
+                closing_balance: total,
+                closing_time: new Date(),
+                is_closed: true,
+              },
+              function (e, v) { }
+            );
+
+            return res.status(200).json({ status: 1, message: "Added closing balance" });
+          }
+        });
+      }
+    }
+  );
+});
+
+router.post("/partnerCashier/getClosingBalance", jwtTokenAuth, function (req, res) {
+  const jwtusername = req.sign_creds.username;
+  PartnerCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        res.status(200).json({
+          status: 0,
+          message:
+            "Token changed or user not valid. Try to login again or contact system administrator.",
+        });
+      } else {
+        let cb = 0,
+          c = cashier;
+        cb = c.closing_balance;
+        da = c.closing_time;
+        var diff = Number(cb) - Number(cashier.cash_in_hand);
+        res.status(200).json({
+          cashInHand: cashier.cash_in_hand,
+          balance1: cb,
+          balance2: diff,
+          lastdate: da,
+          transactionStarted: c.transaction_started,
+          isClosed: c.is_closed,
+        });
+      }
+    }
+  );
+});
+
+router.post("/partnerCashier/getIncomingTransfer", jwtTokenAuth, function (req, res) {
+  const jwtusername = req.sign_creds.username;
+  PartnerCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        res.status(200).json({
+          status: 0,
+          message:
+            "Token changed or user not valid. Try to login again or contact system administrator.",
+        });
+      } else {
+        CashierTransfer.find(
+          {
+            receiver_id: cashier._id,
+            status: 0,
+          },
+          (e, data) => {
+            res.status(200).json({
+              status: 1,
+              result: data,
+            });
+          }
+        );
+      }
+    }
+  );
+});
+
+router.post("/partnerCashier/getTransfers", jwtTokenAuth, function (req, res) {
+  const jwtusername = req.sign_creds.username;
+  PartnerCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        res.status(200).json({
+          status: 0,
+          message:
+            "Token changed or user not valid. Try to login again or contact system administrator.",
+        });
+      } else {
+        CashierTransfer.find({
+          $or: [{ sender_id: cashier._id }, { receiver_id: cashier._id }],
+        }).exec(function (err, b) {
+          res.status(200).json({
+            status: 1,
+            history: b,
+          });
+        });
+      }
+    }
+  );
+});
 
 router.post("/partnerCashier/transferMoney", jwtTokenAuth, function (req, res) {
   const { otpId, otp, amount, receiver_id, receiver_name } = req.body;

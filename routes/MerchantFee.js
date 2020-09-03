@@ -11,8 +11,84 @@ const MerchantFee = require("../models/merchant/MerchantFee");
 const Merchant = require("../models/merchant/Merchant");
 const Cashier = require("../models/Cashier");
 const User = require("../models/User");
+const PartnerCashier = require("../models/partner/Cashier");
 
 const jwtTokenAuth = require("./JWTTokenAuth");
+
+router.post("/partnercashier/checkMerchantFee", jwtTokenAuth, (req, res) => {
+	var { merchant_id, amount } = req.body;
+	const jwtusername = req.sign_creds.username;
+	PartnerCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				MerchantFee.findOne(
+					{ merchant_id: merchant_id, type: 1, status: 1 },
+					(err, fee) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (fee == null) {
+							return res.status(200).json({
+								status: 0,
+								message: "Fee rule not found",
+							});
+						} else {
+							amount = Number(amount);
+							var charge = 0;
+							var range_found = false;
+							fee.ranges.map((range) => {
+								if (amount >= range.trans_from && amount <= range.trans_to) {
+									range_found = true;
+									charge = (amount * range.percentage) / 100;
+									charge = charge + range.fixed;
+								}
+							});
+							if (range_found) {
+								res.status(200).json({
+									status: 1,
+									message: "Wallet to Merchant fee",
+									fee: charge,
+								});
+							} else {
+								res.status(200).json({
+									status: 1,
+									message: "The amount is not within any range",
+								});
+							}
+						}
+					}
+				);
+			}
+		}
+	);
+});
 
 router.post("/bank/merchantFee/updatePartnersShare", function (req, res) {
 	var { token, fee_id, percentage, specific_partners_share } = req.body;
