@@ -165,6 +165,7 @@ router.post("/partnerBranch/login", function (req, res) {
 								mobile: branch.mobile,
 								logo: logo,
 								id: branch._id,
+								partner_id: partner._id
 							});
 						}
 					}
