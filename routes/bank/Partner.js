@@ -53,7 +53,7 @@ router.post("/bank/listPartners", function (req, res) {
                         "Token changed or user not valid. Try to login again or contact system administrator.",
                 });
             } else {
-                Partner.find({}, function (err, partner) {
+                Partner.find({ bank_id: bank._id }, function (err, partner) {
                     if (err) {
                         console.log(err);
                         var message = err;
