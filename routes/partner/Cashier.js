@@ -29,6 +29,55 @@ const OTP = require("../../models/OTP");
 const Merchant = require("../../models/merchant/Merchant");
 const User = require("../../models/User");
 
+router.post("/partnerCashier/getDetails", jwtTokenAuth, function (req, res) {
+  const jwtusername = req.sign_creds.username;
+  PartnerCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        res.status(200).json({
+          status: 0,
+          message:
+            "Token changed or user not valid. Try to login again or contact system administrator.",
+        });
+      } else {
+        PartnerUser.findOne({ _id: cashier.partner_user_id }, function (err, user) {
+          if (err) {
+            console.log(err);
+            var message = err;
+            if (err.message) {
+              message = err.message;
+            }
+            res.status(200).json({
+              status: 0,
+              message: message,
+            });
+          } else {
+            res.status(200).json({
+              cashier: cashier,
+              user: user,
+            });
+          }
+        });
+
+      }
+    }
+  );
+});
+
 router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
   var today = new Date();
   today = today.toISOString();
