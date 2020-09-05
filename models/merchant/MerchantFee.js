@@ -1,11 +1,12 @@
 const mongoose = require("mongoose");
 const MerchantFeeSchema = new mongoose.Schema({
 	merchant_id: { type: String, required: true },
+	bank_id: { type: String, required: true },
 	name: { type: String, required: true },
 	status: { type: Number, required: true, default: 0 },
-    active: { type: Number, required: true, default: 0 },
+	active: { type: Number, required: true, default: 0 },
 	type: { type: Number, required: true },
-	type_desc: { type: String, required: false, default: "0-Wallet, 1-Non-Wallet" },
+	type_desc: { type: String, required: false, default: "0-Wallet, 1-Non-Wallet 2-Merchant" },
 	description: { type: String, required: false },
 	rule_edit_status: { type: Number, required: true, default: 0 },
 	infra_share_edit_status: { type: Number, required: true, default: 0 },
@@ -38,7 +39,7 @@ const MerchantFeeSchema = new mongoose.Schema({
 		},
 		active: { type: Number, required: false },
 		name: { type: String, required: false },
-        type: { type: Number, required: false },
+		type: { type: Number, required: false },
 		merchant_approve_status: { type: Number, required: false },
 		infra_approve_status: { type: Number, required: false },
 		ranges: [

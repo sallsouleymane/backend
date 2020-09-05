@@ -31,6 +31,18 @@ const FeeSchema = new mongoose.Schema({
 				send: { type: Number, required: false }
 			},
 		],
+		partner_share: {
+			claim: { type: Number, required: false, default: 0 },
+			send: { type: Number, required: false, default: 0 }
+		},
+		specific_partner_share: [
+			{
+				branch_code: { type: String, required: false },
+				branch_name: { type: String, required: false },
+				claim: { type: Number, required: false },
+				send: { type: Number, required: false }
+			},
+		]
 	},
 });
 

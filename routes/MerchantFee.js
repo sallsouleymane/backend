@@ -227,6 +227,7 @@ router.post("/bank/merchantFee/createRule", function (req, res) {
 								let merchantFee = new MerchantFee();
 								merchantFee.name = name;
 								merchantFee.merchant_id = merchant_id;
+								merchantFee.bank_id = bank._id;
 								merchantFee.active = active;
 								merchantFee.type = type;
 								merchantFee.description = description;

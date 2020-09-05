@@ -31,6 +31,194 @@ const PartnerBranch = require("../models/partner/Branch");
 
 const jwtTokenAuth = require("./JWTTokenAuth");
 
+router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
+	const { invoice_ids } = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				Merchant.findOne({ merchant_id: cashier.merchant_id }, (err, merchant) => {
+					MerchantFee.findOne(
+						{ merchant_id: merchant._id, type: 2 },
+						(err, fee) => {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else if (fee == null) {
+								res.status(200).json({
+									status: 0,
+									message: "Fee rule not found",
+								});
+							} else {
+								try {
+									let bank = await Bank.findOne({
+										_id: fee.bank_id,
+										status: 1,
+									});
+									if (bank == null) {
+										throw new Error("Merchant Cashier has invalid bank");
+									}
+									let infra = await Infra.findOne({
+										_id: bank.user_id,
+									});
+									if (infra == null) {
+										throw new Error("Cashier's bank has invalid infra");
+									}
+
+									const today = new Date();
+									await Merchant.findOneAndUpdate(
+										{
+											_id: merchant._id,
+											last_paid_at: {
+												$lte: new Date(today.setHours(00, 00, 00)),
+											},
+										},
+										{ amount_collected: 0 }
+									);
+
+									var result = await merchantCashierInvoicePay(
+										total_amount,
+										infra,
+										bank,
+										merchant,
+										fee,
+									);
+									var status_update_feedback;
+									if (result.status == 1) {
+										for (invoice_id of invoice_ids) {
+											var i = await Invoice.findOneAndUpdate(
+												{ _id: invoice_id },
+												{
+													paid: 1,
+													paid_by: "MC"
+												}
+											);
+											if (i == null) {
+												status_update_feedback =
+													"Invoice paid status can not be updated";
+											}
+
+											var last_paid_at = new Date();
+											var m = await Merchant.updateOne(
+												{ _id: merchant._id },
+												{
+													$set: { last_paid_at: last_paid_at },
+													$inc: {
+														amount_collected: total_amount,
+														amount_due: -total_amount,
+														bills_paid: 1,
+													},
+												}
+											);
+											if (m == null) {
+												status_update_feedback =
+													"Merchant status can not be updated";
+											}
+
+											var mc = await MerchantCashier.updateOne(
+												{ _id: i.cashier_id },
+												{
+													$set: { last_paid_at: last_paid_at },
+													$inc: {
+														bills_paid: 1,
+													},
+												}
+											);
+											if (mc == null) {
+												status_update_feedback =
+													"Merchant cashier status can not be updated";
+											}
+
+											var mb = await MerchantBranch.updateOne(
+												{ _id: mc.branch_id },
+												{
+													$set: { last_paid_at: last_paid_at },
+													$inc: {
+														amount_collected: total_amount,
+														amount_due: -total_amount,
+														bills_paid: 1,
+													},
+												}
+											);
+											if (mb == null) {
+												status_update_feedback =
+													"Merchant branch status can not be updated";
+											}
+
+											var ig = await InvoiceGroup.updateOne(
+												{ _id: i.group_id },
+												{
+													$set: { last_paid_at: last_paid_at },
+													$inc: {
+														bills_paid: 1,
+													},
+												}
+											);
+											if (ig == null) {
+												status_update_feedback =
+													"Invoice group status can not be updated";
+											}
+
+											content =
+												"E-Wallet:  Amount " +
+												i.amount +
+												" is paid for invoice nummber " +
+												i.number +
+												" for purpose " +
+												i.description;
+											sendSMS(content, invoice.mobile);
+										}
+									}
+									result.status_update_feedback = status_update_feedback;
+									res.status(200).json(result);
+
+								} catch (err) {
+									console.log(err);
+									var message = err;
+									if (err && err.message) {
+										message = err.message;
+									}
+									res
+										.status(200)
+										.json({ status: 0, message: message, err: err });
+								}
+
+							}
+						}
+					);
+				})
+			}
+		}
+	);
+});
+
 router.post("/partnerCashier/payInvoice", jwtTokenAuth, (req, res) => {
 	const { invoice_ids, merchant_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -186,7 +374,10 @@ router.post("/partnerCashier/payInvoice", jwtTokenAuth, (req, res) => {
 														for (invoice_id of invoice_ids) {
 															var i = await Invoice.findOneAndUpdate(
 																{ _id: invoice_id },
-																{ paid: 1 }
+																{
+																	paid: 1,
+																	paid_by: "PC"
+																}
 															);
 															if (i == null) {
 																status_update_feedback =
@@ -963,7 +1154,10 @@ router.post("/cashier/payInvoice", (req, res) => {
 													for (invoice_id of invoice_ids) {
 														var i = await Invoice.findOneAndUpdate(
 															{ _id: invoice_id },
-															{ paid: 1 }
+															{
+																paid: 1,
+																paid_by: "BC"
+															}
 														);
 														if (i == null) {
 															status_update_feedback =
@@ -1436,7 +1630,10 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 													for (invoice_id of invoice_ids) {
 														var i = await Invoice.findOneAndUpdate(
 															{ _id: invoice_id },
-															{ paid: 1 }
+															{
+																paid: 1,
+																paid_by: "US"
+															}
 														);
 														if (i == null) {
 															status_update_feedback =

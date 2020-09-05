@@ -178,6 +178,10 @@ router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
 						revenue_sharing_rule.branch_share.send,
 					"revenue_sharing_rule.specific_branch_share":
 						revenue_sharing_rule.specific_branch_share,
+					"revenue_sharing_rule.partner_share.claim": revenue_sharing_rule.partner_share.claim,
+					"revenue_sharing_rule.partner_share.send": revenue_sharing_rule.partner_share.send,
+					"revenue_sharing_rule.specific_partner_share":
+						revenue_sharing_rule.specific_partner_share,
 				},
 			}
 		);
