@@ -249,10 +249,11 @@ router.post("/merchant/zoneSetting", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/merchant/addCountry", jwtTokenAuth, (req, res) => {
-	const country = {
-		ccode: req.body.ccode,
-		name: req.body.name,
+router.post("/merchant/editPenaltyRule", jwtTokenAuth, (req, res) => {
+	const penalty_rule = {
+		type: req.body.type,
+		percentage: req.body.percentage,
+		fixed_amount: req.body.fixed_amount,
 	};
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
@@ -292,9 +293,10 @@ router.post("/merchant/addCountry", jwtTokenAuth, (req, res) => {
 								message: message,
 							});
 						} else if (count == 1) {
-							MerchantSettings.update(
+							MerchantSettings.findOneAndUpdate(
 								{ merchant_id: merchant._id },
-								{ $push: { country_list: country } },
+								{ penalty_rule: penalty_rule },
+								{ new: true },
 								function (err, setting) {
 									if (err) {
 										console.log(err);
@@ -316,7 +318,7 @@ router.post("/merchant/addCountry", jwtTokenAuth, (req, res) => {
 									} else {
 										res.status(200).json({
 											status: 1,
-											message: "Country Added",
+											message: "Penalty Rule Edited",
 										});
 									}
 								}
@@ -324,7 +326,7 @@ router.post("/merchant/addCountry", jwtTokenAuth, (req, res) => {
 						} else {
 							const data = new MerchantSettings();
 							data.merchant_id = merchant._id;
-							data.country_list = [country];
+							data.penalty_rule = penalty_rule;
 							data.save((err) => {
 								if (err) {
 									console.log(err);
@@ -339,7 +341,7 @@ router.post("/merchant/addCountry", jwtTokenAuth, (req, res) => {
 								} else {
 									res.status(200).json({
 										status: 1,
-										message: "Country Added",
+										message: "Penalty Rule Edited",
 									});
 								}
 							});

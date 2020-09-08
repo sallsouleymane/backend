@@ -25,15 +25,10 @@ const MerchantSettings = new mongoose.Schema({
         days: { type: Number, required: false},
         name: { type: String, required: false},
     },
-    country_list: [
-        {
-            ccode: { type: String, required: false},
-            name: { type: String, required: false},
-        },
-    ],
-    default_country: {
-        ccode: { type: String, required: false},
-        name: { type: String, required: false},
+    penalty_rule:  {
+        type: { type: String, required: false},
+        percentage: { type: Number, required: false},
+        fixed_amount: { type: Number, required: false}
     },
 });
 
