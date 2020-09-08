@@ -25,6 +25,7 @@ const CashierClaim = require("../models/CashierClaim");
 const CashierLedger = require("../models/CashierLedger");
 const CashierTransfer = require("../models/CashierTransfer");
 const Merchant = require("../models/merchant/Merchant");
+const MerchantSettings = require("../models/merchant/MerchantSettings");
 
 router.post("/cashier/getTransactionHistory", function (req, res) {
 	const { token } = req.body;
@@ -200,6 +201,50 @@ router.post("/cashier/getUser", function (req, res) {
 		}
 	});
 });
+
+router.post("/cashier/getMerchantPenaltyRule", function (req, res) {
+	const { token, merchant_id } = req.body;
+	Cashier.findOne({ token }, function (err, cashier) {
+		if (err) {
+			console.log(err);
+			var message = err;
+			if (err.message) {
+				message = err.message;
+			}
+			res.status(200).json({
+				status: 0,
+				message: message,
+			});
+		} else if (cashier == null) {
+			res.status(200).json({
+				status: 0,
+				message: "You are either not authorised or not logged in.",
+			});
+		} else {
+			MerchantSettings.findOne({ merchant_id: merchant_id }, function (
+				err,
+				setting
+			) {
+				if (err) {
+				  	console.log(err);
+				 	 var message = err;
+				  	if (err.message) {
+						message = err.message;
+				  	}
+				  	res.status(200).json({
+						status: 0,
+						message: message,
+				  	});
+				} else {
+				  	res.status(200).json({
+						rule: setting.penalty_rule,
+				  	});
+				}
+			});
+		}
+	});
+});
+
 
 router.post("/cashier/createUser", function (req, res) {
 	const {

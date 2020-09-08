@@ -27,6 +27,7 @@ const CashierLedger = require("../../models/CashierLedger");
 const CashierTransfer = require("../../models/CashierTransfer");
 const OTP = require("../../models/OTP");
 const Merchant = require("../../models/merchant/Merchant");
+const MerchantSettings = require("../../models/merchant/MerchantSettings");
 const User = require("../../models/User");
 
 router.post("/partnerCashier/getDetails", jwtTokenAuth, function (req, res) {
@@ -72,6 +73,57 @@ router.post("/partnerCashier/getDetails", jwtTokenAuth, function (req, res) {
             res.status(200).json({
               cashier: cashier,
               user: user,
+            });
+          }
+        });
+      }
+    }
+  );
+});
+
+router.post("/partnerCashier/getMerchantPenaltyRule", jwtTokenAuth, function (req, res) {
+  const jwtusername = req.sign_creds.username;
+  const merchant_id = req.body.merchant_id;
+  PartnerCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        res.status(200).json({
+          status: 0,
+          message:
+            "Token changed or user not valid. Try to login again or contact system administrator.",
+        });
+      } else {
+        MerchantSettings.findOne({ merchant_id: merchant_id }, function (
+          err,
+          setting
+        ) {
+          if (err) {
+            console.log(err);
+            var message = err;
+            if (err.message) {
+              message = err.message;
+            }
+            res.status(200).json({
+              status: 0,
+              message: message,
+            });
+          } else {
+            res.status(200).json({
+              rule: setting.penalty_rule,
             });
           }
         });
