@@ -32,7 +32,7 @@ const PartnerBranch = require("../models/partner/Branch");
 const jwtTokenAuth = require("./JWTTokenAuth");
 
 router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
-  const { invoice_ids } = req.body;
+  const { invoices } = req.body;
   const jwtusername = req.sign_creds.username;
   MerchantCashier.findOne(
     {
@@ -80,6 +80,27 @@ router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
                   });
                 } else {
                   try {
+                    var total_amount = 0;
+                    for (invoice of invoices) {
+                      var { id, penalty } = invoice;
+                      var inv = await Invoice.findOne({
+                        _id: id,
+                        merchant_id: merchant_id,
+                        paid: 0,
+                        is_validated: 1,
+                      });
+                      if (inv == null) {
+                        throw new Error(
+                          "Invoice id " +
+                          id +
+                          " is already paid or it belongs to different merchant"
+                        );
+                      }
+                      total_amount += inv.amount + penalty;
+                    }
+                    if (total_amount < 0) {
+                      throw new Error("Amount is a negative value");
+                    }
                     let bank = await Bank.findOne({
                       _id: fee.bank_id,
                       status: 1,
@@ -114,9 +135,9 @@ router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
                     );
                     var status_update_feedback;
                     if (result.status == 1) {
-                      for (invoice_id of invoice_ids) {
+                      for (invoice of invoices) {
                         var i = await Invoice.findOneAndUpdate(
-                          { _id: invoice_id },
+                          { _id: invoice.id },
                           {
                             paid: 1,
                             paid_by: "MC",
@@ -195,7 +216,7 @@ router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
                           i.number +
                           " for purpose " +
                           i.description;
-                        sendSMS(content, invoice.mobile);
+                        sendSMS(content, i.mobile);
                       }
                     }
                     result.status_update_feedback = status_update_feedback;
@@ -221,7 +242,7 @@ router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/partnerCashier/payInvoice", jwtTokenAuth, (req, res) => {
-  const { invoice_ids, merchant_id } = req.body;
+  const { invoices, merchant_id } = req.body;
   const jwtusername = req.sign_creds.username;
   PartnerCashier.findOne(
     {
@@ -286,23 +307,23 @@ router.post("/partnerCashier/payInvoice", jwtTokenAuth, (req, res) => {
                       });
                     } else {
                       try {
-                        var invoice;
                         var total_amount = 0;
-                        for (invoice_id of invoice_ids) {
-                          invoice = await Invoice.findOne({
-                            _id: invoice_id,
+                        for (invoice of invoices) {
+                          var { id, penalty } = invoice;
+                          var inv = await Invoice.findOne({
+                            _id: id,
                             merchant_id: merchant_id,
                             paid: 0,
                             is_validated: 1,
                           });
-                          if (invoice == null) {
+                          if (inv == null) {
                             throw new Error(
                               "Invoice id " +
-                                invoice_id +
-                                " is already paid or it belongs to different merchant"
+                              id +
+                              " is already paid or it belongs to different merchant"
                             );
                           }
-                          total_amount += invoice.amount;
+                          total_amount += inv.amount + penalty;
                         }
                         if (total_amount < 0) {
                           throw new Error("Amount is a negative value");
@@ -375,9 +396,9 @@ router.post("/partnerCashier/payInvoice", jwtTokenAuth, (req, res) => {
                           );
                           var status_update_feedback;
                           if (result.status == 1) {
-                            for (invoice_id of invoice_ids) {
+                            for (invoice of invoices) {
                               var i = await Invoice.findOneAndUpdate(
-                                { _id: invoice_id },
+                                { _id: invoice.id },
                                 {
                                   paid: 1,
                                   paid_by: "PC",
@@ -488,7 +509,7 @@ router.post("/partnerCashier/payInvoice", jwtTokenAuth, (req, res) => {
                                 i.number +
                                 " for purpose " +
                                 i.description;
-                              sendSMS(content, invoice.mobile);
+                              sendSMS(content, i.mobile);
                             }
                           }
                           result.status_update_feedback = status_update_feedback;
@@ -1013,7 +1034,7 @@ router.post("/cashier/getUserInvoices", (req, res) => {
 });
 
 router.post("/cashier/payInvoice", (req, res) => {
-  const { token, invoice_ids, merchant_id } = req.body;
+  const { token, invoices, merchant_id } = req.body;
   Cashier.findOne(
     {
       token,
@@ -1076,23 +1097,23 @@ router.post("/cashier/payInvoice", (req, res) => {
                     });
                   } else {
                     try {
-                      var invoice;
                       var total_amount = 0;
-                      for (invoice_id of invoice_ids) {
-                        invoice = await Invoice.findOne({
-                          _id: invoice_id,
+                      for (invoice of invoices) {
+                        var { id, penalty } = invoice;
+                        var inv = await Invoice.findOne({
+                          _id: id,
                           merchant_id: merchant_id,
                           paid: 0,
                           is_validated: 1,
                         });
-                        if (invoice == null) {
+                        if (inv == null) {
                           throw new Error(
                             "Invoice id " +
-                              invoice_id +
-                              " is already paid or it belongs to different merchant"
+                            id +
+                            " is already paid or it belongs to different merchant"
                           );
                         }
-                        total_amount += invoice.amount;
+                        total_amount += inv.amount + penalty;
                       }
                       if (total_amount < 0) {
                         throw new Error("Amount is a negative value");
@@ -1162,9 +1183,9 @@ router.post("/cashier/payInvoice", (req, res) => {
                         );
                         var status_update_feedback;
                         if (result.status == 1) {
-                          for (invoice_id of invoice_ids) {
+                          for (invoice of invoices) {
                             var i = await Invoice.findOneAndUpdate(
-                              { _id: invoice_id },
+                              { _id: invoice.id },
                               {
                                 paid: 1,
                                 paid_by: "BC",
@@ -1271,7 +1292,7 @@ router.post("/cashier/payInvoice", (req, res) => {
                               i.number +
                               " for purpose " +
                               i.description;
-                            sendSMS(content, invoice.mobile);
+                            sendSMS(content, i.mobile);
                           }
                         }
                         result.status_update_feedback = status_update_feedback;
@@ -1499,7 +1520,7 @@ router.post("/user/getInvoicesForMobile", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
-  const { invoice_ids, merchant_id } = req.body;
+  const { invoices, merchant_id } = req.body;
   const username = req.sign_creds.username;
   User.findOne(
     {
@@ -1563,23 +1584,23 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
                     });
                   } else {
                     try {
-                      var invoice;
                       var total_amount = 0;
-                      for (invoice_id of invoice_ids) {
-                        invoice = await Invoice.findOne({
-                          _id: invoice_id,
+                      for (invoice of invoices) {
+                        var { id, penalty } = invoice;
+                        var inv = await Invoice.findOne({
+                          _id: id,
                           merchant_id: merchant_id,
                           paid: 0,
                           is_validated: 1,
                         });
-                        if (invoice == null) {
+                        if (inv == null) {
                           throw new Error(
                             "Invoice id " +
-                              invoice_id +
-                              " is already paid or it belongs to different merchant"
+                            id +
+                            " is already paid or it belongs to different merchant"
                           );
                         }
-                        total_amount += invoice.amount;
+                        total_amount += inv.amount + penalty;
                       }
                       if (total_amount < 0) {
                         throw new Error("Amount is a negative value");
@@ -1638,9 +1659,9 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
                         );
                         var status_update_feedback;
                         if (result.status == 1) {
-                          for (invoice_id of invoice_ids) {
+                          for (invoice of invoices) {
                             var i = await Invoice.findOneAndUpdate(
-                              { _id: invoice_id },
+                              { _id: invoice.id },
                               {
                                 paid: 1,
                                 paid_by: "US",
@@ -1719,7 +1740,7 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
                               i.number +
                               " for purpose " +
                               i.description;
-                            sendSMS(content, invoice.mobile);
+                            sendSMS(content, i.mobile);
                           }
                         }
                         result.status_update_feedback = status_update_feedback;
