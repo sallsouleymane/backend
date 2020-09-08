@@ -353,68 +353,6 @@ router.post("/merchant/editPenaltyRule", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/merchant/setDefaultCountry", jwtTokenAuth, (req, res) => {
-	const country = {
-		ccode: req.body.ccode,
-		name: req.body.name,
-	};
-	const jwtusername = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				MerchantSettings.findOneAndUpdate(
-					{ merchant_id: merchant._id },
-					{ default_country: country },
-					{ new: true },
-					(err, setting) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (setting == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Setting not found",
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								message: "Default country updated",
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
-
 router.post("/merchant/addBillPeriod", jwtTokenAuth, (req, res) => {
 	const billperiod = {
 		start_date: req.body.start_date,
