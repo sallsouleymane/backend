@@ -12,6 +12,7 @@ const Infra = require("../models/Infra");
 const Fee = require("../models/Fee");
 const CashierSend = require("../models/CashierSend");
 const Merchant = require("../models/merchant/Merchant");
+const MerchantSettings = require("../models/merchant/MerchantSettings");
 const Invoice = require("../models/merchant/Invoice");
 
 //utils
@@ -20,6 +21,57 @@ const sendMail = require("./utils/sendMail");
 const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
 const blockchain = require("../services/Blockchain");
+
+router.post("/user/getMerchantPenaltyRule", jwtTokenAuth, function (req, res) {
+	const { merchant_id } = req.body;
+	const username = req.sign_creds.username;
+	User.findOne(
+		{
+			username,
+			status: 1,
+		},
+		function (err, user) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (user == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				MerchantSettings.findOne({ merchant_id: merchant_id }, function (
+					err,
+					setting
+				) {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						res.status(200).json({
+							rule: setting.penalty_rule,
+						});
+					}
+				});
+			}
+		}
+	);
+});
 
 router.post("/user/getMerchantDetails", jwtTokenAuth, function (req, res) {
 	const { merchant_id } = req.body;
