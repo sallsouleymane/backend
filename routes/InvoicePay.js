@@ -31,6 +31,188 @@ const PartnerBranch = require("../models/partner/Branch");
 
 const jwtTokenAuth = require("./JWTTokenAuth");
 
+router.post("/merchantCashier/getInvoicesByCustomerCode", jwtTokenAuth, (req, res) => {
+  const { customer_code } = req.body;
+  const jwtusername = req.sign_creds.username;
+  MerchantCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        res.status(200).json({
+          status: 0,
+          message: "Cashier is not activated.",
+        });
+      } else {
+        Invoice.find(
+          {
+            is_validated: 1,
+            merchant_id: cashier.merchant_id,
+            customer_code: customer_code,
+          },
+          async (err, invoices) => {
+            if (err) {
+              console.log(err);
+              var message = err;
+              if (err.message) {
+                message = err.message;
+              }
+              res.status(200).json({
+                status: 0,
+                message: message,
+              });
+            } else if (invoices.length == 0) {
+              res.status(200).json({
+                status: 0,
+                message: "Invoice not found",
+              });
+            } else {
+              res.status(200).json({
+                status: 1,
+                invoice: invoices,
+              });
+            }
+          }
+        );
+      }
+    }
+  );
+});
+
+router.post("/merchantCashier/getInvoicesByNumber", jwtTokenAuth, (req, res) => {
+  const { number } = req.body;
+  const jwtusername = req.sign_creds.username;
+  MerchantCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        res.status(200).json({
+          status: 0,
+          message: "Cashier is not activated.",
+        });
+      } else {
+        Invoice.find(
+          {
+            is_validated: 1,
+            merchant_id: cashier.merchant_id,
+            $or: [{ number: number }, { reference_invoice: number }],
+          },
+          async (err, invoices) => {
+            if (err) {
+              console.log(err);
+              var message = err;
+              if (err.message) {
+                message = err.message;
+              }
+              res.status(200).json({
+                status: 0,
+                message: message,
+              });
+            } else if (invoices.length == 0) {
+              res.status(200).json({
+                status: 0,
+                message: "Invoice not found",
+              });
+            } else {
+              res.status(200).json({
+                status: 1,
+                invoice: invoices,
+              });
+            }
+          }
+        );
+      }
+    }
+  );
+});
+
+router.post("/merchantCashier/getInvoicesByMobile", jwtTokenAuth, (req, res) => {
+  try {
+    const { mobile } = req.body;
+    const jwtusername = req.sign_creds.username;
+    MerchantCashier.findOne(
+      {
+        username: jwtusername,
+        status: 1,
+      },
+      function (err, cashier) {
+        if (err) {
+          console.log(err);
+          var message = err;
+          if (err.message) {
+            message = err.message;
+          }
+          res.status(200).json({
+            status: 0,
+            message: message,
+          });
+        } else if (cashier == null) {
+          console.log(err);
+          res.status(200).json({
+            status: 0,
+            message: "Cashier is not valid",
+          });
+        } else {
+          Invoice.find(
+            { mobile: mobile, is_validated: 1, merchant_id: cashier.merchant_id },
+            async (err, invoices) => {
+              if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                  message = err.message;
+                }
+                res.status(200).json({
+                  status: 0,
+                  message: message,
+                });
+              } else {
+                res.status(200).json({
+                  status: 1,
+                  invoices: invoices,
+                });
+              }
+            }
+          );
+        }
+      }
+    );
+  } catch (err) {
+    console.log(err);
+    var message = err.toString();
+    if (err.message) {
+      message = err.message;
+    }
+    res.status(200).json({ status: 0, message: message, err: err });
+  }
+});
+
+
 router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
   const { invoices } = req.body;
   const jwtusername = req.sign_creds.username;
