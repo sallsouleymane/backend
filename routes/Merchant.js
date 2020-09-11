@@ -1968,6 +1968,7 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 	let data = new MerchantStaff();
 	const jwtusername = req.sign_creds.username;
 	const {
+		role,
 		code,
 		name,
 		email,
@@ -2001,6 +2002,7 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
+				data.role = role;
 				data.code = code;
 				data.name = name;
 				data.email = email;
@@ -2062,6 +2064,7 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 
 router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 	const {
+		role,
 		name,
 		email,
 		ccode,
@@ -2103,6 +2106,7 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 					},
 					{
 						name: name,
+						role: role,
 						email: email,
 						ccode: ccode,
 						mobile: mobile,
