@@ -437,9 +437,9 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
                                                 .then(function (bal) {
                                                   if (
                                                     Number(bal) +
-                                                      Number(
-                                                        branch.credit_limit
-                                                      ) >=
+                                                    Number(
+                                                      branch.credit_limit
+                                                    ) >=
                                                     oamount + fee
                                                   ) {
                                                     console.log(fe);
@@ -506,8 +506,8 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
                                                     ) {
                                                       feeObject = specific_partner_share.filter(
                                                         (bwsf) =>
-                                                          bwsf.branch_code ==
-                                                          branch.bcode
+                                                          bwsf.partner_code ==
+                                                          partner.code
                                                       )[0];
                                                     }
                                                     const { send } = feeObject;
@@ -547,7 +547,7 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
                                                       feeObject,
                                                       partner_share,
                                                       specific_partner_share,
-                                                      branch.bcode
+                                                      branch.code
                                                     );
 
                                                     blockchain
@@ -628,7 +628,7 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
                                                                   function (
                                                                     e,
                                                                     v
-                                                                  ) {}
+                                                                  ) { }
                                                                 );
 
                                                                 CashierLedger.findOne(
@@ -675,7 +675,7 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
                                                                         function (
                                                                           err,
                                                                           c
-                                                                        ) {}
+                                                                        ) { }
                                                                       );
                                                                     } else {
                                                                       var amt =
@@ -696,7 +696,7 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
                                                                         function (
                                                                           err,
                                                                           c
-                                                                        ) {}
+                                                                        ) { }
                                                                       );
                                                                     }
                                                                   }
@@ -1039,7 +1039,7 @@ router.post("/partnerCashier/sendMoney", jwtTokenAuth, function (req, res) {
                                           .then(function (bal) {
                                             if (
                                               Number(bal) +
-                                                Number(branch.credit_limit) >=
+                                              Number(branch.credit_limit) >=
                                               oamount + fee
                                             ) {
                                               console.log(fe);
@@ -1096,8 +1096,8 @@ router.post("/partnerCashier/sendMoney", jwtTokenAuth, function (req, res) {
                                               ) {
                                                 feeObject = specific_partner_share.filter(
                                                   (bwsf) =>
-                                                    bwsf.branch_code ==
-                                                    branch.code
+                                                    bwsf.partner_code ==
+                                                    partner.code
                                                 )[0];
                                               }
                                               const { send } = feeObject;
@@ -1220,7 +1220,7 @@ router.post("/partnerCashier/sendMoney", jwtTokenAuth, function (req, res) {
                                                                   cashier.total_trans
                                                                 ) + 1,
                                                             },
-                                                            function (e, v) {}
+                                                            function (e, v) { }
                                                           );
                                                         }
 
@@ -1261,7 +1261,7 @@ router.post("/partnerCashier/sendMoney", jwtTokenAuth, function (req, res) {
                                                                 function (
                                                                   err,
                                                                   c
-                                                                ) {}
+                                                                ) { }
                                                               );
                                                             } else {
                                                               var amt =
@@ -1278,7 +1278,7 @@ router.post("/partnerCashier/sendMoney", jwtTokenAuth, function (req, res) {
                                                                 function (
                                                                   err,
                                                                   c
-                                                                ) {}
+                                                                ) { }
                                                               );
                                                             }
                                                           }
@@ -1555,8 +1555,8 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
                                             ) {
                                               feeObject = specific_partner_share.filter(
                                                 (bwsf) =>
-                                                  bwsf.branch_code ==
-                                                  branch.code
+                                                  bwsf.partner_code ==
+                                                  partner.code
                                               )[0];
                                             }
 
@@ -1630,7 +1630,7 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
                                                                 cashier.total_trans
                                                               ) + 1,
                                                           },
-                                                          function (e, v) {}
+                                                          function (e, v) { }
                                                         );
                                                         CashierLedger.findOne(
                                                           {
@@ -1663,7 +1663,7 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
                                                                 function (
                                                                   err,
                                                                   c
-                                                                ) {}
+                                                                ) { }
                                                               );
                                                             } else {
                                                               var amt =
@@ -1837,7 +1837,7 @@ router.post("/partnerCashier/addClosingBalance", jwtTokenAuth, (req, res) => {
                 closing_time: new Date(),
                 is_closed: true,
               },
-              function (e, v) {}
+              function (e, v) { }
             );
 
             return res
