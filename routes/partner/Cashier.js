@@ -30,6 +30,53 @@ const Merchant = require("../../models/merchant/Merchant");
 const MerchantSettings = require("../../models/merchant/MerchantSettings");
 const User = require("../../models/User");
 
+router.post("/partnerCashier/getUserByMobile", jwtTokenAuth, function (req, res) {
+  const { mobile } = req.body;
+  const jwtusername = req.sign_creds.username;
+  PartnerCashier.findOne({ username: jwtusername, status: 1 }, function (err, cashier) {
+    if (err) {
+      console.log(err);
+      var message = err;
+      if (err.message) {
+        message = err.message;
+      }
+      res.status(200).json({
+        status: 0,
+        message: message,
+      });
+    } else if (cashier == null) {
+      res.status(200).json({
+        status: 0,
+        message: "You are either not authorised or not logged in.",
+      });
+    } else {
+      User.findOne({ mobile }, "-password", function (err, user) {
+        if (err) {
+          console.log(err);
+          var message = err;
+          if (err.message) {
+            message = err.message;
+          }
+          res.status(200).json({
+            status: 0,
+            message: message,
+          });
+        } else if (user == null) {
+          res.status(200).json({
+            status: 0,
+            message: "User not found",
+          });
+        } else {
+          res.status(200).json({
+            status: 1,
+            data: user,
+          });
+        }
+      });
+    }
+  });
+});
+
 router.post("/partnerCashier/getDetails", jwtTokenAuth, function (req, res) {
   const jwtusername = req.sign_creds.username;
   PartnerCashier.findOne(
@@ -2264,7 +2311,7 @@ router.post("/partnerCashier/cancelTransfer", jwtTokenAuth, function (
   ); //branch
 });
 
-router.post("/partnerCashier/getUserByMobile", jwtTokenAuth, function (
+router.post("/partnerCashier/getPartnerUserByMobile", jwtTokenAuth, function (
   req,
   res
 ) {
