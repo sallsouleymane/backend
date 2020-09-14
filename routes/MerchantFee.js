@@ -167,7 +167,7 @@ router.post("/partnerCashier/checkMerchantFee", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/bank/merchantFee/updatePartnersShare", function (req, res) {
-	var { token, fee_id, percentage, specific_partners_share } = req.body;
+	var { token, fee_id, percentage, partner_branch_share, specific_partners_share, specific_partners_branch_share } = req.body;
 	if (!specific_partners_share) {
 		specific_partners_share = [];
 	}
@@ -201,6 +201,8 @@ router.post("/bank/merchantFee/updatePartnersShare", function (req, res) {
 					{
 						partner_share_percentage: percentage,
 						specific_partners_share: specific_partners_share,
+						partner_branch_share: partner_branch_share,
+						specific_partners_branch_share: specific_partners_branch_share
 					},
 					{ new: true },
 					(err, fee) => {

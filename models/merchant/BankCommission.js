@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const BankCommissionSchema = new mongoose.Schema({
 	merchant_id: { type: String, required: true },
 	status: { type: Number, required: true, default: 0 },
-	status_desc: { type: String, required: true, default: "0-created 1-valid"},
+	status_desc: { type: String, required: true, default: "0-created 1-valid" },
 	name: { type: String, required: true },
 	type: { type: Number, required: true },
 	type_desc: { type: String, required: false, default: "0-Wallet, 1-Non-Wallet" },
@@ -31,6 +31,14 @@ const BankCommissionSchema = new mongoose.Schema({
 		},
 	],
 	partner_share_percentage: { type: String, required: true, default: 0 },
+	specific_partners_branch_share: [
+		{
+			code: { type: String, required: false },
+			name: { type: String, required: false },
+			percentage: { type: Number, required: false },
+		},
+	],
+	partner_branch_share: { type: String, required: true, default: 0 },
 	edited: {
 		infra_share: {
 			fixed: { type: Number, required: false },

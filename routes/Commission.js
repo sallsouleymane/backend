@@ -16,7 +16,9 @@ router.post("/bank/commission/updatePartnersShare", function (req, res) {
 		token,
 		commission_id,
 		percentage,
+		partner_branch_share,
 		specific_partners_share,
+		specific_partners_branch_share,
 	} = req.body;
 	Bank.findOne(
 		{
@@ -48,6 +50,8 @@ router.post("/bank/commission/updatePartnersShare", function (req, res) {
 					{
 						partner_share_percentage: percentage,
 						specific_partners_share: specific_partners_share,
+						partner_branch_share: partner_branch_share,
+						specific_partners_branch_share: specific_partners_branch_share
 					},
 					{ new: true },
 					(err, comm) => {

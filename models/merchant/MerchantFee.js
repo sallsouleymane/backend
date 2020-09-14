@@ -32,6 +32,14 @@ const MerchantFeeSchema = new mongoose.Schema({
 		},
 	],
 	partner_share_percentage: { type: String, required: true, default: 0 },
+	specific_partners_branch_share: [
+		{
+			code: { type: String, required: false },
+			name: { type: String, required: false },
+			percentage: { type: Number, required: false },
+		},
+	],
+	partner_branch_share: { type: String, required: true, default: 0 },
 	edited: {
 		infra_share: {
 			fixed: { type: Number, required: false },
