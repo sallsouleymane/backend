@@ -57,12 +57,25 @@ module.exports.calculateShare = function (
 				var partnerRule = rule.specific_partners_share.filter(
 					(specific_prule) => specific_prule.code == partnerCode
 				)[0];
-				if(partnerRule){
-				percent = partnerRule.percentage;
+				if (partnerRule) {
+					percent = partnerRule.percentage;
 				}
 			}
 			var partnerFee = (percent * bankShare) / 100;
 			console.log("Merchant's Partner Share: ", partnerFee);
+			return partnerFee;
+		case "partnerBranch":
+			var percent = rule.partner_branch_share;
+			if (rule.specific_partners_branch_share && rule.specific_partners_branch_share.length > 0) {
+				var partnerBRule = rule.specific_partners_branch_share.filter(
+					(specific_pbrule) => specific_pbrule.code == partnerCode
+				)[0];
+				if (partnerBRule) {
+					percent = partnerBRule.percentage;
+				}
+			}
+			var partnerFee = (percent * bankShare) / 100;
+			console.log("Merchant's Partner Branch Share: ", partnerFee);
 			return partnerFee;
 	}
 };

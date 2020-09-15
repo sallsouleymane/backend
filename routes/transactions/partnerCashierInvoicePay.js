@@ -127,7 +127,7 @@ async function distributeRevenue(
   await blockchain.initiateTransfer(trans3);
 
   //fourth transaction
-  partnerShare = calculateShare("partner", amount, fee);
+  partnerShare = calculateShare("partnerBranch", amount, fee);
   console.log("Partner Share: ", partnerShare);
   let trans4 = {
     from: bankOpWallet,
@@ -185,7 +185,7 @@ async function distributeRevenue(
   await blockchain.initiateTransfer(trans6);
 
   //seventh transaction
-  partnerShare = calculateShare("partner", amount, comm);
+  partnerShare = calculateShare("partnerBranch", amount, comm);
   let trans7 = {
     from: bankOpWallet,
     to: branchOpWallet,
