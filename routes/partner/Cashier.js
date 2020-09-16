@@ -1136,16 +1136,19 @@ router.post("/partnerCashier/sendMoney", jwtTokenAuth, function (req, res) {
 
                                               let feeObject = partner_share;
                                               let sendFee = 0;
-
+                                              var spFeeObject;
                                               if (
                                                 specific_partner_share.length >
                                                 0
                                               ) {
-                                                feeObject = specific_partner_share.filter(
+                                                spFeeObject = specific_partner_share.filter(
                                                   (bwsf) =>
                                                     bwsf.partner_code ==
                                                     partner.code
                                                 )[0];
+                                              }
+                                              if (spFeeObject) {
+                                                feeObject = spFeeObject
                                               }
                                               const { send } = feeObject;
                                               sendFee = (send * fee) / 100;
