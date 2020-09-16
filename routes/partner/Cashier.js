@@ -546,16 +546,19 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
 
                                                     let feeObject = partner_share;
                                                     let sendFee = 0;
-
+                                                    var spFeeObject;
                                                     if (
                                                       specific_partner_share.length >
                                                       0
                                                     ) {
-                                                      feeObject = specific_partner_share.filter(
+                                                      spFeeObject = specific_partner_share.filter(
                                                         (bwsf) =>
                                                           bwsf.partner_code ==
                                                           partner.code
                                                       )[0];
+                                                    }
+                                                    if (spFeeObject) {
+                                                      feeObject = spFeeObject
                                                     }
                                                     const { send } = feeObject;
                                                     sendFee =
@@ -1599,17 +1602,19 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
                                             } = fe.revenue_sharing_rule;
                                             let feeObject = partner_share;
                                             let claimFee = 0;
-
+                                            var spFeeObject;
                                             if (
                                               specific_partner_share.length > 0
                                             ) {
-                                              feeObject = specific_partner_share.filter(
+                                              spFeeObject = specific_partner_share.filter(
                                                 (bwsf) =>
                                                   bwsf.partner_code ==
                                                   partner.code
                                               )[0];
                                             }
-
+                                            if (spFeeObject) {
+                                              feeObject = spFeeObject
+                                            }
                                             const { claim } = feeObject;
                                             claimFee = (claim * fee) / 100;
 
