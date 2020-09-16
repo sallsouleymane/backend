@@ -2180,11 +2180,28 @@ router.post("/partnerCashier/acceptIncoming", jwtTokenAuth, function (
                 {
                   status: 1,
                 },
-                (e, data) => {
-                  res.status(200).json({
-                    status: 1,
-                    message: "Accepted incoming cash",
-                  });
+                (err, data) => {
+                  if (err) {
+                    console.log(err);
+                    var message = err;
+                    if (err.message) {
+                      message = err.message;
+                    }
+                    res.status(200).json({
+                      status: 0,
+                      message: message,
+                    });
+                  } else if (data == null) {
+                    res.status(200).json({
+                      status: 0,
+                      message: "Cashier transfer record not found",
+                    });
+                  } else {
+                    res.status(200).json({
+                      status: 1,
+                      message: "Accepted incoming cash",
+                    });
+                  }
                 }
               );
             }

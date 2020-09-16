@@ -226,19 +226,19 @@ router.post("/cashier/getMerchantPenaltyRule", function (req, res) {
 				setting
 			) {
 				if (err) {
-				  	console.log(err);
-				 	 var message = err;
-				  	if (err.message) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
 						message = err.message;
-				  	}
-				  	res.status(200).json({
+					}
+					res.status(200).json({
 						status: 0,
 						message: message,
-				  	});
+					});
 				} else {
-				  	res.status(200).json({
+					res.status(200).json({
 						rule: setting.penalty_rule,
-				  	});
+					});
 				}
 			});
 		}
@@ -676,10 +676,27 @@ router.post("/cashierAcceptIncoming", function (req, res) {
 										{
 											cash_in_hand: cashInHand,
 										},
-										(e, data) => {
-											res.status(200).json({
-												success: true,
-											});
+										(err, data) => {
+											if (err) {
+												console.log(err);
+												var message = err;
+												if (err.message) {
+													message = err.message;
+												}
+												res.status(200).json({
+													status: 0,
+													message: message,
+												});
+											} else if (data == null) {
+												res.status(200).json({
+													status: 0,
+													message: "Cashier transfer record not found",
+												});
+											} else {
+												res.status(200).json({
+													success: 1,
+												});
+											}
 										}
 									);
 								}
