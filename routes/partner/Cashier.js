@@ -425,13 +425,12 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
                                           });
                                         } else {
                                           var fee = 0;
-                                          var temp;
                                           fe.ranges.map((range) => {
                                             if (
                                               amount >= range.trans_from &&
                                               amount <= range.trans_to
                                             ) {
-                                              temp =
+                                              var temp =
                                                 (amount * range.percentage) /
                                                 100;
                                               fee = temp + range.fixed_amount;
@@ -441,43 +440,44 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
                                               if (isInclusive) {
                                                 oamount = oamount - fee;
                                               }
+                                              console.log(fe);
+                                              const {
+                                                infra_share,
+                                                partner_share,
+                                                specific_partner_share,
+                                              } = fe.revenue_sharing_rule;
 
-                                              let trans1 = {};
-                                              trans1.from = branchOpWallet;
-                                              trans1.to = receiverWallet;
-                                              trans1.amount = oamount;
-                                              trans1.note =
-                                                "Cashier Send Money";
-                                              trans1.email1 = branch.email;
-                                              trans1.email2 = receiver.email;
-                                              trans1.mobile1 = branch.mobile;
-                                              trans1.mobile2 = receiver.mobile;
-                                              trans1.from_name = branch.name;
-                                              trans1.to_name = receiver.name;
-                                              trans1.user_id = cashier._id;
-                                              trans1.master_code = master_code;
-                                              trans1.child_code =
-                                                child_code + "1";
+                                              var infraShare = 0;
+                                              var temp =
+                                                (fee *
+                                                  Number(
+                                                    infra_share.percentage
+                                                  )) /
+                                                100;
+                                              var infraShare =
+                                                temp +
+                                                Number(infra_share.fixed);
 
-                                              let trans2 = {};
-                                              trans2.from = branchOpWallet;
-                                              trans2.to = bankOpWallet;
-                                              trans2.amount = fee;
-                                              trans2.note =
-                                                "Cashier Send Money Fee";
-                                              trans2.email1 = branch.email;
-                                              trans2.email2 = bank.email;
-                                              trans2.mobile1 = branch.mobile;
-                                              trans2.mobile2 = bank.mobile;
-                                              trans2.from_name = branch.name;
-                                              trans2.to_name = bank.name;
-                                              trans2.user_id = cashier._id;
-                                              trans2.master_code = master_code;
-                                              now = new Date().getTime();
-                                              child_code =
-                                                mns + "" + mnr + "" + now;
-                                              trans2.child_code =
-                                                child_code + "2";
+                                              var bankShare = fee - infraShare;
+                                              let feeObject = partner_share;
+                                              let sendFee = 0;
+                                              var spFeeObject;
+                                              if (
+                                                specific_partner_share.length >
+                                                0
+                                              ) {
+                                                spFeeObject = specific_partner_share.filter(
+                                                  (bwsf) =>
+                                                    bwsf.partner_code ==
+                                                    partner.code
+                                                )[0];
+                                              }
+                                              if (spFeeObject) {
+                                                feeObject = spFeeObject
+                                              }
+                                              const { send } = feeObject;
+                                              sendFee =
+                                                (send * bankShare) / 100;
 
                                               blockchain
                                                 .getBalance(branchOpWallet)
@@ -489,23 +489,43 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
                                                     ) >=
                                                     oamount + fee
                                                   ) {
-                                                    console.log(fe);
-                                                    const {
-                                                      infra_share,
-                                                      partner_share,
-                                                      specific_partner_share,
-                                                    } = fe.revenue_sharing_rule;
 
-                                                    var infraShare = 0;
-                                                    var temp =
-                                                      (fee *
-                                                        Number(
-                                                          infra_share.percentage
-                                                        )) /
-                                                      100;
-                                                    var infraShare =
-                                                      temp +
-                                                      Number(infra_share.fixed);
+                                                    let trans1 = {};
+                                                    trans1.from = branchOpWallet;
+                                                    trans1.to = receiverWallet;
+                                                    trans1.amount = oamount;
+                                                    trans1.note =
+                                                      "Cashier Send Money";
+                                                    trans1.email1 = branch.email;
+                                                    trans1.email2 = receiver.email;
+                                                    trans1.mobile1 = branch.mobile;
+                                                    trans1.mobile2 = receiver.mobile;
+                                                    trans1.from_name = branch.name;
+                                                    trans1.to_name = receiver.name;
+                                                    trans1.user_id = cashier._id;
+                                                    trans1.master_code = master_code;
+                                                    trans1.child_code =
+                                                      child_code + "1";
+
+                                                    let trans2 = {};
+                                                    trans2.from = branchOpWallet;
+                                                    trans2.to = bankOpWallet;
+                                                    trans2.amount = fee;
+                                                    trans2.note =
+                                                      "Cashier Send Money Fee";
+                                                    trans2.email1 = branch.email;
+                                                    trans2.email2 = bank.email;
+                                                    trans2.mobile1 = branch.mobile;
+                                                    trans2.mobile2 = bank.mobile;
+                                                    trans2.from_name = branch.name;
+                                                    trans2.to_name = bank.name;
+                                                    trans2.user_id = cashier._id;
+                                                    trans2.master_code = master_code;
+                                                    now = new Date().getTime();
+                                                    child_code =
+                                                      mns + "" + mnr + "" + now;
+                                                    trans2.child_code =
+                                                      child_code + "2";
 
                                                     let trans3 = {};
                                                     trans3.from = bankOpWallet;
@@ -538,31 +558,6 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
                                                       "3";
                                                     trans3.child_code = child_code;
 
-                                                    //Code by Hatim
-
-                                                    //what i need
-                                                    //branchId
-                                                    //feeId
-
-                                                    let feeObject = partner_share;
-                                                    let sendFee = 0;
-                                                    var spFeeObject;
-                                                    if (
-                                                      specific_partner_share.length >
-                                                      0
-                                                    ) {
-                                                      spFeeObject = specific_partner_share.filter(
-                                                        (bwsf) =>
-                                                          bwsf.partner_code ==
-                                                          partner.code
-                                                      )[0];
-                                                    }
-                                                    if (spFeeObject) {
-                                                      feeObject = spFeeObject
-                                                    }
-                                                    const { send } = feeObject;
-                                                    sendFee =
-                                                      (send * fee) / 100;
                                                     let trans4 = {};
                                                     trans4.from = bankOpWallet;
                                                     trans4.to = branchOpWallet;
