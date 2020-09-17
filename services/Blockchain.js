@@ -106,7 +106,8 @@ module.exports.transferThis = async (
 	};
 
 	let res = await doRequest(options);
-	console.log("one: " + res.toString());
+	console.log("one: ");
+	console.log(res.toString());
 	if (res.status == 0) {
 		if (res.message) {
 			err.push(res.message);
@@ -124,10 +125,10 @@ module.exports.transferThis = async (
 		if (url.email2 && url.email2 != "") {
 			sendMail(
 				"<p>You have received " +
-					url.amount +
-					" from the wallet " +
-					url.from +
-					"</p>",
+				url.amount +
+				" from the wallet " +
+				url.from +
+				"</p>",
 				"Payment Received",
 				url.email2
 			);
@@ -165,7 +166,8 @@ module.exports.transferThis = async (
 			};
 
 			res = await doRequest(options);
-			console.log("two: " + res.toString());
+			console.log("two: ");
+			console.log(res.toString());
 			if (res.status == 0) {
 				if (res.message) {
 					err.push(res.message);
@@ -176,10 +178,10 @@ module.exports.transferThis = async (
 				if (url.email1 && url.email1 != "") {
 					sendMail(
 						"<p>You have sent " +
-							url.amount +
-							" to the wallet " +
-							url.to +
-							"</p>",
+						url.amount +
+						" to the wallet " +
+						url.to +
+						"</p>",
 						"Payment Sent",
 						url.email1
 					);
@@ -187,10 +189,10 @@ module.exports.transferThis = async (
 				if (url.email2 && url.email2 != "") {
 					sendMail(
 						"<p>You have received " +
-							url.amount +
-							" from the wallet " +
-							url.from +
-							"</p>",
+						url.amount +
+						" from the wallet " +
+						url.from +
+						"</p>",
 						"Payment Received",
 						url.email2
 					);
@@ -229,7 +231,8 @@ module.exports.transferThis = async (
 					};
 
 					res = await doRequest(options);
-					console.log("three: " + res.toString());
+					console.log("three: ")
+					console.log(res.toString());
 					if (res.status == 0) {
 						if (res.message) {
 							err.push(res.message);
@@ -240,10 +243,10 @@ module.exports.transferThis = async (
 						if (url.email1 && url.email1 != "") {
 							sendMail(
 								"<p>You have sent " +
-									url.amount +
-									" to the wallet " +
-									url.to +
-									"</p>",
+								url.amount +
+								" to the wallet " +
+								url.to +
+								"</p>",
 								"Payment Sent",
 								url.email1
 							);
@@ -251,10 +254,10 @@ module.exports.transferThis = async (
 						if (url.email2 && url.email2 != "") {
 							sendMail(
 								"<p>You have received " +
-									url.amount +
-									" from the wallet " +
-									url.from +
-									"</p>",
+								url.amount +
+								" from the wallet " +
+								url.from +
+								"</p>",
 								"Payment Received",
 								url.email2
 							);
@@ -268,9 +271,9 @@ module.exports.transferThis = async (
 						if (url.mobile2 && url.mobile2 != "") {
 							sendSMS(
 								"You have received " +
-									url.amount +
-									" from the wallet " +
-									url.from,
+								url.amount +
+								" from the wallet " +
+								url.from,
 								url.mobile2
 							);
 						}
@@ -298,7 +301,8 @@ module.exports.transferThis = async (
 							};
 
 							res = await doRequest(options);
-							console.log("Four: " + res.toString());
+							console.log("Four: ")
+							console.log(res.toString());
 							if (res.status == 0) {
 								if (res.message) {
 									err.push(res.message);
@@ -309,10 +313,10 @@ module.exports.transferThis = async (
 								if (url.email1 && url.email1 != "") {
 									sendMail(
 										"<p>You have sent " +
-											url.amount +
-											" to the wallet " +
-											url.to +
-											"</p>",
+										url.amount +
+										" to the wallet " +
+										url.to +
+										"</p>",
 										"Payment Sent",
 										url.email1
 									);
@@ -320,10 +324,10 @@ module.exports.transferThis = async (
 								if (url.email2 && url.email2 != "") {
 									sendMail(
 										"<p>You have received " +
-											url.amount +
-											" from the wallet " +
-											url.from +
-											"</p>",
+										url.amount +
+										" from the wallet " +
+										url.from +
+										"</p>",
 										"Payment Received",
 										url.email2
 									);
@@ -337,9 +341,9 @@ module.exports.transferThis = async (
 								if (url.mobile2 && url.mobile2 != "") {
 									sendSMS(
 										"You have received " +
-											url.amount +
-											" from the wallet " +
-											url.from,
+										url.amount +
+										" from the wallet " +
+										url.from,
 										url.mobile2
 									);
 								}
@@ -453,10 +457,10 @@ module.exports.initiateTransfer = async function (transaction, tx_id = "") {
 		if (transaction.email1 && transaction.email1 != "") {
 			sendMail(
 				"<p>You have sent " +
-					transaction.amount +
-					" to the wallet " +
-					transaction.to +
-					"</p>",
+				transaction.amount +
+				" to the wallet " +
+				transaction.to +
+				"</p>",
 				"Payment Sent",
 				transaction.email1
 			);
@@ -464,10 +468,10 @@ module.exports.initiateTransfer = async function (transaction, tx_id = "") {
 		if (transaction.email2 && transaction.email2 != "") {
 			sendMail(
 				"<p>You have received " +
-					transaction.amount +
-					" from the wallet " +
-					transaction.from +
-					"</p>",
+				transaction.amount +
+				" from the wallet " +
+				transaction.from +
+				"</p>",
 				"Payment Received",
 				transaction.email2
 			);
@@ -475,18 +479,18 @@ module.exports.initiateTransfer = async function (transaction, tx_id = "") {
 		if (transaction.mobile1 && transaction.mobile1 != "") {
 			sendSMS(
 				"You have sent " +
-					transaction.amount +
-					" to the wallet " +
-					transaction.to,
+				transaction.amount +
+				" to the wallet " +
+				transaction.to,
 				transaction.mobile1
 			);
 		}
 		if (transaction.mobile2 && transaction.mobile2 != "") {
 			sendSMS(
 				"You have received " +
-					transaction.amount +
-					" from the wallet " +
-					transaction.from,
+				transaction.amount +
+				" from the wallet " +
+				transaction.from,
 				transaction.mobile2
 			);
 		}
