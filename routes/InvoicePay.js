@@ -240,7 +240,7 @@ router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
         });
       } else {
         Merchant.findOne(
-          { merchant_id: cashier.merchant_id },
+          { _id: cashier.merchant_id },
           (err, merchant) => {
             if (err) {
               console.log(err);
