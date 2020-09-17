@@ -20,14 +20,18 @@ module.exports.calculateShare = function (
 		return 0;
 	}
 	var temp = (amount * bankRule.percentage) / 100;
-	var bankShare = temp + bankRule.fixed;
+	var bankFee = temp + bankRule.fixed;
+
+	temp = (bankFee * Number(rule.infra_share.percentage)) / 100;
+	var infraShare = temp + Number(rule.infra_share.fixed);
+
+	var bankShare = bankFee - infraShare;
 	switch (calculate) {
 		case "bank":
-			console.log("Bank Share: ", bankShare);
-			return bankShare;
+			console.log("Bank Fee: ", bankShare);
+			return bankFee;
 		case "infra":
-			var temp = (bankShare * Number(rule.infra_share.percentage)) / 100;
-			var infraShare = temp + Number(rule.infra_share.fixed);
+			console.log("Infra Share: ", infraShare);
 			return infraShare;
 		case "claimBranch":
 			var branchRule = rule.branch_share;
@@ -37,7 +41,7 @@ module.exports.calculateShare = function (
 				)[0];
 			}
 			var { claim } = branchRule;
-			var claimFee = (claim * fee) / 100;
+			var claimFee = (claim * bankShare) / 100;
 			console.log("Claiming Branch Share: ", claimFee);
 			return claimFee;
 		case "sendBranch":
@@ -48,7 +52,7 @@ module.exports.calculateShare = function (
 				)[0];
 			}
 			var { send } = branchRule;
-			var sendFee = (send * fee) / 100;
+			var sendFee = (send * bankShare) / 100;
 			console.log("Sending Branch Share: ", sendFee);
 			return sendFee;
 		case "partner":
