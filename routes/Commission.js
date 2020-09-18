@@ -147,6 +147,7 @@ router.post("/bank/commission/createRule", function (req, res) {
 								} else {
 									let commission = new Commission();
 									commission.merchant_id = merchant_id;
+									commission.bank_id = bank._id;
 									commission.name = name;
 									commission.type = type;
 									commission.active = active;
