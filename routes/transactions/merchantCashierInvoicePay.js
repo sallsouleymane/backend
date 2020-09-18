@@ -7,7 +7,7 @@ module.exports = async function (
 	infra,
 	bank,
 	merchant,
-	fee
+	comm
 ) {
 
 	amount = Number(amount);
@@ -20,14 +20,14 @@ module.exports = async function (
 	let master_code = getTransactionCode(merchant.mobile, bank.mobile);
 
 	// first transaction
-	bankFee = calculateShare("bank", amount, fee);
-	console.log("Bank Fee: ", bankFee);
+	bankComm = calculateShare("bank", amount, comm);
+	console.log("Bank Commission: ", bankComm);
 
 	let trans1 = {
 		from: merchantOpWallet,
 		to: bankOpWallet,
-		amount: bankFee,
-		note: "Bank fee on paid bill",
+		amount: bankComm,
+		note: "Bank commission on paid bill",
 		email1: merchant.email,
 		email2: bank.email,
 		mobile1: merchant.mobile,
@@ -41,13 +41,13 @@ module.exports = async function (
 	await blockchain.initiateTransfer(trans1);
 
 	//second transaction
-	infraShare = calculateShare("infra", amount, fee);
+	infraShare = calculateShare("infra", amount, comm);
 	console.log("Infra Share: ", infraShare);
 	let trans2 = {
 		from: bankOpWallet,
 		to: infraOpWallet,
 		amount: infraShare,
-		note: "Infra Fee share on paid bill",
+		note: "Infra commission share on paid bill",
 		email1: bank.email,
 		email2: infra.email,
 		mobile1: bank.mobile,

@@ -259,9 +259,9 @@ router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
                   "Cashier's Merchant not found",
               });
             } else {
-              MerchantFee.findOne(
+              Commission.findOne(
                 { merchant_id: merchant._id, type: 2 },
-                async (err, fee) => {
+                async (err, comm) => {
                   if (err) {
                     console.log(err);
                     var message = err;
@@ -272,10 +272,10 @@ router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
                       status: 0,
                       message: message,
                     });
-                  } else if (fee == null) {
+                  } else if (comm == null) {
                     res.status(200).json({
                       status: 0,
-                      message: "Fee rule not found",
+                      message: "Commission rule not found",
                     });
                   } else {
                     try {
@@ -284,7 +284,7 @@ router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
                         var { id, penalty } = invoice;
                         var inv = await Invoice.findOne({
                           _id: id,
-                          merchant_id: merchant_id,
+                          merchant_id: merchant._id,
                           paid: 0,
                           is_validated: 1,
                         });
@@ -301,7 +301,7 @@ router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
                         throw new Error("Amount is a negative value");
                       }
                       let bank = await Bank.findOne({
-                        _id: fee.bank_id,
+                        _id: comm.bank_id,
                         status: 1,
                       });
                       if (bank == null) {
@@ -330,7 +330,7 @@ router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
                         infra,
                         bank,
                         merchant,
-                        fee
+                        comm
                       );
                       var status_update_feedback;
                       if (result.status == 1) {
