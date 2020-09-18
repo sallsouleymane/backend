@@ -12,6 +12,7 @@ const { calculateShare } = require("./utils/utility");
 const cashierInvoicePay = require("./transactions/cashierInvoicePay");
 const userInvoicePay = require("./transactions/userInvoicePay");
 const partnerCashierInvoicePay = require("./transactions/partnerCashierInvoicePay");
+const merchantCashierInvoicePay = require("./transactions/merchantCashierInvoicePay");
 
 const Bank = require("../models/Bank");
 const Branch = require("../models/Branch");
