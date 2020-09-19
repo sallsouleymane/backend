@@ -13,7 +13,7 @@ module.exports = async function (
 	amount = Number(amount);
 
 	var creator = (merchant.creator == 1) ? "inframerchant" : "merchant";
-	const merchantOpWallet = merchant.username + "_" + creator + "_operational@" + bank.name;
+	const merchantOpWallet = merchant.code + "_" + creator + "_operational@" + bank.name;
 	const bankOpWallet = "operational@" + bank.name;
 	const infraOpWallet = "infra_operational@" + bank.name;
 

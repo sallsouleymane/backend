@@ -17,6 +17,7 @@ const merchantCashierRouter = require("./routes/MerchantCashier");
 const merchantBranchRouter = require("./routes/MerchantBranch");
 const bankPartnerRouter = require("./routes/bank/Partner")
 const bankMerchantRouter = require("./routes/bank/Merchant")
+const InterBankRuleRouter = require("./routes/InterBankRule")
 const invoicePayRouter = require("./routes/InvoicePay");
 const partnerRouter = require("./routes/partner/Partner");
 const partnerBranchRouter = require("./routes/partner/Branch");
@@ -69,4 +70,5 @@ app.use("/api", bankMerchantRouter);
 app.use("/api", partnerRouter);
 app.use("/api", partnerBranchRouter);
 app.use("/api", partnerCashierRouter);
+app.use("/api", InterBankRuleRouter);
 app.listen(API_PORT, () => console.log("Backend Started"));

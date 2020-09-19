@@ -12,6 +12,7 @@ const PartnerCashierSchema = new mongoose.Schema({
     max_trans_count: { type: String, required: false, default: 0 },
     partner_id: { type: String, required: true },
     branch_id: { type: String, required: false },
+    bank_id: { type: String, required: false },
     partner_user_id: { type: String, required: false, default: null },
     created_at: { type: Date, default: Date.now },
     modified_at: { type: Date, default: null },
