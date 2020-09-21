@@ -1322,11 +1322,11 @@ router.post("/createBankRules", (req, res) => {
 				fee.active = active;
 				fee.status = 0;
 				ranges.forEach((range) => {
-					var { trans_from, trans_to, fixed_amount, percentage } = range;
+					var { trans_from, trans_to, fixed, percentage } = range;
 					fee.ranges.push({
 						trans_from: trans_from,
 						trans_to: trans_to,
-						fixed_amount: fixed_amount,
+						fixed: fixed,
 						percentage: percentage,
 					});
 				});

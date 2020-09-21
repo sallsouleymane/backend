@@ -1273,7 +1273,7 @@ router.post("/checkCashierFee", function (req, res) {
 									console.log(range);
 									if (amount >= range.trans_from && amount <= range.trans_to) {
 										temp = (amount * range.percentage) / 100;
-										fee = temp + range.fixed_amount;
+										fee = temp + range.fixed;
 										res.status(200).json({
 											status: 1,
 											fee: fee,
@@ -1428,7 +1428,7 @@ router.post("/cashier/checkNonWaltoWalFee", function (req, res) {
 											amount <= range.trans_to
 										) {
 											temp = (amount * range.percentage) / 100;
-											fee = temp + range.fixed_amount;
+											fee = temp + range.fixed;
 											res.status(200).json({
 												status: 1,
 												fee: fee,
@@ -1691,7 +1691,7 @@ router.post("/cashierSendMoney", function (req, res) {
 																			var fee = 0;
 																			var temp;
 																			temp = (amount * range.percentage) / 100;
-																			fee = temp + range.fixed_amount;
+																			fee = temp + range.fixed;
 
 																			oamount = Number(amount);
 
@@ -2244,7 +2244,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																					) {
 																						var temp =
 																							(amount * range.percentage) / 100;
-																						fee = temp + range.fixed_amount;
+																						fee = temp + range.fixed;
 
 																						oamount = Number(amount);
 
@@ -3061,7 +3061,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 																						temp =
 																							(oamount * range.percentage) /
 																							100;
-																						fee = temp + range.fixed_amount;
+																						fee = temp + range.fixed;
 																					}
 
 																					const {

@@ -295,7 +295,7 @@ router.post("/user/checkWalToWalFee", jwtTokenAuth, function (req, res) {
 											amount <= range.trans_to
 										) {
 											temp = (amount * range.percentage) / 100;
-											fee = temp + range.fixed_amount;
+											fee = temp + range.fixed;
 											res.status(200).json({
 												status: 1,
 												message: "wallet to wallet fee",
@@ -391,7 +391,7 @@ router.post("/user/checkWalToNonWalFee", jwtTokenAuth, function (req, res) {
 											amount <= range.trans_to
 										) {
 											temp = (amount * range.percentage) / 100;
-											fee = temp + range.fixed_amount;
+											fee = temp + range.fixed;
 											res.status(200).json({
 												status: 1,
 												message:
@@ -1212,7 +1212,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																	) {
 																		var temp =
 																			(oamount * range.percentage) / 100;
-																		fee = temp + range.fixed_amount;
+																		fee = temp + range.fixed;
 
 																		if (isInclusive) {
 																			oamount = oamount - fee;
@@ -1394,7 +1394,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 					country: receiverCountry,
 				};
 
-				await NWUser.create(receiver, function (err) {});
+				await NWUser.create(receiver, function (err) { });
 
 				const senderWallet = sender.mobile + "@" + sender.bank;
 				var bal = await blockchain.getBalance(senderWallet);
@@ -1478,7 +1478,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 															oamount <= range.trans_to
 														) {
 															var temp = (oamount * range.percentage) / 100;
-															fee = temp + range.fixed_amount;
+															fee = temp + range.fixed;
 
 															if (isInclusive) {
 																oamount = oamount - fee;

@@ -509,7 +509,7 @@ router.post("/checkBranchFee", function (req, res) {
 											oamount <= range.trans_to
 										) {
 											temp = (oamount * range.percentage) / 100;
-											fee = temp + range.fixed_amount;
+											fee = temp + range.fixed;
 										}
 
 										res.status(200).json({
@@ -878,7 +878,7 @@ router.post("/branchClaimMoney", function (req, res) {
 																										data.save(function (
 																											err,
 																											c
-																										) {});
+																										) { });
 																									} else {
 																										var amt =
 																											Number(c.amount) +
@@ -886,7 +886,7 @@ router.post("/branchClaimMoney", function (req, res) {
 																										BranchLedger.findByIdAndUpdate(
 																											c._id,
 																											{ amount: amt },
-																											function (err, c) {}
+																											function (err, c) { }
 																										);
 																									}
 																								}

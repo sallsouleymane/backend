@@ -433,7 +433,7 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
                                               var temp =
                                                 (amount * range.percentage) /
                                                 100;
-                                              fee = temp + range.fixed_amount;
+                                              fee = temp + range.fixed;
 
                                               oamount = Number(amount);
 
@@ -1056,7 +1056,7 @@ router.post("/partnerCashier/sendMoney", jwtTokenAuth, function (req, res) {
                                         ) {
                                           var temp =
                                             (amount * range.percentage) / 100;
-                                          fee = temp + range.fixed_amount;
+                                          fee = temp + range.fixed;
 
                                           oamount = Number(amount);
 
@@ -1589,7 +1589,7 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
                                                 var temp =
                                                   (oamount * range.percentage) /
                                                   100;
-                                                fee = temp + range.fixed_amount;
+                                                fee = temp + range.fixed;
                                               }
 
                                               const {
@@ -2509,7 +2509,7 @@ router.post("/partnerCashier/checkNonWaltoWalFee", jwtTokenAuth, function (
                       amount <= range.trans_to
                     ) {
                       temp = (amount * range.percentage) / 100;
-                      fee = temp + range.fixed_amount;
+                      fee = temp + range.fixed;
                       res.status(200).json({
                         status: 1,
                         fee: fee,
@@ -2982,7 +2982,7 @@ router.post("/partnerCashier/checkFee", jwtTokenAuth, function (req, res) {
                 console.log(range);
                 if (amount >= range.trans_from && amount <= range.trans_to) {
                   temp = (amount * range.percentage) / 100;
-                  fee = temp + range.fixed_amount;
+                  fee = temp + range.fixed;
                   res.status(200).json({
                     status: 1,
                     fee: fee,

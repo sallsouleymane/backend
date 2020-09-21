@@ -10,7 +10,7 @@ const FeeSchema = new mongoose.Schema({
 		{
 			trans_from: { type: Number, required: true, default: 0 },
 			trans_to: { type: Number, required: true, default: 0 },
-			fixed_amount: { type: Number, required: true, default: 0 },
+			fixed: { type: Number, required: true, default: 0 },
 			percentage: { type: Number, required: true, default: 0 }
 		}
 	],

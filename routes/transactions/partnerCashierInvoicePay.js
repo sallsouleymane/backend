@@ -32,8 +32,8 @@ module.exports = async function (
     email2: merchant.email,
     mobile1: branch.mobile,
     mobile2: merchant.mobile,
-    fromName: branch.name,
-    toName: merchant.name,
+    from_name: branch.name,
+    to_name: merchant.name,
     master_code: master_code,
     child_code: master_code + "1",
   };
@@ -98,8 +98,8 @@ async function distributeRevenue(
     email2: bank.email,
     mobile1: branch.mobile,
     mobile2: bank.mobile,
-    fromName: branch.name,
-    toName: bank.name,
+    from_name: branch.name,
+    to_name: bank.name,
     master_code: master_code,
     child_code: getTransactionCode(branch.mobile, bank.mobile) + "2",
   };
@@ -118,8 +118,8 @@ async function distributeRevenue(
     email2: infra.email,
     mobile1: bank.mobile,
     mobile2: infra.mobile,
-    fromName: bank.name,
-    toName: infra.name,
+    from_name: bank.name,
+    to_name: infra.name,
     master_code: master_code,
     child_code: getTransactionCode(bank.mobile, infra.mobile) + "3",
   };
@@ -127,7 +127,7 @@ async function distributeRevenue(
   await blockchain.initiateTransfer(trans3);
 
   //fourth transaction
-  partnerShare = calculateShare("partnerBranch", amount, fee);
+  partnerShare = calculateShare("partnerBranch", amount, fee, {}, branch.code);
   console.log("Partner Share: ", partnerShare);
   let trans4 = {
     from: bankOpWallet,
@@ -138,8 +138,8 @@ async function distributeRevenue(
     email2: branch.email,
     mobile1: bank.mobile,
     mobile2: branch.mobile,
-    fromName: bank.name,
-    toName: branch.name,
+    from_name: bank.name,
+    to_name: branch.name,
     master_code: master_code,
     child_code: getTransactionCode(bank.mobile, branch.mobile) + "4",
   };
@@ -157,8 +157,8 @@ async function distributeRevenue(
     email2: bank.email,
     mobile1: merchant.mobile,
     mobile2: bank.mobile,
-    fromName: merchant.name,
-    toName: bank.name,
+    from_name: merchant.name,
+    to_name: bank.name,
     master_code: master_code,
     child_code: getTransactionCode(merchant.mobile, bank.mobile) + "5",
   };
@@ -176,8 +176,8 @@ async function distributeRevenue(
     email2: infra.email,
     mobile1: bank.mobile,
     mobile2: infra.mobile,
-    fromName: bank.name,
-    toName: infra.name,
+    from_name: bank.name,
+    to_name: infra.name,
     master_code: master_code,
     child_code: getTransactionCode(bank.mobile, infra.mobile) + "6",
   };
@@ -185,7 +185,7 @@ async function distributeRevenue(
   await blockchain.initiateTransfer(trans6);
 
   //seventh transaction
-  partnerShare = calculateShare("partnerBranch", amount, comm);
+  partnerShare = calculateShare("partnerBranch", amount, comm, {}, branch.code);
   let trans7 = {
     from: bankOpWallet,
     to: branchOpWallet,
@@ -195,8 +195,8 @@ async function distributeRevenue(
     email2: branch.email,
     mobile1: bank.mobile,
     mobile2: branch.mobile,
-    fromName: branch.name,
-    toName: bank.name,
+    from_name: branch.name,
+    to_name: bank.name,
     master_code: master_code,
     child_code: getTransactionCode(bank.mobile, branch.mobile) + "7",
   };

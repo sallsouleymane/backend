@@ -32,8 +32,8 @@ module.exports = async function (
 		email2: bank.email,
 		mobile1: merchant.mobile,
 		mobile2: bank.mobile,
-		fromName: merchant.name,
-		toName: bank.name,
+		from_name: merchant.name,
+		to_name: bank.name,
 		master_code: master_code,
 		child_code: master_code
 	};
@@ -52,8 +52,8 @@ module.exports = async function (
 		email2: infra.email,
 		mobile1: bank.mobile,
 		mobile2: infra.mobile,
-		fromName: bank.name,
-		toName: infra.name,
+		from_name: bank.name,
+		to_name: infra.name,
 		master_code: master_code,
 		child_code: getTransactionCode(bank.mobile, infra.mobile) + "1",
 	};
