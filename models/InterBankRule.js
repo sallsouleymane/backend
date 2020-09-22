@@ -8,6 +8,7 @@ const InterBankRuleSchema = new mongoose.Schema({
 	type_desc: { type: String, required: false, default: "0-NWNW" },
 	description: { type: String, required: false },
 	sharing_added: { type: String, required: false, default: 0 },
+	sharing_edited: { type: String, required: false, default: 0 },
 	edit_status: { type: Number, required: true, default: 0 },
 	ranges: [
 		{
