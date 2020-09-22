@@ -15,6 +15,7 @@ const Partner = require('../../models/partner/Partner')
 const PartnerBranch = require('../../models/partner/Branch')
 const PartnerCashier = require('../../models/partner/Cashier')
 const PartnerUser = require('../../models/partner/User')
+const InterBankRule = require('../../models/InterBankRule')
 
 module.exports = (key) => {
 	switch (key) {
@@ -68,6 +69,9 @@ module.exports = (key) => {
 			break
 		case 'partnerUser':
 			return PartnerUser
+			break
+		case 'interbankrule':
+			return InterBankRule
 			break
 		default:
 			return null
