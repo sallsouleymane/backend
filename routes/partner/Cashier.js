@@ -1523,12 +1523,17 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
                                       message: "Infra Not Found",
                                     });
                                   } else {
+                                    var oamount = amount = otpd.amount;
+                                    if (otpd.is_inclusive) {
+                                      amount = otpd.amount - otpd.fee;
+                                    }
                                     let data = new CashierClaim();
                                     data.transaction_code = transferCode;
                                     data.proof = proof;
                                     data.cashier_id = cashier._id;
                                     data.amount = otpd.amount;
                                     data.fee = otpd.fee;
+                                    data.is_inclusive = otpd.is_inclusive;
                                     data.sender_name =
                                       givenname + " " + familyname;
                                     data.sender_mobile = mobile;
@@ -1544,7 +1549,6 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
                                     data.master_code = master_code;
                                     data.child_code = child_code + "1";
 
-                                    const oamount = otpd.amount;
                                     data.save((err, cashierClaimObj) => {
                                       if (err) {
                                         console.log(err);
@@ -1701,12 +1705,12 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
                                                                 Number(
                                                                   cashier.cash_paid
                                                                 ) +
-                                                                Number(oamount),
+                                                                Number(amount),
                                                               cash_in_hand:
                                                                 Number(
                                                                   cashier.cash_in_hand
                                                                 ) -
-                                                                Number(oamount),
+                                                                Number(amount),
                                                               fee_generated:
                                                                 Number(
                                                                   cashier.fee_generated
@@ -1741,7 +1745,7 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
                                                               ) {
                                                                 let data = new CashierLedger();
                                                                 data.amount = Number(
-                                                                  oamount
+                                                                  amount
                                                                 );
                                                                 data.trans_type =
                                                                   "DR";
@@ -1751,14 +1755,22 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
                                                                   function (
                                                                     err,
                                                                     c
-                                                                  ) { }
+                                                                  ) {
+                                                                    res
+                                                                      .status(200)
+                                                                      .json({
+                                                                        status: 1,
+                                                                        message:
+                                                                          "Cashier claimed money",
+                                                                      });
+                                                                  }
                                                                 );
                                                               } else {
                                                                 var amt =
                                                                   Number(
                                                                     c.amount
                                                                   ) +
-                                                                  Number(oamount);
+                                                                  Number(amount);
                                                                 CashierLedger.findByIdAndUpdate(
                                                                   c._id,
                                                                   { amount: amt },
