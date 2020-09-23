@@ -46,7 +46,7 @@ module.exports = async function (
     }
 
     claimerBankShare = calculateShare("claimBank", transfer.amount, rule1);
-    claimerBranchShare = calculateShare("claimBranch", transfer.amount, rule1, rule2, branch.bcode);
+    claimerBranchShare = calculateShare("claimPartner", transfer.amount, rule1, rule2, transfer.partnerCode);
 
     let trans2 = {
         from: senderBankOpWallet,

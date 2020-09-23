@@ -80,6 +80,44 @@ module.exports.calculateShare = function (
 			var sendFee = (Number(send) * bankShare) / 100;
 			console.log("Sending Branch Share: ", sendFee);
 			return sendFee;
+		case "claimPartner":
+			if (rule2.revenue_sharing_rule.partner_share) {
+				rule = rule2
+			}
+			console.log(rule.revenue_sharing_rule.partner_share);
+			console.log(rule.revenue_sharing_rule.specific_partner_share)
+			var partnerRule = rule.revenue_sharing_rule.partner_share;
+			if (rule.revenue_sharing_rule.specific_partner_share && rule.revenue_sharing_rule.specific_partner_share.length > 0) {
+				var specificPartnerRule = rule.revenue_sharing_rule.specific_partner_share.filter(
+					(specific_brule) => specific_brule.partner_code == partnerCode
+				)[0];
+			}
+			if (specificPartnerRule) {
+				partnerRule = specificPartnerRule
+			}
+			var { claim } = partnerRule;
+			var claimFee = (claim * bankShare) / 100;
+			console.log("Claiming Partner Share: ", claimFee);
+			return claimFee;
+		case "sendPartner":
+			if (rule2.revenue_sharing_rule.partner_share) {
+				rule = rule2
+			}
+			console.log(rule.revenue_sharing_rule.partner_share);
+			console.log(rule.revenue_sharing_rule.specific_partner_share)
+			var partnerRule = rule.revenue_sharing_rule.partner_share;
+			if (rule.revenue_sharing_rule.specific_partner_share && rule.revenue_sharing_rule.specific_partner_share.length > 0) {
+				var specificPartnerRule = rule.revenue_sharing_rule.specific_partner_share.filter(
+					(specific_brule) => specific_brule.partner_code == partnerCode
+				)[0];
+			}
+			if (specificPartnerRule) {
+				partnerRule = specificPartnerRule
+			}
+			var { send } = partnerRule;
+			var sendFee = (Number(send) * bankShare) / 100;
+			console.log("Sending Partner Share: ", sendFee);
+			return sendFee;
 		case "partner":
 			if (rule2.partner_share_percentage) {
 				rule = rule2
