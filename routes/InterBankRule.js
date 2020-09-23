@@ -1874,7 +1874,7 @@ router.post("/infra/interBank/getRules", function (req, res) {
     );
 });
 
-router.post("/infra/interBank/declineRule", function (req, res) {
+router.post("/infra/interBank/declineShare", function (req, res) {
     const { token, rule_id } = req.body;
     Infra.findOne(
         {
@@ -1899,9 +1899,13 @@ router.post("/infra/interBank/declineRule", function (req, res) {
                         "Token changed or user not valid. Try to login again or contact system administrator.",
                 });
             } else {
-                InterBankRule.findOne(
+                InterBankRule.findOneAndUpdate(
                     {
                         _id: rule_id,
+
+                    },
+                    {
+                        infra_approval_status: -1
                     },
                     async (err, rule) => {
                         if (err) {
@@ -1920,54 +1924,37 @@ router.post("/infra/interBank/declineRule", function (req, res) {
                                 message: "Rule not found.",
                             });
                         } else {
-                            try {
-                                var bank = Bank.findOne({ _id: rule.bank_id })
-                                if (!bank) {
-                                    throw new Error("Bank not found");
-                                }
-                                if (rule.edit_status == 1) {
-                                    InterBankRule.updateOne(
-                                        {
-                                            _id: rule._id,
-                                        },
-                                        {
-                                            $set: {
-                                                "edited.status": -1,
-                                            },
-                                        }
-                                    );
+                            Bank.findOne({ _id: rule.bank_id }, (err, bank) => {
+                                if (err) {
+                                    console.log(err);
+                                    var message = err;
+                                    if (err.message) {
+                                        message = err.message;
+                                    }
+                                    res.status(200).json({
+                                        status: 0,
+                                        message: message,
+                                    });
+                                } else if (rule == null) {
+                                    res.status(200).json({
+                                        status: 0,
+                                        message: "Bank not found.",
+                                    });
                                 } else {
-                                    InterBankRule.updateOne(
-                                        {
-                                            _id: rule_id,
-                                        },
-                                        {
-                                            $set: {
-                                                status: -1,
-                                            },
-                                        }
-                                    );
+                                    var content =
+                                        "Infra has declined the fee rule " +
+                                        rule.name +
+                                        "in Ewallet Application";
+                                    sendMail(content, "Share declined by Infra", bank.email);
+                                    content =
+                                        "Ewallet: Infra has declined the share of fee rule " + rule.name;
+                                    sendSMS(content, bank.mobile);
+                                    res.status(200).json({
+                                        status: 1,
+                                        message: "Declined",
+                                    });
                                 }
-                            } catch (err) {
-                                console.log(err);
-                                var message = err.toString();
-                                if (err.message) {
-                                    message = err.message;
-                                }
-                                res.status(200).json({ status: 0, message: message });
-                            }
-                            var content =
-                                "Infra has declined the fee rule " +
-                                rule.name +
-                                "in Ewallet Application";
-                            sendMail(content, "Fee rule approved by Infra", bank.email);
-                            content =
-                                "Ewallet: Infra has declined the fee rule " + rule.name;
-                            sendSMS(content, bank.mobile);
-                            res.status(200).json({
-                                status: 1,
-                                message: "Declined",
-                            });
+                            })
                         }
                     }
                 );
@@ -1976,7 +1963,7 @@ router.post("/infra/interBank/declineRule", function (req, res) {
     );
 });
 
-router.post("/infra/interBank/approveRule", function (req, res) {
+router.post("/infra/interBank/approveShare", function (req, res) {
     const { token, rule_id } = req.body;
     Infra.findOne(
         {
@@ -2027,24 +2014,22 @@ router.post("/infra/interBank/approveRule", function (req, res) {
                                 if (!bank) {
                                     throw new Error("Bank not found");
                                 }
-                                if (rule.edit_status == 1) {
+                                if (rule.status == 0) {
+                                    await InterBankRule.updateOne({ _id: rule._id }, {
+                                        status: 1,
+                                        infra_approval_status: 1
+                                    })
+
+                                } else {
                                     await InterBankRule.updateOne({ _id: rule._id }, {
                                         $set: {
-                                            name: rule.edited.name,
-                                            active: rule.edited.active,
-                                            ranges: rule.edited.ranges,
-                                            edit_status: 0,
                                             infra_share: rule.edited.infra_share,
-                                            other_bank_share: rule.edited.other_bank_share
+                                            infra_approval_status: 1
                                         },
                                         $unset: {
                                             edited: {}
                                         }
                                     });
-                                } else {
-                                    await InterBankRule.updateOne({ _id: rule._id }, {
-                                        status: 1
-                                    })
                                 }
                             } catch (err) {
                                 console.log(err);
@@ -2055,10 +2040,10 @@ router.post("/infra/interBank/approveRule", function (req, res) {
                                 res.status(200).json({ status: 0, message: message });
                             }
                             var content =
-                                "Infra has approved the fee rule " +
+                                "Infra has approved the share of " +
                                 rule.name +
-                                "in Ewallet Application";
-                            sendMail(content, "Fee rule approved by Infra", bank.email);
+                                " rule in Ewallet Application";
+                            sendMail(content, "Share approved by Infra", bank.email);
                             content =
                                 "Ewallet: Infra has approved the fee rule " + rule.name;
                             sendSMS(content, bank.mobile);
@@ -2075,8 +2060,8 @@ router.post("/infra/interBank/approveRule", function (req, res) {
     );
 });
 
-router.post("/bank/interBank/editRuleShares", function (req, res) {
-    const { token, rule_id, infra_share, other_bank_share } = req.body;
+router.post("/bank/interBank/updateOtherBankShares", function (req, res) {
+    const { token, rule_id, other_bank_share } = req.body;
     Bank.findOne(
         {
             token,
@@ -2100,9 +2085,14 @@ router.post("/bank/interBank/editRuleShares", function (req, res) {
                         "Token changed or user not valid. Try to login again or contact system administrator.",
                 });
             } else {
-                InterBankRule.findOne(
+                InterBankRule.findOneAndUpdate(
                     {
                         _id: rule_id,
+                    },
+                    {
+                        $set: {
+                            other_bank_share: other_bank_share,
+                        },
                     },
                     async (err, rule) => {
                         if (err) {
@@ -2118,65 +2108,14 @@ router.post("/bank/interBank/editRuleShares", function (req, res) {
                         } else if (rule == null) {
                             res.status(200).json({
                                 status: 0,
-                                message: "This rule is not allowed to edit.",
+                                message: "Rule not found.",
                             });
                         } else {
-                            try {
-                                if (rule.status == 0) {
-                                    rule = await InterBankRule.findOneAndUpdate(
-                                        {
-                                            _id: rule._id,
-                                        },
-                                        {
-                                            $set: {
-                                                infra_share: infra_share,
-                                                other_bank_share: other_bank_share,
-                                                sharing_edited: 1
-                                            },
-                                        }, { new: true })
-                                } else if (rule.rule_edit_status == 1) {
-                                    rule = await InterBankRule.findOneAndUpdate(
-                                        {
-                                            _id: rule._id,
-                                        },
-                                        {
-                                            $set: {
-                                                "edited.infra_share": infra_share,
-                                                "edited.other_bank_share": other_bank_share,
-                                                sharing_edited: 1
-                                            },
-                                        }, { new: true });
-                                } else {
-                                    rule = await InterBankRule.findOneAndUpdate(
-                                        {
-                                            _id: rule._id,
-                                        },
-                                        {
-                                            $set: {
-                                                "edited.status": 0,
-                                                "edited.active": rule.active,
-                                                "edited.name": rule.name,
-                                                "edited.ranges": rule.ranges,
-                                                "edited.infra_share": infra_share,
-                                                "edited.other_bank_share": other_bank_share,
-                                                edit_status: 1,
-                                                sharing_edited: 1
-                                            },
-                                        }, { new: true });
-                                }
-                                res.status(200).json({
-                                    status: 1,
-                                    message: "Edited shares in " + rule.name + " transactions fee rule",
-                                    rule: rule,
-                                });
-                            } catch (err) {
-                                console.log(err);
-                                var message = err.toString();
-                                if (err && err.message) {
-                                    message = err.message;
-                                }
-                                res.status(200).json({ status: 0, message: message, err: err });
-                            }
+                            res.status(200).json({
+                                status: 1,
+                                message: "Updated Bank shares in " + rule.name + " transactions fee rule",
+                                rule: rule,
+                            });
                         }
                     }
                 );
@@ -2210,10 +2149,18 @@ router.post("/bank/interBank/editRule", function (req, res) {
                         "Token changed or user not valid. Try to login again or contact system administrator.",
                 });
             } else {
-                InterBankRule.findOne(
+                InterBankRule.findOneAndUpdate(
                     {
                         _id: rule_id,
                     },
+                    {
+                        $set: {
+                            name: name,
+                            active: active,
+                            ranges: ranges,
+                            description: description,
+                        }
+                    }, { new: true },
                     async (err, rule) => {
                         if (err) {
                             console.log(err);
@@ -2231,46 +2178,6 @@ router.post("/bank/interBank/editRule", function (req, res) {
                                 message: "Rule not found.",
                             });
                         } else {
-                            try {
-                                if (rule.status == 0) {
-                                    rule = await InterBankRule.findOneAndUpdate(
-                                        {
-                                            _id: rule._id,
-                                        },
-                                        {
-                                            $set: {
-                                                name: name,
-                                                active: active,
-                                                ranges: ranges,
-                                                description: description,
-                                            },
-                                        }, { new: true })
-                                } else {
-                                    rule = await InterBankRule.findOneAndUpdate(
-                                        {
-                                            _id: rule._id,
-                                        },
-                                        {
-                                            $set: {
-                                                edit_status: 1,
-                                                "edited.name": name,
-                                                "edited.active": active,
-                                                "edited.ranges": ranges,
-                                                "edited.description": description,
-                                                "edited.infra_share": rule.infra_share,
-                                                "edited.other_bank_share": rule.other_bank_share,
-                                                "edited.status": 0
-                                            },
-                                        }, { new: true });
-                                }
-                            } catch (err) {
-                                console.log(err);
-                                var message = err.toString();
-                                if (err && err.message) {
-                                    message = err.message;
-                                }
-                                res.status(200).json({ status: 0, message: message, err: err });
-                            }
                             let content =
                                 "<p>Fee Rule for " + rule.name + " transactions is edited for your bank in E-Wallet application</p><p>&nbsp;</p>";
                             sendMail(content, "Fee Rule Edited", bank.email);
@@ -2389,8 +2296,8 @@ router.post("/bank/interBank/createRule", function (req, res) {
     );
 });
 
-router.post("/bank/interBank/addRuleShares", function (req, res) {
-    const { token, rule_id, infra_share, other_bank_share } = req.body;
+router.post("/bank/interBank/sendShareForApproval", function (req, res) {
+    const { token, rule_id, infra_share } = req.body;
     Bank.findOne(
         {
             token,
@@ -2414,43 +2321,86 @@ router.post("/bank/interBank/addRuleShares", function (req, res) {
                         "Token changed or user not valid. Try to login again or contact system administrator.",
                 });
             } else {
-                InterBankRule.findOneAndUpdate(
-                    {
-                        _id: rule_id,
-                        status: 0
-                    },
-                    {
-                        infra_share: infra_share,
-                        other_bank_share: other_bank_share,
-                        sharing_added: 1,
-                    },
-                    { new: true },
-                    (err, rule) => {
-                        if (err) {
-                            console.log(err);
-                            var message = err;
-                            if (err.message) {
-                                message = err.message;
-                            }
-                            res.status(200).json({
-                                status: 0,
-                                message: message,
-                            });
-                        } else if (rule == null) {
-                            res.status(200).json({
-                                status: 0,
-                                message: "Infra share can not be added.",
-                            });
-                        } else {
-                            res.status(200).json({
-                                status: 1,
-                                message:
-                                    "Inter Bank " + rule.name + " Rule successfully updated with infra share",
-                                rule: rule,
-                            });
+                Infra.findById({ _id: bank.user_id }, (err, infra) => {
+                    if (err) {
+                        console.log(err);
+                        var message = err;
+                        if (err.message) {
+                            message = err.message;
                         }
+                        res.status(200).json({
+                            status: 0,
+                            message: message,
+                        });
+                    } else if (infra == null) {
+                        res.status(200).json({
+                            status: 0,
+                            message:
+                                "Token changed or user not valid. Try to login again or contact system administrator.",
+                        });
+                    } else {
+
+                        InterBankRule.findOneAndUpdate(
+                            {
+                                _id: rule_id,
+                            },
+                            { new: true },
+                            async (err, rule) => {
+                                if (err) {
+                                    console.log(err);
+                                    var message = err;
+                                    if (err.message) {
+                                        message = err.message;
+                                    }
+                                    res.status(200).json({
+                                        status: 0,
+                                        message: message,
+                                    });
+                                } else if (rule == null) {
+                                    res.status(200).json({
+                                        status: 0,
+                                        message: "Infra share can not be added.",
+                                    });
+                                } else {
+                                    try {
+                                        if (rule.status == 0) {
+                                            rule = await InterBankRule.findOneAndUpdate({ _id: rule_id },
+                                                {
+                                                    infra_share: infra_share,
+                                                    infra_approval_status: 2
+                                                }, { new: true });
+                                        } else {
+                                            rule = await InterBankRule.findOneAndUpdate({ _id: rule_id },
+                                                {
+                                                    "edited.infra_share": infra_share,
+                                                    infra_approval_status: 2
+                                                }, { new: true });
+                                        }
+                                        let content =
+                                            "<p>Share of an Inter Bank fee rule for " + rule.name + " transactions is sent for approval in E-Wallet application</p><p>&nbsp;</p>";
+                                        sendMail(content, "Waiting for approval", infra.email);
+                                        let content2 =
+                                            " E-Wallet: Share of an Inter Bank fee rule for " + rule.name + " transactions needs approval"
+                                        sendSMS(content2, infra.mobile);
+                                        res.status(200).json({
+                                            status: 1,
+                                            message:
+                                                "Inter Bank " + rule.name + " Rule sent for approval",
+                                            rule: rule,
+                                        });
+                                    } catch (err) {
+                                        console.log(err);
+                                        var message = err.toString();
+                                        if (err && err.message) {
+                                            message = err.message;
+                                        }
+                                        res.status(200).json({ status: 0, message: message, err: err });
+                                    }
+                                }
+                            }
+                        );
                     }
-                );
+                })
             }
         }
     );
