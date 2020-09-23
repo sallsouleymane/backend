@@ -1668,7 +1668,7 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
                                                     let trans1 = {};
                                                     trans1.from = bankEsWallet;
                                                     trans1.to = branchOpWallet;
-                                                    trans1.amount = oamount;
+                                                    trans1.amount = amount;
                                                     trans1.note = "Cashier claim Money";
                                                     trans1.email1 = bank.email;
                                                     trans1.email2 = branch.email;
