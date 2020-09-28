@@ -2339,7 +2339,6 @@ router.post("/bank/interBank/sendShareForApproval", function (req, res) {
                                 "Token changed or user not valid. Try to login again or contact system administrator.",
                         });
                     } else {
-
                         InterBankRule.findOneAndUpdate(
                             {
                                 _id: rule_id,

@@ -79,7 +79,8 @@ module.exports.transferThis = async (
 	t1,
 	t2 = false,
 	t3 = false,
-	t4 = false
+	t4 = false,
+	t5 = false
 ) => {
 	console.log("Blockchain service: transferThis");
 	var err = [];
@@ -145,7 +146,7 @@ module.exports.transferThis = async (
 				url.mobile2
 			);
 		}
-		if (t2) {
+		if (t2 && t2 != {}) {
 			url = t2;
 			mc = url.master_code ? url.master_code : new Date().getTime();
 			cc = url.child_code ? url.child_code : new Date().getTime();
@@ -210,7 +211,7 @@ module.exports.transferThis = async (
 					);
 				}
 
-				if (t3) {
+				if (t3 && t3 != {}) {
 					url = t3;
 					mc = url.master_code ? url.master_code : new Date().getTime();
 					cc = url.child_code ? url.child_code : new Date().getTime();
@@ -279,7 +280,7 @@ module.exports.transferThis = async (
 						}
 
 						//Code By Hatim
-						if (t4) {
+						if (t4 && t4 != {}) {
 							url = t4;
 							mc = url.master_code ? url.master_code : new Date().getTime();
 							cc = url.child_code ? url.child_code : new Date().getTime();
@@ -346,6 +347,77 @@ module.exports.transferThis = async (
 										url.from,
 										url.mobile2
 									);
+								}
+
+								if (t5 && t5 != {}) {
+									url = t5;
+									mc = url.master_code ? url.master_code : new Date().getTime();
+									cc = url.child_code ? url.child_code : new Date().getTime();
+									options = {
+										uri:
+											"http://" + config.blockChainIP + ":8000/transferBtwEWallets",
+										method: "POST",
+										json: {
+											wallet_from: url.from.toString(),
+											wallet_to: url.to.toString(),
+											amount: url.amount.toString(),
+											from_name: url.from_name,
+											to_name: url.to_name,
+											user_id: "",
+											master_id: mc.toString(),
+											child_id: cc.toString(),
+											remarks: url.note.toString(),
+										},
+									};
+
+									res = await doRequest(options);
+									console.log("Five: ")
+									console.log(res.toString());
+									if (res.status == 0) {
+										if (res.message) {
+											err.push(res.message);
+										} else {
+											err.push("Blockchain connection error");
+										}
+									} else {
+										if (url.email1 && url.email1 != "") {
+											sendMail(
+												"<p>You have sent " +
+												url.amount +
+												" to the wallet " +
+												url.to +
+												"</p>",
+												"Payment Sent",
+												url.email1
+											);
+										}
+										if (url.email2 && url.email2 != "") {
+											sendMail(
+												"<p>You have received " +
+												url.amount +
+												" from the wallet " +
+												url.from +
+												"</p>",
+												"Payment Received",
+												url.email2
+											);
+										}
+										if (url.mobile1 && url.mobile1 != "") {
+											sendSMS(
+												"You have sent " + url.amount + " to the wallet " + url.to,
+												url.mobile1
+											);
+										}
+										if (url.mobile2 && url.mobile2 != "") {
+											sendSMS(
+												"You have received " +
+												url.amount +
+												" from the wallet " +
+												url.from,
+												url.mobile2
+											);
+										}
+									}
 								}
 							}
 						}

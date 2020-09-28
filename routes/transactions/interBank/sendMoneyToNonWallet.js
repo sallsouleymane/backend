@@ -65,27 +65,31 @@ module.exports = async function (
         };
     }
 
-    let trans2 = {
-        from: branchOpWallet,
-        to: bankOpWallet,
-        amount: fee,
-        note: "Cashier Send Fee for Inter Bank Non Wallet to Non Wallet Transaction",
-        email1: branch.email,
-        email2: bank.email,
-        mobile1: branch.mobile,
-        mobile2: bank.mobile,
-        from_name: branch.name,
-        to_name: bank.name,
-        user_id: transfer.cashierId,
-        master_code: master_code,
-        child_code: master_code + "1"
+    transfer.fee = fee;
+    var sendingBranchShare = 0;
+    if (fee > 0) {
+        let trans2 = {
+            from: branchOpWallet,
+            to: bankOpWallet,
+            amount: fee,
+            note: "Cashier Send Fee for Inter Bank Non Wallet to Non Wallet Transaction",
+            email1: branch.email,
+            email2: bank.email,
+            mobile1: branch.mobile,
+            mobile2: bank.mobile,
+            from_name: branch.name,
+            to_name: bank.name,
+            user_id: transfer.cashierId,
+            master_code: master_code,
+            child_code: master_code + "1"
+        }
+
+        await blockchain.initiateTransfer(trans2);
+        sendingBranchShare = calculateShare("sendBranch", transfer.amount, rule1, rule2, branch.bcode);
+        transfer.sendingBranchShare = sendingBranchShare;
     }
 
-    await blockchain.initiateTransfer(trans2);
-
-    var sendingBranchShare = calculateShare("sendBranch", transfer.amount, rule1, rule2, branch.bcode);
     transfer.master_code = master_code;
-    transfer.sendingBranchShare = sendingBranchShare;
     distributeRevenue(
         transfer,
         infra,
@@ -120,39 +124,61 @@ async function distributeRevenue(transfer,
 
     var infraShare = calculateShare("infra", transfer.amount, rule1);
 
-    let trans3 = {
-        from: bankOpWallet,
-        to: infraOpWallet,
-        amount: infraShare,
-        note: "Bank Send Infra Fee for Inter Bank Non Wallet to Non Wallet transaction",
-        email1: branch.email,
-        email2: infra.email,
-        mobile1: branch.mobile,
-        mobile2: infra.mobile,
-        from_name: branch.name,
-        to_name: infra.name,
-        user_id: "",
-        master_code: transfer.master_code,
-        child_code: transfer.master_code + "2",
+    if (infraShare.percentage_amount > 0) {
+        let trans21 = {
+            from: bankOpWallet,
+            to: infraOpWallet,
+            amount: infraShare.percentage_amount,
+            note: "Bank Send Infra Percentage amount for Inter Bank Non Wallet to Non Wallet transaction",
+            email1: branch.email,
+            email2: infra.email,
+            mobile1: branch.mobile,
+            mobile2: infra.mobile,
+            from_name: branch.name,
+            to_name: infra.name,
+            user_id: "",
+            master_code: transfer.master_code,
+            child_code: transfer.master_code + "2.1",
+        }
+        await blockchain.initiateTransfer(trans21);
     }
 
-    await blockchain.initiateTransfer(trans3);
-
-    let trans4 = {
-        from: bankOpWallet,
-        to: branchOpWallet,
-        amount: transfer.sendingBranchShare,
-        note: "Bank Send Revenue Share for Sending Money for Inter Bank Non Wallet to Non Wallet transaction",
-        email1: branch.email,
-        email2: bank.email,
-        mobile1: branch.mobile,
-        mobile2: bank.mobile,
-        from_name: branch.name,
-        to_name: bank.name,
-        user_id: "",
-        master_code: transfer.master_code,
-        child_code: transfer.master_code + "3",
+    if (infraShare.fixed_amount > 0) {
+        let trans22 = {
+            from: bankOpWallet,
+            to: infraOpWallet,
+            amount: infraShare.fixed_amount,
+            note: "Bank Send Infra Fixed amount for Inter Bank Non Wallet to Non Wallet transaction",
+            email1: branch.email,
+            email2: infra.email,
+            mobile1: branch.mobile,
+            mobile2: infra.mobile,
+            from_name: branch.name,
+            to_name: infra.name,
+            user_id: "",
+            master_code: transfer.master_code,
+            child_code: transfer.master_code + "2.2",
+        }
+        await blockchain.initiateTransfer(trans22);
     }
 
-    await blockchain.initiateTransfer(trans4);
+    if (transfer.fee > 0) {
+        let trans4 = {
+            from: bankOpWallet,
+            to: branchOpWallet,
+            amount: transfer.sendingBranchShare,
+            note: "Bank Send Revenue Share for Sending Money for Inter Bank Non Wallet to Non Wallet transaction",
+            email1: branch.email,
+            email2: bank.email,
+            mobile1: branch.mobile,
+            mobile2: bank.mobile,
+            from_name: branch.name,
+            to_name: bank.name,
+            user_id: "",
+            master_code: transfer.master_code,
+            child_code: transfer.master_code + "3",
+        }
+
+        await blockchain.initiateTransfer(trans4);
+    }
 }

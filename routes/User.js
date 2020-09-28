@@ -1272,34 +1272,56 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																		trans2.child_code = child_code + "2";
 
 																		var infraShare = 0;
-																		var temp =
+																		var infraShare =
 																			(fee * Number(infra_share.percentage)) /
 																			100;
-																		var infraShare =
-																			temp + Number(infra_share.fixed);
 
-																		let trans3 = {};
-																		trans3.from = bankOpWallet;
-																		trans3.to = infraOpWallet;
-																		trans3.amount = infraShare;
-																		trans3.note = "Infra Fee";
-																		trans3.email1 = bank.email;
-																		trans3.email2 = infra.email;
-																		trans3.mobile1 = bank.mobile;
-																		trans3.mobile2 = infra.mobile;
-																		trans3.from_name = bank.name;
-																		trans3.to_name = infra.name;
-																		trans3.user_id = "";
-																		trans3.master_code = master_code;
-																		mns = bank.mobile.slice(-2);
-																		mnr = infra.mobile.slice(-2);
-																		now = new Date().getTime();
-																		child_code =
-																			mns + "" + mnr + "" + now + "3";
-																		trans3.child_code = child_code;
+																		let trans31 = {};
+																		if (infraShare > 0) {
+																			trans31.from = bankOpWallet;
+																			trans31.to = infraOpWallet;
+																			trans31.amount = infraShare;
+																			trans31.note = "Infra Percentage Fee";
+																			trans31.email1 = bank.email;
+																			trans31.email2 = infra.email;
+																			trans31.mobile1 = bank.mobile;
+																			trans31.mobile2 = infra.mobile;
+																			trans31.from_name = bank.name;
+																			trans31.to_name = infra.name;
+																			trans31.user_id = "";
+																			trans31.master_code = master_code;
+																			mns = bank.mobile.slice(-2);
+																			mnr = infra.mobile.slice(-2);
+																			now = new Date().getTime();
+																			child_code =
+																				mns + "" + mnr + "" + now + "3.1";
+																			trans31.child_code = child_code;
+																		}
+
+																		let trans32 = {};
+																		if (infra_share.fixed > 0) {
+																			trans32.from = bankOpWallet;
+																			trans32.to = infraOpWallet;
+																			trans32.amount = infra_share.fixed;
+																			trans32.note = "Infra Percentage Fee";
+																			trans32.email1 = bank.email;
+																			trans32.email2 = infra.email;
+																			trans32.mobile1 = bank.mobile;
+																			trans32.mobile2 = infra.mobile;
+																			trans32.from_name = bank.name;
+																			trans32.to_name = infra.name;
+																			trans32.user_id = "";
+																			trans32.master_code = master_code;
+																			mns = bank.mobile.slice(-2);
+																			mnr = infra.mobile.slice(-2);
+																			now = new Date().getTime();
+																			child_code =
+																				mns + "" + mnr + "" + now + "3.2";
+																			trans32.child_code = child_code;
+																		}
 
 																		blockchain
-																			.transferThis(trans1, trans2, trans3)
+																			.transferThis(trans1, trans2, trans31, trans32)
 																			.then(function (result) {
 																				console.log("Result: " + result);
 																				if (result.length <= 0) {
@@ -1577,50 +1599,73 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																	trans1.child_code = child_code + "1";
 
 																	let trans2 = {};
-																	trans2.from = senderWallet;
-																	trans2.to = bankOpWallet;
-																	trans2.amount = fee;
-																	trans2.note = "Deducted Bank Fee";
-																	trans2.email1 = sender.email;
-																	trans2.email2 = bank.email;
-																	trans2.mobile1 = sender.mobile;
-																	trans2.mobile2 = bank.mobile;
-																	trans2.from_name = sender.name;
-																	trans2.to_name = bank.name;
-																	trans2.user_id = "";
-																	trans2.master_code = master_code;
-																	now = new Date().getTime();
-																	child_code = mns + "" + mnr + "" + now;
-																	trans2.child_code = child_code + "2";
+																	if (fee > 0) {
+																		trans2.from = senderWallet;
+																		trans2.to = bankOpWallet;
+																		trans2.amount = fee;
+																		trans2.note = "Deducted Bank Fee";
+																		trans2.email1 = sender.email;
+																		trans2.email2 = bank.email;
+																		trans2.mobile1 = sender.mobile;
+																		trans2.mobile2 = bank.mobile;
+																		trans2.from_name = sender.name;
+																		trans2.to_name = bank.name;
+																		trans2.user_id = "";
+																		trans2.master_code = master_code;
+																		now = new Date().getTime();
+																		child_code = mns + "" + mnr + "" + now;
+																		trans2.child_code = child_code + "2";
+																	}
 
 																	var infraShare = 0;
-																	var temp =
+																	infraShare =
 																		(fee * Number(infra_share.percentage)) /
 																		100;
-																	var infraShare =
-																		temp + Number(infra_share.fixed);
 
-																	let trans3 = {};
-																	trans3.from = bankOpWallet;
-																	trans3.to = infraOpWallet;
-																	trans3.amount = infraShare;
-																	trans3.note = "Deducted Infra Fee";
-																	trans3.email1 = bank.email;
-																	trans3.email2 = infra.email;
-																	trans3.mobile1 = bank.mobile;
-																	trans3.mobile2 = infra.mobile;
-																	trans3.from_name = bank.name;
-																	trans3.to_name = infra.name;
-																	trans3.user_id = "";
-																	trans3.master_code = master_code;
-																	mns = bank.mobile.slice(-2);
-																	mnr = infra.mobile.slice(-2);
-																	now = new Date().getTime();
-																	child_code = mns + "" + mnr + "" + now + "3";
-																	trans3.child_code = child_code;
+																	let trans31 = {};
+																	if (infraShare > 0) {
+																		trans31.from = bankOpWallet;
+																		trans31.to = infraOpWallet;
+																		trans31.amount = infraShare;
+																		trans31.note = "Deducted Infra Fee";
+																		trans31.email1 = bank.email;
+																		trans31.email2 = infra.email;
+																		trans31.mobile1 = bank.mobile;
+																		trans31.mobile2 = infra.mobile;
+																		trans31.from_name = bank.name;
+																		trans31.to_name = infra.name;
+																		trans31.user_id = "";
+																		trans31.master_code = master_code;
+																		mns = bank.mobile.slice(-2);
+																		mnr = infra.mobile.slice(-2);
+																		now = new Date().getTime();
+																		child_code = mns + "" + mnr + "" + now + "3.1";
+																		trans31.child_code = child_code;
+																	}
+
+																	let trans32 = {};
+																	if (infra_share.fixed > 0) {
+																		trans32.from = bankOpWallet;
+																		trans32.to = infraOpWallet;
+																		trans32.amount = infra_share.fixed;
+																		trans32.note = "Deducted Infra Fee";
+																		trans32.email1 = bank.email;
+																		trans32.email2 = infra.email;
+																		trans32.mobile1 = bank.mobile;
+																		trans32.mobile2 = infra.mobile;
+																		trans32.from_name = bank.name;
+																		trans32.to_name = infra.name;
+																		trans32.user_id = "";
+																		trans32.master_code = master_code;
+																		mns = bank.mobile.slice(-2);
+																		mnr = infra.mobile.slice(-2);
+																		now = new Date().getTime();
+																		child_code = mns + "" + mnr + "" + now + "3.2";
+																		trans32.child_code = child_code;
+																	}
 
 																	blockchain
-																		.transferThis(trans1, trans2, trans3)
+																		.transferThis(trans1, trans2, trans31, trans32)
 																		.then(function (result) {
 																			console.log("Result: " + result);
 																			if (result.length <= 0) {

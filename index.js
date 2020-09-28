@@ -36,7 +36,7 @@ app.use(cookieParser());
 app.use(express.static("public"));
 const router = express.Router();
 
-app.use(logger("combined"));
+app.use(logger("dev"));
 app.use(
 	bodyParser.json({
 		limit: "50mb"

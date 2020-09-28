@@ -1706,36 +1706,35 @@ router.post("/cashierSendMoney", function (req, res) {
 																				specific_branch_share,
 																			} = fe.revenue_sharing_rule;
 																			var infraShare = 0;
-																			var temp =
+																			var infraShare =
 																				(fee *
 																					Number(
 																						infra_share.percentage
 																					)) /
 																				100;
-																			var infraShare =
-																				temp + Number(infra_share.fixed);
 
 																			var bankShare = fee - infraShare;
+																			if (bankShare > 0) {
+																				let feeObject = branch_share;
+																				let sendFee = 0;
+																				var sbFeeObject;
 
-																			let feeObject = branch_share;
-																			let sendFee = 0;
-																			var sbFeeObject;
+																				if (
+																					specific_branch_share.length > 0
+																				) {
+																					sbFeeObject = specific_branch_share.filter(
+																						(bwsf) =>
+																							bwsf.branch_code == f2.bcode
+																					)[0];
+																				}
 
-																			if (
-																				specific_branch_share.length > 0
-																			) {
-																				sbFeeObject = specific_branch_share.filter(
-																					(bwsf) =>
-																						bwsf.branch_code == f2.bcode
-																				)[0];
+																				if (sbFeeObject) {
+																					feeObject = sbFeeObject;
+																				}
+
+																				const { send } = feeObject;
+																				sendFee = (send * bankShare) / 100;
 																			}
-
-																			if (sbFeeObject) {
-																				feeObject = sbFeeObject;
-																			}
-
-																			const { send } = feeObject;
-																			sendFee = (send * bankShare) / 100;
 
 																			blockchain
 																				.getBalance(branchOpWallet)
@@ -1762,66 +1761,96 @@ router.post("/cashierSendMoney", function (req, res) {
 																						trans1.child_code = child_code + "1";
 
 																						let trans2 = {};
-																						trans2.from = branchOpWallet;
-																						trans2.to = bankOpWallet;
-																						trans2.amount = fee;
-																						trans2.note = "Cashier Send Money Fee";
-																						trans2.email1 = f2.email;
-																						trans2.email2 = f3.email;
-																						trans2.mobile1 = f2.mobile;
-																						trans2.mobile2 = f3.mobile;
-																						trans2.from_name = f2.name;
-																						trans2.to_name = f3.name;
-																						trans2.user_id = f._id;
-																						trans2.master_code = master_code;
-																						now = new Date().getTime();
-																						child_code = mns + "" + mnr + "" + now;
-																						trans2.child_code = child_code + "2";
+																						if (fee > 0) {
+																							trans2.from = branchOpWallet;
+																							trans2.to = bankOpWallet;
+																							trans2.amount = fee;
+																							trans2.note = "Cashier Send Money Fee";
+																							trans2.email1 = f2.email;
+																							trans2.email2 = f3.email;
+																							trans2.mobile1 = f2.mobile;
+																							trans2.mobile2 = f3.mobile;
+																							trans2.from_name = f2.name;
+																							trans2.to_name = f3.name;
+																							trans2.user_id = f._id;
+																							trans2.master_code = master_code;
+																							now = new Date().getTime();
+																							child_code = mns + "" + mnr + "" + now;
+																							trans2.child_code = child_code + "2";
 
-																						let trans3 = {};
-																						trans3.from = bankOpWallet;
-																						trans3.to = infraOpWallet;
-																						trans3.amount = infraShare;
-																						trans3.note =
-																							"Cashier Send Money Infra Fee";
-																						trans3.email1 = f2.email;
-																						trans3.email2 = f4.email;
-																						trans3.mobile1 = f2.mobile;
-																						trans3.mobile2 = f4.mobile;
-																						trans3.from_name = f2.name;
-																						trans3.to_name = f4.name;
-																						trans3.user_id = "";
-																						trans3.master_code = master_code;
-																						mns = f2.mobile.slice(-2);
-																						mnr = f4.mobile.slice(-2);
-																						now = new Date().getTime();
-																						child_code =
-																							mns + "" + mnr + "" + now + "3";
-																						trans3.child_code = child_code;
+																						}
+
+																						let trans31 = {};
+																						if (infraShare > 0) {
+																							trans31.from = bankOpWallet;
+																							trans31.to = infraOpWallet;
+																							trans31.amount = infraShare;
+																							trans31.note =
+																								"Cashier Send Money Infra Fee";
+																							trans31.email1 = f2.email;
+																							trans31.email2 = f4.email;
+																							trans31.mobile1 = f2.mobile;
+																							trans31.mobile2 = f4.mobile;
+																							trans31.from_name = f2.name;
+																							trans31.to_name = f4.name;
+																							trans31.user_id = "";
+																							trans31.master_code = master_code;
+																							mns = f2.mobile.slice(-2);
+																							mnr = f4.mobile.slice(-2);
+																							now = new Date().getTime();
+																							child_code =
+																								mns + "" + mnr + "" + now + "3.1";
+																							trans31.child_code = child_code;
+																						}
+
+																						let trans32 = {};
+																						if (infra_share.fixed > 0) {
+																							trans32.from = bankOpWallet;
+																							trans32.to = infraOpWallet;
+																							trans32.amount = infra_share.fixed;
+																							trans32.note =
+																								"Cashier Send Money Infra Fee";
+																							trans32.email1 = f2.email;
+																							trans32.email2 = f4.email;
+																							trans32.mobile1 = f2.mobile;
+																							trans32.mobile2 = f4.mobile;
+																							trans32.from_name = f2.name;
+																							trans32.to_name = f4.name;
+																							trans32.user_id = "";
+																							trans32.master_code = master_code;
+																							mns = f2.mobile.slice(-2);
+																							mnr = f4.mobile.slice(-2);
+																							now = new Date().getTime();
+																							child_code =
+																								mns + "" + mnr + "" + now + "3.2";
+																							trans32.child_code = child_code;
+																						}
 
 																						let trans4 = {};
-																						trans4.from = bankOpWallet;
-																						trans4.to = branchOpWallet;
-																						//cacluat the revene here and replace with fee below.
-																						trans4.amount = Number(
-																							Number(sendFee).toFixed(2)
-																						);
-																						// trans4.amount = 1 ;
-																						trans4.note =
-																							"Bank Send Revenue Branch for Sending money";
-																						trans4.email1 = f2.email;
-																						trans4.email2 = f3.email;
-																						trans4.mobile1 = f2.mobile;
-																						trans4.mobile2 = f3.mobile;
-																						trans4.from_name = f2.name;
-																						trans4.to_name = f3.name;
-																						trans4.user_id = "";
-																						trans4.master_code = master_code;
-																						now = new Date().getTime();
-																						child_code =
-																							mns + "" + mnr + "" + now;
-																						trans4.child_code =
-																							child_code + "4";
+																						if (bankShare > 0) {
+																							trans4.from = bankOpWallet;
+																							trans4.to = branchOpWallet;
+																							//cacluat the revene here and replace with fee below.
+																							trans4.amount = Number(
+																								Number(sendFee).toFixed(2)
+																							);
+																							// trans4.amount = 1 ;
+																							trans4.note =
+																								"Bank Send Revenue Branch for Sending money";
+																							trans4.email1 = f2.email;
+																							trans4.email2 = f3.email;
+																							trans4.mobile1 = f2.mobile;
+																							trans4.mobile2 = f3.mobile;
+																							trans4.from_name = f2.name;
+																							trans4.to_name = f3.name;
+																							trans4.user_id = "";
+																							trans4.master_code = master_code;
+																							now = new Date().getTime();
+																							child_code =
+																								mns + "" + mnr + "" + now;
+																							trans4.child_code =
+																								child_code + "4";
+																						}
 																						//End
 																						console.log(
 																							sendFee,
@@ -1835,7 +1864,8 @@ router.post("/cashierSendMoney", function (req, res) {
 																							.transferThis(
 																								trans1,
 																								trans2,
-																								trans3,
+																								trans31,
+																								trans32,
 																								trans4
 																							)
 																							.then(function (result) {
@@ -2259,36 +2289,34 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																						} = fe.revenue_sharing_rule;
 
 																						var infraShare = 0;
-																						temp =
+																						infraShare =
 																							(fee *
 																								Number(
 																									infra_share.percentage
 																								)) /
 																							100;
-																						var infraShare =
-																							temp +
-																							Number(infra_share.fixed);
 
 																						let bankShare = fee - infraShare;
-																						let feeObject = branch_share;
-																						let sendFee = 0;
-																						var sbFeeObject;
-																						if (
-																							specific_branch_share.length >
-																							0
-																						) {
-																							sbFeeObject = specific_branch_share.filter(
-																								(bwsf) =>
-																									bwsf.branch_code ==
-																									branch.bcode
-																							)[0];
+																						if (bankShare > 0) {
+																							let feeObject = branch_share;
+																							var sendFee = 0;
+																							var sbFeeObject;
+																							if (
+																								specific_branch_share.length >
+																								0
+																							) {
+																								sbFeeObject = specific_branch_share.filter(
+																									(bwsf) =>
+																										bwsf.branch_code ==
+																										branch.bcode
+																								)[0];
+																							}
+																							if (sbFeeObject) {
+																								feeObject = sbFeeObject;
+																							}
+																							const { send } = feeObject;
+																							sendFee = (send * bankShare) / 100;
 																						}
-																						if (sbFeeObject) {
-																							feeObject = sbFeeObject;
-																						}
-																						const { send } = feeObject;
-																						sendFee = (send * bankShare) / 100;
-
 																						blockchain
 																							.getBalance(branchOpWallet)
 																							.then(function (bal) {
@@ -2317,74 +2345,107 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																										child_code + "1";
 
 																									let trans2 = {};
-																									trans2.from = branchOpWallet;
-																									trans2.to = bankOpWallet;
-																									trans2.amount = fee;
-																									trans2.note =
-																										"Cashier Send Money Fee";
-																									trans2.email1 = branch.email;
-																									trans2.email2 = bank.email;
-																									trans2.mobile1 = branch.mobile;
-																									trans2.mobile2 = bank.mobile;
-																									trans2.from_name = branch.name;
-																									trans2.to_name = bank.name;
-																									trans2.user_id = cashier._id;
-																									trans2.master_code = master_code;
-																									now = new Date().getTime();
-																									child_code =
-																										mns + "" + mnr + "" + now;
-																									trans2.child_code =
-																										child_code + "2";
+																									if (fee > 0) {
+																										trans2.from = branchOpWallet;
+																										trans2.to = bankOpWallet;
+																										trans2.amount = fee;
+																										trans2.note =
+																											"Cashier Send Money Fee";
+																										trans2.email1 = branch.email;
+																										trans2.email2 = bank.email;
+																										trans2.mobile1 = branch.mobile;
+																										trans2.mobile2 = bank.mobile;
+																										trans2.from_name = branch.name;
+																										trans2.to_name = bank.name;
+																										trans2.user_id = cashier._id;
+																										trans2.master_code = master_code;
+																										now = new Date().getTime();
+																										child_code =
+																											mns + "" + mnr + "" + now;
+																										trans2.child_code =
+																											child_code + "2";
+																									}
+																									let trans31 = {};
+																									if (infraShare > 0) {
+																										trans31.from = bankOpWallet;
+																										trans31.to = infraOpWallet;
+																										trans31.amount = infraShare;
+																										trans31.note =
+																											"Cashier Send percentage Infra Fee";
+																										trans31.email1 = bank.email;
+																										trans31.email2 = f4.email;
+																										trans31.mobile1 = bank.mobile;
+																										trans31.mobile2 = f4.mobile;
+																										trans31.from_name = bank.name;
+																										trans31.to_name = f4.name;
+																										trans31.user_id = "";
+																										trans31.master_code = master_code;
+																										mns = bank.mobile.slice(-2);
+																										mnr = f4.mobile.slice(-2);
+																										now = new Date().getTime();
+																										child_code =
+																											mns +
+																											"" +
+																											mnr +
+																											"" +
+																											now +
+																											"3.1";
+																										trans31.child_code = child_code;
+																									}
 
-																									let trans3 = {};
-																									trans3.from = bankOpWallet;
-																									trans3.to = infraOpWallet;
-																									trans3.amount = infraShare;
-																									trans3.note =
-																										"Cashier Send Money Infra Fee";
-																									trans3.email1 = bank.email;
-																									trans3.email2 = f4.email;
-																									trans3.mobile1 = bank.mobile;
-																									trans3.mobile2 = f4.mobile;
-																									trans3.from_name = bank.name;
-																									trans3.to_name = f4.name;
-																									trans3.user_id = "";
-																									trans3.master_code = master_code;
-																									mns = bank.mobile.slice(-2);
-																									mnr = f4.mobile.slice(-2);
-																									now = new Date().getTime();
-																									child_code =
-																										mns +
-																										"" +
-																										mnr +
-																										"" +
-																										now +
-																										"3";
-																									trans3.child_code = child_code;
+																									let trans32 = {};
+																									if (infra_share.fixed > 0) {
+																										trans32.from = bankOpWallet;
+																										trans32.to = infraOpWallet;
+																										trans32.amount = infra_share.fixed;
+																										trans32.note =
+																											"Cashier Send Fixed Infra Fee";
+																										trans32.email1 = bank.email;
+																										trans32.email2 = f4.email;
+																										trans32.mobile1 = bank.mobile;
+																										trans32.mobile2 = f4.mobile;
+																										trans32.from_name = bank.name;
+																										trans32.to_name = f4.name;
+																										trans32.user_id = "";
+																										trans32.master_code = master_code;
+																										mns = bank.mobile.slice(-2);
+																										mnr = f4.mobile.slice(-2);
+																										now = new Date().getTime();
+																										child_code =
+																											mns +
+																											"" +
+																											mnr +
+																											"" +
+																											now +
+																											"3.2";
+																										trans32.child_code = child_code;
+																									}
 
 																									let trans4 = {};
-																									trans4.from = bankOpWallet;
-																									trans4.to = branchOpWallet;
-																									//cacluat the revene here and replace with fee below.
-																									trans4.amount = Number(
-																										Number(sendFee).toFixed(2)
-																									);
-																									trans4.note =
-																										"Bank Send Revenue Branch for Sending money";
-																									trans4.email1 = bank.email;
-																									trans4.email2 = branch.email;
-																									trans4.mobile1 =
-																										branch.mobile;
-																									trans4.mobile2 = bank.mobile;
-																									trans4.from_name = bank.name;
-																									trans4.to_name = branch.name;
-																									trans4.user_id = "";
-																									trans4.master_code = master_code;
-																									now = new Date().getTime();
-																									child_code =
-																										mns + "" + mnr + "" + now;
-																									trans4.child_code =
-																										child_code + "4";
+																									if (bankShare > 0) {
+																										trans4.from = bankOpWallet;
+																										trans4.to = branchOpWallet;
+																										//cacluat the revene here and replace with fee below.
+																										trans4.amount = Number(
+																											Number(sendFee).toFixed(2)
+																										);
+																										trans4.note =
+																											"Bank Send Revenue Branch for Sending money";
+																										trans4.email1 = bank.email;
+																										trans4.email2 = branch.email;
+																										trans4.mobile1 =
+																											branch.mobile;
+																										trans4.mobile2 = bank.mobile;
+																										trans4.from_name = bank.name;
+																										trans4.to_name = branch.name;
+																										trans4.user_id = "";
+																										trans4.master_code = master_code;
+																										now = new Date().getTime();
+																										child_code =
+																											mns + "" + mnr + "" + now;
+																										trans4.child_code =
+																											child_code + "4";
+																									}
 																									//End
 																									console.log(
 																										sendFee,
@@ -2398,7 +2459,8 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																										.transferThis(
 																											trans1,
 																											trans2,
-																											trans3,
+																											trans31,
+																											trans32,
 																											trans4
 																										)
 																										.then(function (result) {
@@ -2503,8 +2565,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																																				fee: fee,
 																																			}
 																																		);
-																																		data.cashier_id =
-																																			cashier._id;
+																																		data.cashier_id = cashier._id;
 																																		data.save(
 																																			function (
 																																				err,
@@ -3098,36 +3159,34 @@ router.post("/cashierClaimMoney", function (req, res) {
 																								} = fe.revenue_sharing_rule;
 
 																								var infraShare = 0;
-																								var temp =
+																								infraShare =
 																									(fee *
 																										Number(
 																											infra_share.percentage
 																										)) /
 																									100;
-																								var infraShare =
-																									temp + Number(infra_share.fixed);
-
 																								let bankShare = fee - infraShare;
-																								let feeObject = branch_share;
-																								let claimFee = 0;
-																								var sbFeeObject;
+																								if (bankShare > 0) {
+																									let feeObject = branch_share;
+																									let claimFee = 0;
+																									var sbFeeObject;
 
-																								if (
-																									specific_branch_share.length > 0
-																								) {
-																									sbFeeObject = specific_branch_share.filter(
-																										(bwsf) =>
-																											bwsf.branch_code == f2.bcode
-																									)[0];
+																									if (
+																										specific_branch_share.length > 0
+																									) {
+																										sbFeeObject = specific_branch_share.filter(
+																											(bwsf) =>
+																												bwsf.branch_code == f2.bcode
+																										)[0];
+																									}
+																									if (sbFeeObject) {
+																										feeObject = sbFeeObject;
+																									}
+
+																									const { claim } = feeObject;
+																									claimFee = (claim * bankShare) / 100;
+
 																								}
-																								if (sbFeeObject) {
-																									feeObject = sbFeeObject;
-																								}
-
-																								const { claim } = feeObject;
-																								claimFee = (claim * bankShare) / 100;
-
-
 																								const branchOpWallet =
 																									f2.bcode + "_operational@" + f3.name;
 																								const bankEsWallet = "escrow@" + f3.name;
@@ -3150,23 +3209,24 @@ router.post("/cashierClaimMoney", function (req, res) {
 																								trans1.child_code = child_code;
 
 																								let trans2 = {};
-																								trans2.from = bankOpWallet;
-																								trans2.to = branchOpWallet;
-																								//Replace the amount with the Claim Revenue below
-																								trans2.amount = claimFee;
-																								trans2.note =
-																									"Revenue for claim Money";
-																								trans2.email1 = f2.email;
-																								trans2.email2 = f3.email;
-																								trans2.mobile1 = f2.mobile;
-																								trans2.mobile2 = f3.mobile;
-																								trans2.from_name = f2.name;
-																								trans2.to_name = f3.name;
-																								trans2.user_id = "";
-																								trans2.master_code = master_code;
-																								trans2.child_code =
-																									data.child_code + "2";
-
+																								if (bankShare > 0) {
+																									trans2.from = bankOpWallet;
+																									trans2.to = branchOpWallet;
+																									//Replace the amount with the Claim Revenue below
+																									trans2.amount = claimFee;
+																									trans2.note =
+																										"Revenue for claim Money";
+																									trans2.email1 = f2.email;
+																									trans2.email2 = f3.email;
+																									trans2.mobile1 = f2.mobile;
+																									trans2.mobile2 = f3.mobile;
+																									trans2.from_name = f2.name;
+																									trans2.to_name = f3.name;
+																									trans2.user_id = "";
+																									trans2.master_code = master_code;
+																									trans2.child_code =
+																										data.child_code + "2";
+																								}
 																								//End of hatim Code
 
 																								blockchain
