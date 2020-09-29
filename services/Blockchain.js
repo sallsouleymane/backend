@@ -146,7 +146,7 @@ module.exports.transferThis = async (
 				url.mobile2
 			);
 		}
-		if (t2 && t2 != {}) {
+		if (t2 && !(isEmpty(t2))) {
 			url = t2;
 			mc = url.master_code ? url.master_code : new Date().getTime();
 			cc = url.child_code ? url.child_code : new Date().getTime();
@@ -211,7 +211,7 @@ module.exports.transferThis = async (
 					);
 				}
 
-				if (t3 && t3 != {}) {
+				if (t3 && !(isEmpty(t3))) {
 					url = t3;
 					mc = url.master_code ? url.master_code : new Date().getTime();
 					cc = url.child_code ? url.child_code : new Date().getTime();
@@ -280,7 +280,7 @@ module.exports.transferThis = async (
 						}
 
 						//Code By Hatim
-						if (t4 && t4 != {}) {
+						if (t4 && !(isEmpty(t4))) {
 							url = t4;
 							mc = url.master_code ? url.master_code : new Date().getTime();
 							cc = url.child_code ? url.child_code : new Date().getTime();
@@ -349,7 +349,7 @@ module.exports.transferThis = async (
 									);
 								}
 
-								if (t5 && t5 != {}) {
+								if (t5 && !(isEmpty(t5))) {
 									url = t5;
 									mc = url.master_code ? url.master_code : new Date().getTime();
 									cc = url.child_code ? url.child_code : new Date().getTime();
@@ -569,3 +569,7 @@ module.exports.initiateTransfer = async function (transaction, tx_id = "") {
 	}
 	return res;
 };
+
+function isEmpty(obj) {
+	return Object.keys(obj).length === 0;
+}

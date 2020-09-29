@@ -2317,6 +2317,14 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																							const { send } = feeObject;
 																							sendFee = (send * bankShare) / 100;
 																						}
+
+																						console.log(
+																							sendFee,
+																							feeObject,
+																							branch_share,
+																							specific_branch_share,
+																							branch.bcode
+																						);
 																						blockchain
 																							.getBalance(branchOpWallet)
 																							.then(function (bal) {
@@ -2447,14 +2455,6 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																											child_code + "4";
 																									}
 																									//End
-																									console.log(
-																										sendFee,
-																										feeObject,
-																										branch_share,
-																										specific_branch_share,
-																										branch.bcode
-																									);
-
 																									blockchain
 																										.transferThis(
 																											trans1,
