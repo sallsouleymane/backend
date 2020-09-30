@@ -6,7 +6,7 @@ module.exports = async function (
     transfer, sendingBank, bank, branch, rule1, rule2
 ) {
     const senderBankEsWallet = "escrow@" + sendingBank.name;
-    const branchOpWallet = branch.bcode + "_operational@" + bank.name;
+    const branchOpWallet = branch.code + "_partnerbranch_operational@" + bank.name;
     const bankOpWallet = "operational@" + bank.name;
     const senderBankOpWallet = "operational@" + sendingBank.name;
 

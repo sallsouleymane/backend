@@ -87,7 +87,6 @@ router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (req,
                     country: receiverCountry,
                 };
                 try {
-                    await NWUser.create(receiver);
                     const bank = await Bank.findOne(
                         {
                             name: sender.bank,
@@ -142,6 +141,7 @@ router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (req,
                     data.transaction_code = transactionCode;
                     data.rule_type = "Wallet to Non Wallet";
                     data.inter_bank_rule_type = 1;
+                    data.is_inter_bank = 1;
 
                     data.without_id = withoutID ? 1 : 0;
                     if (requireOTP) {
@@ -164,75 +164,70 @@ router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (req,
 
                     var cs = await data.save();
 
-                    interBankSendMoneyToNWByUser(transfer, infra, bank, sender, rule)
-                        .then(function (result) {
-                            console.log("Result: " + result);
-                            if (result.status != 0) {
-                                let content =
-                                    "Your Transaction Code is " +
-                                    transactionCode;
-                                if (
-                                    receiverMobile &&
-                                    receiverMobile != null
-                                ) {
-                                    sendSMS(content, receiverMobile);
-                                }
-                                if (
-                                    receiverEmail &&
-                                    receiverEmail != null
-                                ) {
-                                    sendMail(
-                                        content,
-                                        "Transaction Code",
-                                        receiverEmail
-                                    );
-                                }
+                    var transfer = {
+                        amount: sending_amount,
+                        isInclusive: isInclusive,
+                        receiverFamilyName: receiverFamilyName
+                    }
+                    var result = await interBankSendMoneyToNWByUser(transfer, infra, bank, sender, rule)
+                    console.log("Result: " + result);
+                    if (result.status != 0) {
+                        let content =
+                            "Your Transaction Code is " +
+                            transactionCode;
+                        if (
+                            receiverMobile &&
+                            receiverMobile != null
+                        ) {
+                            sendSMS(content, receiverMobile);
+                        }
+                        if (
+                            receiverEmail &&
+                            receiverEmail != null
+                        ) {
+                            sendMail(
+                                content,
+                                "Transaction Code",
+                                receiverEmail
+                            );
+                        }
 
-                                CashierSend.findByIdAndUpdate(
-                                    cs._id,
-                                    {
-                                        status: 1,
-                                        fee: result.fee,
-                                        master_code: result.master_code
-                                    },
-                                    (err) => {
-                                        if (err) {
-                                            console.log(err);
-                                            var message = err;
-                                            if (err.message) {
-                                                message = err.message;
-                                            }
-                                            res.status(200).json({
-                                                status: 0,
-                                                message: message,
-                                            });
-                                        } else {
-                                            res.status(200).json({
-                                                status: 1,
-                                                message:
-                                                    sending_amount +
-                                                    " XOF is transferred to branch",
-                                                balance: bal - (result.amount + result.fee),
-                                            });
-                                        }
-                                    }
-                                );
-                            } else {
-                                res.status(200).json({
-                                    status: 0,
-                                    message: result.toString(),
-                                });
+                        const caSend = await CashierSend.findByIdAndUpdate(
+                            cs._id,
+                            {
+                                status: 1,
+                                fee: result.fee,
+                                master_code: result.master_code
                             }
+                        );
+                        if (caSend == null) {
+                            throw new Error("Cashier send record not found");
+                        }
+
+                        await NWUser.create(receiver);
+                        res.status(200).json({
+                            status: 1,
+                            message:
+                                sending_amount +
+                                " XOF is transferred to branch",
+                            balance: bal - (result.amount + result.fee),
                         });
-
-
-
+                    } else {
+                        res.status(200).json({
+                            status: 0,
+                            message: result.toString(),
+                        });
+                    }
                 } catch (err) {
-
+                    console.log(err);
+                    var message = err.toString();
+                    if (err.message) {
+                        message = err.message;
+                    }
+                    res.status(200).json({ status: 0, message: message });
                 }
             }
-        }
-    );
+        });
 });
 
 router.post("/partnerCashier/interBank/claimMoney", JWTTokenAuth, function (req, res) {
@@ -1047,7 +1042,6 @@ router.post("/partnerCashier/interBank/SendMoneyToNonWallet", JWTTokenAuth, func
     );
 });
 
-
 router.post("/cashier/interBank/claimMoney", function (req, res) {
     var today = new Date();
     today = today.toISOString();
@@ -1813,7 +1807,6 @@ router.post("/cashier/interBank/SendMoneyToNonWallet", function (req, res) {
         }
     );
 });
-
 
 router.post("/partnerCashier/interBank/checkNWNWFee", JWTTokenAuth, function (req, res) {
     const { amount } = req.body;
