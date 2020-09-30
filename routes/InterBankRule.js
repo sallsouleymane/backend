@@ -7,6 +7,8 @@ const sendMail = require("./utils/sendMail");
 const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
 const interBankSendMoneyToNonWallet = require("./transactions/interBank/sendMoneyToNonWallet");
+const interBankSendMoneyToNWByUser = require("./transactions/interBank/sendMoneyToNWByUser");
+const interBankSendMoneyToNWByPartner = require("./transactions/interBank/sendMoneyToNWByPartner");
 const interBankClaimMoney = require("./transactions/interBank/claimMoney");
 const interBankClaimByPartner = require("./transactions/interBank/claimMoneyByPartner")
 
@@ -24,8 +26,214 @@ const PartnerBranch = require("../models/partner/Branch");
 const Infra = require("../models/Infra");
 const InterBankRule = require("../models/InterBankRule");
 const Fee = require("../models/Fee");
+const User = require("../models/User");
+const NWUser = require("../models/NonWalletUsers");
 
 const JWTTokenAuth = require("./JWTTokenAuth");
+
+router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (req, res) {
+    var now = new Date().getTime();
+
+    const username = req.sign_creds.username;
+
+    const {
+        note,
+        withoutID,
+        requireOTP,
+        receiverMobile,
+        receiverGivenName,
+        receiverFamilyName,
+        receiverCountry,
+        receiverEmail,
+        receiverIdentificationType,
+        receiverIdentificationNumber,
+        receiverIdentificationValidTill,
+        sending_amount,
+        isInclusive,
+    } = req.body;
+
+    User.findOneAndUpdate(
+        {
+            username,
+            status: 1,
+        },
+        {
+            $addToSet: {
+                contact_list: receiverMobile,
+            },
+        },
+        async function (err, sender) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (sender == null) {
+                res.status(200).json({
+                    status: 0,
+                    message: "Sender not found",
+                });
+            } else {
+                receiver = {
+                    name: receiverGivenName,
+                    last_name: receiverFamilyName,
+                    mobile: receiverMobile,
+                    email: receiverEmail,
+                    country: receiverCountry,
+                };
+                try {
+                    await NWUser.create(receiver);
+                    const bank = await Bank.findOne(
+                        {
+                            name: sender.bank,
+                        });
+                    if (bank == null) {
+                        throw new Error("Bank not found")
+                    }
+
+                    const infra = await Infra.findOne(
+                        {
+                            _id: bank.user_id,
+                        });
+                    if (infra == null) {
+                        throw new Error("Infra not found")
+                    }
+                    const find = {
+                        bank_id: bank._id,
+                        type: 1,
+                        status: 1,
+                        active: 1,
+                    };
+                    const rule = await InterBankRule.findOne(find);
+                    if (rule == null) {
+                        throw new Error("Rule not found")
+                    }
+
+                    let data = new CashierSend();
+                    temp = {
+                        mobile: sender.mobile,
+                        note: note,
+                    };
+                    data.sender_info = JSON.stringify(temp);
+                    temp = {
+                        mobile: receiverMobile,
+                        // ccode: receiverccode,
+                        givenname: receiverGivenName,
+                        familyname: receiverFamilyName,
+                        country: receiverCountry,
+                        email: receiverEmail,
+                    };
+                    data.receiver_info = JSON.stringify(temp);
+                    temp = {
+                        country: receiverCountry,
+                        type: receiverIdentificationType,
+                        number: receiverIdentificationNumber,
+                        valid: receiverIdentificationValidTill,
+                    };
+                    data.receiver_id = JSON.stringify(temp);
+                    data.amount = sending_amount;
+                    data.is_inclusive = isInclusive;
+                    const transactionCode = makeid(8);
+                    data.transaction_code = transactionCode;
+                    data.rule_type = "Wallet to Non Wallet";
+                    data.inter_bank_rule_type = 1;
+
+                    data.without_id = withoutID ? 1 : 0;
+                    if (requireOTP) {
+                        data.require_otp = 1;
+                        data.otp = makeotp(6);
+                        content = data.otp + " - Send this OTP to the Receiver";
+                        if (sender.mobile && sender.mobile != null) {
+                            sendSMS(content, sender.mobile);
+                        }
+                        if (sender.email && sender.email != null) {
+                            sendMail(
+                                content,
+                                "Transaction OTP",
+                                receiver.email
+                            );
+                        }
+                    }
+
+                    //send transaction sms after actual transaction
+
+                    var cs = await data.save();
+
+                    interBankSendMoneyToNWByUser(transfer, infra, bank, sender, rule)
+                        .then(function (result) {
+                            console.log("Result: " + result);
+                            if (result.status != 0) {
+                                let content =
+                                    "Your Transaction Code is " +
+                                    transactionCode;
+                                if (
+                                    receiverMobile &&
+                                    receiverMobile != null
+                                ) {
+                                    sendSMS(content, receiverMobile);
+                                }
+                                if (
+                                    receiverEmail &&
+                                    receiverEmail != null
+                                ) {
+                                    sendMail(
+                                        content,
+                                        "Transaction Code",
+                                        receiverEmail
+                                    );
+                                }
+
+                                CashierSend.findByIdAndUpdate(
+                                    cs._id,
+                                    {
+                                        status: 1,
+                                        fee: result.fee,
+                                        master_code: result.master_code
+                                    },
+                                    (err) => {
+                                        if (err) {
+                                            console.log(err);
+                                            var message = err;
+                                            if (err.message) {
+                                                message = err.message;
+                                            }
+                                            res.status(200).json({
+                                                status: 0,
+                                                message: message,
+                                            });
+                                        } else {
+                                            res.status(200).json({
+                                                status: 1,
+                                                message:
+                                                    sending_amount +
+                                                    " XOF is transferred to branch",
+                                                balance: bal - (result.amount + result.fee),
+                                            });
+                                        }
+                                    }
+                                );
+                            } else {
+                                res.status(200).json({
+                                    status: 0,
+                                    message: result.toString(),
+                                });
+                            }
+                        });
+
+
+
+                } catch (err) {
+
+                }
+            }
+        }
+    );
+});
 
 router.post("/partnerCashier/interBank/claimMoney", JWTTokenAuth, function (req, res) {
     var today = new Date();

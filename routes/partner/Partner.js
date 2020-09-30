@@ -813,6 +813,7 @@ router.post("/partner/addCashier", jwtTokenAuth, (req, res) => {
                 data.max_trans_count = max_trans_count;
                 data.partner_id = partner._id;
                 data.branch_id = branch_id;
+                data.bank_id = partner.bank_id;
                 if (cashier_length == 0) {
                     data.central = true;
                 }

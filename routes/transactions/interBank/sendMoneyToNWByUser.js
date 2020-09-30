@@ -6,54 +6,52 @@ module.exports = async function (
     transfer,
     infra,
     bank,
-    branch,
-    rule1,
-    rule2
+    sender,
+    rule1
 ) {
-    const branchOpWallet =
-        branch.bcode + "_operational@" + bank.name;
+    const senderWallet = sender.mobile + "@" + sender.bank;
     const bankEsWallet = "escrow@" + bank.name;
     const bankOpWallet = "operational@" + bank.name;
+    const infraOpWallet = "infra_operational@" + bank.name;
 
     // first transaction
     var amount = Number(transfer.amount);
     var fee = calculateShare("bank", transfer.amount, rule1);
+    console.log(fee);
     if (transfer.isInclusive) {
         amount = amount - fee;
     }
 
-    var balance = await blockchain.getBalance(branchOpWallet);
+    var balance = await blockchain.getBalance(senderWallet);
 
     //Check balance first
     if (
-        Number(balance) +
-        Number(branch.credit_limit) <
+        Number(balance) <
         amount + fee
     ) {
         return {
             status: 0,
-            message: "Not enough balance in branch operational wallet",
+            message: "Not enough balance in user's wallet",
         };
     }
 
-    let master_code = getTransactionCode(branch.mobile, bank.mobile)
+    let master_code = getTransactionCode(sender.mobile, bank.mobile)
 
     let trans1 = {
-        from: branchOpWallet,
+        from: senderWallet,
         to: bankEsWallet,
         amount: amount,
-        note: "Cashier Send Money to Non Wallet of Inter Bank",
-        email1: branch.email,
-        email2: bank.email,
-        mobile1: branch.mobile,
-        mobile2: bank.mobile,
-        from_name: branch.name,
-        to_name: bank.name,
-        user_id: transfer.cashierId,
+        note: "Transferred Money to " + transfer.receiverFamilyName,
+        email1: sender.email,
+        email2: receiver.email,
+        mobile1: sender.mobile,
+        mobile2: receiver.mobile,
+        from_name: sender.name,
+        to_name: receiver.name,
+        user_id: "",
         master_code: master_code,
-        child_code: master_code
+        child_code: child_code + "1"
     }
-
     var result = await blockchain.initiateTransfer(trans1);
 
     // return response
@@ -66,27 +64,23 @@ module.exports = async function (
     }
 
     transfer.fee = fee;
-    var sendingBranchShare = 0;
     if (fee > 0) {
-        let trans2 = {
-            from: branchOpWallet,
+        const trans2 = {
+            from: senderWallet,
             to: bankOpWallet,
             amount: fee,
-            note: "Cashier Send Fee for Inter Bank Non Wallet to Non Wallet Transaction",
-            email1: branch.email,
+            note: "Bank Fee",
+            email1: sender.email,
             email2: bank.email,
-            mobile1: branch.mobile,
+            mobile1: sender.mobile,
             mobile2: bank.mobile,
-            from_name: branch.name,
+            from_name: sender.name,
             to_name: bank.name,
-            user_id: transfer.cashierId,
+            user_id: "",
             master_code: master_code,
-            child_code: master_code + "1"
+            child_code: child_code + "2"
         }
-
         await blockchain.initiateTransfer(trans2);
-        sendingBranchShare = calculateShare("sendBranch", transfer.amount, rule1, rule2, branch.bcode);
-        transfer.sendingBranchShare = sendingBranchShare;
     }
 
     transfer.master_code = master_code;
@@ -94,8 +88,9 @@ module.exports = async function (
         transfer,
         infra,
         bank,
-        branch,
-        rule1
+        sender,
+        rule1,
+        rule2,
     );
     return {
         status: 1,
@@ -103,19 +98,16 @@ module.exports = async function (
         blockchain_message: result.message,
         amount: amount,
         fee: fee,
-        sendFee: sendingBranchShare,
         master_code: master_code
     };
 
 }
 
-async function distributeRevenue(transfer,
+async function distributeRevenue(
+    transfer,
     infra,
     bank,
-    branch,
     rule1) {
-    const branchOpWallet =
-        branch.bcode + "_operational@" + bank.name;
     const bankOpWallet = "operational@" + bank.name;
     const infraOpWallet =
         "infra_operational@" + bank.name;
@@ -127,7 +119,7 @@ async function distributeRevenue(transfer,
             from: bankOpWallet,
             to: infraOpWallet,
             amount: infraShare.percentage_amount,
-            note: "Bank Send Infra Percentage amount for Inter Bank Non Wallet to Non Wallet transaction",
+            note: "Bank Send Infra Percentage amount for Inter Bank Wallet to Non Wallet transaction",
             email1: bank.email,
             email2: infra.email,
             mobile1: bank.mobile,
@@ -146,12 +138,12 @@ async function distributeRevenue(transfer,
             from: bankOpWallet,
             to: infraOpWallet,
             amount: infraShare.fixed_amount,
-            note: "Bank Send Infra Fixed amount for Inter Bank Wallet to Non Wallet transaction",
-            email1: bank.email,
+            note: "Bank Send Infra Fixed amount for Inter Bank Non Wallet to Non Wallet transaction",
+            email1: branch.email,
             email2: infra.email,
-            mobile1: bank.mobile,
+            mobile1: branch.mobile,
             mobile2: infra.mobile,
-            from_name: bank.name,
+            from_name: branch.name,
             to_name: infra.name,
             user_id: "",
             master_code: transfer.master_code,
@@ -166,12 +158,12 @@ async function distributeRevenue(transfer,
             to: branchOpWallet,
             amount: transfer.sendingBranchShare,
             note: "Bank Send Revenue Share for Sending Money for Inter Bank Non Wallet to Non Wallet transaction",
-            email1: bank.email,
-            email2: branch.email,
-            mobile1: bank.mobile,
-            mobile2: branch.mobile,
-            from_name: bank.name,
-            to_name: branch.name,
+            email1: branch.email,
+            email2: bank.email,
+            mobile1: branch.mobile,
+            mobile2: bank.mobile,
+            from_name: branch.name,
+            to_name: bank.name,
             user_id: "",
             master_code: transfer.master_code,
             child_code: transfer.master_code + "3",
