@@ -48,7 +48,7 @@ module.exports = async function (
             mobile2: bank.mobile,
             from_name: branch.name,
             to_name: bank.name,
-            user_id: transfer.cashier_id,
+            user_id: transfer.cashierId,
             master_code: master_code,
             child_code: master_code
         }
@@ -76,7 +76,7 @@ module.exports = async function (
                 mobile2: bank.mobile,
                 from_name: branch.name,
                 to_name: bank.name,
-                user_id: transfer.cashier_id,
+                user_id: transfer.cashierId,
                 master_code: master_code,
                 child_code: master_code + "1"
             }
