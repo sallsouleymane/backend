@@ -1714,9 +1714,9 @@ router.post("/cashierSendMoney", function (req, res) {
 																				100;
 
 																			var bankShare = fee - infraShare;
+																			let feeObject = branch_share;
+																			let sendFee = 0;
 																			if (bankShare > 0) {
-																				let feeObject = branch_share;
-																				let sendFee = 0;
 																				var sbFeeObject;
 
 																				if (
