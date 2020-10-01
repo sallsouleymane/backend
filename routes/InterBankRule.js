@@ -10,7 +10,10 @@ const interBankSendMoneyToNonWallet = require("./transactions/interBank/sendMone
 const interBankSendMoneyToNWByUser = require("./transactions/interBank/sendMoneyToNWByUser");
 const interBankSendMoneyToNWByPartner = require("./transactions/interBank/sendMoneyToNWByPartner");
 const interBankClaimMoney = require("./transactions/interBank/claimMoney");
-const interBankClaimByPartner = require("./transactions/interBank/claimMoneyByPartner")
+const interBankClaimByPartner = require("./transactions/interBank/claimMoneyByPartner");
+const interBankSendMoneyToWallet = require("./transactions/interBank/sendMoneyToWallet");
+const interBankSendMoneyToWByUser = require("./transactions/interBank/sendMoneyToWalletByUser");
+const interBankSendMoneyToWByPartner = require("./transactions/interBank/sendMoneyToWByPartner");
 
 const Bank = require("../models/Bank");
 const Branch = require("../models/Branch")
@@ -30,6 +33,1026 @@ const User = require("../models/User");
 const NWUser = require("../models/NonWalletUsers");
 
 const JWTTokenAuth = require("./JWTTokenAuth");
+
+router.post("/user/interBank/sendMoneyToWallet", JWTTokenAuth, async function (req, res) {
+    const username = req.sign_creds.username;
+
+    const { receiverMobile, note, sending_amount, isInclusive } = req.body;
+
+    try {
+        const sender = await User.findOneAndUpdate(
+            {
+                username,
+                status: 1,
+            },
+            {
+                $addToSet: {
+                    contact_list: receiverMobile,
+                },
+            });
+        if (sender == null) {
+            throw new Error(
+                "Token changed or user not valid. Try to login again or contact system administrator.");
+        }
+
+        const receiver = await User.findOne(
+            {
+                mobile: receiverMobile,
+            });
+        if (receiver == null) {
+            throw new Error("Receiver's wallet do not exist");
+        }
+
+        const bank = await Bank.findOne(
+            {
+                name: sender.bank,
+            });
+        if (bank == null) {
+            throw new Error("Bank Not Found");
+        }
+
+        const receiverBank = await Bank.findOne({ name: receiver.bank });
+        if (receiver.bank == null) {
+            throw new Error("Receiver Bank Not Found");
+        }
+
+        const infra = await Infra.findOne(
+            {
+                _id: bank.user_id,
+            });
+        if (infra == null) {
+            throw new Error("Infra Not Found");
+        }
+        const find = {
+            bank_id: bank._id,
+            type: 3,
+            status: 1,
+            active: 1
+        };
+        const rule1 = await InterBankRule.findOne(find)
+        if (rule1 == null) {
+            throw new Error("Inter Bank Rule Not Found");
+        }
+
+        const transfer = {
+            amount: sending_amount,
+            isInclusive: isInclusive,
+            note: note,
+        }
+        const result = await interBankSendMoneyToWByUser(transfer,
+            infra,
+            bank,
+            receiverBank,
+            sender,
+            receiver,
+            rule1)
+        console.log("Result: " + result);
+        if (result.status == 1) {
+            res.status(200).json({
+                status: 1,
+                message:
+                    sending_amount +
+                    " XOF is transferred to " +
+                    receiver.name,
+                balance: result.balance - (result.amount + result.fee),
+            });
+        } else {
+            res.status(200).json({
+                status: 0,
+                message: result.toString(),
+            });
+        }
+    } catch (err) {
+        console.log(err);
+        var message = err.toString();
+        if (err && err.message) {
+            message = err.message;
+        }
+        res.status(200).json({
+            status: 0,
+            message: message,
+        });
+
+    }
+});
+
+router.post("/partnerCashier/interBank/sendMoneyToWallet", JWTTokenAuth, function (req, res) {
+    var today = new Date();
+    today = today.toISOString();
+    var s = today.split("T");
+    var start = s[0] + "T00:00:00.000Z";
+    var end = s[0] + "T23:59:59.999Z";
+
+    const jwtusername = req.sign_creds.username;
+    const {
+        givenname,
+        familyname,
+        note,
+        senderIdentificationCountry,
+        senderIdentificationType,
+        senderIdentificationNumber,
+        senderIdentificationValidTill,
+        address1,
+        state,
+        zip,
+        ccode,
+        country,
+        email,
+        mobile,
+        requireOTP,
+        receiverMobile,
+        receiverIdentificationAmount,
+        isInclusive,
+    } = req.body;
+
+    PartnerCashier.findOne(
+        {
+            username: jwtusername,
+            status: 1,
+        },
+        function (err, cashier) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (cashier == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                Partner.findOne(
+                    { _id: cashier.partner_id },
+                    (err, partner) => {
+                        if (err) {
+                            console.log(err);
+                            var message = err;
+                            if (err.message) {
+                                message = err.message;
+                            }
+                            res.status(200).json({
+                                status: 0,
+                                message: message,
+                            });
+                        } else if (partner == null) {
+                            res.status(200).json({
+                                status: 0,
+                                message: "Partner not found",
+                            });
+                        } else {
+
+                            User.findOne(
+                                {
+                                    mobile: receiverMobile,
+                                },
+                                function (err, receiver) {
+                                    if (err) {
+                                        console.log(err);
+                                        var message = err;
+                                        if (err.message) {
+                                            message = err.message;
+                                        }
+                                        res.status(200).json({
+                                            status: 0,
+                                            message: message,
+                                        });
+                                    } else if (receiver == null) {
+                                        res.status(200).json({
+                                            status: 0,
+                                            message: "Receiver Not Found",
+                                        });
+                                    } else {
+                                        Bank.findOne({ name: receiver.bank }, (err, receiverBank) => {
+                                            if (err) {
+                                                console.log(err);
+                                                var message = err;
+                                                if (err.message) {
+                                                    message = err.message;
+                                                }
+                                                res.status(200).json({
+                                                    status: 0,
+                                                    message: message,
+                                                });
+                                            } else if (receiverBank == null) {
+                                                res.status(200).json({
+                                                    status: 0,
+                                                    message: "Receiver Bank Not Found",
+                                                });
+                                            } else {
+                                                PartnerBranch.findOne(
+                                                    {
+                                                        _id: cashier.branch_id,
+                                                    },
+                                                    function (err, branch) {
+                                                        if (err) {
+                                                            console.log(err);
+                                                            var message = err;
+                                                            if (err.message) {
+                                                                message = err.message;
+                                                            }
+                                                            res.status(200).json({
+                                                                status: 0,
+                                                                message: message,
+                                                            });
+                                                        } else if (branch == null) {
+                                                            res.status(200).json({
+                                                                status: 0,
+                                                                message: "Branch Not Found",
+                                                            });
+                                                        } else {
+                                                            Bank.findOne(
+                                                                {
+                                                                    _id: cashier.bank_id,
+                                                                },
+                                                                function (err, bank) {
+                                                                    if (err) {
+                                                                        console.log(err);
+                                                                        var message = err;
+                                                                        if (err.message) {
+                                                                            message = err.message;
+                                                                        }
+                                                                        res.status(200).json({
+                                                                            status: 0,
+                                                                            message: message,
+                                                                        });
+                                                                    } else if (bank == null) {
+                                                                        res.status(200).json({
+                                                                            status: 0,
+                                                                            message: "Bank Not Found",
+                                                                        });
+                                                                    } else {
+                                                                        Infra.findOne(
+                                                                            {
+                                                                                _id: bank.user_id,
+                                                                            },
+                                                                            function (err, infra) {
+                                                                                if (err) {
+                                                                                    console.log(err);
+                                                                                    var message = err;
+                                                                                    if (err.message) {
+                                                                                        message = err.message;
+                                                                                    }
+                                                                                    res.status(200).json({
+                                                                                        status: 0,
+                                                                                        message: message,
+                                                                                    });
+                                                                                } else if (infra == null) {
+                                                                                    res.status(200).json({
+                                                                                        status: 0,
+                                                                                        message: "Infra Not Found",
+                                                                                    });
+                                                                                } else {
+                                                                                    let data = new CashierSend();
+                                                                                    let temp = {
+                                                                                        ccode: ccode,
+                                                                                        mobile: mobile,
+                                                                                        givenname: givenname,
+                                                                                        familyname: familyname,
+                                                                                        address1: address1,
+                                                                                        state: state,
+                                                                                        zip: zip,
+                                                                                        country: country,
+                                                                                        email: email,
+                                                                                        note: note,
+                                                                                    };
+                                                                                    data.sender_info = JSON.stringify(temp);
+                                                                                    temp = {
+                                                                                        country: senderIdentificationCountry,
+                                                                                        type: senderIdentificationType,
+                                                                                        number: senderIdentificationNumber,
+                                                                                        valid: senderIdentificationValidTill,
+                                                                                    };
+                                                                                    data.sender_id = JSON.stringify(temp);
+                                                                                    temp = {
+                                                                                        mobile: receiverMobile,
+                                                                                    };
+                                                                                    data.receiver_info = JSON.stringify(temp);
+                                                                                    data.amount = receiverIdentificationAmount;
+                                                                                    data.is_inclusive = isInclusive;
+                                                                                    data.cashier_id = cashier._id;
+                                                                                    data.rule_type = "Non Wallet to Wallet";
+                                                                                    data.is_inter_bank = 1;
+                                                                                    data.inter_bank_rule_type = 2;
+
+                                                                                    //send transaction sms after actual transaction
+
+                                                                                    if (requireOTP) {
+                                                                                        data.require_otp = 1;
+                                                                                        data.otp = makeotp(6);
+                                                                                        content =
+                                                                                            data.otp +
+                                                                                            " - Send this OTP to the Receiver";
+                                                                                        if (mobile && mobile != null) {
+                                                                                            sendSMS(content, mobile);
+                                                                                        }
+                                                                                        if (email && email != null) {
+                                                                                            sendMail(content, "Transaction OTP", email);
+                                                                                        }
+                                                                                    }
+
+                                                                                    data.save((err, cs) => {
+                                                                                        if (err) {
+                                                                                            console.log(err);
+                                                                                            var message = err;
+                                                                                            if (err.message) {
+                                                                                                message = err.message;
+                                                                                            }
+                                                                                            res.status(200).json({
+                                                                                                status: 0,
+                                                                                                message: message,
+                                                                                            });
+                                                                                        } else {
+                                                                                            var find = {
+                                                                                                bank_id: bank._id,
+                                                                                                type: 2,
+                                                                                                status: 1,
+                                                                                                active: 1
+                                                                                            };
+                                                                                            InterBankRule.findOne(find, function (err, rule1) {
+                                                                                                if (err) {
+                                                                                                    console.log(err);
+                                                                                                    var message = err;
+                                                                                                    if (err.message) {
+                                                                                                        message = err.message;
+                                                                                                    }
+                                                                                                    res.status(200).json({
+                                                                                                        status: 0,
+                                                                                                        message: message,
+                                                                                                    });
+                                                                                                } else if (rule1 == null) {
+                                                                                                    res.status(200).json({
+                                                                                                        status: 0,
+                                                                                                        message: "Inter Bank Revenue Rule Not Found",
+                                                                                                    });
+                                                                                                } else {
+                                                                                                    find = {
+                                                                                                        bank_id: bank._id,
+                                                                                                        trans_type: "Non Wallet to Wallet",
+                                                                                                        status: 1,
+                                                                                                        active: "Active",
+                                                                                                    };
+                                                                                                    const amount = receiverIdentificationAmount;
+                                                                                                    Fee.findOne(find, function (err, rule2) {
+                                                                                                        if (err) {
+                                                                                                            console.log(err);
+                                                                                                            var message = err;
+                                                                                                            if (err.message) {
+                                                                                                                message = err.message;
+                                                                                                            }
+                                                                                                            res.status(200).json({
+                                                                                                                status: 0,
+                                                                                                                message: message,
+                                                                                                            });
+                                                                                                        } else if (rule2 == null) {
+                                                                                                            res.status(200).json({
+                                                                                                                status: 0,
+                                                                                                                message: "Revenue Rule Not Found",
+                                                                                                            });
+                                                                                                        } else {
+                                                                                                            //End
+                                                                                                            var transfer = {
+                                                                                                                amount: amount,
+                                                                                                                isInclusive: isInclusive,
+                                                                                                                cashierId: cashier._id,
+                                                                                                                partnerCode: partner.code
+                                                                                                            }
+                                                                                                            interBankSendMoneyToWByPartner(
+                                                                                                                transfer,
+                                                                                                                infra,
+                                                                                                                bank,
+                                                                                                                receiverBank,
+                                                                                                                branch,
+                                                                                                                receiver,
+                                                                                                                rule1,
+                                                                                                                rule2)
+                                                                                                                .then(function (result) {
+                                                                                                                    console.log(
+                                                                                                                        "Result: " + result
+                                                                                                                    );
+                                                                                                                    if (result.status == 1) {
+                                                                                                                        CashierSend.findByIdAndUpdate(
+                                                                                                                            cs._id,
+                                                                                                                            {
+                                                                                                                                status: 1,
+                                                                                                                                fee: result.fee,
+                                                                                                                                master_code: result.master_code
+                                                                                                                            },
+                                                                                                                            (err) => {
+                                                                                                                                if (err) {
+                                                                                                                                    console.log(err);
+                                                                                                                                    var message = err;
+                                                                                                                                    if (err.message) {
+                                                                                                                                        message =
+                                                                                                                                            err.message;
+                                                                                                                                    }
+                                                                                                                                    res
+                                                                                                                                        .status(200)
+                                                                                                                                        .json({
+                                                                                                                                            status: 0,
+                                                                                                                                            message: message,
+                                                                                                                                        });
+                                                                                                                                } else {
+                                                                                                                                    PartnerCashier.findByIdAndUpdate(
+                                                                                                                                        cashier._id,
+                                                                                                                                        {
+                                                                                                                                            cash_received:
+                                                                                                                                                Number(
+                                                                                                                                                    cashier.cash_received
+                                                                                                                                                ) +
+                                                                                                                                                Number(
+                                                                                                                                                    result.amount
+                                                                                                                                                ) +
+                                                                                                                                                Number(result.fee),
+                                                                                                                                            cash_in_hand:
+                                                                                                                                                Number(
+                                                                                                                                                    cashier.cash_in_hand
+                                                                                                                                                ) +
+                                                                                                                                                Number(
+                                                                                                                                                    result.amount
+                                                                                                                                                ) +
+                                                                                                                                                Number(result.fee),
+                                                                                                                                            fee_generated:
+                                                                                                                                                Number(
+                                                                                                                                                    result.sendFee
+                                                                                                                                                ) +
+                                                                                                                                                Number(
+                                                                                                                                                    cashier.fee_generated
+                                                                                                                                                ),
+
+                                                                                                                                            total_trans:
+                                                                                                                                                Number(
+                                                                                                                                                    cashier.total_trans
+                                                                                                                                                ) + 1,
+                                                                                                                                        },
+                                                                                                                                        function (
+                                                                                                                                            e,
+                                                                                                                                            v
+                                                                                                                                        ) { }
+                                                                                                                                    );
+
+                                                                                                                                    CashierLedger.findOne(
+                                                                                                                                        {
+                                                                                                                                            cashier_id:
+                                                                                                                                                cashier._id,
+                                                                                                                                            trans_type:
+                                                                                                                                                "CR",
+                                                                                                                                            created_at: {
+                                                                                                                                                $gte: new Date(
+                                                                                                                                                    start
+                                                                                                                                                ),
+                                                                                                                                                $lte: new Date(
+                                                                                                                                                    end
+                                                                                                                                                ),
+                                                                                                                                            },
+                                                                                                                                        },
+                                                                                                                                        function (
+                                                                                                                                            err,
+                                                                                                                                            c
+                                                                                                                                        ) {
+                                                                                                                                            if (
+                                                                                                                                                err ||
+                                                                                                                                                c == null
+                                                                                                                                            ) {
+                                                                                                                                                let data = new CashierLedger();
+                                                                                                                                                data.amount =
+                                                                                                                                                    Number(
+                                                                                                                                                        result.amount
+                                                                                                                                                    ) +
+                                                                                                                                                    Number(
+                                                                                                                                                        result.fee
+                                                                                                                                                    );
+                                                                                                                                                data.trans_type =
+                                                                                                                                                    "CR";
+                                                                                                                                                data.transaction_details = JSON.stringify(
+                                                                                                                                                    {
+                                                                                                                                                        fee: result.fee,
+                                                                                                                                                    }
+                                                                                                                                                );
+                                                                                                                                                data.cashier_id = cashier._id;
+                                                                                                                                                data.save(
+                                                                                                                                                    function (
+                                                                                                                                                        err,
+                                                                                                                                                        c
+                                                                                                                                                    ) { }
+                                                                                                                                                );
+                                                                                                                                            } else {
+                                                                                                                                                var amt =
+                                                                                                                                                    Number(
+                                                                                                                                                        c.amount
+                                                                                                                                                    ) +
+                                                                                                                                                    Number(
+                                                                                                                                                        result.amount
+                                                                                                                                                    ) +
+                                                                                                                                                    Number(
+                                                                                                                                                        result.fee
+                                                                                                                                                    );
+                                                                                                                                                CashierLedger.findByIdAndUpdate(
+                                                                                                                                                    c._id,
+                                                                                                                                                    {
+                                                                                                                                                        amount: amt,
+                                                                                                                                                    },
+                                                                                                                                                    function (
+                                                                                                                                                        err,
+                                                                                                                                                        c
+                                                                                                                                                    ) { }
+                                                                                                                                                );
+                                                                                                                                            }
+                                                                                                                                        }
+                                                                                                                                    );
+                                                                                                                                    res
+                                                                                                                                        .status(200)
+                                                                                                                                        .json({
+                                                                                                                                            status: 1,
+                                                                                                                                            message:
+                                                                                                                                                receiverIdentificationAmount +
+                                                                                                                                                "XOF amount is Transferred",
+                                                                                                                                        });
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        );
+                                                                                                                    } else {
+                                                                                                                        res.status(200).json({
+                                                                                                                            status: 0,
+                                                                                                                            message: result.toString(),
+                                                                                                                        });
+                                                                                                                    }
+                                                                                                                });
+                                                                                                        }
+                                                                                                    });
+                                                                                                }
+                                                                                            });
+                                                                                        }
+                                                                                    });
+                                                                                }
+                                                                            });
+                                                                    }
+                                                                });
+                                                        } //infra
+                                                    }
+                                                );
+                                            }
+                                        })
+                                    }
+                                }
+                            );
+                        }
+                    }
+                )
+            }
+        }
+    ); //branch
+});
+
+
+router.post("/cashier/interBank/sendMoneyToWallet", function (req, res) {
+    var today = new Date();
+    today = today.toISOString();
+    var s = today.split("T");
+    var start = s[0] + "T00:00:00.000Z";
+    var end = s[0] + "T23:59:59.999Z";
+    var now = new Date().getTime();
+
+    const {
+        token,
+        givenname,
+        familyname,
+        note,
+        senderIdentificationCountry,
+        senderIdentificationType,
+        senderIdentificationNumber,
+        senderIdentificationValidTill,
+        address1,
+        state,
+        zip,
+        ccode,
+        country,
+        email,
+        mobile,
+        requireOTP,
+        receiverMobile,
+        receiverIdentificationAmount,
+        isInclusive,
+    } = req.body;
+
+    Cashier.findOne(
+        {
+            token,
+            status: 1,
+        },
+        function (err, cashier) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (cashier == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                User.findOne(
+                    {
+                        mobile: receiverMobile,
+                    },
+                    function (err, receiver) {
+                        if (err) {
+                            console.log(err);
+                            var message = err;
+                            if (err.message) {
+                                message = err.message;
+                            }
+                            res.status(200).json({
+                                status: 0,
+                                message: message,
+                            });
+                        } else if (receiver == null) {
+                            res.status(200).json({
+                                status: 0,
+                                message: "Receiver Not Found",
+                            });
+                        } else {
+                            Bank.findOne({ name: receiver.bank }, (err, receiverBank) => {
+                                if (err) {
+                                    console.log(err);
+                                    var message = err;
+                                    if (err.message) {
+                                        message = err.message;
+                                    }
+                                    res.status(200).json({
+                                        status: 0,
+                                        message: message,
+                                    });
+                                } else if (receiverBank == null) {
+                                    res.status(200).json({
+                                        status: 0,
+                                        message: "Receiver Not Found",
+                                    });
+                                } else {
+                                    Branch.findOne(
+                                        {
+                                            _id: cashier.branch_id,
+                                        },
+                                        function (err, branch) {
+                                            if (err) {
+                                                console.log(err);
+                                                var message = err;
+                                                if (err.message) {
+                                                    message = err.message;
+                                                }
+                                                res.status(200).json({
+                                                    status: 0,
+                                                    message: message,
+                                                });
+                                            } else if (branch == null) {
+                                                res.status(200).json({
+                                                    status: 0,
+                                                    message: "Branch Not Found",
+                                                });
+                                            } else {
+                                                Bank.findOne(
+                                                    {
+                                                        _id: cashier.bank_id,
+                                                    },
+                                                    function (err, bank) {
+                                                        if (err) {
+                                                            console.log(err);
+                                                            var message = err;
+                                                            if (err.message) {
+                                                                message = err.message;
+                                                            }
+                                                            res.status(200).json({
+                                                                status: 0,
+                                                                message: message,
+                                                            });
+                                                        } else if (bank == null) {
+                                                            res.status(200).json({
+                                                                status: 0,
+                                                                message: "Bank Not Found",
+                                                            });
+                                                        } else {
+                                                            Infra.findOne(
+                                                                {
+                                                                    _id: bank.user_id,
+                                                                },
+                                                                function (err, infra) {
+                                                                    if (err) {
+                                                                        console.log(err);
+                                                                        var message = err;
+                                                                        if (err.message) {
+                                                                            message = err.message;
+                                                                        }
+                                                                        res.status(200).json({
+                                                                            status: 0,
+                                                                            message: message,
+                                                                        });
+                                                                    } else if (infra == null) {
+                                                                        res.status(200).json({
+                                                                            status: 0,
+                                                                            message: "Infra Not Found",
+                                                                        });
+                                                                    } else {
+                                                                        let data = new CashierSend();
+                                                                        let temp = {
+                                                                            ccode: ccode,
+                                                                            mobile: mobile,
+                                                                            givenname: givenname,
+                                                                            familyname: familyname,
+                                                                            address1: address1,
+                                                                            state: state,
+                                                                            zip: zip,
+                                                                            country: country,
+                                                                            email: email,
+                                                                            note: note,
+                                                                        };
+                                                                        data.sender_info = JSON.stringify(temp);
+                                                                        temp = {
+                                                                            country: senderIdentificationCountry,
+                                                                            type: senderIdentificationType,
+                                                                            number: senderIdentificationNumber,
+                                                                            valid: senderIdentificationValidTill,
+                                                                        };
+                                                                        data.sender_id = JSON.stringify(temp);
+                                                                        temp = {
+                                                                            mobile: receiverMobile,
+                                                                        };
+                                                                        data.receiver_info = JSON.stringify(temp);
+                                                                        data.amount = receiverIdentificationAmount;
+                                                                        data.is_inclusive = isInclusive;
+                                                                        data.cashier_id = cashier._id;
+                                                                        data.rule_type = "Non Wallet to Wallet";
+                                                                        data.is_inter_bank = 1;
+                                                                        data.inter_bank_rule_type = 2;
+
+                                                                        //send transaction sms after actual transaction
+
+                                                                        if (requireOTP) {
+                                                                            data.require_otp = 1;
+                                                                            data.otp = makeotp(6);
+                                                                            content =
+                                                                                data.otp +
+                                                                                " - Send this OTP to the Receiver";
+                                                                            if (mobile && mobile != null) {
+                                                                                sendSMS(content, mobile);
+                                                                            }
+                                                                            if (email && email != null) {
+                                                                                sendMail(content, "Transaction OTP", email);
+                                                                            }
+                                                                        }
+
+                                                                        data.save((err, cs) => {
+                                                                            if (err) {
+                                                                                console.log(err);
+                                                                                var message = err;
+                                                                                if (err.message) {
+                                                                                    message = err.message;
+                                                                                }
+                                                                                res.status(200).json({
+                                                                                    status: 0,
+                                                                                    message: message,
+                                                                                });
+                                                                            } else {
+                                                                                var find = {
+                                                                                    bank_id: bank._id,
+                                                                                    type: 2,
+                                                                                    status: 1,
+                                                                                    active: 1
+                                                                                };
+                                                                                InterBankRule.findOne(find, function (err, rule1) {
+                                                                                    if (err) {
+                                                                                        console.log(err);
+                                                                                        var message = err;
+                                                                                        if (err.message) {
+                                                                                            message = err.message;
+                                                                                        }
+                                                                                        res.status(200).json({
+                                                                                            status: 0,
+                                                                                            message: message,
+                                                                                        });
+                                                                                    } else if (rule1 == null) {
+                                                                                        res.status(200).json({
+                                                                                            status: 0,
+                                                                                            message: "Inter Bank Revenue Rule Not Found",
+                                                                                        });
+                                                                                    } else {
+                                                                                        find = {
+                                                                                            bank_id: bank._id,
+                                                                                            trans_type: "Non Wallet to Wallet",
+                                                                                            status: 1,
+                                                                                            active: "Active",
+                                                                                        };
+                                                                                        const amount = receiverIdentificationAmount;
+                                                                                        Fee.findOne(find, function (err, rule2) {
+                                                                                            if (err) {
+                                                                                                console.log(err);
+                                                                                                var message = err;
+                                                                                                if (err.message) {
+                                                                                                    message = err.message;
+                                                                                                }
+                                                                                                res.status(200).json({
+                                                                                                    status: 0,
+                                                                                                    message: message,
+                                                                                                });
+                                                                                            } else if (rule2 == null) {
+                                                                                                res.status(200).json({
+                                                                                                    status: 0,
+                                                                                                    message: "Revenue Rule Not Found",
+                                                                                                });
+                                                                                            } else {
+                                                                                                //End
+                                                                                                var transfer = {
+                                                                                                    amount: amount,
+                                                                                                    isInclusive: isInclusive,
+                                                                                                    cashierId: cashier._id
+                                                                                                }
+                                                                                                interBankSendMoneyToWallet(transfer, infra, bank, receiverBank, branch, receiver, rule1, rule2)
+                                                                                                    .then(function (result) {
+                                                                                                        console.log(
+                                                                                                            "Result: " + result
+                                                                                                        );
+                                                                                                        if (result.status == 1) {
+                                                                                                            CashierSend.findByIdAndUpdate(
+                                                                                                                cs._id,
+                                                                                                                {
+                                                                                                                    status: 1,
+                                                                                                                    fee: result.fee,
+                                                                                                                    master_code: result.master_code
+                                                                                                                },
+                                                                                                                (err) => {
+                                                                                                                    if (err) {
+                                                                                                                        console.log(err);
+                                                                                                                        var message = err;
+                                                                                                                        if (err.message) {
+                                                                                                                            message =
+                                                                                                                                err.message;
+                                                                                                                        }
+                                                                                                                        res
+                                                                                                                            .status(200)
+                                                                                                                            .json({
+                                                                                                                                status: 0,
+                                                                                                                                message: message,
+                                                                                                                            });
+                                                                                                                    } else {
+                                                                                                                        Cashier.findByIdAndUpdate(
+                                                                                                                            cashier._id,
+                                                                                                                            {
+                                                                                                                                cash_received:
+                                                                                                                                    Number(
+                                                                                                                                        cashier.cash_received
+                                                                                                                                    ) +
+                                                                                                                                    Number(
+                                                                                                                                        result.amount
+                                                                                                                                    ) +
+                                                                                                                                    Number(result.fee),
+                                                                                                                                cash_in_hand:
+                                                                                                                                    Number(
+                                                                                                                                        cashier.cash_in_hand
+                                                                                                                                    ) +
+                                                                                                                                    Number(
+                                                                                                                                        result.amount
+                                                                                                                                    ) +
+                                                                                                                                    Number(result.fee),
+                                                                                                                                fee_generated:
+                                                                                                                                    Number(
+                                                                                                                                        result.sendFee
+                                                                                                                                    ) +
+                                                                                                                                    Number(
+                                                                                                                                        cashier.fee_generated
+                                                                                                                                    ),
+
+                                                                                                                                total_trans:
+                                                                                                                                    Number(
+                                                                                                                                        cashier.total_trans
+                                                                                                                                    ) + 1,
+                                                                                                                            },
+                                                                                                                            function (
+                                                                                                                                e,
+                                                                                                                                v
+                                                                                                                            ) { }
+                                                                                                                        );
+
+                                                                                                                        CashierLedger.findOne(
+                                                                                                                            {
+                                                                                                                                cashier_id:
+                                                                                                                                    cashier._id,
+                                                                                                                                trans_type:
+                                                                                                                                    "CR",
+                                                                                                                                created_at: {
+                                                                                                                                    $gte: new Date(
+                                                                                                                                        start
+                                                                                                                                    ),
+                                                                                                                                    $lte: new Date(
+                                                                                                                                        end
+                                                                                                                                    ),
+                                                                                                                                },
+                                                                                                                            },
+                                                                                                                            function (
+                                                                                                                                err,
+                                                                                                                                c
+                                                                                                                            ) {
+                                                                                                                                if (
+                                                                                                                                    err ||
+                                                                                                                                    c == null
+                                                                                                                                ) {
+                                                                                                                                    let data = new CashierLedger();
+                                                                                                                                    data.amount =
+                                                                                                                                        Number(
+                                                                                                                                            result.amount
+                                                                                                                                        ) +
+                                                                                                                                        Number(
+                                                                                                                                            result.fee
+                                                                                                                                        );
+                                                                                                                                    data.trans_type =
+                                                                                                                                        "CR";
+                                                                                                                                    data.transaction_details = JSON.stringify(
+                                                                                                                                        {
+                                                                                                                                            fee: result.fee,
+                                                                                                                                        }
+                                                                                                                                    );
+                                                                                                                                    data.cashier_id = cashier._id;
+                                                                                                                                    data.save(
+                                                                                                                                        function (
+                                                                                                                                            err,
+                                                                                                                                            c
+                                                                                                                                        ) { }
+                                                                                                                                    );
+                                                                                                                                } else {
+                                                                                                                                    var amt =
+                                                                                                                                        Number(
+                                                                                                                                            c.amount
+                                                                                                                                        ) +
+                                                                                                                                        Number(
+                                                                                                                                            result.amount
+                                                                                                                                        ) +
+                                                                                                                                        Number(
+                                                                                                                                            result.fee
+                                                                                                                                        );
+                                                                                                                                    CashierLedger.findByIdAndUpdate(
+                                                                                                                                        c._id,
+                                                                                                                                        {
+                                                                                                                                            amount: amt,
+                                                                                                                                        },
+                                                                                                                                        function (
+                                                                                                                                            err,
+                                                                                                                                            c
+                                                                                                                                        ) { }
+                                                                                                                                    );
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        );
+                                                                                                                        res
+                                                                                                                            .status(200)
+                                                                                                                            .json({
+                                                                                                                                status: 1,
+                                                                                                                                message:
+                                                                                                                                    receiverIdentificationAmount +
+                                                                                                                                    "XOF amount is Transferred",
+                                                                                                                            });
+                                                                                                                    }
+                                                                                                                }
+                                                                                                            );
+                                                                                                        } else {
+                                                                                                            res.status(200).json({
+                                                                                                                status: 0,
+                                                                                                                message: result.toString(),
+                                                                                                            });
+                                                                                                        }
+                                                                                                    });
+                                                                                            }
+                                                                                        });
+                                                                                    }
+                                                                                });
+                                                                            }
+                                                                        });
+                                                                    }
+                                                                });
+                                                        }
+                                                    });
+                                            } //infra
+                                        }
+                                    );
+                                }
+                            })
+                        }
+                    }
+                );
+            }
+        }
+    ); //branch
+});
 
 router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (req, res) {
     var now = new Date().getTime();
