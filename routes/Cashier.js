@@ -3166,9 +3166,9 @@ router.post("/cashierClaimMoney", function (req, res) {
 																										)) /
 																									100;
 																								let bankShare = fee - infraShare;
+																								let feeObject = branch_share;
+																								let claimFee = 0;
 																								if (bankShare > 0) {
-																									let feeObject = branch_share;
-																									let claimFee = 0;
 																									var sbFeeObject;
 
 																									if (
