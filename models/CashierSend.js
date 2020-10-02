@@ -22,6 +22,6 @@ const CashierSendSchema = new mongoose.Schema({
   rule_type: { type: String, required: false },
   sending_bank_id: { type: String, required: false },
   is_inter_bank: { type: Number, required: true, default: 0 },
-  inter_bank_rule_type: { type: Number, required: false }
+  inter_bank_rule_type: { type: String, required: false }
 });
 module.exports = mongoose.model('CashierSend', CashierSendSchema);
