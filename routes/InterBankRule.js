@@ -34,6 +34,111 @@ const NWUser = require("../models/NonWalletUsers");
 
 const JWTTokenAuth = require("./JWTTokenAuth");
 
+router.post("/user/interBank/checkFee", JWTTokenAuth, function (req, res) {
+    const { type, amount } = req.body;
+    const jwtusername = req.sign_creds.username;
+    if (type == "IBWNW" || type == "IBWW") {
+        User.findOne(
+            {
+                username: jwtusername,
+                status: 1,
+            },
+            function (err, user) {
+                if (err) {
+                    console.log(err);
+                    var message = err;
+                    if (err.message) {
+                        message = err.message;
+                    }
+                    res.status(200).json({
+                        status: 0,
+                        message: message,
+                    });
+                } else if (user == null) {
+                    return res.status(200).json({
+                        status: 0,
+                        message:
+                            "Token changed or user not valid. Try to login again or contact system administrator.",
+                    });
+                } else {
+                    Bank.findOne({ name: user.bank }, (err, bank) => {
+                        if (err) {
+                            console.log(err);
+                            var message = err;
+                            if (err.message) {
+                                message = err.message;
+                            }
+                            res.status(200).json({
+                                status: 0,
+                                message: message,
+                            });
+                        } else if (bank == null) {
+                            return res.status(200).json({
+                                status: 0,
+                                message: "Bank not found"
+                            });
+                        } else {
+                            const find = {
+                                bank_id: bank._id,
+                                type: type,
+                                status: 1,
+                                active: 1,
+                            };
+                            InterBankRule.findOne(find, function (err, rule) {
+                                if (err) {
+                                    console.log(err);
+                                    var message = err;
+                                    if (err.message) {
+                                        message = err.message;
+                                    }
+                                    res.status(200).json({
+                                        status: 0,
+                                        message: message,
+                                    });
+                                } else if (rule == null) {
+                                    return res.status(200).json({
+                                        status: 0,
+                                        message: "Transaction cannot be done at this time",
+                                    });
+                                } else {
+                                    var amnt = Number(amount);
+                                    var fee = 0;
+                                    var range_found = false;
+                                    rule.ranges.map((range) => {
+                                        if (amnt >= range.trans_from && amnt <= range.trans_to) {
+                                            range_found = true;
+                                            fee = (amnt * range.percentage) / 100;
+                                            fee = fee + range.fixed;
+                                        }
+                                    });
+                                    if (range_found) {
+                                        res.status(200).json({
+                                            status: 1,
+                                            message: "Inter Bank " + rule.name + " Fee",
+                                            fee: fee,
+                                        });
+                                    } else {
+                                        res.status(200).json({
+                                            status: 1,
+                                            message: "The amount is not within any range",
+                                        });
+                                    }
+                                }
+                            }
+                            );
+                        }
+                    })
+                }
+            }
+        );
+    } else {
+        res.status(200).json({
+            status: 0,
+            message: "Invalid rule type"
+        });
+    }
+})
+
 router.post("/user/interBank/sendMoneyToWallet", JWTTokenAuth, async function (req, res) {
     const username = req.sign_creds.username;
 
@@ -2829,162 +2934,176 @@ router.post("/cashier/interBank/SendMoneyToNonWallet", function (req, res) {
     );
 });
 
-router.post("/partnerCashier/interBank/checkNWNWFee", JWTTokenAuth, function (req, res) {
-    const { amount } = req.body;
+router.post("/partnerCashier/interBank/checkFee", JWTTokenAuth, function (req, res) {
+    const { type, amount } = req.body;
     const jwtusername = req.sign_creds.username;
-    PartnerCashier.findOne(
-        {
-            username: jwtusername,
-            status: 1,
-        },
-        function (err, cashier) {
-            if (err) {
-                console.log(err);
-                var message = err;
-                if (err.message) {
-                    message = err.message;
-                }
-                res.status(200).json({
-                    status: 0,
-                    message: message,
-                });
-            } else if (cashier == null) {
-                return res.status(200).json({
-                    status: 0,
-                    message:
-                        "Token changed or user not valid. Try to login again or contact system administrator.",
-                });
-            } else {
-                const find = {
-                    bank_id: cashier.bank_id,
-                    type: 0,
-                    status: 1,
-                    active: 1,
-                };
-                InterBankRule.findOne(find, function (err, rule) {
-                    if (err) {
-                        console.log(err);
-                        var message = err;
-                        if (err.message) {
-                            message = err.message;
-                        }
-                        res.status(200).json({
-                            status: 0,
-                            message: message,
-                        });
-                    } else if (rule == null) {
-                        return res.status(200).json({
-                            status: 0,
-                            message: "Transaction cannot be done at this time",
-                        });
-                    } else {
-                        var amnt = Number(amount);
-                        var fee = 0;
-                        var range_found = false;
-                        rule.ranges.map((range) => {
-                            if (amnt >= range.trans_from && amnt <= range.trans_to) {
-                                range_found = true;
-                                fee = (amnt * range.percentage) / 100;
-                                fee = fee + range.fixed;
+    if (type == "IBNWNW" || type == "IBNWW") {
+        PartnerCashier.findOne(
+            {
+                username: jwtusername,
+                status: 1,
+            },
+            function (err, cashier) {
+                if (err) {
+                    console.log(err);
+                    var message = err;
+                    if (err.message) {
+                        message = err.message;
+                    }
+                    res.status(200).json({
+                        status: 0,
+                        message: message,
+                    });
+                } else if (cashier == null) {
+                    return res.status(200).json({
+                        status: 0,
+                        message:
+                            "Token changed or user not valid. Try to login again or contact system administrator.",
+                    });
+                } else {
+                    const find = {
+                        bank_id: cashier.bank_id,
+                        type: type,
+                        status: 1,
+                        active: 1,
+                    };
+                    InterBankRule.findOne(find, function (err, rule) {
+                        if (err) {
+                            console.log(err);
+                            var message = err;
+                            if (err.message) {
+                                message = err.message;
                             }
-                        });
-                        if (range_found) {
                             res.status(200).json({
-                                status: 1,
-                                message: "Inter Bank Non Wallet to Non Wallet Fee",
-                                fee: fee,
+                                status: 0,
+                                message: message,
+                            });
+                        } else if (rule == null) {
+                            return res.status(200).json({
+                                status: 0,
+                                message: "Transaction cannot be done at this time",
                             });
                         } else {
-                            res.status(200).json({
-                                status: 1,
-                                message: "The amount is not within any range",
+                            var amnt = Number(amount);
+                            var fee = 0;
+                            var range_found = false;
+                            rule.ranges.map((range) => {
+                                if (amnt >= range.trans_from && amnt <= range.trans_to) {
+                                    range_found = true;
+                                    fee = (amnt * range.percentage) / 100;
+                                    fee = fee + range.fixed;
+                                }
                             });
+                            if (range_found) {
+                                res.status(200).json({
+                                    status: 1,
+                                    message: "Inter Bank " + rule.name + " Fee",
+                                    fee: fee,
+                                });
+                            } else {
+                                res.status(200).json({
+                                    status: 1,
+                                    message: "The amount is not within any range",
+                                });
+                            }
                         }
                     }
+                    );
                 }
-                );
             }
-        }
-    );
+        );
+    } else {
+        res.status(200).json({
+            status: 0,
+            message: "Invalid rule type"
+        });
+    }
 })
 
-router.post("/cashier/interBank/checkNWNWFee", function (req, res) {
-    const { token, amount } = req.body;
-    Cashier.findOne(
-        {
-            token,
-            status: 1,
-        },
-        function (err, cashier) {
-            if (err) {
-                console.log(err);
-                var message = err;
-                if (err.message) {
-                    message = err.message;
-                }
-                res.status(200).json({
-                    status: 0,
-                    message: message,
-                });
-            } else if (cashier == null) {
-                return res.status(200).json({
-                    status: 0,
-                    message:
-                        "Token changed or user not valid. Try to login again or contact system administrator.",
-                });
-            } else {
-                const find = {
-                    bank_id: cashier.bank_id,
-                    type: 0,
-                    status: 1,
-                    active: 1,
-                };
-                InterBankRule.findOne(find, function (err, rule) {
-                    if (err) {
-                        console.log(err);
-                        var message = err;
-                        if (err.message) {
-                            message = err.message;
-                        }
-                        res.status(200).json({
-                            status: 0,
-                            message: message,
-                        });
-                    } else if (rule == null) {
-                        return res.status(200).json({
-                            status: 0,
-                            message: "Transaction cannot be done at this time",
-                        });
-                    } else {
-                        var amnt = Number(amount);
-                        var fee = 0;
-                        var range_found = false;
-                        rule.ranges.map((range) => {
-                            if (amnt >= range.trans_from && amnt <= range.trans_to) {
-                                range_found = true;
-                                fee = (amnt * range.percentage) / 100;
-                                fee = fee + range.fixed;
+router.post("/cashier/interBank/checkFee", function (req, res) {
+    const { token, type, amount } = req.body;
+    if (type == "IBNWNW" || type == "IBNWW") {
+        Cashier.findOne(
+            {
+                token,
+                status: 1,
+            },
+            function (err, cashier) {
+                if (err) {
+                    console.log(err);
+                    var message = err;
+                    if (err.message) {
+                        message = err.message;
+                    }
+                    res.status(200).json({
+                        status: 0,
+                        message: message,
+                    });
+                } else if (cashier == null) {
+                    return res.status(200).json({
+                        status: 0,
+                        message:
+                            "Token changed or user not valid. Try to login again or contact system administrator.",
+                    });
+                } else {
+                    const find = {
+                        bank_id: cashier.bank_id,
+                        type: type,
+                        status: 1,
+                        active: 1,
+                    };
+                    InterBankRule.findOne(find, function (err, rule) {
+                        if (err) {
+                            console.log(err);
+                            var message = err;
+                            if (err.message) {
+                                message = err.message;
                             }
-                        });
-                        if (range_found) {
                             res.status(200).json({
-                                status: 1,
-                                message: "Inter Bank Non Wallet to Non Wallet Fee",
-                                fee: fee,
+                                status: 0,
+                                message: message,
+                            });
+                        } else if (rule == null) {
+                            return res.status(200).json({
+                                status: 0,
+                                message: "Transaction cannot be done at this time",
                             });
                         } else {
-                            res.status(200).json({
-                                status: 1,
-                                message: "The amount is not within any range",
+                            var amnt = Number(amount);
+                            var fee = 0;
+                            var range_found = false;
+                            rule.ranges.map((range) => {
+                                if (amnt >= range.trans_from && amnt <= range.trans_to) {
+                                    range_found = true;
+                                    fee = (amnt * range.percentage) / 100;
+                                    fee = fee + range.fixed;
+                                }
                             });
+                            if (range_found) {
+                                res.status(200).json({
+                                    status: 1,
+                                    message: "Inter Bank " + rule.name + " Fee",
+                                    fee: fee,
+                                });
+                            } else {
+                                res.status(200).json({
+                                    status: 1,
+                                    message: "The amount is not within any range",
+                                });
+                            }
                         }
-                    }
 
+                    }
+                    );
                 }
-                );
             }
-        }
-    );
+        );
+    } else {
+        res.status(200).json({
+            status: 0,
+            message: "Invalid rule type"
+        });
+    }
 })
 
 router.post("/bank/interBank/getRules", function (req, res) {
