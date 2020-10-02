@@ -85,7 +85,7 @@ router.post("/user/interBank/sendMoneyToWallet", JWTTokenAuth, async function (r
         }
         const find = {
             bank_id: bank._id,
-            type: 3,
+            type: "IBWW",
             status: 1,
             active: 1
         };
@@ -339,7 +339,7 @@ router.post("/partnerCashier/interBank/sendMoneyToWallet", JWTTokenAuth, functio
                                                                                     data.cashier_id = cashier._id;
                                                                                     data.rule_type = "Non Wallet to Wallet";
                                                                                     data.is_inter_bank = 1;
-                                                                                    data.inter_bank_rule_type = 2;
+                                                                                    data.inter_bank_rule_type = "IBNWW";
 
                                                                                     //send transaction sms after actual transaction
 
@@ -371,7 +371,7 @@ router.post("/partnerCashier/interBank/sendMoneyToWallet", JWTTokenAuth, functio
                                                                                         } else {
                                                                                             var find = {
                                                                                                 bank_id: bank._id,
-                                                                                                type: 2,
+                                                                                                type: "IBNWW",
                                                                                                 status: 1,
                                                                                                 active: 1
                                                                                             };
@@ -610,7 +610,6 @@ router.post("/partnerCashier/interBank/sendMoneyToWallet", JWTTokenAuth, functio
     ); //branch
 });
 
-
 router.post("/cashier/interBank/sendMoneyToWallet", function (req, res) {
     var today = new Date();
     today = today.toISOString();
@@ -795,7 +794,7 @@ router.post("/cashier/interBank/sendMoneyToWallet", function (req, res) {
                                                                         data.cashier_id = cashier._id;
                                                                         data.rule_type = "Non Wallet to Wallet";
                                                                         data.is_inter_bank = 1;
-                                                                        data.inter_bank_rule_type = 2;
+                                                                        data.inter_bank_rule_type = "IBNWW";
 
                                                                         //send transaction sms after actual transaction
 
@@ -827,7 +826,7 @@ router.post("/cashier/interBank/sendMoneyToWallet", function (req, res) {
                                                                             } else {
                                                                                 var find = {
                                                                                     bank_id: bank._id,
-                                                                                    type: 2,
+                                                                                    type: "IBNWW",
                                                                                     status: 1,
                                                                                     active: 1
                                                                                 };
@@ -1127,7 +1126,7 @@ router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (req,
                     }
                     const find = {
                         bank_id: bank._id,
-                        type: 1,
+                        type: "IBWNW",
                         status: 1,
                         active: 1,
                     };
@@ -1164,7 +1163,7 @@ router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (req,
                     data.transaction_code = transactionCode;
                     data.rule_type = "Wallet to Non Wallet";
                     data.inter_bank_rule_type = 1;
-                    data.is_inter_bank = 1;
+                    data.is_inter_bank = "IBWNW";
 
                     data.without_id = withoutID ? 1 : 0;
                     if (requireOTP) {
@@ -1376,7 +1375,6 @@ router.post("/partnerCashier/interBank/claimMoney", JWTTokenAuth, function (req,
                                                                 message: "Partner Not Found",
                                                             });
                                                         } else {
-
                                                             Bank.findOne(
                                                                 {
                                                                     _id: cashier.bank_id,
@@ -1780,7 +1778,7 @@ router.post("/partnerCashier/interBank/SendMoneyToNonWallet", JWTTokenAuth, func
                                                         } else {
                                                             let data = new CashierSend();
                                                             data.is_inter_bank = 1;
-                                                            data.inter_bank_rule_type = 0;
+                                                            data.inter_bank_rule_type = "IBNWNW";
                                                             let temp = {
                                                                 ccode: ccode,
                                                                 mobile: mobile,
@@ -1851,7 +1849,7 @@ router.post("/partnerCashier/interBank/SendMoneyToNonWallet", JWTTokenAuth, func
                                                                 } else {
                                                                     const find = {
                                                                         bank_id: bank._id,
-                                                                        type: 0,
+                                                                        type: "IBNWNW",
                                                                         status: 1,
                                                                         active: 1,
                                                                     };
@@ -2554,7 +2552,7 @@ router.post("/cashier/interBank/SendMoneyToNonWallet", function (req, res) {
                                                 } else {
                                                     let data = new CashierSend();
                                                     data.is_inter_bank = 1;
-                                                    data.inter_bank_rule_type = 0;
+                                                    data.inter_bank_rule_type = "IBNWNW";
                                                     let temp = {
                                                         ccode: ccode,
                                                         mobile: mobile,
@@ -2625,7 +2623,7 @@ router.post("/cashier/interBank/SendMoneyToNonWallet", function (req, res) {
                                                         } else {
                                                             const find = {
                                                                 bank_id: bank._id,
-                                                                type: 0,
+                                                                type: "IBNWNW",
                                                                 status: 1,
                                                                 active: 1,
                                                             };

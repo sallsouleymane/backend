@@ -4,7 +4,7 @@ const InterBankRuleSchema = new mongoose.Schema({
 	name: { type: String, required: true },
 	status: { type: Number, required: true, default: 0 },
 	active: { type: Number, required: true, default: 0 },
-	type: { type: Number, required: true },
+	type: { type: String, required: true },
 	type_desc: { type: String, required: false, default: "0-NWNW" },
 	description: { type: String, required: false },
 	infra_approval_status: { type: Number, required: false, default: 0 },
