@@ -235,6 +235,7 @@ router.post("/bank/merchantFee/updatePartnersShare", function (req, res) {
 		}
 	);
 });
+
 router.post("/bank/merchantFee/createRule", function (req, res) {
 	const {
 		token,

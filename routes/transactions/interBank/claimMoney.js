@@ -86,6 +86,7 @@ module.exports = async function (
 
         await blockchain.initiateTransfer(trans2);
     }
+
     var claimerBranchShare = 0;
     if (fee > 0) {
         claimerBranchShare = calculateShare("claimBranch", transfer.amount, rule1, rule2, branch.bcode);
