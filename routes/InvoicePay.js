@@ -37,6 +37,276 @@ const InterBankRule = require("../models/InterBankRule")
 
 const jwtTokenAuth = require("./JWTTokenAuth");
 
+router.post("/user/interBank/payInvoice", jwtTokenAuth, (req, res) => {
+  const { invoices, merchant_id } = req.body;
+  const username = req.sign_creds.username;
+  User.findOne(
+    {
+      username,
+      status: 1,
+    },
+    function (err, user) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (user == null) {
+        console.log(err);
+        res.status(200).json({
+          status: 0,
+          message: "User is not valid",
+        });
+      } else {
+        Bank.findOne({ name: user.bank }, (err, bank) => {
+          if (err) {
+            console.log(err);
+            var message = err;
+            if (err.message) {
+              message = err.message;
+            }
+            res.status(200).json({
+              status: 0,
+              message: message,
+            });
+          } else if (bank == null) {
+            res.status(200).json({
+              status: 0,
+              message: "Inter Bank Fee rule not found",
+            });
+          } else {
+            var find = {
+              bank_id: bank._id,
+              type: "IBWM-F",
+              status: 1,
+              active: 1
+            }
+            InterBankRule.findOne(find, (err, fee) => {
+              if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                  message = err.message;
+                }
+                res.status(200).json({
+                  status: 0,
+                  message: message,
+                });
+              } else if (fee == null) {
+                res.status(200).json({
+                  status: 0,
+                  message: "Inter Bank Fee rule not found",
+                });
+              } else {
+                find = {
+                  bank_id: bank._id,
+                  type: "IBWM-C",
+                  status: 1,
+                  active: 1
+                }
+                InterBankRule.findOne(find, async (err, comm) => {
+                  if (err) {
+                    console.log(err);
+                    var message = err;
+                    if (err.message) {
+                      message = err.message;
+                    }
+                    res.status(200).json({
+                      status: 0,
+                      message: message,
+                    });
+                  } else if (comm == null) {
+                    res.status(200).json({
+                      status: 0,
+                      message: "Inter Bank Commission rule not found",
+                    });
+                  } else {
+                    try {
+                      var total_amount = 0;
+                      for (invoice of invoices) {
+                        var { id, penalty } = invoice;
+                        var inv = await Invoice.findOne({
+                          _id: id,
+                          merchant_id: merchant_id,
+                          paid: 0,
+                          is_validated: 1,
+                        });
+                        if (inv == null) {
+                          throw new Error(
+                            "Invoice id " +
+                            id +
+                            " is already paid or it belongs to different merchant"
+                          );
+                        }
+                        total_amount += inv.amount + penalty;
+                      }
+                      if (total_amount < 0) {
+                        throw new Error("Amount is a negative value");
+                      }
+                      console.log("Total Amount", total_amount);
+                      // all the users
+
+                      let infra = await Infra.findOne({
+                        _id: bank.user_id,
+                      });
+                      if (infra == null) {
+                        throw new Error("User's bank has invalid infra");
+                      }
+
+                      let merchant = await Merchant.findOne({
+                        _id: merchant_id,
+                      });
+                      if (merchant == null) {
+                        throw new Error("Invoice has invalid merchant");
+                      }
+
+                      let merchantBank = await Bank.findOne({
+                        _id: merchant.bank_id,
+                        status: 1,
+                      });
+                      if (merchantBank == null) {
+                        throw new Error("Merchant has invalid bank");
+                      }
+
+                      const today = new Date();
+                      await Merchant.findOneAndUpdate(
+                        {
+                          _id: merchant._id,
+                          last_paid_at: {
+                            $lte: new Date(today.setHours(00, 00, 00)),
+                          },
+                        },
+                        { amount_collected: 0 }
+                      );
+                      var rule1 = {
+                        fee: fee,
+                        comm, comm
+                      }
+                      var result = await iBuserInvoicePay(
+                        total_amount,
+                        infra,
+                        bank,
+                        merchantBank,
+                        user,
+                        merchant,
+                        rule1
+                      );
+                      var status_update_feedback;
+                      if (result.status == 1) {
+                        for (invoice of invoices) {
+                          var i = await Invoice.findOneAndUpdate(
+                            { _id: invoice.id },
+                            {
+                              paid: 1,
+                              paid_by: "US",
+                            }
+                          );
+                          if (i == null) {
+                            status_update_feedback =
+                              "Invoice status can not be updated";
+                          }
+
+                          var last_paid_at = new Date();
+                          var m = await Merchant.updateOne(
+                            { _id: merchant._id },
+                            {
+                              last_paid_at: last_paid_at,
+                              $inc: {
+                                amount_collected: total_amount,
+                                amount_due: -total_amount,
+                                bills_paid: 1,
+                              },
+                            }
+                          );
+                          if (m == null) {
+                            status_update_feedback =
+                              "Merchant status can not be updated";
+                          }
+
+                          var mc = await MerchantCashier.updateOne(
+                            { _id: i.cashier_id },
+                            {
+                              last_paid_at: last_paid_at,
+                              $inc: {
+                                bills_paid: 1,
+                              },
+                            }
+                          );
+                          if (mc == null) {
+                            status_update_feedback =
+                              "Merchant cashier status can not be updated";
+                          }
+
+                          var mb = await MerchantBranch.updateOne(
+                            { _id: mc.branch_id },
+                            {
+                              last_paid_at: last_paid_at,
+                              $inc: {
+                                amount_collected: total_amount,
+                                amount_due: -total_amount,
+                                bills_paid: 1,
+                              },
+                            }
+                          );
+                          if (mb == null) {
+                            status_update_feedback =
+                              "Merchant Branch status can not be updated";
+                          }
+
+                          var ig = await InvoiceGroup.updateOne(
+                            { _id: i.group_id },
+                            {
+                              last_paid_at: last_paid_at,
+                              $inc: {
+                                bills_paid: 1,
+                              },
+                            }
+                          );
+                          if (ig == null) {
+                            status_update_feedback =
+                              "Invoice group status can not be updated";
+                          }
+
+                          content =
+                            "E-Wallet:: Due amount " +
+                            i.amount +
+                            " is paid for invoice nummber " +
+                            i.number +
+                            " for purpose " +
+                            i.description;
+                          sendSMS(content, i.mobile);
+                        }
+                      }
+                      result.status_update_feedback = status_update_feedback;
+                      res.status(200).json(result);
+
+                    } catch (err) {
+                      console.log(err);
+                      var message = err;
+                      if (err && err.message) {
+                        message = err.message;
+                      }
+                      res.status(200).json({ status: 0, message: message });
+                    }
+                  }
+                }
+                );
+              }
+            }
+            );
+          }
+        });
+      }
+    }
+  );
+});
+
+
 router.post("/partnerCashier/interBank/payInvoice", jwtTokenAuth, (req, res) => {
   const { invoices, merchant_id } = req.body;
   const jwtusername = req.sign_creds.username;
@@ -205,7 +475,7 @@ router.post("/partnerCashier/interBank/payInvoice", jwtTokenAuth, (req, res) => 
                                   _id: merchant.bank_id,
                                   status: 1,
                                 });
-                                if (bank == null) {
+                                if (merchantBank == null) {
                                   throw new Error("Merchant has invalid bank");
                                 }
 
@@ -537,7 +807,7 @@ router.post("/cashier/interBank/payInvoice", (req, res) => {
                                 _id: merchant.bank_id,
                                 status: 1,
                               });
-                              if (bank == null) {
+                              if (merchantBank == null) {
                                 throw new Error("Merchant's Bank not found");
                               }
 
