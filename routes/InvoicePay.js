@@ -16,7 +16,6 @@ const merchantCashierInvoicePay = require("./transactions/merchantCashierInvoice
 const iBCashierInvoicePay = require("./transactions/interBank/cashierInvoicePay");
 const iBuserInvoicePay = require("./transactions/interBank/userInvoicePay");
 const iBpartnerCashierInvoicePay = require("./transactions/interBank/partnerCashierInvoicePay");
-const iBmerchantCashierInvoicePay = require("./transactions/interBank/merchantCashierInvoicePay");
 
 const Bank = require("../models/Bank");
 const Branch = require("../models/Branch");
@@ -305,7 +304,6 @@ router.post("/user/interBank/payInvoice", jwtTokenAuth, (req, res) => {
     }
   );
 });
-
 
 router.post("/partnerCashier/interBank/payInvoice", jwtTokenAuth, (req, res) => {
   const { invoices, merchant_id } = req.body;
@@ -1677,97 +1675,94 @@ router.post("/partnerCashier/payInvoice", jwtTokenAuth, (req, res) => {
   );
 });
 
-router.post(
-  "/partnerCashier/getInvoicesForCustomerCode",
-  jwtTokenAuth,
-  (req, res) => {
-    const { customer_code, merchant_id } = req.body;
-    const jwtusername = req.sign_creds.username;
-    PartnerCashier.findOne(
-      {
-        username: jwtusername,
-        status: 1,
-      },
-      function (err, cashier) {
-        if (err) {
-          console.log(err);
-          var message = err;
-          if (err.message) {
-            message = err.message;
-          }
-          res.status(200).json({
-            status: 0,
-            message: message,
-          });
-        } else if (cashier == null) {
-          res.status(200).json({
-            status: 0,
-            message:
-              "Token changed or user not valid. Try to login again or contact system administrator.",
-          });
-        } else {
-          Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
-            Invoice.find(
-              {
-                is_validated: 1,
-                merchant_id: merchant_id,
-                customer_code: customer_code,
-              },
-              async (err, invoices) => {
-                if (err) {
-                  console.log(err);
-                  var message = err;
-                  if (err.message) {
-                    message = err.message;
-                  }
-                  res.status(200).json({
-                    status: 0,
-                    message: message,
-                  });
-                } else if (invoices.length == 0) {
-                  res.status(200).json({
-                    status: 0,
-                    message: "Invoice not found",
-                  });
-                } else {
-                  Merchant.findOne(
-                    {
-                      _id: merchant_id,
-                      bank_id: partner.bank_id,
-                      status: 1,
-                    },
-                    (err, merchant) => {
-                      if (err) {
-                        console.log(err);
-                        var message = err;
-                        if (err.message) {
-                          message = err.message;
-                        }
-                        res.status(200).json({
-                          status: 0,
-                          message: message,
-                        });
-                      } else if (merchant == null) {
-                        res.status(200).json({
-                          status: 0,
-                          message: "Invalid Merchant",
-                        });
-                      } else {
-                        res.status(200).json({
-                          status: 1,
-                          invoice: invoices,
-                        });
-                      }
-                    }
-                  );
-                }
-              }
-            );
-          });
+router.post("/partnerCashier/getInvoicesForCustomerCode", jwtTokenAuth, (req, res) => {
+  const { customer_code, merchant_id } = req.body;
+  const jwtusername = req.sign_creds.username;
+  PartnerCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
         }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        res.status(200).json({
+          status: 0,
+          message:
+            "Token changed or user not valid. Try to login again or contact system administrator.",
+        });
+      } else {
+        Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
+          Invoice.find(
+            {
+              is_validated: 1,
+              merchant_id: merchant_id,
+              customer_code: customer_code,
+            },
+            async (err, invoices) => {
+              if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                  message = err.message;
+                }
+                res.status(200).json({
+                  status: 0,
+                  message: message,
+                });
+              } else if (invoices.length == 0) {
+                res.status(200).json({
+                  status: 0,
+                  message: "Invoice not found",
+                });
+              } else {
+                Merchant.findOne(
+                  {
+                    _id: merchant_id,
+                    bank_id: partner.bank_id,
+                    status: 1,
+                  },
+                  (err, merchant) => {
+                    if (err) {
+                      console.log(err);
+                      var message = err;
+                      if (err.message) {
+                        message = err.message;
+                      }
+                      res.status(200).json({
+                        status: 0,
+                        message: message,
+                      });
+                    } else if (merchant == null) {
+                      res.status(200).json({
+                        status: 0,
+                        message: "Invalid Merchant",
+                      });
+                    } else {
+                      res.status(200).json({
+                        status: 1,
+                        invoice: invoices,
+                      });
+                    }
+                  }
+                );
+              }
+            }
+          );
+        });
       }
-    );
-  }
+    }
+  );
+}
 );
 
 router.post("/partnerCashier/getInvoiceDetails", jwtTokenAuth, (req, res) => {
