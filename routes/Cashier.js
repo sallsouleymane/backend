@@ -129,7 +129,7 @@ router.post("/cashier/listMerchants", function (req, res) {
 				});
 			} else {
 				Merchant.find(
-					{ bank_id: cashier.bank_id, status: 1 },
+					{ status: 1 },
 					"-password",
 					(err, merchants) => {
 						if (err) {

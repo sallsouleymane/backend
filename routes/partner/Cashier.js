@@ -1879,31 +1879,29 @@ router.post("/partnerCashier/listMerchants", jwtTokenAuth, function (req, res) {
             "Token changed or user not valid. Try to login again or contact system administrator.",
         });
       } else {
-        Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
-          Merchant.find(
-            { bank_id: partner.bank_id, status: 1 },
-            "-password",
-            (err, merchants) => {
-              if (err) {
-                console.log(err);
-                var message = err;
-                if (err.message) {
-                  message = err.message;
-                }
-                res.status(200).json({
-                  status: 0,
-                  message: message,
-                });
-              } else {
-                res.status(200).json({
-                  status: 1,
-                  message: "Merchants List",
-                  list: merchants,
-                });
+        Merchant.find(
+          { status: 1 },
+          "-password",
+          (err, merchants) => {
+            if (err) {
+              console.log(err);
+              var message = err;
+              if (err.message) {
+                message = err.message;
               }
+              res.status(200).json({
+                status: 0,
+                message: message,
+              });
+            } else {
+              res.status(200).json({
+                status: 1,
+                message: "Merchants List",
+                list: merchants,
+              });
             }
-          );
-        });
+          }
+        );
       }
     }
   );
