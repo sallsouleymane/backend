@@ -127,7 +127,6 @@ router.post("/:user/getWalletBalance", jwtTokenAuth, function (req, res) {
   const { partner, page, wallet_id } = req.query;
 
   if (wallet_id != null && wallet_id != undefined && wallet_id != "") {
-    console.log("wal", wallet_id);
     getBalance(wallet_id).then(function (result) {
       res.status(200).json({
         status: 1,
@@ -138,7 +137,6 @@ router.post("/:user/getWalletBalance", jwtTokenAuth, function (req, res) {
     const user = req.params.user;
     const jwtusername = req.sign_creds.username;
     const Type = getTypeClass(user);
-    console.log(partner);
     Type.findOne(
       {
         username: jwtusername,

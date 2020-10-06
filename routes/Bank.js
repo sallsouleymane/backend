@@ -14,6 +14,7 @@ const {
 	createWallet,
 	getStatement,
 	getBalance,
+	initiateTransfer
 } = require("../services/Blockchain.js");
 
 const Bank = require("../models/Bank");
@@ -27,6 +28,52 @@ const Merchant = require("../models/merchant/Merchant");
 const FailedTX = require("../models/FailedTXLedger");
 const Partner = require("../models/partner/Partner")
 const Document = require("../models/Document");
+
+router.post("/bank/transferMasterToOp", function (req, res) {
+	const { token, amount } = req.body;
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (bank == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				const masterWallet = "master@" + bank.name;
+				const opWallet = "operational@" + bank.name;
+				const trans = {
+					from: masterWallet,
+					to: opWallet,
+					amount: Number(amount),
+					note: "Master to operational",
+					email1: bank.email,
+					mobile1: bank.mobile,
+					from_name: bank.name,
+					to_name: bank.name,
+					master_code: "",
+					child_code: ""
+				}
+				initiateTransfer(trans).then((result) => {
+					res.status(200).json(result)
+				});
+			}
+		});
+});
 
 router.post("/bank/generateOTP", function (req, res) {
 	let data = new OTP();

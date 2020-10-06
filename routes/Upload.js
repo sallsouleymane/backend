@@ -13,7 +13,6 @@ const getTypeClass = require("./utils/getTypeClass");
 router.get("/uploads/:id/:filePath", (req, res) => {
 	const id = req.params.id;
 	const file_path = req.params.filePath;
-	console.log(file_path);
 	try {
 		res.sendFile(config.uploadPath + id + "/" + file_path);
 	} catch (err) {

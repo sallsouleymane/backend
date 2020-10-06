@@ -6,7 +6,7 @@ const config = require("../config.json");
 const {
 	getStatement,
 	transferThis,
-	getTransactionCount,
+	initiateTransfer,
 } = require("../services/Blockchain.js");
 
 const Infra = require("../models/Infra");
@@ -20,6 +20,78 @@ const CashierLedger = require("../models/CashierLedger");
 const BranchSend = require("../models/BranchSend");
 const BranchClaim = require("../models/BranchClaim");
 const BranchLedger = require("../models/BranchLedger");
+
+router.post("/branch/transferMasterToOp", function (req, res) {
+	const { token, amount } = req.body;
+	Branch.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, branch) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (branch == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				Bank.findOne(
+					{
+						_id: branch.bank_id,
+						status: 1,
+					},
+					function (err, bank) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (bank == null) {
+							res.status(200).json({
+								status: 0,
+								message:
+									"Token changed or user not valid. Try to login again or contact system administrator.",
+							});
+						} else {
+							const masterWallet = branch.bcode + "_master@" + bank.name;
+							const opWallet = branch.bcode + "_operational@" + bank.name;
+							const trans = {
+								from: masterWallet,
+								to: opWallet,
+								amount: Number(amount),
+								note: "Master to operational",
+								email1: branch.email,
+								mobile1: branch.mobile,
+								from_name: branch.name,
+								to_name: branch.name,
+								master_code: "",
+								child_code: ""
+							}
+							initiateTransfer(trans).then((result) => {
+								res.status(200).json(result)
+							});
+						}
+					});
+			}
+		});
+});
+
 
 router.post("/getBranchDashStats", function (req, res) {
 	var today = new Date();

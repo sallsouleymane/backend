@@ -19,6 +19,102 @@ const PartnerCashier = require("../../models/partner/Cashier")
 const PartnerUser = require("../../models/partner/User");
 const FailedTX = require("../../models/FailedTXLedger");
 
+
+router.post("/partnerBranch/transferMasterToOp", jwtTokenAuth, function (req, res) {
+    const { amount } = req.body;
+    const jwtusername = req.sign_creds.username;
+    PartnerBranch.findOne(
+        {
+            username: jwtusername,
+            status: 1,
+        },
+        function (err, branch) {
+            if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                    message = err.message;
+                }
+                res.status(200).json({
+                    status: 0,
+                    message: message,
+                });
+            } else if (branch == null) {
+                res.status(200).json({
+                    status: 0,
+                    message:
+                        "Token changed or user not valid. Try to login again or contact system administrator.",
+                });
+            } else {
+                Partner.findOne(
+                    {
+                        _id: branch.partner_id,
+                        status: 1,
+                    },
+                    function (err, partner) {
+                        if (err) {
+                            console.log(err);
+                            var message = err;
+                            if (err.message) {
+                                message = err.message;
+                            }
+                            res.status(200).json({
+                                status: 0,
+                                message: message,
+                            });
+                        } else if (partner == null) {
+                            res.status(200).json({
+                                status: 0,
+                                message: "Partner not found.",
+                            });
+                        } else {
+                            Bank.findOne(
+                                {
+                                    _id: partner.bank_id,
+                                    status: 1,
+                                },
+                                function (err, bank) {
+                                    if (err) {
+                                        console.log(err);
+                                        var message = err;
+                                        if (err.message) {
+                                            message = err.message;
+                                        }
+                                        res.status(200).json({
+                                            status: 0,
+                                            message: message,
+                                        });
+                                    } else if (bank == null) {
+                                        res.status(200).json({
+                                            status: 0,
+                                            message: "Bank not found.",
+                                        });
+                                    } else {
+                                        const masterWallet = branch.code + "_partnerbranch_master@" + bank.name;
+                                        const opWallet = branch.code + "_partnerbranch_operational@" + bank.name;
+                                        const trans = {
+                                            from: masterWallet,
+                                            to: opWallet,
+                                            amount: Number(amount),
+                                            note: "Master to operational",
+                                            email1: branch.email,
+                                            mobile1: branch.mobile,
+                                            from_name: branch.name,
+                                            to_name: branch.name,
+                                            master_code: "",
+                                            child_code: ""
+                                        }
+                                        blockchain.initiateTransfer(trans).then((result) => {
+                                            res.status(200).json(result)
+                                        });
+                                    }
+                                });
+                        }
+                    });
+            }
+        });
+});
+
 router.post("/partnerBranch/SetupUpdate", jwtTokenAuth, function (req, res) {
     const { password } = req.body;
     const jwtusername = req.sign_creds.username;

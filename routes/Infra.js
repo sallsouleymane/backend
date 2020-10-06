@@ -14,6 +14,7 @@ const {
 	createWallet,
 	transferThis,
 	getBalance,
+	initiateTransfer
 } = require("../services/Blockchain.js");
 
 const Infra = require("../models/Infra");
@@ -26,6 +27,76 @@ const Merchant = require("../models/merchant/Merchant");
 const Country = require("../models/Country");
 
 const mainFee = config.mainFee;
+
+router.post("/infra/transferMasterToOp", function (req, res) {
+	const { token, bank_id, amount } = req.body;
+	Infra.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, infra) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (infra == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				Bank.findOne(
+					{
+						_id: bank_id,
+						status: 1,
+					},
+					function (err, bank) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (bank == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Bank not found.",
+							});
+						} else {
+							const masterWallet = "infra_master@" + bank.name;
+							const opWallet = "infra_operational@" + bank.name;
+							const trans = {
+								from: masterWallet,
+								to: opWallet,
+								amount: Number(amount),
+								note: "Master to operational",
+								email1: infra.email,
+								mobile1: infra.mobile,
+								from_name: infra.name,
+								to_name: infra.name,
+								master_code: "",
+								child_code: ""
+							}
+							initiateTransfer(trans).then((result) => {
+								res.status(200).json(result)
+							});
+						}
+					});
+			}
+		});
+});
 
 router.post("/infra/deleteCountry", (req, res) => {
 	const { token, ccode } = req.body;
