@@ -1265,6 +1265,7 @@ router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (req,
                     const transactionCode = makeid(8);
                     data.transaction_code = transactionCode;
                     data.rule_type = "Wallet to Non Wallet";
+                    data.sending_bank_id = bank._id;
                     data.inter_bank_rule_type = "IBWNW";
                     data.is_inter_bank = 1;
 
@@ -2306,7 +2307,7 @@ router.post("/cashier/interBank/claimMoney", function (req, res) {
                                                                     } else if (sendingBank == null) {
                                                                         res.status(200).json({
                                                                             status: 0,
-                                                                            message: "Bank Not Found",
+                                                                            message: "Sender Bank Not Found",
                                                                         });
                                                                     } else {
                                                                         var amount = cs.amount;
