@@ -1267,8 +1267,8 @@ router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (req,
                     const transactionCode = makeid(8);
                     data.transaction_code = transactionCode;
                     data.rule_type = "Wallet to Non Wallet";
-                    data.inter_bank_rule_type = 1;
-                    data.is_inter_bank = "IBWNW";
+                    data.inter_bank_rule_type = "IBWNW";
+                    data.is_inter_bank = 1;
 
                     data.without_id = withoutID ? 1 : 0;
                     if (requireOTP) {
