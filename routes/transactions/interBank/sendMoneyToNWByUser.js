@@ -89,9 +89,10 @@ module.exports = async function (
             status: 1,
             message: "Transaction success!",
             blockchain_message: result.message,
+            balance: balance,
             amount: amount,
             fee: fee,
-            master_code: master_code
+            master_code: master_code,
         };
     } catch (err) {
         throw err;

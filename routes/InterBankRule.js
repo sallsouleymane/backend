@@ -1337,7 +1337,7 @@ router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (req,
                             message:
                                 sending_amount +
                                 " XOF is transferred to branch",
-                            balance: bal - (result.amount + result.fee),
+                            balance: result.balance - (result.amount + result.fee),
                         });
                     } else {
                         res.status(200).json({
