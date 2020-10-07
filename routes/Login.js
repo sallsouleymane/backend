@@ -96,6 +96,7 @@ router.post("/partnerCashier/login", function (req, res) {
 								email: user.email,
 								mobile: user.mobile,
 								cashier_id: cashier._id,
+								bank_id: cashier.bank_id,
 								id: user._id,
 							});
 						}
@@ -679,6 +680,7 @@ router.post("/cashierLogin", function (req, res) {
 								email: bank.email,
 								mobile: bank.mobile,
 								cashier_id: cashier._id,
+								bank_id: cashier.bank_id,
 								id: bank._id,
 							});
 						}

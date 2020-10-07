@@ -1322,7 +1322,7 @@ router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (req,
                             throw new Error("Cashier send record not found");
                         }
 
-                        receiver = {
+                        var receiver = {
                             name: receiverGivenName,
                             last_name: receiverFamilyName,
                             mobile: receiverMobile,
