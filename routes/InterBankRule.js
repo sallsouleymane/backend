@@ -1204,6 +1204,13 @@ router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (req,
                     message: "Sender not found",
                 });
             } else {
+                var receiver = {
+                    name: receiverGivenName,
+                    last_name: receiverFamilyName,
+                    mobile: receiverMobile,
+                    email: receiverEmail,
+                    country: receiverCountry,
+                };
                 try {
                     const bank = await Bank.findOne(
                         {
@@ -1322,13 +1329,6 @@ router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (req,
                             throw new Error("Cashier send record not found");
                         }
 
-                        var receiver = {
-                            name: receiverGivenName,
-                            last_name: receiverFamilyName,
-                            mobile: receiverMobile,
-                            email: receiverEmail,
-                            country: receiverCountry,
-                        };
                         NWUser.create(receiver);
                         res.status(200).json({
                             status: 1,
