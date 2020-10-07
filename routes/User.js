@@ -1235,6 +1235,8 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																			infra_share,
 																		} = fe.revenue_sharing_rule;
 
+																		var transArr = [];
+
 																		let trans1 = {};
 																		trans1.from = senderWallet;
 																		trans1.to = receiverWallet;
@@ -1253,23 +1255,27 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																		trans1.user_id = "";
 																		trans1.master_code = master_code;
 																		trans1.child_code = child_code + "1";
+																		transArr.push(trans1);
 
-																		let trans2 = {};
-																		trans2.from = senderWallet;
-																		trans2.to = bankOpWallet;
-																		trans2.amount = fee;
-																		trans2.note = "Bank Fee";
-																		trans2.email1 = sender.email;
-																		trans2.email2 = bank.email;
-																		trans2.mobile1 = sender.mobile;
-																		trans2.mobile2 = bank.mobile;
-																		trans2.from_name = sender.name;
-																		trans2.to_name = bank.name;
-																		trans2.user_id = "";
-																		trans2.master_code = master_code;
-																		now = new Date().getTime();
-																		child_code = mns + "" + mnr + "" + now;
-																		trans2.child_code = child_code + "2";
+																		if (fee > 0) {
+																			let trans2 = {};
+																			trans2.from = senderWallet;
+																			trans2.to = bankOpWallet;
+																			trans2.amount = fee;
+																			trans2.note = "Bank Fee";
+																			trans2.email1 = sender.email;
+																			trans2.email2 = bank.email;
+																			trans2.mobile1 = sender.mobile;
+																			trans2.mobile2 = bank.mobile;
+																			trans2.from_name = sender.name;
+																			trans2.to_name = bank.name;
+																			trans2.user_id = "";
+																			trans2.master_code = master_code;
+																			now = new Date().getTime();
+																			child_code = mns + "" + mnr + "" + now;
+																			trans2.child_code = child_code + "2";
+																			transArr.push(trans2);
+																		}
 
 																		var infraShare = 0;
 																		var infraShare =
@@ -1296,6 +1302,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																			child_code =
 																				mns + "" + mnr + "" + now + "3.1";
 																			trans31.child_code = child_code;
+																			transArr.push(trans31);
 																		}
 
 																		let trans32 = {};
@@ -1318,10 +1325,11 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																			child_code =
 																				mns + "" + mnr + "" + now + "3.2";
 																			trans32.child_code = child_code;
+																			transArr.push(trans32);
 																		}
 
 																		blockchain
-																			.transferThis(trans1, trans2, trans31, trans32)
+																			.transferThis(...transArr)
 																			.then(function (result) {
 																				console.log("Result: " + result);
 																				if (result.length <= 0) {
@@ -1581,6 +1589,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																		infra_share,
 																	} = fe.revenue_sharing_rule;
 
+																	var transArr = [];
 																	let trans1 = {};
 																	trans1.from = senderWallet;
 																	trans1.to = bankEsWallet;
@@ -1597,6 +1606,8 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																	trans1.user_id = "";
 																	trans1.master_code = master_code;
 																	trans1.child_code = child_code + "1";
+
+																	transArr.push(trans1);
 
 																	let trans2 = {};
 																	if (fee > 0) {
@@ -1615,6 +1626,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																		now = new Date().getTime();
 																		child_code = mns + "" + mnr + "" + now;
 																		trans2.child_code = child_code + "2";
+																		transArr.push(trans2);
 																	}
 
 																	var infraShare = 0;
@@ -1641,6 +1653,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																		now = new Date().getTime();
 																		child_code = mns + "" + mnr + "" + now + "3.1";
 																		trans31.child_code = child_code;
+																		transArr.push(trans31);
 																	}
 
 																	let trans32 = {};
@@ -1662,10 +1675,11 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																		now = new Date().getTime();
 																		child_code = mns + "" + mnr + "" + now + "3.2";
 																		trans32.child_code = child_code;
+																		transArr.push(trans32);
 																	}
 
 																	blockchain
-																		.transferThis(trans1, trans2, trans31, trans32)
+																		.transferThis(...transArr)
 																		.then(function (result) {
 																			console.log("Result: " + result);
 																			if (result.length <= 0) {

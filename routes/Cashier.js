@@ -1745,6 +1745,7 @@ router.post("/cashierSendMoney", function (req, res) {
 																						oamount + fee
 																					) {
 
+																						var transArr = [];
 																						let trans1 = {};
 																						trans1.from = branchOpWallet;
 																						trans1.to = bankEsWallet;
@@ -1759,6 +1760,7 @@ router.post("/cashierSendMoney", function (req, res) {
 																						trans1.user_id = f._id;
 																						trans1.master_code = master_code;
 																						trans1.child_code = child_code + "1";
+																						transArr.push(trans1);
 
 																						let trans2 = {};
 																						if (fee > 0) {
@@ -1777,7 +1779,7 @@ router.post("/cashierSendMoney", function (req, res) {
 																							now = new Date().getTime();
 																							child_code = mns + "" + mnr + "" + now;
 																							trans2.child_code = child_code + "2";
-
+																							transArr.push(trans2);
 																						}
 
 																						let trans31 = {};
@@ -1801,6 +1803,7 @@ router.post("/cashierSendMoney", function (req, res) {
 																							child_code =
 																								mns + "" + mnr + "" + now + "3.1";
 																							trans31.child_code = child_code;
+																							transArr.push(trans31);
 																						}
 
 																						let trans32 = {};
@@ -1824,6 +1827,7 @@ router.post("/cashierSendMoney", function (req, res) {
 																							child_code =
 																								mns + "" + mnr + "" + now + "3.2";
 																							trans32.child_code = child_code;
+																							transArr.push(trans32);
 																						}
 
 																						let trans4 = {};
@@ -1850,6 +1854,7 @@ router.post("/cashierSendMoney", function (req, res) {
 																								mns + "" + mnr + "" + now;
 																							trans4.child_code =
 																								child_code + "4";
+																							transArr.push(trans4);
 																						}
 																						//End
 																						console.log(
@@ -1862,11 +1867,7 @@ router.post("/cashierSendMoney", function (req, res) {
 
 																						blockchain
 																							.transferThis(
-																								trans1,
-																								trans2,
-																								trans31,
-																								trans32,
-																								trans4
+																								...transArr
 																							)
 																							.then(function (result) {
 																								console.log(
@@ -2335,6 +2336,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																									) >=
 																									oamount + fee
 																								) {
+																									var transArr = [];
 
 																									let trans1 = {};
 																									trans1.from = branchOpWallet;
@@ -2351,6 +2353,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																									trans1.master_code = master_code;
 																									trans1.child_code =
 																										child_code + "1";
+																									transArr.push(trans1);
 
 																									let trans2 = {};
 																									if (fee > 0) {
@@ -2372,6 +2375,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																											mns + "" + mnr + "" + now;
 																										trans2.child_code =
 																											child_code + "2";
+																										transArr.push(trans2)
 																									}
 																									let trans31 = {};
 																									if (infraShare > 0) {
@@ -2399,6 +2403,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																											now +
 																											"3.1";
 																										trans31.child_code = child_code;
+																										transArr.push(trans31)
 																									}
 
 																									let trans32 = {};
@@ -2427,6 +2432,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																											now +
 																											"3.2";
 																										trans32.child_code = child_code;
+																										transArr.push(trans32)
 																									}
 
 																									let trans4 = {};
@@ -2453,15 +2459,12 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																											mns + "" + mnr + "" + now;
 																										trans4.child_code =
 																											child_code + "4";
+																										transArr.push(trans4)
 																									}
 																									//End
 																									blockchain
 																										.transferThis(
-																											trans1,
-																											trans2,
-																											trans31,
-																											trans32,
-																											trans4
+																											...transArr
 																										)
 																										.then(function (result) {
 																											console.log(
@@ -2997,7 +3000,6 @@ router.post("/cashierClaimMoney", function (req, res) {
 								message: "Money is already claimed",
 							});
 						} else {
-
 							CashierSend.findOne(
 								{
 									transaction_code: transferCode,
@@ -3193,6 +3195,8 @@ router.post("/cashierClaimMoney", function (req, res) {
 																								const bankOpWallet =
 																									"operational@" + f3.name;
 
+																								var transArr = [];
+
 																								let trans1 = {};
 																								trans1.from = bankEsWallet;
 																								trans1.to = branchOpWallet;
@@ -3207,6 +3211,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 																								trans1.user_id = "";
 																								trans1.master_code = master_code;
 																								trans1.child_code = child_code;
+																								transArr.push(trans1);
 
 																								let trans2 = {};
 																								if (bankShare > 0) {
@@ -3216,21 +3221,22 @@ router.post("/cashierClaimMoney", function (req, res) {
 																									trans2.amount = claimFee;
 																									trans2.note =
 																										"Revenue for claim Money";
-																									trans2.email1 = f2.email;
-																									trans2.email2 = f3.email;
-																									trans2.mobile1 = f2.mobile;
-																									trans2.mobile2 = f3.mobile;
-																									trans2.from_name = f2.name;
-																									trans2.to_name = f3.name;
+																									trans2.email1 = f3.email;
+																									trans2.email2 = f2.email;
+																									trans2.mobile1 = f3.mobile;
+																									trans2.mobile2 = f2.mobile;
+																									trans2.from_name = f3.name;
+																									trans2.to_name = f2.name;
 																									trans2.user_id = "";
 																									trans2.master_code = master_code;
 																									trans2.child_code =
 																										data.child_code + "2";
+																									transArr.push(trans2);
 																								}
 																								//End of hatim Code
 
 																								blockchain
-																									.transferThis(trans1, trans2)
+																									.transferThis(...transArr)
 																									.then(function (result) {
 																										if (result.length <= 0) {
 																											CashierClaim.findByIdAndUpdate(
