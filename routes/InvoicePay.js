@@ -1091,64 +1091,55 @@ router.post("/merchantCashier/getInvoicesByNumber", jwtTokenAuth, (req, res) => 
 });
 
 router.post("/merchantCashier/getInvoicesByMobile", jwtTokenAuth, (req, res) => {
-  try {
-    const { mobile } = req.body;
-    const jwtusername = req.sign_creds.username;
-    MerchantCashier.findOne(
-      {
-        username: jwtusername,
-        status: 1,
-      },
-      function (err, cashier) {
-        if (err) {
-          console.log(err);
-          var message = err;
-          if (err.message) {
-            message = err.message;
-          }
-          res.status(200).json({
-            status: 0,
-            message: message,
-          });
-        } else if (cashier == null) {
-          console.log(err);
-          res.status(200).json({
-            status: 0,
-            message: "Cashier is not valid",
-          });
-        } else {
-          Invoice.find(
-            { mobile: mobile, is_validated: 1, merchant_id: cashier.merchant_id },
-            async (err, invoices) => {
-              if (err) {
-                console.log(err);
-                var message = err;
-                if (err.message) {
-                  message = err.message;
-                }
-                res.status(200).json({
-                  status: 0,
-                  message: message,
-                });
-              } else {
-                res.status(200).json({
-                  status: 1,
-                  invoices: invoices,
-                });
-              }
-            }
-          );
+  const { mobile } = req.body;
+  const jwtusername = req.sign_creds.username;
+  MerchantCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
         }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        console.log(err);
+        res.status(200).json({
+          status: 0,
+          message: "Cashier is not valid",
+        });
+      } else {
+        Invoice.find(
+          { mobile: mobile, is_validated: 1, merchant_id: cashier.merchant_id },
+          async (err, invoices) => {
+            if (err) {
+              console.log(err);
+              var message = err;
+              if (err.message) {
+                message = err.message;
+              }
+              res.status(200).json({
+                status: 0,
+                message: message,
+              });
+            } else {
+              res.status(200).json({
+                status: 1,
+                invoices: invoices,
+              });
+            }
+          }
+        );
       }
-    );
-  } catch (err) {
-    console.log(err);
-    var message = err.toString();
-    if (err.message) {
-      message = err.message;
     }
-    res.status(200).json({ status: 0, message: message, err: err });
-  }
+  );
 });
 
 router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
@@ -1824,36 +1815,27 @@ router.post("/partnerCashier/getUserInvoices", jwtTokenAuth, (req, res) => {
             "Token changed or user not valid. Try to login again or contact system administrator.",
         });
       } else {
-        try {
-          Invoice.find(
-            { mobile: mobile, is_validated: 1 },
-            (err, invoices) => {
-              if (err) {
-                console.log(err);
-                var message = err;
-                if (err.message) {
-                  message = err.message;
-                }
-                res.status(200).json({
-                  status: 0,
-                  message: message,
-                });
-              } else {
-                res.status(200).json({
-                  status: 1,
-                  invoices: invoices,
-                });
+        Invoice.find(
+          { mobile: mobile, is_validated: 1 },
+          (err, invoices) => {
+            if (err) {
+              console.log(err);
+              var message = err;
+              if (err.message) {
+                message = err.message;
               }
+              res.status(200).json({
+                status: 0,
+                message: message,
+              });
+            } else {
+              res.status(200).json({
+                status: 1,
+                invoices: invoices,
+              });
             }
-          );
-        } catch (err) {
-          console.log(err);
-          var message = err.toString();
-          if (err.message) {
-            message = err.message;
           }
-          res.status(200).json({ status: 0, message: message });
-        }
+        );
       }
     }
   );
@@ -1978,64 +1960,55 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
 });
 
 router.post("/cashier/getUserInvoices", (req, res) => {
-  try {
-    const { token, mobile } = req.body;
-    Cashier.findOne(
-      {
-        token,
-        status: 1,
-      },
-      function (err, cashier) {
-        if (err) {
-          console.log(err);
-          var message = err;
-          if (err.message) {
-            message = err.message;
-          }
-          res.status(200).json({
-            status: 0,
-            message: message,
-          });
-        } else if (cashier == null) {
-          console.log(err);
-          res.status(200).json({
-            status: 0,
-            message: "Cashier is not valid",
-          });
-        } else {
-          Invoice.find(
-            { mobile: mobile, is_validated: 1 },
-            async (err, invoices) => {
-              if (err) {
-                console.log(err);
-                var message = err;
-                if (err.message) {
-                  message = err.message;
-                }
-                res.status(200).json({
-                  status: 0,
-                  message: message,
-                });
-              } else {
-                var result = await Promise.all(invoicePromises);
-                res.status(200).json({
-                  status: 1,
-                  invoices: invoices,
-                });
-              }
-            }
-          );
+
+  const { token, mobile } = req.body;
+  Cashier.findOne(
+    {
+      token,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
         }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        console.log(err);
+        res.status(200).json({
+          status: 0,
+          message: "Cashier is not valid",
+        });
+      } else {
+        Invoice.find(
+          { mobile: mobile, is_validated: 1 },
+          async (err, invoices) => {
+            if (err) {
+              console.log(err);
+              var message = err;
+              if (err.message) {
+                message = err.message;
+              }
+              res.status(200).json({
+                status: 0,
+                message: message,
+              });
+            } else {
+              res.status(200).json({
+                status: 1,
+                invoices: invoices,
+              });
+            }
+          }
+        );
       }
-    );
-  } catch (err) {
-    console.log(err);
-    var message = err.toString();
-    if (err.message) {
-      message = err.message;
     }
-    res.status(200).json({ status: 0, message: message, err: err });
-  }
+  );
 });
 
 router.post("/cashier/payInvoice", (req, res) => {
@@ -2365,47 +2338,27 @@ router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
               message: "User's bank not found",
             });
           } else {
-            try {
-              Invoice.find(
-                { mobile: user.mobile, is_validated: 1 },
-                async (err, invoices) => {
-                  if (err) {
-                    console.log(err);
-                    var message = err;
-                    if (err.message) {
-                      message = err.message;
-                    }
-                    res.status(200).json({
-                      status: 0,
-                      message: message,
-                    });
-                  } else {
-                    var result = [];
-                    for (const invoice of invoices) {
-                      var merchant = await Merchant.findOne({
-                        _id: invoice.merchant_id,
-                        bank_id: bank._id,
-                        status: 1,
-                      });
-                      if (merchant) {
-                        result.push(invoice);
-                      }
-                    }
-                    res.status(200).json({
-                      status: 1,
-                      invoices: result,
-                    });
+            Invoice.find(
+              { mobile: user.mobile, is_validated: 1 },
+              async (err, invoices) => {
+                if (err) {
+                  console.log(err);
+                  var message = err;
+                  if (err.message) {
+                    message = err.message;
                   }
+                  res.status(200).json({
+                    status: 0,
+                    message: message,
+                  });
+                } else {
+                  res.status(200).json({
+                    status: 1,
+                    invoices: invoices,
+                  });
                 }
-              );
-            } catch (err) {
-              console.log("Catch block: ", err);
-              var message = err.toString();
-              if (err.message) {
-                message = err.message;
               }
-              res.status(200).json({ status: 0, message: message, err: err });
-            }
+            );
           }
         });
       }
@@ -2472,49 +2425,27 @@ router.post("/user/getInvoicesForMobile", jwtTokenAuth, (req, res) => {
                   message: "User's bank not found",
                 });
               } else {
-                try {
-                  Invoice.find(
-                    { mobile: payee.mobile, is_validated: 1 },
-                    async (err, invoices) => {
-                      if (err) {
-                        console.log(err);
-                        var message = err;
-                        if (err.message) {
-                          message = err.message;
-                        }
-                        res.status(200).json({
-                          status: 0,
-                          message: message,
-                        });
-                      } else {
-                        var result = [];
-                        for (const invoice of invoices) {
-                          var merchant = await Merchant.findOne({
-                            _id: invoice.merchant_id,
-                            bank_id: bank._id,
-                            status: 1,
-                          });
-                          if (merchant) {
-                            result.push(invoice);
-                          }
-                        }
-                        res.status(200).json({
-                          status: 1,
-                          invoices: result,
-                        });
+                Invoice.find(
+                  { mobile: payee.mobile, is_validated: 1 },
+                  async (err, invoices) => {
+                    if (err) {
+                      console.log(err);
+                      var message = err;
+                      if (err.message) {
+                        message = err.message;
                       }
+                      res.status(200).json({
+                        status: 0,
+                        message: message,
+                      });
+                    } else {
+                      res.status(200).json({
+                        status: 1,
+                        invoices: invoices,
+                      });
                     }
-                  );
-                } catch (err) {
-                  console.log("Catch block: ", err);
-                  var message = err.toString();
-                  if (err.message) {
-                    message = err.message;
                   }
-                  res
-                    .status(200)
-                    .json({ status: 0, message: message, err: err });
-                }
+                );
               }
             });
           }
