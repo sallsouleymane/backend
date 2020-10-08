@@ -124,7 +124,7 @@ async function distributeRevenue(transfer,
     branch,
     rule1) {
     const branchOpWallet =
-        branch.code + "_partnerbranch__operational@" + bank.name;
+        branch.code + "_partnerbranch_operational@" + bank.name;
     const bankOpWallet = "operational@" + bank.name;
     const infraOpWallet =
         "infra_operational@" + bank.name;
