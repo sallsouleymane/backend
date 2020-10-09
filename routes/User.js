@@ -169,49 +169,29 @@ router.get("/user/listMerchants", jwtTokenAuth, function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				Bank.findOne({ name: user.bank }, (err, bank) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (bank == null) {
-						console.log(err);
-						res.status(200).json({
-							status: 0,
-							message: "Internal error please try again",
-						});
-					} else {
-						Merchant.find(
-							{ bank_id: bank._id },
-							"-password",
-							(err, merchants) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else {
-									res.status(200).json({
-										status: 1,
-										message: "Merchant List",
-										list: merchants,
-									});
-								}
+				Merchant.find(
+					{},
+					"-password",
+					(err, merchants) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
 							}
-						);
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Merchant List",
+								list: merchants,
+							});
+						}
 					}
-				});
+				);
 			}
 		}
 	);
