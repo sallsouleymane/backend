@@ -2395,13 +2395,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																										mns = bank.mobile.slice(-2);
 																										mnr = f4.mobile.slice(-2);
 																										now = new Date().getTime();
-																										child_code =
-																											mns +
-																											"" +
-																											mnr +
-																											"" +
-																											now +
-																											"3.1";
+																										child_code = mns + "" + mnr + "" + now + "3.1";
 																										trans31.child_code = child_code;
 																										transArr.push(trans31)
 																									}
@@ -2411,8 +2405,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																										trans32.from = bankOpWallet;
 																										trans32.to = infraOpWallet;
 																										trans32.amount = infra_share.fixed;
-																										trans32.note =
-																											"Cashier Send Fixed Infra Fee";
+																										trans32.note = "Cashier Send Fixed Infra Fee";
 																										trans32.email1 = bank.email;
 																										trans32.email2 = f4.email;
 																										trans32.mobile1 = bank.mobile;
@@ -2424,15 +2417,9 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																										mns = bank.mobile.slice(-2);
 																										mnr = f4.mobile.slice(-2);
 																										now = new Date().getTime();
-																										child_code =
-																											mns +
-																											"" +
-																											mnr +
-																											"" +
-																											now +
-																											"3.2";
+																										child_code = mns + "" + mnr + "" + now + "3.2";
 																										trans32.child_code = child_code;
-																										transArr.push(trans32)
+																										transArr.push(trans32);
 																									}
 
 																									let trans4 = {};
@@ -2455,17 +2442,13 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																										trans4.user_id = "";
 																										trans4.master_code = master_code;
 																										now = new Date().getTime();
-																										child_code =
-																											mns + "" + mnr + "" + now;
-																										trans4.child_code =
-																											child_code + "4";
+																										child_code = mns + "" + mnr + "" + now;
+																										trans4.child_code = child_code + "4";
 																										transArr.push(trans4)
 																									}
 																									//End
 																									blockchain
-																										.transferThis(
-																											...transArr
-																										)
+																										.transferThis(...transArr)
 																										.then(function (result) {
 																											console.log(
 																												"Result: " + result
