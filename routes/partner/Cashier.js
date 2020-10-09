@@ -1684,6 +1684,8 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
                                                       if (spFeeObject) {
                                                         feeObject = spFeeObject
                                                       }
+                                                      console.log("feeObject:")
+                                                      console.log(feeObject);
                                                       const { claim } = feeObject;
                                                       claimFee = (claim * bankShare) / 100;
                                                     }
@@ -1716,7 +1718,9 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
                                                     transArr.push(trans1)
 
                                                     let trans2 = {};
+                                                    console.log("bankShare: ", bankShare)
                                                     if (bankShare > 0) {
+                                                      console.log("PC: claim transaction initiated");
                                                       trans2.from = bankOpWallet;
                                                       trans2.to = branchOpWallet;
                                                       //Replace the amount with the Claim Revenue below

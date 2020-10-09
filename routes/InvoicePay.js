@@ -1001,7 +1001,7 @@ router.post("/merchantCashier/getInvoicesByCustomerCode", jwtTokenAuth, (req, re
             merchant_id: cashier.merchant_id,
             customer_code: customer_code,
           },
-          async (err, invoices) => {
+          (err, invoices) => {
             if (err) {
               console.log(err);
               var message = err;
@@ -1061,7 +1061,7 @@ router.post("/merchantCashier/getInvoicesByNumber", jwtTokenAuth, (req, res) => 
             merchant_id: cashier.merchant_id,
             $or: [{ number: number }, { reference_invoice: number }],
           },
-          async (err, invoices) => {
+          (err, invoices) => {
             if (err) {
               console.log(err);
               var message = err;
@@ -1118,7 +1118,7 @@ router.post("/merchantCashier/getInvoicesByMobile", jwtTokenAuth, (req, res) => 
       } else {
         Invoice.find(
           { mobile: mobile, is_validated: 1, merchant_id: cashier.merchant_id },
-          async (err, invoices) => {
+          (err, invoices) => {
             if (err) {
               console.log(err);
               var message = err;
@@ -1698,7 +1698,7 @@ router.post("/partnerCashier/getInvoicesForCustomerCode", jwtTokenAuth, (req, re
             merchant_id: merchant_id,
             customer_code: customer_code,
           },
-          async (err, invoices) => {
+          (err, invoices) => {
             if (err) {
               console.log(err);
               var message = err;
@@ -1715,12 +1715,10 @@ router.post("/partnerCashier/getInvoicesForCustomerCode", jwtTokenAuth, (req, re
                 message: "Invoice not found",
               });
             } else {
-
               res.status(200).json({
                 status: 1,
                 invoice: invoices,
               });
-
             }
           }
         );
@@ -1874,7 +1872,7 @@ router.post("/cashier/getInvoicesForCustomerCode", (req, res) => {
             merchant_id: merchant_id,
             customer_code: customer_code,
           },
-          async (err, invoices) => {
+          (err, invoices) => {
             if (err) {
               console.log(err);
               var message = err;
@@ -1933,7 +1931,7 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
             merchant_id: merchant_id,
             $or: [{ number: number }, { reference_invoice: number }],
           },
-          async (err, invoices) => {
+          (err, invoices) => {
             if (err) {
               console.log(err);
               var message = err;
@@ -2326,7 +2324,7 @@ router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
       } else {
         Invoice.find(
           { mobile: user.mobile, merchant_id: merchant_id, is_validated: 1 },
-          async (err, invoices) => {
+          (err, invoices) => {
             if (err) {
               console.log(err);
               var message = err;
@@ -2350,8 +2348,68 @@ router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
   );
 });
 
-router.post("/user/getInvoicesForMobile", jwtTokenAuth, (req, res) => {
-  const { mobile } = req.body;
+router.post("/user/getInvoicesByNumber", jwtTokenAuth, (req, res) => {
+  const { number } = req.body;
+  const jwtusername = req.sign_creds.username;
+  User.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, user) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (user == null) {
+        res.status(200).json({
+          status: 0,
+          message: "User is not Valid.",
+        });
+      } else {
+        Invoice.find(
+          {
+            is_validated: 1,
+            merchant_id: cashier.merchant_id,
+            $or: [{ number: number }, { reference_invoice: number }],
+          },
+          (err, invoices) => {
+            if (err) {
+              console.log(err);
+              var message = err;
+              if (err.message) {
+                message = err.message;
+              }
+              res.status(200).json({
+                status: 0,
+                message: message,
+              });
+            } else if (invoices.length == 0) {
+              res.status(200).json({
+                status: 0,
+                message: "Invoice not found",
+              });
+            } else {
+              res.status(200).json({
+                status: 1,
+                invoice: invoices,
+              });
+            }
+          }
+        );
+      }
+    }
+  );
+});
+
+router.post("/user/getInvoicesForCustomerCode", jwtTokenAuth, (req, res) => {
+  const { customer_code, merchant_id } = req.body;
   const username = req.sign_creds.username;
   User.findOne(
     {
@@ -2375,46 +2433,87 @@ router.post("/user/getInvoicesForMobile", jwtTokenAuth, (req, res) => {
           message: "User is not valid",
         });
       } else {
-        User.findOne({ mobile: mobile }, (err, payee) => {
-          if (err) {
-            console.log(err);
-            var message = err;
-            if (err.message) {
-              message = err.message;
-            }
-            res.status(200).json({
-              status: 0,
-              message: message,
-            });
-          } else if (payee == null) {
-            res.status(200).json({
-              status: 0,
-              message: "User not found",
-            });
-          } else {
-            Invoice.find(
-              { mobile: payee.mobile, is_validated: 1 },
-              async (err, invoices) => {
-                if (err) {
-                  console.log(err);
-                  var message = err;
-                  if (err.message) {
-                    message = err.message;
-                  }
-                  res.status(200).json({
-                    status: 0,
-                    message: message,
-                  });
-                } else {
-                  res.status(200).json({
-                    status: 1,
-                    invoices: invoices,
-                  });
-                }
+        Invoice.find(
+          {
+            is_validated: 1,
+            merchant_id: merchant_id,
+            customer_code: customer_code,
+          },
+          (err, invoices) => {
+            if (err) {
+              console.log(err);
+              var message = err;
+              if (err.message) {
+                message = err.message;
               }
-            );
+              res.status(200).json({
+                status: 0,
+                message: message,
+              });
+            } else if (invoices.length == 0) {
+              res.status(200).json({
+                status: 0,
+                message: "Invoice not found",
+              });
+            } else {
+              res.status(200).json({
+                status: 1,
+                invoice: invoices,
+              });
+            }
           }
+        );
+      }
+    }
+  );
+});
+
+router.post("/user/getInvoicesForMobile", jwtTokenAuth, (req, res) => {
+  const { mobile, merchant_id } = req.body;
+  const username = req.sign_creds.username;
+  User.findOne(
+    {
+      username,
+      status: 1,
+    },
+    function (err, payer) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
         });
+      } else if (payer == null) {
+        res.status(200).json({
+          status: 0,
+          message: "User is not valid",
+        });
+      } else {
+        Invoice.find(
+          { mobile: mobile, merchant_id: merchant_id, is_validated: 1 },
+          (err, invoices) => {
+            if (err) {
+              console.log(err);
+              var message = err;
+              if (err.message) {
+                message = err.message;
+              }
+              res.status(200).json({
+                status: 0,
+                message: message,
+              });
+            } else {
+              res.status(200).json({
+                status: 1,
+                invoices: invoices,
+              });
+            }
+          }
+        );
       }
     }
   );
