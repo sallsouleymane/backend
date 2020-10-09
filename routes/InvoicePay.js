@@ -2349,7 +2349,7 @@ router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/user/getInvoicesByNumber", jwtTokenAuth, (req, res) => {
-  const { number } = req.body;
+  const { number, merchant_id } = req.body;
   const jwtusername = req.sign_creds.username;
   User.findOne(
     {
@@ -2376,7 +2376,7 @@ router.post("/user/getInvoicesByNumber", jwtTokenAuth, (req, res) => {
         Invoice.find(
           {
             is_validated: 1,
-            merchant_id: cashier.merchant_id,
+            merchant_id: merchant_id,
             $or: [{ number: number }, { reference_invoice: number }],
           },
           (err, invoices) => {
