@@ -36,7 +36,16 @@ module.exports.calculateShare = function (
 	infraShare.fixed_amount = Number(infra_share.fixed);
 	console.log("Infra Share: ", infraShare);
 
-	var bankShare = bankFee - infraShare.percentage_amount;
+	var otherBankShare = {
+		percentage_amount: 0,
+		fixed_amount: 0
+	};
+	if (rule.other_bank_share && rule.other_bank_share.percentage > 0) {
+		otherBankShare.percentage_amount = (bankFee * Number(rule.other_bank_share.percentage)) / 100;
+		console.log("Other bank percentage amount: ", otherBankShare.percentage_amount)
+	}
+
+	var bankShare = bankFee - infraShare.percentage_amount - otherBankShare.percentage_amount;
 	console.log("Bank Share: ", bankShare);
 	switch (calculate) {
 		case "bank":
@@ -156,10 +165,8 @@ module.exports.calculateShare = function (
 			console.log("Merchant's Partner Branch Share: ", partnerFee);
 			return partnerFee;
 		case "claimBank":
-			var claimerShare = {};
-			claimerShare.percentage_amount = (bankFee * Number(rule.other_bank_share.percentage)) / 100;
-			claimerShare.fixed_amount = Number(rule.other_bank_share.fixed)
-			console.log("Claimer Bank Share: ", claimerShare);
-			return claimerShare;
+			otherBankShare.fixed_amount = Number(rule.other_bank_share.fixed);
+			console.log("Other Bank Share: ", otherBankShare);
+			return otherBankShare;
 	}
 };

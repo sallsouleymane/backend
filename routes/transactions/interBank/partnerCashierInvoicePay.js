@@ -58,8 +58,8 @@ module.exports = async function (
       };
     } else {
       const bankFee = calculateShare("bank", amount, rule1.fee);
-      const partnerFeeShare = calculateShare("partner", amount, rule1.fee, rule2.fee, branch.code);
-      const partnerCommShare = calculateShare("partner", amount, rule1.comm, rule2.comm, branch.code);
+      const partnerFeeShare = calculateShare("partnerBranch", amount, rule1.fee, rule2.fee, branch.code);
+      const partnerCommShare = calculateShare("partnerBranch", amount, rule1.comm, rule2.comm, branch.code);
 
       var transfer = {};
       transfer.amount = amount;
