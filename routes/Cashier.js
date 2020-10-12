@@ -26,6 +26,87 @@ const CashierLedger = require("../models/CashierLedger");
 const CashierTransfer = require("../models/CashierTransfer");
 const Merchant = require("../models/merchant/Merchant");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
+const PartnerBranch = require("../models/partner/Branch")
+
+router.post("/cashier/sendToOp", function (req, res) {
+	const { token, wallet_id } = req.body;
+	Cashier.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				Branch.findOne({ _id: cashier.branch_id }, (err, branch) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (cashier == null) {
+						res.status(200).json({
+							status: 0,
+							message:
+								"Token changed or user not valid. Try to login again or contact system administrator.",
+						});
+					} else {
+						PartnerBranch.findOne({ wallet_id: wallet_id }, (err, pbranch) => {
+							const trans = {
+								from: bbranch.wallet_id,
+								to: pbranch.wallet_id,
+								amount: amount,
+								note: "Transfer to Operational Wallet",
+								email1: bbranch.email,
+								email2: pbranch.email,
+								mobile1: bbranch.mobile,
+								mobile2: pbranch.mobile,
+								from_name: bbranch.name,
+								to_name: pbranch.name,
+								user_id: cashier._id,
+								master_code: master_code,
+								child_code: master_code + "1"
+							}
+							blockchain.initiateTransfer(trans).then((result) => {
+								if (result.status == 1) {
+									res.status(200).json({
+										status: 1,
+										message: result.message,
+									});
+								} else {
+									res.status(200).json({
+										status: 0,
+										message: result.message,
+									});
+								}
+							})
+						});
+					}
+				});
+			}
+
+		});
+});
 
 router.post("/cashier/getTransactionHistory", function (req, res) {
 	const { token } = req.body;
@@ -1789,11 +1870,11 @@ router.post("/cashierSendMoney", function (req, res) {
 																							trans31.amount = infraShare;
 																							trans31.note =
 																								"Cashier Send Money Infra Fee";
-																							trans31.email1 = f2.email;
+																							trans31.email1 = f3.email;
 																							trans31.email2 = f4.email;
-																							trans31.mobile1 = f2.mobile;
+																							trans31.mobile1 = f3.mobile;
 																							trans31.mobile2 = f4.mobile;
-																							trans31.from_name = f2.name;
+																							trans31.from_name = f3.name;
 																							trans31.to_name = f4.name;
 																							trans31.user_id = "";
 																							trans31.master_code = master_code;
@@ -1813,11 +1894,11 @@ router.post("/cashierSendMoney", function (req, res) {
 																							trans32.amount = infra_share.fixed;
 																							trans32.note =
 																								"Cashier Send Money Infra Fee";
-																							trans32.email1 = f2.email;
+																							trans32.email1 = f3.email;
 																							trans32.email2 = f4.email;
-																							trans32.mobile1 = f2.mobile;
+																							trans32.mobile1 = f3.mobile;
 																							trans32.mobile2 = f4.mobile;
-																							trans32.from_name = f2.name;
+																							trans32.from_name = f3.name;
 																							trans32.to_name = f4.name;
 																							trans32.user_id = "";
 																							trans32.master_code = master_code;
@@ -1841,12 +1922,12 @@ router.post("/cashierSendMoney", function (req, res) {
 																							// trans4.amount = 1 ;
 																							trans4.note =
 																								"Bank Send Revenue Branch for Sending money";
-																							trans4.email1 = f2.email;
-																							trans4.email2 = f3.email;
-																							trans4.mobile1 = f2.mobile;
-																							trans4.mobile2 = f3.mobile;
-																							trans4.from_name = f2.name;
-																							trans4.to_name = f3.name;
+																							trans4.email1 = f3.email;
+																							trans4.email2 = f2.email;
+																							trans4.mobile1 = f3.mobile;
+																							trans4.mobile2 = f2.mobile;
+																							trans4.from_name = f3.name;
+																							trans4.to_name = f2.name;
 																							trans4.user_id = "";
 																							trans4.master_code = master_code;
 																							now = new Date().getTime();
