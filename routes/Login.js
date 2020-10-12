@@ -710,6 +710,7 @@ router.post("/user/login", (req, res) => {
 				message: "User account not found. Please signup",
 			});
 		} else {
+			var bank_id = null;
 			Bank.findOne({ name: user.bank }, (err, bank) => {
 				if (err) {
 					console.log(err);
@@ -721,18 +722,16 @@ router.post("/user/login", (req, res) => {
 						status: 0,
 						message: message,
 					});
-				} else if (bank == null) {
-					return res.status(200).json({
-						status: 0,
-						message: "Bank not found",
-					});
 				} else {
+					if (bank) {
+						bank_id = bank._id
+					}
 					let sign_creds = { username: username, password: password };
 					const token = jwtsign(sign_creds);
 					res.status(200).json({
 						status: 1,
 						user: user,
-						bank_id: bank._id,
+						bank_id: bank_id,
 						token: token,
 					});
 				}
