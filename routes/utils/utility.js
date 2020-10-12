@@ -40,9 +40,16 @@ module.exports.calculateShare = function (
 		percentage_amount: 0,
 		fixed_amount: 0
 	};
+	var bankBShare = 0;
 	if (rule.other_bank_share && rule.other_bank_share.percentage > 0) {
 		otherBankShare.percentage_amount = (bankFee * Number(rule.other_bank_share.percentage)) / 100;
 		console.log("Other bank percentage amount: ", otherBankShare.percentage_amount)
+		bankBShare = bankBShare + otherBankShare.percentage_amount;
+	}
+	if (rule.other_bank_share && rule.other_bank_share.fixed > 0) {
+		otherBankShare.fixed_amount = Number(rule.other_bank_share.fixed) / 100;
+		console.log("Other bank fixed amount: ", otherBankShare.fixed_amount);
+		bankBShare = bankBShare + otherBankShare.fixed_amount;
 	}
 
 	var bankShare = bankFee - infraShare.percentage_amount - otherBankShare.percentage_amount;
@@ -55,6 +62,7 @@ module.exports.calculateShare = function (
 		case "claimBranch":
 			if (rule2.revenue_sharing_rule.branch_share) {
 				rule = rule2
+				bankShare = bankBShare;
 			}
 			console.log(rule.revenue_sharing_rule.branch_share);
 			console.log(rule.revenue_sharing_rule.specific_branch_share)
@@ -165,8 +173,6 @@ module.exports.calculateShare = function (
 			console.log("Merchant's Partner Branch Share: ", partnerFee);
 			return partnerFee;
 		case "claimBank":
-			otherBankShare.fixed_amount = Number(rule.other_bank_share.fixed);
-			console.log("Other Bank Share: ", otherBankShare);
 			return otherBankShare;
 	}
 };
