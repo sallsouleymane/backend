@@ -1208,12 +1208,12 @@ router.post("/partnerCashier/sendMoney", jwtTokenAuth, function (req, res) {
                                                   );
                                                   trans4.note =
                                                     "Bank Send Revenue Branch for Sending money";
-                                                  trans4.email1 = branch.email;
-                                                  trans4.email2 = bank.email;
-                                                  trans4.mobile1 = branch.mobile;
-                                                  trans4.mobile2 = bank.mobile;
-                                                  trans4.from_name = branch.name;
-                                                  trans4.to_name = bank.name;
+                                                  trans4.email1 = bank.email;
+                                                  trans4.email2 = branch.email;
+                                                  trans4.mobile1 = bank.mobile;
+                                                  trans4.mobile2 = branch.mobile;
+                                                  trans4.from_name = bank.name;
+                                                  trans4.to_name = branch.name;
                                                   trans4.user_id = "";
                                                   trans4.master_code = master_code;
                                                   now = new Date().getTime();
