@@ -230,6 +230,38 @@ router.post("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
 	}
 });
 
+router.post("/bank/getRevenueFeeForInterBank", async (req, res) => {
+	try {
+		const { token, type, bank_id } = req.body;
+		var result = await Bank.findOne({ token: token });
+		if (result == null) {
+			throw new Error(
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+		}
+		var ib_type;
+		if (type == "IBNWNW") {
+			ib_type = "Non Wallet to Non Wallet"
+		} else if (type == "IBWNW") {
+			ib_type = "Wallet to Non Wallet"
+		} else if (type == "IBWW") {
+			ib_type = "Wallet to Wallet"
+		} else if (type == "IBNWW") {
+			ib_type = "Non Wallet to Wallet"
+		}
+		const fee = await Fee.findOne({ trans_type: ib_type, bank_id: bank_id });
+		if (fee == null) throw new Error("No Fee Rule found");
+
+		res.send({
+			status: 1,
+			fee: fee.revenue_sharing_rule,
+			infra_status: fee.status,
+		});
+	} catch (err) {
+		res.status(200).send({ status: 0, message: err.message });
+	}
+});
+
 router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
 	try {
 		const { token, revenue_sharing_rule } = req.body;
