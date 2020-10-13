@@ -172,10 +172,33 @@ router.post("/bank/generateOTP", function (req, res) {
 									}
 								});
 							} else {
-								res.status(200).json({
-									status: 0,
-									message: "Duplicate Entry",
-								});
+								if (name == partner.name) {
+									res.status(200).json({
+										status: 0,
+										message: "Name already taken",
+									});
+								}
+								else if (email == partner.email) {
+									res.status(200).json({
+										status: 0,
+										message: "Email already taken",
+									});
+								} else if (mobile == partner.mobile) {
+									res.status(200).json({
+										status: 0,
+										message: "Mobile already taken",
+									});
+								} else if (code == partner.code) {
+									res.status(200).json({
+										status: 0,
+										message: "Code already taken",
+									});
+								} else {
+									res.status(200).json({
+										status: 0,
+										message: "Duplicate entry",
+									});
+								}
 							}
 						}
 					);
