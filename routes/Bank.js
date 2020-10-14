@@ -262,6 +262,54 @@ router.post("/bank/getRevenueFeeForInterBank", async (req, res) => {
 	}
 });
 
+router.post("/bank/updateRevenueSharingRules", async (req, res) => {
+	try {
+		const { token, type, bank_id, revenue_sharing_rule } = req.body;
+
+		var result = await Bank.findOne({ token: token });
+		if (result == null) {
+			throw new Error("Token is invalid");
+		}
+		var ib_type;
+		if (type == "IBNWNW") {
+			ib_type = "Non Wallet to Non Wallet"
+		} else if (type == "IBWNW") {
+			ib_type = "Wallet to Non Wallet"
+		} else if (type == "IBWW") {
+			ib_type = "Wallet to Wallet"
+		} else if (type == "IBNWW") {
+			ib_type = "Non Wallet to Wallet"
+		}
+		result = await Fee.findOneAndUpdate(
+			{
+				trans_type: ib_type,
+				bank_id: bank_id
+			},
+			{
+				$set: {
+					"revenue_sharing_rule.branch_share.claim":
+						revenue_sharing_rule.branch_share.claim,
+					"revenue_sharing_rule.branch_share.send":
+						revenue_sharing_rule.branch_share.send,
+					"revenue_sharing_rule.specific_branch_share":
+						revenue_sharing_rule.specific_branch_share,
+					"revenue_sharing_rule.partner_share.claim": revenue_sharing_rule.partner_share.claim,
+					"revenue_sharing_rule.partner_share.send": revenue_sharing_rule.partner_share.send,
+					"revenue_sharing_rule.specific_partner_share":
+						revenue_sharing_rule.specific_partner_share,
+				},
+			}
+		);
+		if (result == null) {
+			throw new Error("Not Found");
+		}
+
+		res.send({ status: 1 });
+	} catch (err) {
+		res.send({ status: 0, message: err.message });
+	}
+});
+
 router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
 	try {
 		const { token, revenue_sharing_rule } = req.body;
