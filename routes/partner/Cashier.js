@@ -1727,12 +1727,12 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
                                                       trans2.amount = claimFee;
                                                       trans2.note =
                                                         "Revenue for claim Money";
-                                                      trans2.email1 = branch.email;
-                                                      trans2.email2 = bank.email;
-                                                      trans2.mobile1 = branch.mobile;
-                                                      trans2.mobile2 = bank.mobile;
-                                                      trans2.from_name = branch.name;
-                                                      trans2.to_name = bank.name;
+                                                      trans2.email1 = bank.email;
+                                                      trans2.email2 = branch.email;
+                                                      trans2.mobile1 = bank.mobile;
+                                                      trans2.mobile2 = branch.mobile;
+                                                      trans2.from_name = bank.name;
+                                                      trans2.to_name = branch.name;
                                                       trans2.user_id = "";
                                                       trans2.master_code = master_code;
                                                       trans2.child_code =
