@@ -19,7 +19,7 @@ module.exports = async function (
       branch.code + "_partnerbranch_operational@" + bank.name;
     var creator = merchant.creator == 1 ? "inframerchant" : "merchant";
     const merchantOpWallet =
-      merchant.username + "_" + creator + "_operational@" + bank.name;
+      merchant.username + "_" + creator + "_operational@" + merchantBank.name;
 
     // check branch operational wallet balance
     var balance = await blockchain.getBalance(branchOpWallet);
