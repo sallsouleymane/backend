@@ -101,6 +101,7 @@ module.exports.calculateShare = function (
 		case "claimPartner":
 			if (rule2.revenue_sharing_rule.partner_share) {
 				rule = rule2
+				bankShare = bankBShare;
 			}
 			console.log(rule.revenue_sharing_rule.partner_share);
 			console.log(rule.revenue_sharing_rule.specific_partner_share)
