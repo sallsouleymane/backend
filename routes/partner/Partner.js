@@ -640,6 +640,7 @@ router.post("/partner/addUser", jwtTokenAuth, (req, res) => {
         }
     );
 });
+
 router.post("/partner/editUser", jwtTokenAuth, (req, res) => {
     const {
         name,
@@ -874,38 +875,44 @@ router.post("/partner/addCashier", jwtTokenAuth, (req, res) => {
                         "Token changed or user not valid. Try to login again or contact system administrator.",
                 });
             } else {
-                data.name = name;
-                data.code = code;
-                data.credit_limit = credit_limit;
-                data.working_from = working_from;
-                data.working_to = working_to;
-                data.per_trans_amt = per_trans_amt;
-                data.max_trans_amt = max_trans_amt;
-                data.max_trans_count = max_trans_count;
-                data.partner_id = partner._id;
-                data.branch_id = branch_id;
-                data.bank_id = partner.bank_id;
-                if (cashier_length == 0) {
-                    data.central = true;
-                }
-
-                data.save((err, d) => {
-                    if (err) {
-                        console.log(err);
-                        var message = err;
-                        if (err.message) {
-                            message = err.message;
-                        }
-                        res.status(200).json({
-                            status: 0,
-                            message: message,
-                        });
-                    } else {
-
-                        Partner.updateOne(
-                            { _id: partner._id },
-                            { $inc: { total_cashiers: 1 } },
-                            (err) => {
+                PartnerBranch.findOne(
+                    {
+                        _id: branch_id,
+                    },
+                    function (err, branch) {
+                        if (err) {
+                            console.log(err);
+                            var message = err;
+                            if (err.message) {
+                                message = err.message;
+                            }
+                            res.status(200).json({
+                                status: 0,
+                                message: message,
+                            });
+                        } else if (branch == null) {
+                            res.status(200).json({
+                                status: 0,
+                                message: message,
+                            });
+                        } else {
+                            data.name = name;
+                            data.code = code;
+                            data.credit_limit = credit_limit;
+                            data.working_from = working_from;
+                            data.working_to = working_to;
+                            data.per_trans_amt = per_trans_amt;
+                            data.max_trans_amt = max_trans_amt;
+                            data.max_trans_count = max_trans_count;
+                            data.partner_id = partner._id;
+                            data.branch_id = branch_id;
+                            data.bank_id = partner.bank_id;
+                            if (cashier_length == 0) {
+                                data.central = true;
+                                data.opening_balance = branch.cash_in_hand;
+                                data.cash_in_hand = branch.cash_in_hand;
+                            }
+                            data.save((err, d) => {
                                 if (err) {
                                     console.log(err);
                                     var message = err;
@@ -917,19 +924,35 @@ router.post("/partner/addCashier", jwtTokenAuth, (req, res) => {
                                         message: message,
                                     });
                                 } else {
-                                    PartnerBranch.findByIdAndUpdate(
-                                        branch_id,
+                                    Partner.updateOne(
+                                        { _id: partner._id },
                                         { $inc: { total_cashiers: 1 } },
-                                        function (e) {
-                                            return res.status(200).json({ status: 1, data: data });
-                                        }
-                                    );
+                                        (err) => {
+                                            if (err) {
+                                                console.log(err);
+                                                var message = err;
+                                                if (err.message) {
+                                                    message = err.message;
+                                                }
+                                                res.status(200).json({
+                                                    status: 0,
+                                                    message: message,
+                                                });
+                                            } else {
+                                                PartnerBranch.updateOne(
+                                                    { _id: branch._id },
+                                                    { $inc: { total_cashiers: 1 } },
+                                                    function (e) {
+                                                        return res.status(200).json({ status: 1, data: data });
+                                                    }
+                                                );
 
+                                            }
+                                        });
                                 }
-
                             });
-                    }
-                });
+                        }
+                    });
             }
         }
     );
@@ -1076,9 +1099,11 @@ router.post("/partner/addBranch", jwtTokenAuth, (req, res) => {
                 });
             } else {
                 Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
+                    const op_wallet = code + "_partnerbranch_operational@" + bank.name;
+                    const master_wallet = code + "_partnerbranch_master@" + bank.name;
                     blockchain.createWallet([
-                        code + "_partnerbranch_operational@" + bank.name,
-                        code + "_partnerbranch_master@" + bank.name,
+                        op_wallet,
+                        master_wallet,
                     ]).then(function (result) {
                         if (result != "" && !result.includes("wallet already exists")) {
                             console.log(result);
@@ -1108,6 +1133,7 @@ router.post("/partner/addBranch", jwtTokenAuth, (req, res) => {
                             data.password = makeid(10);
                             data.working_from = working_from;
                             data.working_to = working_to;
+                            data.op_wallet_id = op_wallet;
                             let partnerName = partner.name;
 
                             data.save((err) => {
