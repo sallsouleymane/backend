@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
-const MerchantFeeSchema = new mongoose.Schema({
+const MerchantRuleSchema = new mongoose.Schema({
 	merchant_id: { type: String, required: true },
 	bank_id: { type: String, required: true },
 	name: { type: String, required: true },
 	status: { type: Number, required: true, default: 0 },
 	active: { type: Number, required: true, default: 0 },
-	type: { type: Number, required: true },
-	type_desc: { type: String, required: false, default: "0-Wallet, 1-Non-Wallet 2-Merchant" },
+	type: { type: String, required: true },
+	type_desc: { type: String, required: false, default: "WM-F, WM-C, NWM-F, NWM-C, M-F, M-C" },
 	description: { type: String, required: false },
 	rule_edit_status: { type: Number, required: true, default: 0 },
 	infra_share_edit_status: { type: Number, required: true, default: 0 },
@@ -24,22 +24,22 @@ const MerchantFeeSchema = new mongoose.Schema({
 		fixed: { type: Number, required: true, default: 0 },
 		percentage: { type: Number, required: true, default: 0 },
 	},
-	specific_partners_share: [
+	specific_branch_share: [
 		{
 			code: { type: String, required: false },
 			name: { type: String, required: false },
 			percentage: { type: Number, required: false },
 		},
 	],
-	partner_share_percentage: { type: String, required: true, default: 0 },
-	specific_partners_branch_share: [
+	branch_share: { type: String, required: true, default: 0 },
+	specific_partner_share: [
 		{
 			code: { type: String, required: false },
 			name: { type: String, required: false },
 			percentage: { type: Number, required: false },
 		},
 	],
-	partner_branch_share: { type: String, required: true, default: 0 },
+	partner_share: { type: String, required: true, default: 0 },
 	edited: {
 		infra_share: {
 			fixed: { type: Number, required: false },
@@ -60,4 +60,4 @@ const MerchantFeeSchema = new mongoose.Schema({
 		],
 	},
 });
-module.exports = mongoose.model("MerchantFee", MerchantFeeSchema);
+module.exports = mongoose.model("MerchantRule", MerchantRuleSchema);

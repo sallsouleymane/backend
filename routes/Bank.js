@@ -28,6 +28,7 @@ const Merchant = require("../models/merchant/Merchant");
 const FailedTX = require("../models/FailedTXLedger");
 const Partner = require("../models/partner/Partner")
 const Document = require("../models/Document");
+const Infra = require("../models/Infra");
 
 router.post("/bank/transferMasterToOp", function (req, res) {
 	const { token, amount } = req.body;
@@ -514,11 +515,8 @@ router.post("/bankActivate", function (req, res) {
 							result: result,
 						});
 					} else {
-						Bank.findByIdAndUpdate(
-							bank._id,
-							{
-								status: 1,
-							},
+						Infra.findByIdAndUpdate(infra._id,
+							{ op_wallet_id: "infra_operational@" + bank.name },
 							(err) => {
 								if (err) {
 									console.log(err);
@@ -531,13 +529,33 @@ router.post("/bankActivate", function (req, res) {
 										message: message,
 									});
 								} else {
-									res.status(200).json({
-										status: "activated",
-										walletStatus: result,
-									});
+									Bank.findByIdAndUpdate(
+										bank._id,
+										{
+											status: 1,
+											op_wallet_id: "operational@" + bank.name
+										},
+										(err) => {
+											if (err) {
+												console.log(err);
+												var message = err;
+												if (err.message) {
+													message = err.message;
+												}
+												res.status(200).json({
+													status: 0,
+													message: message,
+												});
+											} else {
+												res.status(200).json({
+													status: "activated",
+													walletStatus: result,
+												});
+											}
+										}
+									);
 								}
-							}
-						);
+							})
 					}
 				});
 			}

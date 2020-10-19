@@ -71,36 +71,40 @@ router.post("/cashier/sendToOp", function (req, res) {
 								"Token changed or user not valid. Try to login again or contact system administrator.",
 						});
 					} else {
-						PartnerBranch.findOne({ wallet_id: wallet_id }, (err, pbranch) => {
-							const trans = {
-								from: bbranch.wallet_id,
-								to: pbranch.wallet_id,
-								amount: amount,
-								note: "Transfer to Operational Wallet",
-								email1: bbranch.email,
-								email2: pbranch.email,
-								mobile1: bbranch.mobile,
-								mobile2: pbranch.mobile,
-								from_name: bbranch.name,
-								to_name: pbranch.name,
-								user_id: cashier._id,
-								master_code: master_code,
-								child_code: master_code + "1"
-							}
-							blockchain.initiateTransfer(trans).then((result) => {
-								if (result.status == 1) {
-									res.status(200).json({
-										status: 1,
-										message: result.message,
-									});
-								} else {
-									res.status(200).json({
-										status: 0,
-										message: result.message,
-									});
+						Bank.findOne({ _id: branch.bank_id }, (err, bank) => {
+							PartnerBranch.findOne({ op_wallet_id: wallet_id }, (err, pbranch) => {
+								const from_wallet = branch.bcode + "_operational@" + bank.name
+								const trans = {
+									from: from_wallet,
+									to: wallet_id,
+									amount: amount,
+									note: "Transfer to Operational Wallet",
+									email1: branch.email,
+									email2: pbranch.email,
+									mobile1: branch.mobile,
+									mobile2: pbranch.mobile,
+									from_name: branch.name,
+									to_name: pbranch.name,
+									user_id: cashier._id,
+									master_code: master_code,
+									child_code: master_code + "1"
 								}
+								blockchain.initiateTransfer(trans).then((result) => {
+									if (result.status == 1) {
+										res.status(200).json({
+											status: 1,
+											message: result.message,
+										});
+									} else {
+										res.status(200).json({
+											status: 0,
+											message: result.message,
+										});
+									}
+								})
 							})
-						});
+
+						})
 					}
 				});
 			}
@@ -148,7 +152,7 @@ router.post("/cashier/getTransactionHistory", function (req, res) {
 						res.status(200).json({
 							status: 0,
 							message:
-								"Token changed or user not valid. Try to login again or contact system administrator.",
+								"Branch not found.",
 						});
 					} else {
 						Bank.findOne({ _id: branch.bank_id }, async (err, bank) => {
@@ -166,7 +170,7 @@ router.post("/cashier/getTransactionHistory", function (req, res) {
 								res.status(200).json({
 									status: 0,
 									message:
-										"Token changed or user not valid. Try to login again or contact system administrator.",
+										"Bank not found.",
 								});
 							} else {
 								const wallet = branch.bcode + "_operational@" + bank.name;
@@ -2840,13 +2844,6 @@ router.post("/cashierSendMoneyPending", function (req, res) {
 });
 
 router.post("/cashierTransferMoney", function (req, res) {
-	var today = new Date();
-	today = today.toISOString();
-	var s = today.split("T");
-	var start = s[0] + "T00:00:00.000Z";
-	var end = s[0] + "T23:59:59.999Z";
-	var now = new Date().getTime();
-
 	const { otpId, token, otp, amount, receiver_id, receiver_name } = req.body;
 
 	// const transactionCode = makeid(8);

@@ -2611,14 +2611,9 @@ router.get("/clearDb", function (req, res) {
     db.dropCollection("merchants", function () { });
   }
 
-  if (type == "all" || type == "merchantfee") {
+  if (type == "all" || type == "merchantrule") {
     matchfound = true;
-    db.dropCollection("merchantfees", function () { });
-  }
-
-  if (type == "all" || type == "commission") {
-    matchfound = true;
-    db.dropCollection("bankcommissions", function () { });
+    db.dropCollection("merchantrules", function () { });
   }
 
   if (type == "all" || type == "failedtx") {
@@ -2654,6 +2649,31 @@ router.get("/clearDb", function (req, res) {
   if (type == "all" || type == "zone") {
     matchfound = true;
     db.dropCollection("zones", function () { });
+  }
+
+  if (type == "all" || type == "partnerbranch") {
+    matchfound = true;
+    db.dropCollection("partnerbranches", function () { });
+  }
+
+  if (type == "all" || type == "partneruser") {
+    matchfound = true;
+    db.dropCollection("partnerusers", function () { });
+  }
+
+  if (type == "all" || type == "partnercashier") {
+    matchfound = true;
+    db.dropCollection("partnercashiers", function () { });
+  }
+
+  if (type == "all" || type == "merchantbranch") {
+    matchfound = true;
+    db.dropCollection("merchantbranches", function () { });
+  }
+
+  if (type == "all" || type == "merchantuser") {
+    matchfound = true;
+    db.dropCollection("merchantusers", function () { });
   }
 
   res.status(200).json({

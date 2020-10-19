@@ -30,6 +30,85 @@ const Merchant = require("../../models/merchant/Merchant");
 const MerchantSettings = require("../../models/merchant/MerchantSettings");
 const User = require("../../models/User");
 
+router.post("/partnerCashier/sendToOp", jwtTokenAuth, function (req, res) {
+  const { wallet_id } = req.body;
+  const jwtusername = req.sign_creds.username;
+  PartnerCashier.findOne(
+    {
+      username: jwtusername,
+      status: 1,
+    },
+    function (err, cashier) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
+        }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (cashier == null) {
+        res.status(200).json({
+          status: 0,
+          message:
+            "Token changed or user not valid. Try to login again or contact system administrator.",
+        });
+      } else {
+        PartnerBranch.findOne({ op_wallet_id: wallet_id }, (err, pbranch) => {
+          if (err) {
+            console.log(err);
+            var message = err;
+            if (err.message) {
+              message = err.message;
+            }
+            res.status(200).json({
+              status: 0,
+              message: message,
+            });
+          } else if (cashier == null) {
+            res.status(200).json({
+              status: 0,
+              message:
+                "Partner Branh not found.",
+            });
+          } else {
+            const from_wallet = branch.bcode + "_operational@" + bank.name
+            const trans = {
+              from: from_wallet,
+              to: wallet_id,
+              amount: amount,
+              note: "Transfer to Operational Wallet",
+              email1: branch.email,
+              email2: pbranch.email,
+              mobile1: branch.mobile,
+              mobile2: pbranch.mobile,
+              from_name: branch.name,
+              to_name: pbranch.name,
+              user_id: cashier._id,
+              master_code: master_code,
+              child_code: master_code + "1"
+            }
+            blockchain.initiateTransfer(trans).then((result) => {
+              if (result.status == 1) {
+                res.status(200).json({
+                  status: 1,
+                  message: result.message,
+                });
+              } else {
+                res.status(200).json({
+                  status: 0,
+                  message: result.message,
+                });
+              }
+            })
+          }
+        })
+      }
+    });
+});
+
 router.post("/partnerCashier/getUserByMobile", jwtTokenAuth, function (req, res) {
   const { mobile } = req.body;
   const jwtusername = req.sign_creds.username;

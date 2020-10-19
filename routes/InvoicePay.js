@@ -20,14 +20,14 @@ const iBpartnerCashierInvoicePay = require("./transactions/interBank/partnerCash
 const Bank = require("../models/Bank");
 const Branch = require("../models/Branch");
 const Infra = require("../models/Infra");
-const MerchantFee = require("../models/merchant/MerchantFee");
+const MerchantRule = require("../models/merchant/MerchantRule");
+const IBMerchantRule = require("../models/merchant/InterBankRule");
 const MerchantBranch = require("../models/merchant/MerchantBranch");
 const MerchantCashier = require("../models/merchant/MerchantCashier");
 const Merchant = require("../models/merchant/Merchant");
 const Cashier = require("../models/Cashier");
 const User = require("../models/User");
 const Invoice = require("../models/merchant/Invoice");
-const Commission = require("../models/merchant/BankCommission");
 const InvoiceGroup = require("../models/merchant/InvoiceGroup");
 const Partner = require("../models/partner/Partner");
 const PartnerCashier = require("../models/partner/Cashier");
@@ -76,16 +76,16 @@ router.post("/user/interBank/payInvoice", jwtTokenAuth, (req, res) => {
           } else if (bank == null) {
             res.status(200).json({
               status: 0,
-              message: "Inter Bank Fee rule not found",
+              message: "Bank not found",
             });
           } else {
             var find = {
-              bank_id: bank._id,
+              merchant_id: merchant_id,
               type: "IBWM-F",
               status: 1,
               active: 1
             }
-            InterBankRule.findOne(find, (err, fee) => {
+            IBMerchantRule.findOne(find, (err, fee) => {
               if (err) {
                 console.log(err);
                 var message = err;
@@ -103,12 +103,12 @@ router.post("/user/interBank/payInvoice", jwtTokenAuth, (req, res) => {
                 });
               } else {
                 find = {
-                  bank_id: bank._id,
+                  merchant_id: merchant_id,
                   type: "IBWM-C",
                   status: 1,
                   active: 1
                 }
-                InterBankRule.findOne(find, async (err, comm) => {
+                IBMerchantRule.findOne(find, async (err, comm) => {
                   if (err) {
                     console.log(err);
                     var message = err;
@@ -333,12 +333,12 @@ router.post("/partnerCashier/interBank/payInvoice", jwtTokenAuth, (req, res) => 
       } else {
         Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
           var find = {
-            bank_id: cashier.bank_id,
+            merchant_id: merchant_id,
             type: "IBNWM-F",
             status: 1,
             active: 1
           }
-          InterBankRule.findOne(find, (err, fee1) => {
+          IBMerchantRule.findOne(find, (err, fee1) => {
             if (err) {
               console.log(err);
               var message = err;
@@ -356,12 +356,12 @@ router.post("/partnerCashier/interBank/payInvoice", jwtTokenAuth, (req, res) => 
               });
             } else {
               find = {
-                bank_id: cashier.bank_id,
+                merchant_id: merchant_id,
                 type: "IBNWM-C",
                 status: 1,
                 active: 1
               }
-              InterBankRule.findOne(find, (err, comm1) => {
+              IBMerchantRule.findOne(find, (err, comm1) => {
                 if (err) {
                   console.log(err);
                   var message = err;
@@ -378,8 +378,8 @@ router.post("/partnerCashier/interBank/payInvoice", jwtTokenAuth, (req, res) => 
                     message: "Inter Bank Commission rule not found",
                   });
                 } else {
-                  MerchantFee.findOne(
-                    { merchant_id: merchant_id, type: 1 },
+                  MerchantRule.findOne(
+                    { merchant_id: merchant_id, type: "NWM-F", status: 1, active: 1 },
                     (err, fee2) => {
                       if (err) {
                         console.log(err);
@@ -397,8 +397,8 @@ router.post("/partnerCashier/interBank/payInvoice", jwtTokenAuth, (req, res) => 
                           message: "Fee rule not found",
                         });
                       } else {
-                        Commission.findOne(
-                          { merchant_id: merchant_id, type: 1 },
+                        MerchantRule.findOne(
+                          { merchant_id: merchant_id, type: "NWM-C", status: 1, active: 1 },
                           async (err, comm2) => {
                             if (err) {
                               console.log(err);
@@ -664,12 +664,12 @@ router.post("/cashier/interBank/payInvoice", (req, res) => {
         });
       } else {
         var find = {
-          bank_id: cashier.bank_id,
+          merchant_id: merchant_id,
           type: "IBNWM-F",
           status: 1,
           active: 1
         }
-        InterBankRule.findOne(find, (err, fee1) => {
+        IBMerchantRule.findOne(find, (err, fee1) => {
           if (err) {
             console.log(err);
             var message = err;
@@ -687,12 +687,12 @@ router.post("/cashier/interBank/payInvoice", (req, res) => {
             });
           } else {
             find = {
-              bank_id: cashier.bank_id,
+              merchant_id: merchant_id,
               type: "IBNWM-C",
               status: 1,
               active: 1
             }
-            InterBankRule.findOne(find, (err, comm1) => {
+            IBMerchantRule.findOne(find, (err, comm1) => {
               if (err) {
                 console.log(err);
                 var message = err;
@@ -709,8 +709,8 @@ router.post("/cashier/interBank/payInvoice", (req, res) => {
                   message: "Inter Bank Commission rule not found",
                 });
               } else {
-                MerchantFee.findOne(
-                  { merchant_id: merchant_id, type: 1 },
+                MerchantRule.findOne(
+                  { merchant_id: merchant_id, type: "NWM-F", status: 1, active: 1 },
                   (err, fee2) => {
                     if (err) {
                       console.log(err);
@@ -728,8 +728,8 @@ router.post("/cashier/interBank/payInvoice", (req, res) => {
                         message: "Fee rule not found",
                       });
                     } else {
-                      Commission.findOne(
-                        { merchant_id: merchant_id, type: 1 },
+                      MerchantRule.findOne(
+                        { merchant_id: merchant_id, type: "NWM-C", status: 1, active: 1 },
                         async (err, comm2) => {
                           if (err) {
                             console.log(err);
@@ -1188,8 +1188,8 @@ router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
                   "Cashier's Merchant not found",
               });
             } else {
-              Commission.findOne(
-                { merchant_id: merchant._id, type: 2 },
+              MerchantRule.findOne(
+                { merchant_id: merchant._id, type: "M-C", status: 1, active: 1 },
                 async (err, comm) => {
                   if (err) {
                     console.log(err);
@@ -1397,8 +1397,8 @@ router.post("/partnerCashier/payInvoice", jwtTokenAuth, (req, res) => {
         });
       } else {
         Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
-          MerchantFee.findOne(
-            { merchant_id: merchant_id, type: 1 },
+          MerchantRule.findOne(
+            { merchant_id: merchant_id, type: "NWM-F", status: 1, active: 1 },
             (err, fee) => {
               if (err) {
                 console.log(err);
@@ -1416,8 +1416,8 @@ router.post("/partnerCashier/payInvoice", jwtTokenAuth, (req, res) => {
                   message: "Fee rule not found",
                 });
               } else {
-                Commission.findOne(
-                  { merchant_id: merchant_id, type: 1 },
+                MerchantRule.findOne(
+                  { merchant_id: merchant_id, type: "NWM-C", status: 1, active: 1 },
                   async (err, comm) => {
                     if (err) {
                       console.log(err);
@@ -2036,8 +2036,8 @@ router.post("/cashier/payInvoice", (req, res) => {
             "Token changed or user not valid. Try to login again or contact system administrator.",
         });
       } else {
-        MerchantFee.findOne(
-          { merchant_id: merchant_id, type: 1 },
+        MerchantRule.findOne(
+          { merchant_id: merchant_id, type: "NWM-F", status: 1, active: 1 },
           (err, fee) => {
             if (err) {
               console.log(err);
@@ -2055,8 +2055,8 @@ router.post("/cashier/payInvoice", (req, res) => {
                 message: "Fee rule not found",
               });
             } else {
-              Commission.findOne(
-                { merchant_id: merchant_id, type: 1 },
+              MerchantRule.findOne(
+                { merchant_id: merchant_id, type: "NWM-C", status: 1, active: 1 },
                 async (err, comm) => {
                   if (err) {
                     console.log(err);
@@ -2545,8 +2545,8 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
           message: "User is not valid",
         });
       } else {
-        MerchantFee.findOne(
-          { merchant_id: merchant_id, type: 0 },
+        MerchantRule.findOne(
+          { merchant_id: merchant_id, type: "WM-F", status: 1, active: 1 },
           (err, fee) => {
             if (err) {
               console.log(err);
@@ -2564,8 +2564,8 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
                 message: "Fee rule not found",
               });
             } else {
-              Commission.findOne(
-                { merchant_id: merchant_id, type: 0 },
+              MerchantRule.findOne(
+                { merchant_id: merchant_id, type: "WM-C", status: 1, active: 1 },
                 async (err, comm) => {
                   if (err) {
                     console.log(err);

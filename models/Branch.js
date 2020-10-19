@@ -1,9 +1,9 @@
 // User.js
 const mongoose = require('mongoose');
 const BranchSchema = new mongoose.Schema({
-  name: { type: String, required: true, unique: true},
-  bcode: { type: String, required: true, unique: true},
-  username: { type: String, required: true, unique:true },
+  name: { type: String, required: true, unique: true },
+  bcode: { type: String, required: true, unique: true },
+  username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   credit_limit: { type: Number, required: false, default: 0 },
   cash_in_hand: { type: Number, required: false, default: 0 },
@@ -17,11 +17,12 @@ const BranchSchema = new mongoose.Schema({
   bank_id: { type: String, required: true },
   created_at: { type: Date, default: Date.now },
   modified_at: { type: Date, default: null },
-  initial_setup: { type: Boolean, default: false},
-  total_cashiers: {type: Number, required: false, default: 0},
-  status: {type: Number, required:true, default:1},
-  token: {type: String, required:false, default:null},
+  initial_setup: { type: Boolean, default: false },
+  total_cashiers: { type: Number, required: false, default: 0 },
+  status: { type: Number, required: true, default: 1 },
+  token: { type: String, required: false, default: null },
   working_from: { type: String, required: false, default: 0 },
   working_to: { type: String, required: false, default: 0 },
+  op_wallet_id: { type: String, required: false }
 });
 module.exports = mongoose.model('Branch', BranchSchema);
