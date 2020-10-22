@@ -873,23 +873,27 @@ router.post("/infra/merchantRule/interBank/getAll", function (req, res) {
 				IBMerchantRule.find(
 					{
 						merchant_id: merchant_id,
-						$or: query,
-						$or: [
+						$and: [
+							{ $or: query },
 							{
-								$and: [{ rule_edit_status: 0 }, { merchant_approve_status: 1 }],
-							},
-							{
-								$and: [
-									{ rule_edit_status: 1 },
+								$or: [
 									{
-										$or: [
-											{ "edited.merchant_approve_status": 1 },
-											{ merchant_approve_status: 1 },
+										$and: [{ rule_edit_status: 0 }, { merchant_approve_status: 1 }],
+									},
+									{
+										$and: [
+											{ rule_edit_status: 1 },
+											{
+												$or: [
+													{ "edited.merchant_approve_status": 1 },
+													{ merchant_approve_status: 1 },
+												],
+											},
 										],
 									},
 								],
-							},
-						],
+							}
+						]
 					},
 					async (err, rules) => {
 						if (err) {
