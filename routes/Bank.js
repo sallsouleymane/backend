@@ -55,8 +55,8 @@ router.post("/bank/transferMasterToOp", function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				const masterWallet = "master@" + bank.name;
-				const opWallet = "operational@" + bank.name;
+				const masterWallet = bank.wallet_ids.master;
+				const opWallet = bank.wallet_ids.operational;
 				const trans = {
 					from: masterWallet,
 					to: opWallet,
@@ -499,65 +499,78 @@ router.post("/bankActivate", function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				createWallet([
-					"testuser@" + bank.name,
-					"operational@" + bank.name,
-					"escrow@" + bank.name,
-					"master@" + bank.name,
-					"infra_operational@" + bank.name,
-					"infra_master@" + bank.name,
-				]).then(function (result) {
-					if (result != "" && !result.includes("wallet already exists")) {
-						console.log(result);
+				Infra.findOne({ _id: bank.user_id }, (err, infra) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
 						res.status(200).json({
 							status: 0,
-							message: "Blockchain service was unavailable. Please try again.",
-							result: result,
+							message: message,
+						});
+					} else if (!infra) {
+						res.status(200).json({
+							status: 0,
+							message: "Infra not found.",
 						});
 					} else {
-						Infra.findByIdAndUpdate(infra._id,
-							{ op_wallet_id: "infra_operational@" + bank.name },
-							(err) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else {
-									Bank.findByIdAndUpdate(
-										bank._id,
-										{
-											status: 1,
-											op_wallet_id: "operational@" + bank.name
-										},
-										(err) => {
-											if (err) {
-												console.log(err);
-												var message = err;
-												if (err.message) {
-													message = err.message;
-												}
-												res.status(200).json({
-													status: 0,
-													message: message,
-												});
-											} else {
-												res.status(200).json({
-													status: "activated",
-													walletStatus: result,
-												});
-											}
+						const op_wallet = "BAO@" + bank.bcode + "@" + bank.bcode;
+						const escrow_wallet = "BAE@" + bank.bcode + "@" + bank.bcode;
+						const master_wallet = "BAM@" + bank.bcode + "@" + bank.bcode;
+						const infra_op_wallet = "IRO@" + infra.username + "@" + bank.bcode;
+						const infra_master_wallet = "IRM@" + infra.username + "@" + bank.bcode;
+						createWallet([
+							op_wallet,
+							escrow_wallet,
+							master_wallet,
+							infra_op_wallet,
+							infra_master_wallet,
+						]).then(function (result) {
+							if (result != "" && !result.includes("wallet already exists")) {
+								console.log(result);
+								res.status(200).json({
+									status: 0,
+									message: "Blockchain service was unavailable. Please try again.",
+									result: result,
+								});
+							} else {
+								Bank.findByIdAndUpdate(
+									bank._id,
+									{
+										status: 1,
+										wallet_ids: {
+											operational: op_wallet,
+											master: master_wallet,
+											escrow: escrow_wallet,
+											infra_operational: infra_op_wallet,
+											infra_master: infra_master_wallet
 										}
-									);
-								}
-							})
+									},
+									(err) => {
+										if (err) {
+											console.log(err);
+											var message = err;
+											if (err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+											});
+										} else {
+											res.status(200).json({
+												status: "activated",
+												walletStatus: result,
+											});
+										}
+									}
+								);
+							}
+						});
 					}
-				});
+				})
 			}
 		}
 	);
@@ -640,7 +653,7 @@ router.get("/getBankOperationalBalance", function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				const wallet_id = "operational@" + ba.name;
+				const wallet_id = ba.wallet_ids.operational;
 
 				getBalance(wallet_id).then(function (result) {
 					res.status(200).json({
@@ -799,9 +812,11 @@ router.post("/addBranch", (req, res) => {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
+				const op_wallet = "BRO@" + bcode + "@" + bank.bcode;
+				const master_wallet = "BRM@" + bcode + "@" + bank.bcode;
 				createWallet([
-					bcode + "_operational@" + bank.name,
-					bcode + "_master@" + bank.name,
+					op_wallet,
+					master_wallet,
 				]).then(function (result) {
 					if (result != "" && !result.includes("wallet already exists")) {
 						console.log(result);

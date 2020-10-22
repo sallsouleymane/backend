@@ -71,39 +71,35 @@ router.post("/cashier/sendToOp", function (req, res) {
 								"Token changed or user not valid. Try to login again or contact system administrator.",
 						});
 					} else {
-						Bank.findOne({ _id: branch.bank_id }, (err, bank) => {
-							PartnerBranch.findOne({ op_wallet_id: wallet_id }, (err, pbranch) => {
-								const from_wallet = branch.bcode + "_operational@" + bank.name
-								const trans = {
-									from: from_wallet,
-									to: wallet_id,
-									amount: amount,
-									note: "Transfer to Operational Wallet",
-									email1: branch.email,
-									email2: pbranch.email,
-									mobile1: branch.mobile,
-									mobile2: pbranch.mobile,
-									from_name: branch.name,
-									to_name: pbranch.name,
-									user_id: cashier._id,
-									master_code: master_code,
-									child_code: master_code + "1"
+						Collection.findOne({ wallet_ids: { operational: wallet_id } }, (err, tobranch) => {
+							const trans = {
+								from: branch.wallet_ids.operational,
+								to: wallet_id,
+								amount: amount,
+								note: "Transfer to " + Collection + "'s Operational Wallet",
+								email1: branch.email,
+								email2: tobranch.email,
+								mobile1: branch.mobile,
+								mobile2: tobranch.mobile,
+								from_name: branch.name,
+								to_name: tobranch.name,
+								user_id: cashier._id,
+								master_code: master_code,
+								child_code: master_code + "1"
+							}
+							blockchain.initiateTransfer(trans).then((result) => {
+								if (result.status == 1) {
+									res.status(200).json({
+										status: 1,
+										message: result.message,
+									});
+								} else {
+									res.status(200).json({
+										status: 0,
+										message: result.message,
+									});
 								}
-								blockchain.initiateTransfer(trans).then((result) => {
-									if (result.status == 1) {
-										res.status(200).json({
-											status: 1,
-											message: result.message,
-										});
-									} else {
-										res.status(200).json({
-											status: 0,
-											message: result.message,
-										});
-									}
-								})
 							})
-
 						})
 					}
 				});
@@ -173,8 +169,7 @@ router.post("/cashier/getTransactionHistory", function (req, res) {
 										"Bank not found.",
 								});
 							} else {
-								const wallet = branch.bcode + "_operational@" + bank.name;
-								let result = await blockchain.getStatement(wallet, cashier._id);
+								let result = await blockchain.getStatement(branch.wallet_ids.operational, cashier._id);
 								res.status(200).json({
 									status: 1,
 									message: "get cashier transaction history success",
@@ -1736,12 +1731,10 @@ router.post("/cashierSendMoney", function (req, res) {
 																message: message,
 															});
 														} else {
-															const branchOpWallet =
-																f2.bcode + "_operational@" + f3.name;
-															const bankEsWallet = "escrow@" + f3.name;
-															const bankOpWallet = "operational@" + f3.name;
-															const infraOpWallet =
-																"infra_operational@" + f3.name;
+															const branchOpWallet = f2.wallet_ids.operational;
+															const bankEsWallet = f3.wallet_ids.escrow;
+															const bankOpWallet = f3.wallet_ids.operational;
+															const infraOpWallet = f3.wallet_ids.infra_operational;
 
 															const find = {
 																bank_id: f3._id,
@@ -2316,16 +2309,10 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																			message: message,
 																		});
 																	} else {
-																		const branchOpWallet =
-																			branch.bcode +
-																			"_operational@" +
-																			bank.name;
-																		const receiverWallet =
-																			receiverMobile + "@" + receiver.bank;
-																		const bankOpWallet =
-																			"operational@" + bank.name;
-																		const infraOpWallet =
-																			"infra_operational@" + bank.name;
+																		const branchOpWallet = branch.wallet_ids.operational;
+																		const receiverWallet = receiverMobile + "@" + receiver.bank;
+																		const bankOpWallet = bank.wallet_ids.operational;
+																		const infraOpWallet = bank.wallet_ids.infra_operational;
 
 																		const find = {
 																			bank_id: bank._id,
@@ -3250,11 +3237,9 @@ router.post("/cashierClaimMoney", function (req, res) {
 																									claimFee = (claim * bankShare) / 100;
 
 																								}
-																								const branchOpWallet =
-																									f2.bcode + "_operational@" + f3.name;
-																								const bankEsWallet = "escrow@" + f3.name;
-																								const bankOpWallet =
-																									"operational@" + f3.name;
+																								const branchOpWallet = f2.wallet_ids.operational;
+																								const bankEsWallet = f3.wallet_ids.escrow;
+																								const bankOpWallet = f3.wallet_ids.operational;
 
 																								var transArr = [];
 

@@ -1476,10 +1476,7 @@ router.post("/partnerCashier/payInvoice", jwtTokenAuth, (req, res) => {
                         }
 
                         // check branch operational wallet balance
-                        const branchOpWallet =
-                          branch.code +
-                          "_partnerbranch_operational@" +
-                          bank.name;
+                        const branchOpWallet = branch.wallet_ids.oprational;
                         var bal = await blockchain.getBalance(branchOpWallet);
                         console.log(branchOpWallet);
                         if (Number(bal) < total_amount) {
@@ -2115,8 +2112,7 @@ router.post("/cashier/payInvoice", (req, res) => {
                       }
 
                       // check branch operational wallet balance
-                      const branchOpWallet =
-                        branch.bcode + "_operational@" + bank.name;
+                      const branchOpWallet = branch.wallet_ids.operational;
                       var bal = await blockchain.getBalance(branchOpWallet);
                       console.log(branchOpWallet);
                       if (Number(bal) < total_amount) {

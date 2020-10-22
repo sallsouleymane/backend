@@ -90,8 +90,8 @@ router.post("/partnerBranch/transferMasterToOp", jwtTokenAuth, function (req, re
                                             message: "Bank not found.",
                                         });
                                     } else {
-                                        const masterWallet = branch.code + "_partnerbranch_master@" + bank.name;
-                                        const opWallet = branch.code + "_partnerbranch_operational@" + bank.name;
+                                        const masterWallet = branch.wallet_ids.master;
+                                        const opWallet = branch.wallt_ids.operational;
                                         const trans = {
                                             from: masterWallet,
                                             to: opWallet,

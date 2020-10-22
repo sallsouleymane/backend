@@ -74,7 +74,7 @@ router.post("/partnerCashier/sendToOp", jwtTokenAuth, function (req, res) {
                 "Partner Branh not found.",
             });
           } else {
-            const from_wallet = branch.bcode + "_operational@" + bank.name
+            const from_wallet = branch.wallet_ids.operational;
             const trans = {
               from: from_wallet,
               to: wallet_id,
@@ -467,16 +467,10 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
                                         message: message,
                                       });
                                     } else {
-                                      const branchOpWallet =
-                                        branch.code +
-                                        "_partnerbranch_operational@" +
-                                        bank.name;
-                                      const receiverWallet =
-                                        receiverMobile + "@" + receiver.bank;
-                                      const bankOpWallet =
-                                        "operational@" + bank.name;
-                                      const infraOpWallet =
-                                        "infra_operational@" + bank.name;
+                                      const branchOpWallet = branch.wallet_ids.operational;
+                                      const receiverWallet = receiverMobile + "@" + receiver.bank;
+                                      const bankOpWallet = bank.wallet_ids.operational;
+                                      const infraOpWallet = bank.wallet_ids.infra_operational;
 
                                       const find = {
                                         bank_id: bank._id,
@@ -1099,14 +1093,10 @@ router.post("/partnerCashier/sendMoney", jwtTokenAuth, function (req, res) {
                                     message: message,
                                   });
                                 } else {
-                                  const branchOpWallet =
-                                    branch.code +
-                                    "_partnerbranch_operational@" +
-                                    bank.name;
-                                  const bankEsWallet = "escrow@" + bank.name;
-                                  const bankOpWallet = "operational@" + bank.name;
-                                  const infraOpWallet =
-                                    "infra_operational@" + bank.name;
+                                  const branchOpWallet = branch.wallet_ids.operational;
+                                  const bankEsWallet = bank.wallet_ids.escrow;
+                                  const bankOpWallet = bank.wallet_ids.operational;
+                                  const infraOpWallet = bank.wallet_ids.infra_operational;
 
                                   const find = {
                                     bank_id: bank._id,
@@ -1769,14 +1759,9 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
                                                       claimFee = (claim * bankShare) / 100;
                                                     }
 
-                                                    const branchOpWallet =
-                                                      branch.code +
-                                                      "_partnerbranch_operational@" +
-                                                      bank.name;
-                                                    const bankEsWallet =
-                                                      "escrow@" + bank.name;
-                                                    const bankOpWallet =
-                                                      "operational@" + bank.name;
+                                                    const branchOpWallet = branch.wallet_ids.operational;
+                                                    const bankEsWallet = bank.wallet_ids.escrow;
+                                                    const bankOpWallet = bank.wallet_ids.operational;
 
                                                     var transArr = [];
 

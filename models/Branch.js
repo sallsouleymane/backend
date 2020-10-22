@@ -23,6 +23,9 @@ const BranchSchema = new mongoose.Schema({
   token: { type: String, required: false, default: null },
   working_from: { type: String, required: false, default: 0 },
   working_to: { type: String, required: false, default: 0 },
-  op_wallet_id: { type: String, required: false }
+  wallet_ids: {
+    operational: { type: String, required: false },
+    master: { type: String, required: false },
+  }
 });
 module.exports = mongoose.model('Branch', BranchSchema);

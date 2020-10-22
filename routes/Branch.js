@@ -69,8 +69,8 @@ router.post("/branch/transferMasterToOp", function (req, res) {
 									"Token changed or user not valid. Try to login again or contact system administrator.",
 							});
 						} else {
-							const masterWallet = branch.bcode + "_master@" + bank.name;
-							const opWallet = branch.bcode + "_operational@" + bank.name;
+							const masterWallet = branch.wallet_ids.master;
+							const opWallet = branch.wallet_ids.operational;
 							const trans = {
 								from: masterWallet,
 								to: opWallet,
@@ -882,12 +882,9 @@ router.post("/branchClaimMoney", function (req, res) {
 																			message: message,
 																		});
 																	} else {
-																		const branchOpWallet =
-																			f2.bcode + "_operational@" + f3.name;
-																		const bankEsWallet = "escrow@" + f3.name;
 																		let trans1 = {};
-																		trans1.from = bankEsWallet;
-																		trans1.to = branchOpWallet;
+																		trans1.from = f3.wallet_ids.escrow;
+																		trans1.to = f2.wallet_ids.operational;
 																		trans1.amount = oamount;
 																		trans1.note = "Branch claim Money";
 																		trans1.email1 = f3.email;

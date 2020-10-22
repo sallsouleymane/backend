@@ -1323,9 +1323,7 @@ router.get("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 								message: message,
 							});
 						} else {
-							var creator = (merchant.creator == 1) ? "inframerchant" : "merchant";
-							const wallet = merchant.code + "_" + creator + "_operational@" + bank.name;
-							console.log(wallet);
+							const wallet = merchant.wallet_ids.operational;
 							blockchain.getStatement(wallet).then(function (history) {
 								FailedTX.find({ wallet_id: wallet }, (err, failed) => {
 									if (err) {
@@ -2825,8 +2823,7 @@ router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 							message: "Bank not found",
 						});
 					} else {
-						var creator = (merchant.creator == 1) ? "inframerchant" : "merchant";
-						const wallet_id = merchant.code + "_" + creator + "_operational@" + bank.name;
+						const wallet_id = merchant.wallet_ids.operational;
 						blockchain.getBalance(wallet_id).then(function (result) {
 							res.status(200).json({
 								status: 1,

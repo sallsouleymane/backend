@@ -1207,10 +1207,8 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 
 																		const receiverWallet =
 																			receiverMobile + "@" + bank.name;
-																		const bankOpWallet =
-																			"operational@" + bank.name;
-																		const infraOpWallet =
-																			"infra_operational@" + bank.name;
+																		const bankOpWallet = bank.wallet_ids.operational;
+																		const infraOpWallet = bank.wallet_ids.infra_operational;
 																		const {
 																			infra_share,
 																		} = fe.revenue_sharing_rule;
@@ -1559,11 +1557,9 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																		message: message,
 																	});
 																} else {
-																	const bankEsWallet = "escrow@" + bank.name;
-																	const bankOpWallet =
-																		"operational@" + bank.name;
-																	const infraOpWallet =
-																		"infra_operational@" + bank.name;
+																	const bankEsWallet = bank.wallet_ids.escrow;
+																	const bankOpWallet = bank.wallet_ids.operational;
+																	const infraOpWallet = bank.wallet_ids.infra_operational;
 
 																	const {
 																		infra_share,

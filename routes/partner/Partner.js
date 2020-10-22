@@ -67,8 +67,8 @@ router.post("/partner/transferMasterToOp", jwtTokenAuth, function (req, res) {
                                 message: "Bank not found.",
                             });
                         } else {
-                            const masterWallet = partner.code + "_partner_master@" + bank.name;
-                            const opWallet = partner.code + "_partner_operational@" + bank.name;
+                            const masterWallet = partner.wallet_ids.master;
+                            const opWallet = partner.wallet_ids.operational;
                             const trans = {
                                 from: masterWallet,
                                 to: opWallet,
@@ -392,7 +392,7 @@ router.get("/partner/getOperationalBalance", jwtTokenAuth, function (req, res) {
                         });
                     } else {
 
-                        const wallet_id = partner.code + "_partner_operational@" + bank.name;
+                        const wallet_id = partner.wallet_ids.operational;
 
                         blockchain.getBalance(wallet_id).then(function (result) {
                             res.status(200).json({
@@ -1099,8 +1099,8 @@ router.post("/partner/addBranch", jwtTokenAuth, (req, res) => {
                 });
             } else {
                 Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
-                    const op_wallet = code + "_partnerbranch_operational@" + bank.name;
-                    const master_wallet = code + "_partnerbranch_master@" + bank.name;
+                    const op_wallet = "PBO@" + code + "@" + bank.bcode;
+                    const master_wallet = "PBM@" + code + "@" + bank.name;
                     blockchain.createWallet([
                         op_wallet,
                         master_wallet,
@@ -1311,9 +1311,11 @@ router.post("/partner/activate", jwtTokenAuth, function (req, res) {
                 });
             } else {
                 Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
+                    const operational = "PAO@" + partner.code + "@" + bank.name;
+                    const master = "PAM@" + partner.code + "@" + bank.name;
                     blockchain.createWallet([
-                        partner.code + "_partner_operational@" + bank.name,
-                        partner.code + "_partner_master@" + bank.name,
+                        operational,
+                        master,
                     ]).then(function (result) {
                         console.log("result", result)
                         if (result != "" && !result.includes("wallet already exists")) {
@@ -1328,6 +1330,10 @@ router.post("/partner/activate", jwtTokenAuth, function (req, res) {
                                 partner._id,
                                 {
                                     status: 1,
+                                    wallet_ids: {
+                                        operational: operational,
+                                        master: master
+                                    }
                                 },
                                 (err) => {
                                     if (err) {

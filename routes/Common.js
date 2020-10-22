@@ -1379,8 +1379,8 @@ router.post("/getWalletsOperational", function (req, res) {
         });
       } else {
         res.status(200).json({
-          from: "infra_operational@" + bank.name,
-          to: "infra_master@" + bank.name,
+          from: bank.wallet_ids.infra_operational,
+          to: bank.wallet_ids.infra_master,
         });
       }
     }

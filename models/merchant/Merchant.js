@@ -25,7 +25,9 @@ const MerchantSchema = new mongoose.Schema({
 	},
 	last_paid_at: { type: Date, required: false, default: null },
 	amount_due: { type: Number, required: true, default: 0 },
-	op_wallet_id: { type: String, required: false }
+	wallet_ids: {
+		operational: { type: String, required: false }
+	}
 });
 
 MerchantSchema.plugin(uniqueValidator, {

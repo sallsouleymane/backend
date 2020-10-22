@@ -75,8 +75,8 @@ router.post("/infra/transferMasterToOp", function (req, res) {
 								message: "Bank not found.",
 							});
 						} else {
-							const masterWallet = "infra_master@" + bank.name;
-							const opWallet = "infra_operational@" + bank.name;
+							const masterWallet = bank.wallet_ids.infra_master;
+							const opWallet = bank.wallet_ids.infra_operational;
 							const trans = {
 								from: masterWallet,
 								to: opWallet,
@@ -264,7 +264,7 @@ router.post("/infra/createMerchant", function (req, res) {
 								message: "Code is a required field",
 							});
 						} else {
-							const wallet = code + "_inframerchant_operational@" + bank.name;
+							const wallet = "IMO@" + code + "@" + bank.bcode;
 							createWallet([wallet]).then((result) => {
 								if (result != "" && !result.includes("wallet already exists")) {
 									console.log(result);
@@ -1017,7 +1017,7 @@ router.get("/getInfraOperationalBalance", function (req, res) {
 								message: "Not found",
 							});
 						} else {
-							const wallet_id = "infra_operational@" + ba.name;
+							const wallet_id = ba.wallet_ids.infra_operational;
 
 							getBalance(wallet_id).then(function (result) {
 								res.status(200).json({
