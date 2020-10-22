@@ -23,6 +23,10 @@ const PartnerSchema = new mongoose.Schema({
     working_to: { type: String, required: false, default: 0 },
     total_branches: { type: Number, required: true, default: 0 },
     total_cashiers: { type: Number, required: true, default: 0 },
-    total_trans: { type: Number, required: false, default: 0 }
+    total_trans: { type: Number, required: false, default: 0 },
+    wallets: {
+        op_wallet: { type: String, required: false },
+        master_wallet: { type: String, required: false }
+    }
 });
 module.exports = mongoose.model("Partner", PartnerSchema);
