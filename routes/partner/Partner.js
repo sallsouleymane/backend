@@ -1133,7 +1133,8 @@ router.post("/partner/addBranch", jwtTokenAuth, (req, res) => {
                             data.password = makeid(10);
                             data.working_from = working_from;
                             data.working_to = working_to;
-                            data.op_wallet_id = op_wallet;
+                            data.wallet_ids.operational = op_wallet;
+                            data.wallet_ids.master = master_wallet;
                             let partnerName = partner.name;
 
                             data.save((err) => {

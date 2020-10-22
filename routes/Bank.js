@@ -519,8 +519,8 @@ router.post("/bankActivate", function (req, res) {
 						const op_wallet = "BAO@" + bank.bcode + "@" + bank.bcode;
 						const escrow_wallet = "BAE@" + bank.bcode + "@" + bank.bcode;
 						const master_wallet = "BAM@" + bank.bcode + "@" + bank.bcode;
-						const infra_op_wallet = "IRO@" + infra.username + "@" + bank.bcode;
-						const infra_master_wallet = "IRM@" + infra.username + "@" + bank.bcode;
+						const infra_op_wallet = "INO@" + infra.username + "@" + bank.bcode;
+						const infra_master_wallet = "INM@" + infra.username + "@" + bank.bcode;
 						createWallet([
 							op_wallet,
 							escrow_wallet,
@@ -846,6 +846,8 @@ router.post("/addBranch", (req, res) => {
 						data.password = makeid(10);
 						data.working_from = working_from;
 						data.working_to = working_to;
+						data.wallet_ids.operational = op_wallet;
+						data.wallet_ids.master = master_wallet;
 						let bankName = bank.name;
 
 						data.save((err) => {
