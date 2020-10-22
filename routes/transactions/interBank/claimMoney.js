@@ -5,10 +5,10 @@ const { getTransactionCode, calculateShare } = require("../../utils/utility");
 module.exports = async function (
     transfer, sendingBank, bank, branch, rule1, rule2
 ) {
-    const senderBankEsWallet = "escrow@" + sendingBank.name;
-    const branchOpWallet = branch.bcode + "_operational@" + bank.name;
-    const bankOpWallet = "operational@" + bank.name;
-    const senderBankOpWallet = "operational@" + sendingBank.name;
+    const senderBankEsWallet = sendingBank.wallet_ids.escrow;
+    const branchOpWallet = branch.wallet_ids.operational;
+    const bankOpWallet = bank.wallet_ids.operational;
+    const senderBankOpWallet = sendingBank.operational;
 
     var amount = Number(transfer.amount);
     var fee = calculateShare("bank", transfer.amount, rule1);

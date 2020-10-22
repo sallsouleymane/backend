@@ -14,8 +14,7 @@ module.exports = async function (
 	try {
 		// receiver's wallet names
 		const userWallet = user.mobile + "@" + bank.name;
-		var creator = (merchant.creator == 1) ? "inframerchant" : "merchant";
-		const merchantOpWallet = merchant.username + "_" + creator + "_operational@" + merchantBank.name;
+		const merchantOpWallet = merchant.wallet_ids.operational;
 
 		// check branch operational wallet balance
 		var balance = await blockchain.getBalance(userWallet);
@@ -86,11 +85,10 @@ async function distributeRevenue(
 	rule1
 ) {
 	const userWallet = user.mobile + "@" + bank.name;
-	var creator = (merchant.creator == 1) ? "inframerchant" : "merchant";
-	const merchantOpWallet = merchant.username + "_" + creator + "_operational@" + merchantBank.name;
-	const merBankOpWallet = "operational@" + merchantBank.name;
-	const bankOpWallet = "operational@" + bank.name;
-	const infraOpWallet = "infra_operational@" + bank.name;
+	const merchantOpWallet = merchant.wallet_ids.operational;
+	const merBankOpWallet = merchantBank.wallet_ids.operational;
+	const bankOpWallet = bank.wallet_ids.operational;
+	const infraOpWallet = bank.wallet_ids.infra_operational;
 
 	//second transaction
 	bankFee = calculateShare("bank", transfer.amount, rule1.fee);

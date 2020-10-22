@@ -10,10 +10,9 @@ module.exports = async function (
     rule1,
     rule2
 ) {
-    const branchOpWallet =
-        branch.bcode + "_operational@" + bank.name;
-    const bankEsWallet = "escrow@" + bank.name;
-    const bankOpWallet = "operational@" + bank.name;
+    const branchOpWallet = branch.wallet_ids.operational;
+    const bankEsWallet = bank.wallet_ids.escrow;
+    const bankOpWallet = bank.wallet_ids.operational;
 
     // first transaction
     var amount = Number(transfer.amount);
@@ -114,11 +113,9 @@ async function distributeRevenue(transfer,
     bank,
     branch,
     rule1) {
-    const branchOpWallet =
-        branch.bcode + "_operational@" + bank.name;
-    const bankOpWallet = "operational@" + bank.name;
-    const infraOpWallet =
-        "infra_operational@" + bank.name;
+    const branchOpWallet = branch.wallet_ids.operational;
+    const bankOpWallet = bank.wallet_ids.operational;
+    const infraOpWallet = bank.wallet_ids.infra_operational;
 
     var infraShare = calculateShare("infra", transfer.amount, rule1);
 

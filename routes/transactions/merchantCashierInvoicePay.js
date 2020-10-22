@@ -12,10 +12,9 @@ module.exports = async function (
 
 	amount = Number(amount);
 
-	var creator = (merchant.creator == 1) ? "inframerchant" : "merchant";
-	const merchantOpWallet = merchant.code + "_" + creator + "_operational@" + bank.name;
-	const bankOpWallet = "operational@" + bank.name;
-	const infraOpWallet = "infra_operational@" + bank.name;
+	const merchantOpWallet = merchant.wallet_ids.operational;
+	const bankOpWallet = bank.wallet_ids.operational;
+	const infraOpWallet = bank.wallet_ids.infra_operational;
 
 	let master_code = getTransactionCode(merchant.mobile, bank.mobile);
 

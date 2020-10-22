@@ -160,62 +160,14 @@ router.post("/:user/getWalletBalance", jwtTokenAuth, function (req, res) {
               "Token changed or user not valid. Try to login again or contact system administrator.",
           });
         } else {
-          Partner.findOne(
-            {
-              name: partner,
-            },
-            function (err, partner) {
-              if (err) {
-                console.log(err);
-                var message = err;
-                if (err.message) {
-                  message = err.message;
-                }
-                res.status(200).json({
-                  status: 0,
-                  message: message,
-                });
-              } else if (partner == null) {
-                res.status(200).json({
-                  status: 0,
-                  message: "Partner not found",
-                });
-              } else {
-                Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
-                  if (err) {
-                    console.log(err);
-                    var message = err;
-                    if (err.message) {
-                      message = err.message;
-                    }
-                    res.status(200).json({
-                      status: 0,
-                      message: message,
-                    });
-                  } else if (bank == null) {
-                    res.status(200).json({
-                      status: 0,
-                      message: "Partner not found",
-                    });
-                  } else {
-                    let wallet_id =
-                      b.code + "_partner_" + page + "@" + bank.name;
-                    if (user == "partnerBranch") {
-                      wallet_id =
-                        b.code + "_partnerbranch_" + page + "@" + bank.name;
-                    }
+          let wallet_id = b.wallet_ids[page];
 
-                    getBalance(wallet_id).then(function (result) {
-                      res.status(200).json({
-                        status: 1,
-                        balance: result,
-                      });
-                    });
-                  }
-                });
-              }
-            }
-          );
+          getBalance(wallet_id).then(function (result) {
+            res.status(200).json({
+              status: 1,
+              balance: result,
+            });
+          });
         }
       }
     );
@@ -663,41 +615,14 @@ router.get("/getWalletBalance", function (req, res) {
               "Token changed or user not valid. Try to login again or contact system administrator.",
           });
         } else {
-          Bank.findOne(
-            {
-              name: bank,
-            },
-            function (err, ba) {
-              if (err) {
-                console.log(err);
-                var message = err;
-                if (err.message) {
-                  message = err.message;
-                }
-                res.status(200).json({
-                  status: 0,
-                  message: message,
-                });
-              } else if (ba == null) {
-                res.status(200).json({
-                  status: 0,
-                  message: "Not found",
-                });
-              } else {
-                let wallet_id = page + "@" + ba.name;
-                if (type == "branch") {
-                  wallet_id = b.bcode + "_" + page + "@" + ba.name;
-                }
+          let wallet_id = b.wallet_ids[page];
 
-                getBalance(wallet_id).then(function (result) {
-                  res.status(200).json({
-                    status: 1,
-                    balance: result,
-                  });
-                });
-              }
-            }
-          );
+          getBalance(wallet_id).then(function (result) {
+            res.status(200).json({
+              status: 1,
+              balance: result,
+            });
+          });
         }
       }
     );

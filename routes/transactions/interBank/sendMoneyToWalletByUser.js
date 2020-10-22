@@ -13,7 +13,7 @@ module.exports = async function (
 ) {
     const senderWallet = sender.mobile + "@" + sender.bank;
     const receiverWallet = receiver.mobile + "@" + receiverBank.name;
-    const bankOpWallet = "operational@" + bank.name;
+    const bankOpWallet = bank.wallet_ids.operational;
 
     // first transaction
     var amount = Number(transfer.amount);
@@ -108,9 +108,9 @@ async function distributeRevenue(
     bank,
     receiverBank,
     rule1) {
-    const bankOpWallet = "operational@" + bank.name;
-    const infraOpWallet = "infra_operational@" + bank.name;
-    const receiverBankOpWallet = "operational@" + receiverBank.name;
+    const bankOpWallet = bank.wallet_ids.operational;
+    const infraOpWallet = bank.wallet_ids.infra_operational;
+    const receiverBankOpWallet = receiverBank.wallet_ids.operational;
 
     var infraShare = calculateShare("infra", transfer.amount, rule1);
 

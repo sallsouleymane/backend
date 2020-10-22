@@ -13,9 +13,8 @@ module.exports = async function (
 ) {
 	try {
 		// receiver's wallet names
-		const branchOpWallet = branch.bcode + "_operational@" + bank.name;
-		var creator = (merchant.creator == 1) ? "inframerchant" : "merchant";
-		const merchantOpWallet = merchant.username + "_" + creator + "_operational@" + merchantBank.name;
+		const branchOpWallet = branch.wallet_ids.operational;
+		const merchantOpWallet = merchant.wallet_ids.operational;
 
 		// check branch operational wallet balance
 		var balance = await blockchain.getBalance(branchOpWallet);
@@ -96,12 +95,11 @@ async function distributeRevenue(
 	merchant,
 	rule1
 ) {
-	const branchOpWallet = branch.bcode + "_operational@" + bank.name;
-	var creator = (merchant.creator == 1) ? "inframerchant" : "merchant";
-	const merchantOpWallet = merchant.username + "_" + creator + "_operational@" + merchantBank.name;
-	const bankOpWallet = "operational@" + bank.name;
-	const merBankOpWallet = "operational@" + merchantBank.name;
-	const infraOpWallet = "infra_operational@" + bank.name;
+	const branchOpWallet = branch.wallet_ids.operational;
+	const merchantOpWallet = merchant.wallet_ids.operational;
+	const bankOpWallet = bank.wallet_ids.operational;
+	const merBankOpWallet = merchantBank.wallet_ids.operational;
+	const infraOpWallet = bank.wallet_ids.infra_operational;
 
 	if (transfer.bankFee > 0) {
 		let trans = {

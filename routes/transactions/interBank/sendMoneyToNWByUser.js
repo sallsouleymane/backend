@@ -11,8 +11,8 @@ module.exports = async function (
 ) {
     try {
         const senderWallet = sender.mobile + "@" + sender.bank;
-        const bankEsWallet = "escrow@" + bank.name;
-        const bankOpWallet = "operational@" + bank.name;
+        const bankEsWallet = bank.wallet_ids.escrow;
+        const bankOpWallet = bank.wallet_ids.operational;
 
         // first transaction
         var amount = Number(transfer.amount);
@@ -105,8 +105,8 @@ async function distributeRevenue(
     infra,
     bank,
     rule1) {
-    const bankOpWallet = "operational@" + bank.name;
-    const infraOpWallet = "infra_operational@" + bank.name;
+    const bankOpWallet = bank.wallet_ids.operational;
+    const infraOpWallet = bank.wallet_ids.infra_operational;
 
     var infraShare = calculateShare("infra", transfer.amount, rule1);
 
