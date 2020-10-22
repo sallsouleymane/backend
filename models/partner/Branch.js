@@ -22,9 +22,9 @@ const PartnerBranchSchema = new mongoose.Schema({
     status: { type: Number, required: true, default: 1 },
     working_from: { type: String, required: false, default: 0 },
     working_to: { type: String, required: false, default: 0 },
-    wallets: {
-        op_wallet: { type: String, required: false },
-        master_wallet: { type: String, required: false }
+    wallet_ids: {
+        operational: { type: String, required: false },
+        master: { type: String, required: false }
     }
 });
 module.exports = mongoose.model('PartnerBranch', PartnerBranchSchema);

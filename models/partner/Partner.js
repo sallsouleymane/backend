@@ -24,9 +24,9 @@ const PartnerSchema = new mongoose.Schema({
     total_branches: { type: Number, required: true, default: 0 },
     total_cashiers: { type: Number, required: true, default: 0 },
     total_trans: { type: Number, required: false, default: 0 },
-    wallets: {
-        op_wallet: { type: String, required: false },
-        master_wallet: { type: String, required: false }
+    wallet_ids: {
+        operational: { type: String, required: false },
+        master: { type: String, required: false }
     }
 });
 module.exports = mongoose.model("Partner", PartnerSchema);
