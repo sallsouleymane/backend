@@ -26,6 +26,12 @@ const BankSchema = new mongoose.Schema({
 	total_branches: { type: Number, required: true, default: 0 },
 	total_cashiers: { type: Number, required: true, default: 0 },
 	total_partners: { type: Number, required: true, default: 0 },
-	op_wallet_id: { type: String, required: false }
+	wallets: {
+		op_wallet: { type: String, required: false },
+		master_wallet: { type: String, required: false },
+		escrow_wallet: { type: String, required: false },
+		infra_op_wallet: { type: String, required: false },
+		infra_master_wallet: { type: String, required: false },
+	}
 });
 module.exports = mongoose.model("Bank", BankSchema);
