@@ -126,6 +126,7 @@ router.post("/bank/createMerchant", function (req, res) {
                             data.bank_id = bank._id;
                             data.status = 0;
                             data.creator = 0;
+                            data.wallet_ids.operational = wallet;
 
                             data.save((err, merchant) => {
                                 if (err) {
