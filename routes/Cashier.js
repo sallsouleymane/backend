@@ -523,7 +523,7 @@ router.post("/cashier/editUser", function (req, res) {
 router.post("/cashier/activateUser", function (req, res) {
 	try {
 		const { token, mobile } = req.body;
-		Cashier.findOne({ token }, async function (err, cashier) {
+		Cashier.findOne({ token }, function (err, cashier) {
 			if (err) {
 				console.log(err);
 				var message = err;
@@ -540,7 +540,7 @@ router.post("/cashier/activateUser", function (req, res) {
 					message: "You are either not authorised or not logged in.",
 				});
 			} else {
-				Bank.findOne({ _id: cashier.bank_id }, (err, bank) => {
+				Bank.findOne({ _id: cashier.bank_id }, async (err, bank) => {
 					if (err) {
 						console.log(err);
 						var message = err;
