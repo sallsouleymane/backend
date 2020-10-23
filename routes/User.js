@@ -623,7 +623,6 @@ router.get("/user/getDetails", jwtTokenAuth, (req, res) => {
 
 router.post("/user/verify", (req, res) => {
 	const { mobile, email } = req.body;
-
 	User.find(
 		{
 			$or: [{ mobile: mobile }, { email: email }],
@@ -761,7 +760,7 @@ router.post("/user/signup", (req, res) => {
 });
 
 router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
-	const { bank } = req.body;
+	const { bank_id } = req.body;
 	const username = req.sign_creds.username;
 	User.findOne({ username, status: 0 }, (err, user) => {
 		if (err) {
@@ -780,7 +779,7 @@ router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 				message: "You are not allowed to assign bank.",
 			});
 		} else {
-			Bank.findOne({ name: bank }, (err, result) => {
+			Bank.findOne({ bank_id: bank_id }, (err, result) => {
 				if (err) {
 					console.log(err);
 					var message = err;
@@ -799,7 +798,7 @@ router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 				} else {
 					User.updateOne(
 						{ username },
-						{ $set: { bank: bank } },
+						{ $set: { bank_id: bank_id } },
 						(err, user) => {
 							if (err) {
 								console.log(err);

@@ -17,7 +17,7 @@ const UserSchema = new mongoose.Schema({
 	id_number: { type: String, required: false },
 	dob: { type: String, required: false },
 	gender: { type: String, required: false },
-	bank: { type: String, required: false, default: null },
+	bank_id: { type: String, required: false, default: null },
 	docs_hash: [
 		{
 			name: { type: String, required: false },
@@ -26,8 +26,7 @@ const UserSchema = new mongoose.Schema({
 		},
 	],
 	status: { type: Number, required: true, default: null },
-	status_desc: {type: String, required: false, default: "0:Created 1:Active 2:Waiting for cashier approval 3:Go to the nearest branch and get docs uploaded"},
+	status_desc: { type: String, required: false, default: "0:Created 1:Active 2:Waiting for cashier approval 3:Go to the nearest branch and get docs uploaded" },
 	contact_list: { type: [String], required: false, default: null },
 });
 module.exports = mongoose.model("User", UserSchema);
-  
