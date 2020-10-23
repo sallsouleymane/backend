@@ -1163,21 +1163,14 @@ router.post("/getBranchHistory", function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				Bank.findOne(
-					{
-						_id: b.bank_id,
-					},
-					function (err, b2) {
-						const wallet = b.bcode + "_" + from + "@" + b2.name;
-						console.log(wallet);
-						getStatement(wallet).then(function (result) {
-							res.status(200).json({
-								status: 1,
-								history: result,
-							});
-						});
-					}
-				);
+				const wallet = b.wallet_ids[from];
+				console.log(wallet);
+				getStatement(wallet).then(function (result) {
+					res.status(200).json({
+						status: 1,
+						history: result,
+					});
+				});
 			}
 		}
 	);

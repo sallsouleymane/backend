@@ -1239,7 +1239,7 @@ router.post("/getBankHistory", function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				const wallet = from + "@" + b.name;
+				const wallet = b.wallet_ids[from];
 				getStatement(wallet).then(function (history) {
 					FailedTX.find({ wallet_id: wallet }, (err, failed) => {
 						if (err) {

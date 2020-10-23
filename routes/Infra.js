@@ -976,7 +976,8 @@ router.post("/getInfraHistory", function (req, res) {
 								message: "Bank not found",
 							});
 						} else {
-							const wallet = "infra_" + from + "@" + b.name;
+							wallet_type = "infra_" + from;
+							const wallet = b.wallet_ids[wallet_type];
 
 							getStatement(wallet).then(function (result) {
 								res.status(200).json({

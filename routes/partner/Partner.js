@@ -171,33 +171,14 @@ router.post("/partner/getBalance", jwtTokenAuth, function (req, res) {
                         "Token changed or user not valid. Try to login again or contact system administrator.",
                 });
             } else {
-                Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
-                    if (err) {
-                        console.log(err);
-                        var message = err;
-                        if (err.message) {
-                            message = err.message;
-                        }
-                        res.status(200).json({
-                            status: 0,
-                            message: message,
-                        });
-                    } else if (bank == null) {
-                        res.status(200).json({
-                            status: 0,
-                            message:
-                                "Bank of the partner is not valid.",
-                        });
-                    } else {
-                        const wallet = partner.code + "_partner_" + from + "@" + bank.name;
-                        blockchain.getBalance(wallet).then(function (count) {
-                            res.status(200).json({
-                                status: 1,
-                                balance: balance,
-                            });
-                        });
-                    }
+                const wallet = partner.wallet_ids[from];
+                blockchain.getBalance(wallet).then(function (count) {
+                    res.status(200).json({
+                        status: 1,
+                        balance: balance,
+                    });
                 });
+
             }
         }
     );
