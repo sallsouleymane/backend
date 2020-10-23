@@ -62,7 +62,7 @@ router.post("/user/interBank/payInvoice", jwtTokenAuth, (req, res) => {
           message: "User is not valid",
         });
       } else {
-        Bank.findOne({ name: user.bank }, (err, bank) => {
+        Bank.findOne({ _id: user.bank_id }, (err, bank) => {
           if (err) {
             console.log(err);
             var message = err;
@@ -2604,7 +2604,7 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
                       console.log("Total Amount", total_amount);
                       // all the users
                       let bank = await Bank.findOne({
-                        name: user.bank,
+                        _id: user.bank_id,
                       });
                       if (bank == null) {
                         throw new Error("User has invalid bank");

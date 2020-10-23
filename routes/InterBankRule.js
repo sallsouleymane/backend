@@ -61,7 +61,7 @@ router.post("/user/interBank/checkFee", JWTTokenAuth, function (req, res) {
                             "Token changed or user not valid. Try to login again or contact system administrator.",
                     });
                 } else {
-                    Bank.findOne({ name: user.bank }, (err, bank) => {
+                    Bank.findOne({ _id: user.bank_id }, (err, bank) => {
                         if (err) {
                             console.log(err);
                             var message = err;
@@ -170,14 +170,14 @@ router.post("/user/interBank/sendMoneyToWallet", JWTTokenAuth, async function (r
 
         const bank = await Bank.findOne(
             {
-                name: sender.bank,
+                _id: sender.bank_id,
             });
         if (bank == null) {
             throw new Error("Bank Not Found");
         }
 
-        const receiverBank = await Bank.findOne({ name: receiver.bank });
-        if (receiver.bank == null) {
+        const receiverBank = await Bank.findOne({ _id: receiver.bank_id });
+        if (receiverBank == null) {
             throw new Error("Receiver Bank Not Found");
         }
 
@@ -334,7 +334,7 @@ router.post("/partnerCashier/interBank/sendMoneyToWallet", JWTTokenAuth, functio
                                             message: "Receiver Not Found",
                                         });
                                     } else {
-                                        Bank.findOne({ name: receiver.bank }, (err, receiverBank) => {
+                                        Bank.findOne({ _id: receiver.bank_id }, (err, receiverBank) => {
                                             if (err) {
                                                 console.log(err);
                                                 var message = err;
@@ -721,7 +721,6 @@ router.post("/cashier/interBank/sendMoneyToWallet", function (req, res) {
     var s = today.split("T");
     var start = s[0] + "T00:00:00.000Z";
     var end = s[0] + "T23:59:59.999Z";
-    var now = new Date().getTime();
 
     const {
         token,
@@ -789,7 +788,7 @@ router.post("/cashier/interBank/sendMoneyToWallet", function (req, res) {
                                 message: "Receiver Not Found",
                             });
                         } else {
-                            Bank.findOne({ name: receiver.bank }, (err, receiverBank) => {
+                            Bank.findOne({ _id: receiver.bank_id }, (err, receiverBank) => {
                                 if (err) {
                                     console.log(err);
                                     var message = err;
@@ -1214,7 +1213,7 @@ router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (req,
                 try {
                     const bank = await Bank.findOne(
                         {
-                            name: sender.bank,
+                            _id: sender.bank_id,
                         });
                     if (bank == null) {
                         throw new Error("Bank not found")

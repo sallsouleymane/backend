@@ -225,7 +225,7 @@ router.post("/user/checkWalToWalFee", jwtTokenAuth, function (req, res) {
 			} else {
 				Bank.findOne(
 					{
-						name: user.bank,
+						_id: user.bank_id,
 					},
 					function (err, bank) {
 						if (err) {
@@ -321,7 +321,7 @@ router.post("/user/checkWalToNonWalFee", jwtTokenAuth, function (req, res) {
 			} else {
 				Bank.findOne(
 					{
-						name: user.bank,
+						_id: user.bank_id,
 					},
 					function (err, bank) {
 						if (err) {
@@ -1119,7 +1119,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 							} else {
 								Bank.findOne(
 									{
-										name: sender.bank,
+										_id: sender.bank_id,
 									},
 									function (err, bank) {
 										if (err) {
@@ -1412,7 +1412,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 				} else {
 					Bank.findOne(
 						{
-							name: sender.bank,
+							_id: sender.bank_id,
 						},
 						function (err, bank) {
 							if (err) {
