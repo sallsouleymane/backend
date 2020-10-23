@@ -12,7 +12,7 @@ module.exports = async function (
 	comm
 ) {
 	// receiver's wallet names
-	const userWallet = user.mobile + "@" + bank.name;
+	const userWallet = user.wallet_id;
 	const merchantOpWallet = merchant.wallet_ids.operational;
 
 	let master_code = getTransactionCode(user.mobile, merchant.mobile);
@@ -74,7 +74,7 @@ async function distributeRevenue(
 	comm,
 	master_code
 ) {
-	const userWallet = user.mobile + "@" + bank.name;
+	const userWallet = user.wallet_id;
 	const merchantOpWallet = merchant.wallet_ids.operational;
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;

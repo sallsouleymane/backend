@@ -10,7 +10,7 @@ module.exports = async function (
     rule1
 ) {
     try {
-        const senderWallet = sender.mobile + "@" + sender.bank;
+        const senderWallet = sender.wallet_id;
         const bankEsWallet = bank.wallet_ids.escrow;
         const bankOpWallet = bank.wallet_ids.operational;
 

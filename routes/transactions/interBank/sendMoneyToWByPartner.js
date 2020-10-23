@@ -13,7 +13,7 @@ module.exports = async function (
     rule2
 ) {
     const branchOpWallet = branch.wallet_ids.operational;
-    const receiverWallet = receiver.mobile + "@" + receiver.bank;
+    const receiverWallet = receiver.wallet_id;
     const bankOpWallet = bank.wallet_ids.operational;
 
     // first transaction

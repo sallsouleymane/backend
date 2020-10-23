@@ -247,7 +247,7 @@ router.post("/partner/getHistoryTotal", jwtTokenAuth, function (req, res) {
                                 "Bank of the partner is not valid.",
                         });
                     } else {
-                        const wallet = partner.code + "_partner_" + from + "@" + bank.name;
+                        const wallet = partner.wallet_ids[from];
                         blockchain.getTransactionCount(wallet).then(function (count) {
                             if (err) {
                                 console.log(err);
@@ -300,48 +300,29 @@ router.post("/partner/getHistory", jwtTokenAuth, function (req, res) {
                         "Token changed or user not valid. Try to login again or contact system administrator.",
                 });
             } else {
-                Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
-                    if (err) {
-                        console.log(err);
-                        var message = err;
-                        if (err.message) {
-                            message = err.message;
-                        }
-                        res.status(200).json({
-                            status: 0,
-                            message: message,
-                        });
-                    } else if (bank == null) {
-                        res.status(200).json({
-                            status: 0,
-                            message:
-                                "Bank of the partner is not valid.",
-                        });
-                    } else {
-                        const wallet = partner.code + "_partner_" + from + "@" + bank.name;
-                        blockchain.getStatement(wallet).then(function (history) {
-                            FailedTX.find({ wallet_id: wallet }, (err, failed) => {
-                                if (err) {
-                                    console.log(err);
-                                    var message = err;
-                                    if (err.message) {
-                                        message = err.message;
-                                    }
-                                    res.status(200).json({
-                                        status: 0,
-                                        message: message,
-                                    });
-                                } else {
-                                    res.status(200).json({
-                                        status: 1,
-                                        history: history,
-                                        failed: failed,
-                                    });
-                                }
+                const wallet = partner.wallet_ids[from];
+                blockchain.getStatement(wallet).then(function (history) {
+                    FailedTX.find({ wallet_id: wallet }, (err, failed) => {
+                        if (err) {
+                            console.log(err);
+                            var message = err;
+                            if (err.message) {
+                                message = err.message;
+                            }
+                            res.status(200).json({
+                                status: 0,
+                                message: message,
                             });
-                        });
-                    }
+                        } else {
+                            res.status(200).json({
+                                status: 1,
+                                history: history,
+                                failed: failed,
+                            });
+                        }
+                    });
                 });
+
             }
         }
     );

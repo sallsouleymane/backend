@@ -13,7 +13,7 @@ module.exports = async function (
 ) {
 	try {
 		// receiver's wallet names
-		const userWallet = user.mobile + "@" + bank.name;
+		const userWallet = user.wallet_id;
 		const merchantOpWallet = merchant.wallet_ids.operational;
 
 		// check branch operational wallet balance
@@ -84,7 +84,7 @@ async function distributeRevenue(
 	merchant,
 	rule1
 ) {
-	const userWallet = user.mobile + "@" + bank.name;
+	const userWallet = user.wallet_id;
 	const merchantOpWallet = merchant.wallet_ids.operational;
 	const merBankOpWallet = merchantBank.wallet_ids.operational;
 	const bankOpWallet = bank.wallet_ids.operational;

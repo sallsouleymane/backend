@@ -468,7 +468,7 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
                                       });
                                     } else {
                                       const branchOpWallet = branch.wallet_ids.operational;
-                                      const receiverWallet = receiverMobile + "@" + receiver.bank;
+                                      const receiverWallet = receiver.wallet_id;
                                       const bankOpWallet = bank.wallet_ids.operational;
                                       const infraOpWallet = bank.wallet_ids.infra_operational;
 
@@ -3165,32 +3165,27 @@ router.post("/partnerCashier/getHistory", jwtTokenAuth, function (req, res) {
             "Token changed or user not valid. Try to login again or contact system administrator.",
         });
       } else {
-        Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
-          Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
-            PartnerBranch.findOne({ _id: cashier.branch_id }, (err, branch) => {
-              const wallet =
-                branch.code + "_partnerbranch_" + from + "@" + bank.name;
-              blockchain.getStatement(wallet).then(function (history) {
-                FailedTX.find({ wallet_id: wallet }, (err, failed) => {
-                  if (err) {
-                    console.log(err);
-                    var message = err;
-                    if (err.message) {
-                      message = err.message;
-                    }
-                    res.status(200).json({
-                      status: 0,
-                      message: message,
-                    });
-                  } else {
-                    res.status(200).json({
-                      status: 1,
-                      history: history,
-                      failed: failed,
-                    });
-                  }
+        PartnerBranch.findOne({ _id: cashier.branch_id }, (err, branch) => {
+          const wallet = branch.wallet_ids[from]
+          blockchain.getStatement(wallet).then(function (history) {
+            FailedTX.find({ wallet_id: wallet }, (err, failed) => {
+              if (err) {
+                console.log(err);
+                var message = err;
+                if (err.message) {
+                  message = err.message;
+                }
+                res.status(200).json({
+                  status: 0,
+                  message: message,
                 });
-              });
+              } else {
+                res.status(200).json({
+                  status: 1,
+                  history: history,
+                  failed: failed,
+                });
+              }
             });
           });
         });

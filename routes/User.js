@@ -488,7 +488,7 @@ router.get("/user/getBalance", jwtTokenAuth, (req, res) => {
 					message: "User not found",
 				});
 			} else {
-				const wallet_id = user.mobile + "@" + user.bank;
+				const wallet_id = user.wallet_id;
 				blockchain.getBalance(wallet_id).then(function (result) {
 					res.status(200).json({
 						status: 1,
@@ -969,7 +969,7 @@ router.get("/user/getTransactionHistory", jwtTokenAuth, function (req, res) {
 					message: "You are either not authorised or not logged in.",
 				});
 			} else {
-				const wallet = user.mobile + "@" + user.bank;
+				const wallet = user.wallet_id;
 				let result = await blockchain.getStatement(wallet);
 				res.status(200).json({
 					status: 1,
@@ -1088,7 +1088,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				const senderWallet = sender.mobile + "@" + sender.bank;
+				const senderWallet = sender.wallet_id;
 				var bal = await blockchain.getBalance(senderWallet);
 				if (Number(bal) < sending_amount) {
 					res.status(200).json({
@@ -1204,8 +1204,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 
 																		//send transaction sms after actual transaction
 
-																		const receiverWallet =
-																			receiverMobile + "@" + bank.name;
+																		const receiverWallet = receiver.wallet_id;
 																		const bankOpWallet = bank.wallet_ids.operational;
 																		const infraOpWallet = bank.wallet_ids.infra_operational;
 																		const {
@@ -1403,7 +1402,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 
 				await NWUser.create(receiver, function (err) { });
 
-				const senderWallet = sender.mobile + "@" + sender.bank;
+				const senderWallet = sender.wallet_id;
 				var bal = await blockchain.getBalance(senderWallet);
 				if (Number(bal) < sending_amount) {
 					res.status(200).json({

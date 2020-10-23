@@ -2611,7 +2611,7 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
                       }
 
                       // check branch operational wallet balance
-                      const userOpWallet = user.mobile + "@" + bank.name;
+                      const userOpWallet = user.wallet_id;
                       var bal = await blockchain.getBalance(userOpWallet);
                       console.log(bal);
                       if (Number(bal) < total_amount) {

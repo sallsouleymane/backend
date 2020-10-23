@@ -11,8 +11,8 @@ module.exports = async function (
     receiver,
     rule1
 ) {
-    const senderWallet = sender.mobile + "@" + sender.bank;
-    const receiverWallet = receiver.mobile + "@" + receiverBank.name;
+    const senderWallet = sender.wallet_id;
+    const receiverWallet = receiver.wallet_id;
     const bankOpWallet = bank.wallet_ids.operational;
 
     // first transaction

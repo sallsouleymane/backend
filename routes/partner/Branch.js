@@ -197,28 +197,24 @@ router.post("/partnerBranch/getHistoryTotal", jwtTokenAuth, function (req, res) 
                         "Token changed or user not valid. Try to login again or contact system administrator.",
                 });
             } else {
-                Partner.findOne({ _id: branch.partner_id }, (err, partner) => {
-                    Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
-                        const wallet = branch.code + "_partnerbranch_" + from + "@" + bank.name;
-                        blockchain.getTransactionCount(wallet).then(function (count) {
-                            if (err) {
-                                console.log(err);
-                                var message = err;
-                                if (err.message) {
-                                    message = err.message;
-                                }
-                                res.status(200).json({
-                                    status: 0,
-                                    message: message,
-                                });
-                            } else {
-                                res.status(200).json({
-                                    status: 1,
-                                    count: count,
-                                });
-                            }
+                const wallet = branch.wallet_ids[from];
+                blockchain.getTransactionCount(wallet).then(function (count) {
+                    if (err) {
+                        console.log(err);
+                        var message = err;
+                        if (err.message) {
+                            message = err.message;
+                        }
+                        res.status(200).json({
+                            status: 0,
+                            message: message,
                         });
-                    });
+                    } else {
+                        res.status(200).json({
+                            status: 1,
+                            count: count,
+                        });
+                    }
                 });
             }
         }
@@ -251,32 +247,28 @@ router.post("/partnerBranch/getHistory", jwtTokenAuth, function (req, res) {
                         "Token changed or user not valid. Try to login again or contact system administrator.",
                 });
             } else {
-                Partner.findOne({ _id: branch.partner_id }, (err, partner) => {
-                    Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
-                        const wallet = branch.code + "_partnerbranch_" + from + "@" + bank.name;
-                        blockchain.getStatement(wallet).then(function (history) {
-                            FailedTX.find({ wallet_id: wallet }, (err, failed) => {
-                                if (err) {
-                                    console.log(err);
-                                    var message = err;
-                                    if (err.message) {
-                                        message = err.message;
-                                    }
-                                    res.status(200).json({
-                                        status: 0,
-                                        message: message,
-                                    });
-                                } else {
-                                    res.status(200).json({
-                                        status: 1,
-                                        history: history,
-                                        failed: failed,
-                                    });
-                                }
+                const wallet = branch.wallet_ids[from];
+                blockchain.getStatement(wallet).then(function (history) {
+                    FailedTX.find({ wallet_id: wallet }, (err, failed) => {
+                        if (err) {
+                            console.log(err);
+                            var message = err;
+                            if (err.message) {
+                                message = err.message;
+                            }
+                            res.status(200).json({
+                                status: 0,
+                                message: message,
                             });
-                        });
-
+                        } else {
+                            res.status(200).json({
+                                status: 1,
+                                history: history,
+                                failed: failed,
+                            });
+                        }
                     });
+
                 });
             }
         }

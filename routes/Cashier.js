@@ -523,8 +523,8 @@ router.post("/cashier/editUser", function (req, res) {
 router.post("/cashier/activateUser", function (req, res) {
 	try {
 		const { token, mobile } = req.body;
-		Cashier.findOne({ token }, async function(err, cashier) {
-			if(err) {
+		Cashier.findOne({ token }, async function (err, cashier) {
+			if (err) {
 				console.log(err);
 				var message = err;
 				if (err.message) {
@@ -534,89 +534,108 @@ router.post("/cashier/activateUser", function (req, res) {
 					status: 0,
 					message: message,
 				});
-			} else if(cashier == null) {
-			res.status(200).json({
-				status: 0,
-				message: "You are either not authorised or not logged in.",
-			});
-		} else {
-			let wallet_id = mobile + "@" + user.bank;
-			let result = await blockchain.createWallet([wallet_id]);
-			if (result != "" && !result.includes("wallet already exists")) {
-				console.log(result);
+			} else if (cashier == null) {
 				res.status(200).json({
 					status: 0,
-					message:
-						"Blockchain service was unavailable. Please try again.",
-					result: result,
+					message: "You are either not authorised or not logged in.",
 				});
 			} else {
-				User.findOneAndUpdate(
-					{ mobile },
-					{
-						$set: {
-							status: 1,
-							wallet_id: wallet_id
+				Bank.findOne({ _id: cashier.bank_id }, (err, bank) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
 						}
-					},
-					function (err, user) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (cashier == null) {
+						res.status(200).json({
+							status: 0,
+							message: "You are either not authorised or not logged in.",
+						});
+					} else {
+						let wallet_id = mobile + "@" + bank.bcode;
+						let result = await blockchain.createWallet([wallet_id]);
+						if (result != "" && !result.includes("wallet already exists")) {
+							console.log(result);
 							res.status(200).json({
 								status: 0,
-								message: message,
-							});
-						} else if (user == null) {
-							res.status(200).json({
-								status: 0,
-								message: "User not found",
+								message:
+									"Blockchain service was unavailable. Please try again.",
+								result: result,
 							});
 						} else {
-							let content =
-								"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-								config.mainIP +
-								"/user";
-							"'>http://" +
-								config.mainIP +
-								"/user" +
-								"</a></p><p><p>Your username: " +
-								mobile +
-								"</p><p>Your password: " +
-								user.password +
-								"</p>";
-							sendMail(content, "Approved Ewallet Account", user.email);
-							let content2 =
-								"Your account is activated. Login URL: http://" +
-								config.mainIP +
-								"/user" +
-								" Your username: " +
-								mobile +
-								" Your password: " +
-								user.password;
-							sendSMS(content2, mobile);
-							res.status(200).json({
-								status: 1,
-								message: result.toString(),
-							});
-						}
+							User.findOneAndUpdate(
+								{ mobile },
+								{
+									$set: {
+										status: 1,
+										wallet_id: wallet_id
+									}
+								},
+								function (err, user) {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (user == null) {
+										res.status(200).json({
+											status: 0,
+											message: "User not found",
+										});
+									} else {
+										let content =
+											"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+											config.mainIP +
+											"/user";
+										"'>http://" +
+											config.mainIP +
+											"/user" +
+											"</a></p><p><p>Your username: " +
+											mobile +
+											"</p><p>Your password: " +
+											user.password +
+											"</p>";
+										sendMail(content, "Approved Ewallet Account", user.email);
+										let content2 =
+											"Your account is activated. Login URL: http://" +
+											config.mainIP +
+											"/user" +
+											" Your username: " +
+											mobile +
+											" Your password: " +
+											user.password;
+										sendSMS(content2, mobile);
+										res.status(200).json({
+											status: 1,
+											message: result.toString(),
+										});
+									}
 
+								}
+							);
+						}
 					}
-				);
+				})
 			}
-		}
-	});
+		});
 	} catch (err) {
-	console.log(err);
-	var message = err.toString();
-	if (err.message) {
-		message = err.message;
+		console.log(err);
+		var message = err.toString();
+		if (err.message) {
+			message = err.message;
+		}
+		res.status(200).json({ status: 0, message: message, err: err });
 	}
-	res.status(200).json({ status: 0, message: message, err: err });
-}
 });
 
 router.post("/getCashierDashStats", function (req, res) {
@@ -2316,7 +2335,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																		});
 																	} else {
 																		const branchOpWallet = branch.wallet_ids.operational;
-																		const receiverWallet = receiverMobile + "@" + receiver.bank;
+																		const receiverWallet = receiver.wallet_id;
 																		const bankOpWallet = bank.wallet_ids.operational;
 																		const infraOpWallet = bank.wallet_ids.infra_operational;
 
