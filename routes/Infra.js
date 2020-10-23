@@ -289,7 +289,7 @@ router.post("/infra/createMerchant", function (req, res) {
 									data.infra_id = infra._id;
 									data.status = 0;
 									data.creator = 1;
-									data.wallet_ids.operational = wallet
+									data.wallet_ids.operational = wallet;
 
 									data.save((err) => {
 										if (err) {
