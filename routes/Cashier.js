@@ -557,7 +557,7 @@ router.post("/cashier/activateUser", function (req, res) {
 							message: "You are either not authorised or not logged in.",
 						});
 					} else {
-						let wallet_id = mobile  bank.bcode;
+						let wallet_id = mobile + "@" + bank.bcode;
 						let result = await blockchain.createWallet([wallet_id]);
 						if (result != "" && !result.includes("wallet already exists")) {
 							console.log(result);
