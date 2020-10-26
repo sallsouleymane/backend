@@ -691,7 +691,7 @@ router.post("/addBank", (req, res) => {
 								status: 0,
 								message: message,
 							});
-						} else if (bank) {
+						} else if (bank != null) {
 							res.status(200).json({
 								status: 0,
 								message:
@@ -772,7 +772,10 @@ router.post("/addBank", (req, res) => {
 													data.password;
 												sendSMS(content2, mobile);
 
-												return res.status(200).json(data);
+												return res.status(200).json({
+													status: 1,
+													message: "Added Bank successfully"
+												});
 											}
 										});
 
@@ -1911,7 +1914,7 @@ router.post("/generateOTP", function (req, res) {
 								{ bcode: bcode },
 							],
 						},
-						function (err, bank) {
+						function (err, banks) {
 							if (err) {
 								console.log(err);
 								var message = err;
@@ -1922,7 +1925,7 @@ router.post("/generateOTP", function (req, res) {
 									status: 0,
 									message: message,
 								});
-							} else if (bank.length == 0) {
+							} else if (banks.length == 0) {
 								data.mobile = user.mobile;
 								data.save((err, ot) => {
 									if (err) {
@@ -1947,22 +1950,22 @@ router.post("/generateOTP", function (req, res) {
 									}
 								});
 							} else {
-								if (bank[0].name == name) {
+								if (banks[0].name == name) {
 									res.status(200).json({
 										status: 0,
 										message: "Bank already exist with the same name.",
 									});
-								} else if (bank[0].bcode == bcode) {
+								} else if (banks[0].bcode == bcode) {
 									res.status(200).json({
 										status: 0,
 										message: "Bank already exist with the same code.",
 									});
-								} else if (bank[0].mobile == mobile) {
+								} else if (banks[0].mobile == mobile) {
 									res.status(200).json({
 										status: 0,
 										message: "Bank already exist with the same mobile.",
 									});
-								} else if (bank[0].email == email) {
+								} else if (banks[0].email == email) {
 									res.status(200).json({
 										status: 0,
 										message: "Bank already exist with the same email.",
