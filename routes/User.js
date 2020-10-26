@@ -197,8 +197,8 @@ router.get("/user/listMerchants", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/user/checkWalToWalFee", jwtTokenAuth, function (req, res) {
-	var { amount } = req.body;
+router.post("/user/checkFee", jwtTokenAuth, function (req, res) {
+	var { amount, trans_type } = req.body;
 	const username = req.sign_creds.username;
 	User.findOne(
 		{
@@ -223,168 +223,48 @@ router.post("/user/checkWalToWalFee", jwtTokenAuth, function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				Bank.findOne(
-					{
-						_id: user.bank_id,
-					},
-					function (err, bank) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (bank == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Bank not Found",
-							});
-						} else {
-							const find = {
-								bank_id: bank._id,
-								trans_type: "Wallet to Wallet",
-								status: 1,
-								active: "Active",
-							};
-							Fee.findOne(find, function (err, fe) {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (fe == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Transaction cannot be done at this time",
-									});
-								} else {
-									amount = Number(amount);
-									var temp;
-									fe.ranges.map((range) => {
-										if (
-											amount >= range.trans_from &&
-											amount <= range.trans_to
-										) {
-											temp = (amount * range.percentage) / 100;
-											fee = temp + range.fixed;
-											res.status(200).json({
-												status: 1,
-												message: "wallet to wallet fee",
-												fee: fee,
-											});
-										}
-									});
-								}
-							});
+				const find = {
+					bank_id: user.bank_id,
+					trans_type: trans_type,
+					status: 1,
+					active: "Active",
+				};
+				Fee.findOne(find, function (err, fe) {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
 						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (fe == null) {
+						res.status(200).json({
+							status: 0,
+							message: "Transaction cannot be done at this time",
+						});
+					} else {
+						amount = Number(amount);
+						var temp;
+						fe.ranges.map((range) => {
+							if (
+								amount >= range.trans_from &&
+								amount <= range.trans_to
+							) {
+								temp = (amount * range.percentage) / 100;
+								fee = temp + range.fixed;
+								res.status(200).json({
+									status: 1,
+									message: trans_type + " fee",
+									fee: fee,
+								});
+							}
+						});
 					}
-				);
-			}
-		}
-	);
-});
+				});
 
-router.post("/user/checkWalToNonWalFee", jwtTokenAuth, function (req, res) {
-	var { amount } = req.body;
-	const username = req.sign_creds.username;
-	User.findOne(
-		{
-			username,
-			status: 1,
-		},
-		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				Bank.findOne(
-					{
-						_id: user.bank_id,
-					},
-					function (err, bank) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (bank == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Bank not Found",
-							});
-						} else {
-							const find = {
-								bank_id: bank._id,
-								trans_type: "Wallet to Non Wallet",
-								status: 1,
-								active: "Active",
-							};
-							Fee.findOne(find, function (err, fe) {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (fe == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Transaction cannot be done at this time",
-									});
-								} else {
-									amount = Number(amount);
-									var temp;
-									fe.ranges.map((range) => {
-										if (
-											amount >= range.trans_from &&
-											amount <= range.trans_to
-										) {
-											temp = (amount * range.percentage) / 100;
-											fee = temp + range.fixed;
-											res.status(200).json({
-												status: 1,
-												message:
-													"wallet to non wallet fee calculated successfully",
-												fee: fee,
-											});
-										}
-									});
-								}
-							});
-						}
-					}
-				);
 			}
 		}
 	);

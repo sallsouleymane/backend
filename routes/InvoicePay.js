@@ -2233,12 +2233,12 @@ router.post("/cashier/payInvoice", (req, res) => {
 
                             bankFee = calculateShare("bank", total_amount, fee);
                             partnerFeeShare = calculateShare(
-                              "partner",
+                              "branch",
                               total_amount,
                               fee
                             );
                             partnerCommShare = calculateShare(
-                              "partner",
+                              "branch",
                               total_amount,
                               comm
                             );

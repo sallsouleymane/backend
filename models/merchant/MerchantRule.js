@@ -24,6 +24,7 @@ const MerchantRuleSchema = new mongoose.Schema({
 		fixed: { type: Number, required: true, default: 0 },
 		percentage: { type: Number, required: true, default: 0 },
 	},
+	branch_share: { type: String, required: true, default: 0 },
 	specific_branch_share: [
 		{
 			code: { type: String, required: false },
@@ -31,7 +32,7 @@ const MerchantRuleSchema = new mongoose.Schema({
 			percentage: { type: Number, required: false },
 		},
 	],
-	branch_share: { type: String, required: true, default: 0 },
+	partner_share: { type: String, required: true, default: 0 },
 	specific_partner_share: [
 		{
 			code: { type: String, required: false },
@@ -39,7 +40,6 @@ const MerchantRuleSchema = new mongoose.Schema({
 			percentage: { type: Number, required: false },
 		},
 	],
-	partner_share: { type: String, required: true, default: 0 },
 	edited: {
 		infra_share: {
 			fixed: { type: Number, required: false },

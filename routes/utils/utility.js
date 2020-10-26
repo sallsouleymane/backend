@@ -10,7 +10,7 @@ module.exports.calculateShare = function (
 	amount,
 	rule,
 	rule2 = {},
-	partnerCode = ""
+	sharerCode = ""
 ) {
 	console.log("**********Calculating " + calculate + " share for amount " + amount + " **********")
 	console.log(rule);
@@ -60,7 +60,7 @@ module.exports.calculateShare = function (
 		case "infra":
 			return infraShare;
 		case "claimBranch":
-			if (rule2.revenue_sharing_rule.branch_share) {
+			if (rule2.revenue_sharing_rule && rule2.revenue_sharing_rule.branch_share) {
 				rule = rule2
 				bankShare = bankBShare;
 			}
@@ -69,7 +69,7 @@ module.exports.calculateShare = function (
 			var branchRule = rule.revenue_sharing_rule.branch_share;
 			if (rule.revenue_sharing_rule.specific_branch_share && rule.revenue_sharing_rule.specific_branch_share.length > 0) {
 				var specificBranchRule = rule.revenue_sharing_rule.specific_branch_share.filter(
-					(specific_brule) => specific_brule.branch_code == partnerCode
+					(specific_brule) => specific_brule.branch_code == sharerCode
 				)[0];
 			}
 			if (specificBranchRule) {
@@ -80,7 +80,7 @@ module.exports.calculateShare = function (
 			console.log("Claiming Branch Share: ", claimFee);
 			return claimFee;
 		case "sendBranch":
-			if (rule2.revenue_sharing_rule.branch_share) {
+			if (rule2.revenue_sharing_rule && rule2.revenue_sharing_rule.branch_share) {
 				rule = rule2
 			}
 			console.log(rule.revenue_sharing_rule.branch_share);
@@ -88,7 +88,7 @@ module.exports.calculateShare = function (
 			var branchRule = rule.revenue_sharing_rule.branch_share;
 			if (rule.revenue_sharing_rule.specific_branch_share && rule.revenue_sharing_rule.specific_branch_share.length > 0) {
 				var specificBranchRule = rule.revenue_sharing_rule.specific_branch_share.filter(
-					(specific_brule) => specific_brule.branch_code == partnerCode
+					(specific_brule) => specific_brule.branch_code == sharerCode
 				)[0];
 			}
 			if (specificBranchRule) {
@@ -99,7 +99,7 @@ module.exports.calculateShare = function (
 			console.log("Sending Branch Share: ", sendFee);
 			return sendFee;
 		case "claimPartner":
-			if (rule2.revenue_sharing_rule.partner_share) {
+			if (rule2.revenue_sharing_rule && rule2.revenue_sharing_rule.partner_share) {
 				rule = rule2
 				bankShare = bankBShare;
 			}
@@ -108,7 +108,7 @@ module.exports.calculateShare = function (
 			var partnerRule = rule.revenue_sharing_rule.partner_share;
 			if (rule.revenue_sharing_rule.specific_partner_share && rule.revenue_sharing_rule.specific_partner_share.length > 0) {
 				var specificPartnerRule = rule.revenue_sharing_rule.specific_partner_share.filter(
-					(specific_brule) => specific_brule.partner_code == partnerCode
+					(specific_brule) => specific_brule.partner_code == sharerCode
 				)[0];
 			}
 			if (specificPartnerRule) {
@@ -119,7 +119,7 @@ module.exports.calculateShare = function (
 			console.log("Claiming Partner Share: ", claimFee);
 			return claimFee;
 		case "sendPartner":
-			if (rule2.revenue_sharing_rule.partner_share) {
+			if (rule2.revenue_sharing_rule && rule2.revenue_sharing_rule.partner_share) {
 				rule = rule2
 			}
 			console.log(rule.revenue_sharing_rule.partner_share);
@@ -127,7 +127,7 @@ module.exports.calculateShare = function (
 			var partnerRule = rule.revenue_sharing_rule.partner_share;
 			if (rule.revenue_sharing_rule.specific_partner_share && rule.revenue_sharing_rule.specific_partner_share.length > 0) {
 				var specificPartnerRule = rule.revenue_sharing_rule.specific_partner_share.filter(
-					(specific_brule) => specific_brule.partner_code == partnerCode
+					(specific_brule) => specific_brule.partner_code == sharerCode
 				)[0];
 			}
 			if (specificPartnerRule) {
@@ -137,34 +137,34 @@ module.exports.calculateShare = function (
 			var sendFee = (Number(send) * bankShare) / 100;
 			console.log("Sending Partner Share: ", sendFee);
 			return sendFee;
-		case "partner":
-			if (rule2.partner_share_percentage) {
+		case "branch":
+			if (rule2.branch_share) {
 				rule = rule2
 			}
-			console.log(rule.partner_share_percentage);
-			console.log(rule.specific_partners_share)
-			var percent = rule.partner_share_percentage;
-			if (rule.specific_partners_share && rule.specific_partners_share.length > 0) {
-				var partnerRule = rule.specific_partners_share.filter(
-					(specific_prule) => specific_prule.code == partnerCode
+			console.log(rule.branch_share);
+			console.log(rule.specific_branch_share)
+			var percent = rule.branch_share;
+			if (rule.specific_branch_share && rule.specific_branch_share.length > 0) {
+				var branchRule = rule.specific_branch_share.filter(
+					(specific_brule) => specific_brule.code == sharerCode
 				)[0];
-				if (partnerRule) {
-					percent = partnerRule.percentage;
+				if (branchRule) {
+					percent = branchRule.percentage;
 				}
 			}
-			var partnerFee = (percent * bankShare) / 100;
-			console.log("Merchant's Partner Share: ", partnerFee);
-			return partnerFee;
-		case "partnerBranch":
-			if (rule2.partner_branch_share) {
+			var branchFee = (percent * bankShare) / 100;
+			console.log("Bank Branch Share : ", branchFee);
+			return branchFee;
+		case "partner":
+			if (rule2.partner_share) {
 				rule = rule2
 			}
-			console.log(rule.partner_branch_share);
-			console.log(rule.specific_partners_branch_share)
-			var percent = rule.partner_branch_share;
-			if (rule.specific_partners_branch_share && rule.specific_partners_branch_share.length > 0) {
-				var partnerBRule = rule.specific_partners_branch_share.filter(
-					(specific_pbrule) => specific_pbrule.code == partnerCode
+			console.log(rule.partner_share);
+			console.log(rule.specific_partner_share)
+			var percent = rule.partner_share;
+			if (rule.specific_partner_share && rule.specific_partner_share.length > 0) {
+				var partnerBRule = rule.specific_partner_share.filter(
+					(specific_pbrule) => specific_pbrule.code == sharerCode
 				)[0];
 				if (partnerBRule) {
 					percent = partnerBRule.percentage;

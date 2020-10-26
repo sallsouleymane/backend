@@ -15,6 +15,7 @@ const PartnerBranchSchema = new mongoose.Schema({
     mobile: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     partner_id: { type: String, required: true },
+    bank_id: { type: String, required: false },
     created_at: { type: Date, default: Date.now },
     modified_at: { type: Date, default: null },
     initial_setup: { type: Boolean, default: false },

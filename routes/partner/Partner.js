@@ -1062,7 +1062,7 @@ router.post("/partner/addBranch", jwtTokenAuth, (req, res) => {
             } else {
                 Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
                     const op_wallet = "PBO@" + code + "@" + bank.bcode;
-                    const master_wallet = "PBM@" + code + "@" + bank.name;
+                    const master_wallet = "PBM@" + code + "@" + bank.code;
                     blockchain.createWallet([
                         op_wallet,
                         master_wallet,
@@ -1274,8 +1274,8 @@ router.post("/partner/activate", jwtTokenAuth, function (req, res) {
                 });
             } else {
                 Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
-                    const operational = "PAO@" + partner.code + "@" + bank.name;
-                    const master = "PAM@" + partner.code + "@" + bank.name;
+                    const operational = "PAO@" + partner.code + "@" + bank.bcode;
+                    const master = "PAM@" + partner.code + "@" + bank.bcode;
                     blockchain.createWallet([
                         operational,
                         master,

@@ -1332,8 +1332,8 @@ router.post("/getWalletsMaster", function (req, res) {
         });
       } else {
         res.status(200).json({
-          from: "infra_master@" + bank.name,
-          to: "master@" + bank.name,
+          from: bank.wallet_ids.infra_master,
+          to: bank.wallet_ids.master,
         });
       }
     }

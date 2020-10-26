@@ -21,60 +21,48 @@ module.exports = (key) => {
 	switch (key) {
 		case 'cashier':
 			return Cashier
-			break
 		case 'bank':
+		case 'BA':
 			return Bank
-			break
 		case 'infra':
+		case 'IN':
 			return Infra
-			break
 		case 'branch':
+		case 'BR':
 			return Branch
-			break
 		case 'bankuser':
 			return BankUser
-			break
 		case 'bankfee':
 			return Fee
-			break
 		case 'cashierledger':
 			return CashierLedger
-			break
 		case 'cashierpending':
 			return CashierPending
-			break
 		case 'user':
 			return User
-			break
 		case 'merchant':
+		case 'ME':
+		case 'IM':
 			return Merchant
-			break
 		case 'merchantBranch':
 			return MerchantBranch
-			break
 		case 'merchantCashier':
 			return MerchantCashier
-			break
 		case 'merchantUser':
 			return MerchantUser
-			break
 		case 'partner':
+		case 'PA':
 			return Partner
-			break
 		case 'partnerBranch':
+		case 'PB':
 			return PartnerBranch
-			break
 		case 'partnerCashier':
 			return PartnerCashier
-			break
 		case 'partnerUser':
 			return PartnerUser
-			break
 		case 'interbankrule':
 			return InterBankRule
-			break
 		default:
 			return null
-			break
 	}
 }

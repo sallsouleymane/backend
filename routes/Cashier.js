@@ -7,6 +7,7 @@ const makeid = require("./utils/idGenerator");
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
 const makeotp = require("./utils/makeotp");
+const getTypeClass = require("./utils/getTypeClass");
 
 //services
 const blockchain = require("../services/Blockchain.js");
@@ -26,10 +27,11 @@ const CashierLedger = require("../models/CashierLedger");
 const CashierTransfer = require("../models/CashierTransfer");
 const Merchant = require("../models/merchant/Merchant");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
-const PartnerBranch = require("../models/partner/Branch")
+const PartnerBranch = require("../models/partner/Branch");
+const transferToOperational = require("./transactions/transferToOperational");
 
-router.post("/cashier/sendToOp", function (req, res) {
-	const { token, wallet_id } = req.body;
+router.post("/cashier/sendToOperational", function (req, res) {
+	const { token, wallet_id, amount, is_inclusive } = req.body;
 	Cashier.findOne(
 		{
 			token,
@@ -64,43 +66,226 @@ router.post("/cashier/sendToOp", function (req, res) {
 							status: 0,
 							message: message,
 						});
-					} else if (cashier == null) {
+					} else if (branch == null) {
 						res.status(200).json({
 							status: 0,
 							message:
-								"Token changed or user not valid. Try to login again or contact system administrator.",
+								"Branch not found",
 						});
 					} else {
-						Collection.findOne({ wallet_ids: { operational: wallet_id } }, (err, tobranch) => {
-							const trans = {
-								from: branch.wallet_ids.operational,
-								to: wallet_id,
-								amount: amount,
-								note: "Transfer to " + Collection + "'s Operational Wallet",
-								email1: branch.email,
-								email2: tobranch.email,
-								mobile1: branch.mobile,
-								mobile2: tobranch.mobile,
-								from_name: branch.name,
-								to_name: tobranch.name,
-								user_id: cashier._id,
-								master_code: master_code,
-								child_code: master_code + "1"
-							}
-							blockchain.initiateTransfer(trans).then((result) => {
-								if (result.status == 1) {
-									res.status(200).json({
-										status: 1,
-										message: result.message,
-									});
-								} else {
+						const Collection = getTypeClass(wallet_id.substr(0, 2));
+						Collection.findOne(
+							{
+								bank_id: branch.bank_id,
+								wallet_ids: { operational: wallet_id }
+							},
+							(err, toBranch) => {
+								if (err) {
+									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
 									res.status(200).json({
 										status: 0,
-										message: result.message,
+										message: message,
+									});
+								} else if (toBranch == null) {
+									res.status(200).json({
+										status: 0,
+										message:
+											"Invalid wallet ID",
+									});
+								} else {
+									const find = {
+										bank_id: branch.bank_id,
+										trans_type: "Non Wallet to Operational",
+										status: 1,
+										active: "Active"
+									}
+									Fee.findOne(find, (err, rule) => {
+										if (err) {
+											console.log(err);
+											var message = err;
+											if (err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+											});
+										} else if (rule == null) {
+											res.status(200).json({
+												status: 0,
+												message: "Rule not found",
+											});
+										} else {
+											Bank.findOne({ _id: branch.bank_id }, (err, bank) => {
+												if (err) {
+													console.log(err);
+													var message = err;
+													if (err.message) {
+														message = err.message;
+													}
+													res.status(200).json({
+														status: 0,
+														message: message,
+													});
+												} else if (bank == null) {
+													res.status(200).json({
+														status: 0,
+														message: "Bank not found",
+													});
+												} else {
+													Infra.findOne({ _id: bank.user_id }, (err, infra) => {
+														if (err) {
+															console.log(err);
+															var message = err;
+															if (err.message) {
+																message = err.message;
+															}
+															res.status(200).json({
+																status: 0,
+																message: message,
+															});
+														} else if (infra == null) {
+															res.status(200).json({
+																status: 0,
+																message: "Infra not found",
+															});
+														} else {
+															const transfer = {
+																amount: amount,
+																isInclusive: is_inclusive,
+															}
+															transferToOperational(
+																transfer,
+																infra,
+																bank,
+																branch,
+																toBranch,
+																rule)
+																.then((result) => {
+																	if (result == 1) {
+																		CashierSend.findByIdAndUpdate(
+																			d._id,
+																			{
+																				status: 1,
+																				fee: result.fee,
+																			},
+																			(err) => {
+																				if (err) {
+																					console.log(err);
+																					var message = err;
+																					if (err.message) {
+																						message =
+																							err.message;
+																					}
+																					res.status(200).json({
+																						status: 0,
+																						message: message,
+																					});
+																				} else {
+																					Cashier.findByIdAndUpdate(
+																						cashier._id,
+																						{
+																							cash_received:
+																								Number(cashier.cash_received) +
+																								Number(transfer.amount) +
+																								Number(transfer.fee),
+																							cash_in_hand:
+																								Number(cashier.cash_in_hand) +
+																								Number(trasfer.amount) +
+																								Number(transfer.fee),
+																							fee_generated:
+																								Number(transfer.sendFee) +
+																								Number(cashier.fee_generated),
+																							total_trans:
+																								Number(cashier.total_trans) + 1,
+																						},
+																						function (
+																							e,
+																							v
+																						) { }
+																					);
+																					CashierLedger.findOne(
+																						{
+																							cashier_id: cashier._id,
+																							trans_type: "CR",
+																							created_at: {
+																								$gte: new Date(
+																									start
+																								),
+																								$lte: new Date(
+																									end
+																								),
+																							},
+																						},
+																						function (err, c) {
+																							if (err || c == null) {
+																								let data = new CashierLedger();
+																								data.amount =
+																									Number(transfer.amount) +
+																									Number(transfer.fee);
+																								data.trans_type = "CR";
+																								data.transaction_details = JSON.stringify(
+																									{
+																										fee: transfer.fee,
+																									}
+																								);
+																								data.cashier_id = cashier._id;
+																								data.save(
+																									function (
+																										err,
+																										c
+																									) { }
+																								);
+																							} else {
+																								var amt =
+																									Number(c.amount) +
+																									Number(transfer.amount) +
+																									Number(transfer.fee);
+																								CashierLedger.findByIdAndUpdate(
+																									c._id,
+																									{
+																										amount: amt,
+																									},
+																									function (
+																										err,
+																										c
+																									) { }
+																								);
+																							}
+																						}
+																					);
+																					res.status(200).json({
+																						status: 1,
+																						message:
+																							transfer.amount +
+																							"XOF amount is Transferred",
+																					});
+																				}
+																			}
+																		);
+																	} else {
+																		res.status(200).json(result)
+																	}
+
+																})
+																.catch((err) => {
+																	res.status(200).json({
+																		status: 0,
+																		message: err.message
+																	})
+																})
+														}
+													})
+												}
+											});
+										}
 									});
 								}
-							})
-						})
+							});
 					}
 				});
 			}
@@ -1303,7 +1488,7 @@ router.post("/getCashier", function (req, res) {
 });
 
 router.post("/checkCashierFee", function (req, res) {
-	var { amount, token } = req.body;
+	var { token, amount, trans_type } = req.body;
 
 	Cashier.findOne(
 		{
@@ -1328,66 +1513,45 @@ router.post("/checkCashierFee", function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				Bank.findOne(
-					{
-						_id: cashier.bank_id,
-					},
-					function (err, bank) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (bank == null) {
-							return res.status(200).json({
-								status: 0,
-								message: "Bank not Found",
-							});
+				const find = {
+					bank_id: cashier.bank_id,
+					trans_type: trans_type,
+					status: 1,
+					active: "Active",
+				};
+				Fee.findOne(find, function (err, fe) {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
 						}
-						const find = {
-							bank_id: bank._id,
-							trans_type: "Non Wallet to Non Wallet",
-							status: 1,
-							active: "Active",
-						};
-						Fee.findOne(find, function (err, fe) {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (fe == null) {
+						return res.status(200).json({
+							status: 0,
+							message: "Transaction cannot be done at this time",
+						});
+					} else {
+						amount = Number(amount);
+						var temp;
+						fe.ranges.map((range) => {
+							console.log(range);
+							if (amount >= range.trans_from && amount <= range.trans_to) {
+								temp = (amount * range.percentage) / 100;
+								fee = temp + range.fixed;
 								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else if (fe == null) {
-								return res.status(200).json({
-									status: 0,
-									message: "Transaction cannot be done at this time",
-								});
-							} else {
-								amount = Number(amount);
-								var temp;
-								fe.ranges.map((range) => {
-									console.log(range);
-									if (amount >= range.trans_from && amount <= range.trans_to) {
-										temp = (amount * range.percentage) / 100;
-										fee = temp + range.fixed;
-										res.status(200).json({
-											status: 1,
-											fee: fee,
-										});
-									}
+									status: 1,
+									fee: fee,
 								});
 							}
 						});
 					}
+
+				}
 				);
 			}
 		}
@@ -1445,102 +1609,6 @@ router.post("/cashierVerifyOTPClaim", function (req, res) {
 							res.status(200).json({
 								status: 1,
 								message: "Claim OTP verified",
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
-
-router.post("/cashier/checkNonWaltoWalFee", function (req, res) {
-	var { token, amount } = req.body;
-
-	Cashier.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				Bank.findOne(
-					{
-						_id: cashier.bank_id,
-					},
-					function (err, bank) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (bank == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Bank not Found",
-							});
-						} else {
-							const find = {
-								bank_id: bank._id,
-								trans_type: "Non Wallet to Wallet",
-								status: 1,
-								active: "Active",
-							};
-							Fee.findOne(find, function (err, fe) {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (fe == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Transaction cannot be done at this time",
-									});
-								} else {
-									amount = Number(amount);
-									var temp;
-									fe.ranges.map((range) => {
-										console.log(range);
-										if (
-											amount >= range.trans_from &&
-											amount <= range.trans_to
-										) {
-											temp = (amount * range.percentage) / 100;
-											fee = temp + range.fixed;
-											res.status(200).json({
-												status: 1,
-												fee: fee,
-											});
-										}
-									});
-								}
 							});
 						}
 					}

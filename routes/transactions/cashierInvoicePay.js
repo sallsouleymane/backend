@@ -143,8 +143,7 @@ async function distributeRevenue(
 	if (bankFee > 0) {
 
 		//fourth transaction
-		partnerShare = calculateShare("partner", amount, fee, {}, branch.bcode);
-		console.log("Partner Share: ", partnerShare);
+		partnerShare = calculateShare("branch", amount, fee, {}, branch.bcode);
 		let trans4 = {
 			from: bankOpWallet,
 			to: branchOpWallet,
@@ -225,7 +224,7 @@ async function distributeRevenue(
 
 	if (bankComm > 0) {
 		//seventh transaction
-		partnerShare = calculateShare("partner", amount, comm, {}, branch.bcode);
+		partnerShare = calculateShare("branch", amount, comm, {}, branch.bcode);
 		let trans7 = {
 			from: bankOpWallet,
 			to: branchOpWallet,
