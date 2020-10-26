@@ -608,6 +608,7 @@ router.post("/branchLogin", function (req, res) {
 										email: bank.email,
 										mobile: bank.mobile,
 										logo: logo,
+										bank_id: ba._id,
 										id: bank._id,
 									});
 								}

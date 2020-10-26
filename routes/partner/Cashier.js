@@ -838,7 +838,7 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
                                                     if (bankShare > 0) {
                                                       trans4.from = bankOpWallet;
                                                       trans4.to = branchOpWallet;
-                                                      //cacluat the revene here and replace with fee below.
+                                                      //calculate the revenue here and replace with fee below.
                                                       trans4.amount = Number(
                                                         Number(sendFee).toFixed(2)
                                                       );

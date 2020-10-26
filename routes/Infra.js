@@ -1937,10 +1937,28 @@ router.post("/generateOTP", function (req, res) {
 									}
 								});
 							} else {
-								res.status(200).json({
-									status: 0,
-									message: "Duplicate Entry",
-								});
+								if (bank.name == name) {
+									res.status(200).json({
+										status: 0,
+										message: "Bank already exist with the same name.",
+									});
+								} else if (bank.bcode == bcode) {
+									res.status(200).json({
+										status: 0,
+										message: "Bank already exist with the same code.",
+									});
+								} else if (bank.mobile == mobile) {
+									res.status(200).json({
+										status: 0,
+										message: "Bank already exist with the same mobile.",
+									});
+								} else if (bank.email == email) {
+									res.status(200).json({
+										status: 0,
+										message: "Bank already exist with the same email.",
+									});
+								}
+
 							}
 						}
 					);

@@ -7,7 +7,7 @@ const blockchain = require("../services/Blockchain.js");
 //utils
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
-const { calculateShare } = require("./utils/utility");
+const { calculateShare } = require("./utils/calculateShare");
 
 const cashierInvoicePay = require("./transactions/cashierInvoicePay");
 const userInvoicePay = require("./transactions/userInvoicePay");
