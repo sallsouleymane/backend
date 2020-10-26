@@ -1922,7 +1922,7 @@ router.post("/generateOTP", function (req, res) {
 									status: 0,
 									message: message,
 								});
-							} else if (bank == null || bank == undefined || bank.length == 0) {
+							} else if (bank.length == 0) {
 								data.mobile = user.mobile;
 								data.save((err, ot) => {
 									if (err) {
@@ -1947,22 +1947,22 @@ router.post("/generateOTP", function (req, res) {
 									}
 								});
 							} else {
-								if (bank.name == name) {
+								if (bank[0].name == name) {
 									res.status(200).json({
 										status: 0,
 										message: "Bank already exist with the same name.",
 									});
-								} else if (bank.bcode == bcode) {
+								} else if (bank[0].bcode == bcode) {
 									res.status(200).json({
 										status: 0,
 										message: "Bank already exist with the same code.",
 									});
-								} else if (bank.mobile == mobile) {
+								} else if (bank[0].mobile == mobile) {
 									res.status(200).json({
 										status: 0,
 										message: "Bank already exist with the same mobile.",
 									});
-								} else if (bank.email == email) {
+								} else if (bank[0].email == email) {
 									res.status(200).json({
 										status: 0,
 										message: "Bank already exist with the same email.",
