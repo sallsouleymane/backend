@@ -635,6 +635,20 @@ router.post("/addBank", (req, res) => {
 		otp_id,
 		otp,
 	} = req.body;
+
+	if (
+		name === "" ||
+		address1 === "" ||
+		state === "" ||
+		mobile === "" ||
+		email === ""
+	) {
+		res.status(200).json({
+			status: 0,
+			message: "Please provide valid inputs",
+		});
+		return;
+	}
 	Infra.findOne(
 		{
 			token,
@@ -658,129 +672,115 @@ router.post("/addBank", (req, res) => {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				Bank.findOne({ $or: [{ bcode: bcode }, { mobile: mobile }, { email: email }] }, (err, bank) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (bank) {
-						res.status(200).json({
-							status: 0,
-							message:
-								"Bank with either same code/mobile/email already exist.",
-						});
-					} else {
-
-						OTP.findOne(
-							{
-								_id: otp_id,
-								otp: otp,
-							},
-							function (err, otpd) {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else {
-									if (!otpd) {
+				Bank.findOne(
+					{
+						$or: [
+							{ bcode: bcode },
+							{ mobile: mobile },
+							{ email: email }
+						]
+					},
+					(err, bank) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (bank) {
+							res.status(200).json({
+								status: 0,
+								message:
+									"Bank with either same code/mobile/email already exist.",
+							});
+						} else {
+							OTP.findOne(
+								{
+									_id: otp_id,
+									otp: otp,
+								},
+								function (err, otpd) {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (!otpd) {
 										res.status(200).json({
 											status: 0,
 											message: "OTP Missmatch",
 										});
 									} else {
-										if (otpd.otp === otp) {
-											if (
-												name === "" ||
-												address1 === "" ||
-												state === "" ||
-												mobile === "" ||
-												email === ""
-											) {
-												return res.status(200).json({
-													status: 0,
-													message: "Please provide valid inputs",
-												});
-											}
+										data.name = name;
+										data.bcode = bcode;
+										data.address1 = address1;
+										data.state = state;
+										data.country = country;
+										data.zip = zip;
+										data.ccode = ccode;
+										data.mobile = mobile;
+										data.username = mobile;
+										data.email = email;
+										data.user_id = user._id;
+										data.logo = logo;
+										data.contract = contract;
+										data.password = makeid(10);
 
-											data.name = name;
-											data.bcode = bcode;
-											data.address1 = address1;
-											data.state = state;
-											data.country = country;
-											data.zip = zip;
-											data.ccode = ccode;
-											data.mobile = mobile;
-											data.username = mobile;
-											data.email = email;
-											data.user_id = user._id;
-											data.logo = logo;
-											data.contract = contract;
-											data.password = makeid(10);
-
-											data.save((err, d) => {
-												if (err) {
-													console.log(err);
-													var message = err;
-													if (err.message) {
-														message = err.message;
-													}
-													res.status(200).json({
-														status: 0,
-														message: message,
-													});
-												} else {
-													let data2 = new Document();
-													data2.bank_id = d._id;
-													data2.contract = contract;
-													data2.save((err) => { });
-
-													let content =
-														"<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-														config.mainIP +
-														"/bank'>http://" +
-														config.mainIP +
-														"/bank</a></p><p><p>Your username: " +
-														data.username +
-														"</p><p>Your password: " +
-														data.password +
-														"</p>";
-													sendMail(content, "Bank Account Created", email);
-													let content2 =
-														"Your bank is added in E-Wallet application Login URL: http://" +
-														config.mainIP +
-														"/bank Your username: " +
-														data.username +
-														" Your password: " +
-														data.password;
-													sendSMS(content2, mobile);
-
-													return res.status(200).json(data);
+										data.save((err, d) => {
+											if (err) {
+												console.log(err);
+												var message = err;
+												if (err.message) {
+													message = err.message;
 												}
-											});
-										} else {
-											res.status(200).json({
-												status: 0,
-												message: "OTP Missmatch",
-											});
-										}
+												res.status(200).json({
+													status: 0,
+													message: message,
+												});
+											} else {
+												let data2 = new Document();
+												data2.bank_id = d._id;
+												data2.contract = contract;
+												data2.save((err) => { });
+
+												let content =
+													"<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+													config.mainIP +
+													"/bank'>http://" +
+													config.mainIP +
+													"/bank</a></p><p><p>Your username: " +
+													data.username +
+													"</p><p>Your password: " +
+													data.password +
+													"</p>";
+												sendMail(content, "Bank Account Created", email);
+												let content2 =
+													"Your bank is added in E-Wallet application Login URL: http://" +
+													config.mainIP +
+													"/bank Your username: " +
+													data.username +
+													" Your password: " +
+													data.password;
+												sendSMS(content2, mobile);
+
+												return res.status(200).json(data);
+											}
+										});
+
 									}
 								}
-							}
-						);
-					}
-				})
+							);
+						}
+					})
 			}
 		}
 	);
@@ -1912,9 +1912,18 @@ router.post("/generateOTP", function (req, res) {
 							],
 						},
 						function (err, bank) {
-							if (bank == null || bank == undefined || bank.length == 0) {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else if (bank == null || bank == undefined || bank.length == 0) {
 								data.mobile = user.mobile;
-
 								data.save((err, ot) => {
 									if (err) {
 										console.log(err);
@@ -1932,6 +1941,7 @@ router.post("/generateOTP", function (req, res) {
 										sendMail(content, "OTP", user.email);
 
 										res.status(200).json({
+											status: 1,
 											id: ot._id,
 										});
 									}
@@ -1956,6 +1966,11 @@ router.post("/generateOTP", function (req, res) {
 									res.status(200).json({
 										status: 0,
 										message: "Bank already exist with the same email.",
+									});
+								} else {
+									res.status(200).json({
+										status: 0,
+										message: "Can not add bank.",
 									});
 								}
 
