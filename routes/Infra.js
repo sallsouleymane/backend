@@ -270,8 +270,8 @@ router.post("/infra/createMerchant", function (req, res) {
 								message: "Code is a required field",
 							});
 						} else {
-							const wallet = "IMO@" + code + "@" + bank.bcode;
-							createWallet([wallet]).then((result) => {
+							const wallet_ids = getWalletIds("infraMerchant", code, bank.bcode);
+							createWallet([wallet_ids.operational]).then((result) => {
 								if (result != "" && !result.includes("wallet already exists")) {
 									console.log(result);
 									res.status(200).json({
@@ -295,7 +295,7 @@ router.post("/infra/createMerchant", function (req, res) {
 									data.infra_id = infra._id;
 									data.status = 0;
 									data.creator = 1;
-									data.wallet_ids.operational = wallet;
+									data.wallet_ids.operational = wallet_ids.operational;
 
 									data.save((err) => {
 										if (err) {

@@ -1,4 +1,4 @@
-module.exports.getWalletIds = function (user, userCode, bankCode) {
+module.exports = function (user, userCode, bankCode) {
     switch (user) {
         case "bank":
             return {
@@ -36,6 +36,8 @@ module.exports.getWalletIds = function (user, userCode, bankCode) {
                 operational: "IMO@" + userCode + "@" + bankCode,
                 master: "IMM@" + userCode + "@" + bankCode,
             }
+        case user:
+            return userCode + "@" + bankCode;
         default:
             return null;
     }

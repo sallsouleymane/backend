@@ -8,6 +8,7 @@ const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
 const getTypeClass = require("./utils/getTypeClass");
 const makeotp = require("./utils/makeotp");
+const getWalletIds = require("./utils/getWalletIds");
 
 //services
 const {
@@ -29,7 +30,6 @@ const FailedTX = require("../models/FailedTXLedger");
 const Partner = require("../models/partner/Partner")
 const Document = require("../models/Document");
 const Infra = require("../models/Infra");
-const { getWalletIds } = require("./utils/getWalletIds");
 
 router.post("/bank/getMyWalletIds", function (req, res) {
 	const { token } = req.body;
@@ -558,17 +558,14 @@ router.post("/bankActivate", function (req, res) {
 							message: "Infra not found.",
 						});
 					} else {
-						const op_wallet = "BAO@" + bank.bcode + "@" + bank.bcode;
-						const escrow_wallet = "BAE@" + bank.bcode + "@" + bank.bcode;
-						const master_wallet = "BAM@" + bank.bcode + "@" + bank.bcode;
-						const infra_op_wallet = "INO@" + infra.username + "@" + bank.bcode;
-						const infra_master_wallet = "INM@" + infra.username + "@" + bank.bcode;
+						const bank_wallet_ids = getWalletIds("bank", bank.bcode, bank.bcode);
+						const infra_wallet_ids = getWalletIds("infra", infra.username, bank.bcode);
 						createWallet([
-							op_wallet,
-							escrow_wallet,
-							master_wallet,
-							infra_op_wallet,
-							infra_master_wallet,
+							bank_wallet_ids.operational,
+							bank_wallet_ids.escrow,
+							bank_wallet_ids.master,
+							infra_wallet_ids.operational,
+							infra_wallet_ids.master,
 						]).then(function (result) {
 							if (result != "" && !result.includes("wallet already exists")) {
 								console.log(result);
@@ -583,11 +580,11 @@ router.post("/bankActivate", function (req, res) {
 									{
 										status: 1,
 										wallet_ids: {
-											operational: op_wallet,
-											master: master_wallet,
-											escrow: escrow_wallet,
-											infra_operational: infra_op_wallet,
-											infra_master: infra_master_wallet
+											operational: bank_wallet_ids.operational,
+											master: bank_wallet_ids.master,
+											escrow: bank_wallet_ids.escrow,
+											infra_operational: infra_wallet_ids.operational,
+											infra_master: infra_wallet_ids.master
 										}
 									},
 									(err) => {
@@ -861,11 +858,10 @@ router.post("/addBranch", (req, res) => {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				const op_wallet = "BRO@" + bcode + "@" + bank.bcode;
-				const master_wallet = "BRM@" + bcode + "@" + bank.bcode;
+				const wallet_ids = getWalletIds("branch", bcode, bank.bcode)
 				createWallet([
-					op_wallet,
-					master_wallet,
+					wallet_ids.operational,
+					wallet_ids.master,
 				]).then(function (result) {
 					if (result != "" && !result.includes("wallet already exists")) {
 						console.log(result);
@@ -895,8 +891,8 @@ router.post("/addBranch", (req, res) => {
 						data.password = makeid(10);
 						data.working_from = working_from;
 						data.working_to = working_to;
-						data.wallet_ids.operational = op_wallet;
-						data.wallet_ids.master = master_wallet;
+						data.wallet_ids.operational = wallet_ids.operational;
+						data.wallet_ids.master = wallet_ids.master;
 						let bankName = bank.name;
 
 						data.save((err) => {

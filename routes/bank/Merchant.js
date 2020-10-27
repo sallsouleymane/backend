@@ -14,6 +14,7 @@ const {
 
 const Bank = require("../../models/Bank");
 const Merchant = require("../../models/merchant/Merchant");
+const getWalletIds = require("../utils/getWalletIds");
 
 router.post("/bank/listMerchants", function (req, res) {
     var { token } = req.body;
@@ -104,8 +105,8 @@ router.post("/bank/createMerchant", function (req, res) {
                         message: "Code is a required field",
                     });
                 } else {
-                    const wallet = "MEO@" + code + "@" + bank.bcode;
-                    createWallet([wallet]).then((result) => {
+                    const wallet_ids = getWalletIds("merchant", code, bank.bcode);
+                    createWallet([wallet_ids.operational]).then((result) => {
                         if (result != "" && !result.includes("wallet already exists")) {
                             console.log(result);
                             res.status(200).json({
@@ -126,7 +127,7 @@ router.post("/bank/createMerchant", function (req, res) {
                             data.bank_id = bank._id;
                             data.status = 0;
                             data.creator = 0;
-                            data.wallet_ids.operational = wallet;
+                            data.wallet_ids.operational = wallet_ids.operational;
 
                             data.save((err, merchant) => {
                                 if (err) {
