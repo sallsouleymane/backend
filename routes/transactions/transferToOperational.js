@@ -11,7 +11,6 @@ module.exports = async function (
     rule
 ) {
     try {
-
         var fee = calculateShare("bank", transfer.amount, rule);
         var amount = Number(transfer.amount);
         if (transfer.isInclusive) {

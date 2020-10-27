@@ -11,57 +11,61 @@ module.exports = async function (
 	fee,
 	comm
 ) {
-	// receiver's wallet names
-	const userWallet = user.wallet_id;
-	const merchantOpWallet = merchant.wallet_ids.operational;
+	try {
+		// receiver's wallet names
+		const userWallet = user.wallet_id;
+		const merchantOpWallet = merchant.wallet_ids.operational;
 
-	let master_code = getTransactionCode(user.mobile, merchant.mobile);
+		let master_code = getTransactionCode(user.mobile, merchant.mobile);
 
-	// first transaction
-	amount = Number(amount);
+		// first transaction
+		amount = Number(amount);
 
-	let trans1 = {
-		from: userWallet,
-		to: merchantOpWallet,
-		amount: amount,
-		note: "Bill amount",
-		email1: user.email,
-		email2: merchant.email,
-		mobile1: user.mobile,
-		mobile2: merchant.mobile,
-		from_name: user.name,
-		to_name: merchant.name,
-		master_code: master_code,
-		child_code: master_code + "1",
-	};
-
-	var result = await blockchain.initiateTransfer(trans1);
-
-	// return response
-	if (result.status == 0) {
-		result = {
-			status: 0,
-			message: "Transaction failed!",
-			blockchain_message: result.message,
+		let trans1 = {
+			from: userWallet,
+			to: merchantOpWallet,
+			amount: amount,
+			note: "Bill amount",
+			email1: user.email,
+			email2: merchant.email,
+			mobile1: user.mobile,
+			mobile2: merchant.mobile,
+			from_name: user.name,
+			to_name: merchant.name,
+			master_code: master_code,
+			child_code: master_code + "1",
 		};
-	} else {
-		result = {
-			status: 1,
-			message: "Transaction success!",
-			blockchain_message: result.message,
-		};
+
+		var result = await blockchain.initiateTransfer(trans1);
+
+		// return response
+		if (result.status == 0) {
+			result = {
+				status: 0,
+				message: "Transaction failed!",
+				blockchain_message: result.message,
+			};
+		} else {
+			result = {
+				status: 1,
+				message: "Transaction success!",
+				blockchain_message: result.message,
+			};
+		}
+		distributeRevenue(
+			amount,
+			infra,
+			bank,
+			user,
+			merchant,
+			fee,
+			comm,
+			master_code
+		);
+		return result;
+	} catch (err) {
+		throw err;
 	}
-	distributeRevenue(
-		amount,
-		infra,
-		bank,
-		user,
-		merchant,
-		fee,
-		comm,
-		master_code
-	);
-	return result;
 };
 
 async function distributeRevenue(

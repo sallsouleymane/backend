@@ -247,6 +247,12 @@ router.post("/ipfsUpload", function (req, res) {
 					message: "File Upload Error",
 				});
 			}
+		}).catch((err) => {
+			console.log(err.toString);
+			res.status(200).json({
+				status: 0,
+				message: err.message
+			})
 		});
 		// }
 	});

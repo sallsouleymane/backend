@@ -11,57 +11,61 @@ module.exports = async function (
   fee,
   comm
 ) {
-  // receiver's wallet names
-  const branchOpWallet = branch.wallet_ids.operational;
-  const merchantOpWallet = merchant.wallet_ids.operational;
+  try {
+    // receiver's wallet names
+    const branchOpWallet = branch.wallet_ids.operational;
+    const merchantOpWallet = merchant.wallet_ids.operational;
 
-  let master_code = getTransactionCode(branch.mobile, merchant.mobile);
+    let master_code = getTransactionCode(branch.mobile, merchant.mobile);
 
-  // first transaction
-  amount = Number(amount);
+    // first transaction
+    amount = Number(amount);
 
-  let trans1 = {
-    from: branchOpWallet,
-    to: merchantOpWallet,
-    amount: amount,
-    note: "Bill amount",
-    email1: branch.email,
-    email2: merchant.email,
-    mobile1: branch.mobile,
-    mobile2: merchant.mobile,
-    from_name: branch.name,
-    to_name: merchant.name,
-    master_code: master_code,
-    child_code: master_code + "1",
-  };
-
-  var result = await blockchain.initiateTransfer(trans1);
-
-  // return response
-  if (result.status == 0) {
-    result = {
-      status: 0,
-      message: "Transaction failed!",
-      blockchain_message: result.message,
+    let trans1 = {
+      from: branchOpWallet,
+      to: merchantOpWallet,
+      amount: amount,
+      note: "Bill amount",
+      email1: branch.email,
+      email2: merchant.email,
+      mobile1: branch.mobile,
+      mobile2: merchant.mobile,
+      from_name: branch.name,
+      to_name: merchant.name,
+      master_code: master_code,
+      child_code: master_code + "1",
     };
-  } else {
-    result = {
-      status: 1,
-      message: "Transaction success!",
-      blockchain_message: result.message,
-    };
+
+    var result = await blockchain.initiateTransfer(trans1);
+
+    // return response
+    if (result.status == 0) {
+      result = {
+        status: 0,
+        message: "Transaction failed!",
+        blockchain_message: result.message,
+      };
+    } else {
+      result = {
+        status: 1,
+        message: "Transaction success!",
+        blockchain_message: result.message,
+      };
+    }
+    distributeRevenue(
+      amount,
+      infra,
+      bank,
+      branch,
+      merchant,
+      fee,
+      comm,
+      master_code
+    );
+    return result;
+  } catch (err) {
+    throw err;
   }
-  distributeRevenue(
-    amount,
-    infra,
-    bank,
-    branch,
-    merchant,
-    fee,
-    comm,
-    master_code
-  );
-  return result;
 };
 
 async function distributeRevenue(

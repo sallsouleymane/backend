@@ -277,11 +277,12 @@ router.post("/partnerCashier/sendToOperational", jwtTokenAuth, function (req, re
 
                                 })
                                 .catch((err) => {
+                                  console.log(err.toString);
                                   res.status(200).json({
                                     status: 0,
                                     message: err.message
                                   })
-                                })
+                                });
                             }
                           })
                         }
@@ -1030,8 +1031,20 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
                                                             message: result.toString(),
                                                           });
                                                         }
+                                                      }).catch((err) => {
+                                                        console.log(err.toString);
+                                                        res.status(200).json({
+                                                          status: 0,
+                                                          message: err.message
+                                                        })
                                                       });
                                                   }
+                                                }).catch((err) => {
+                                                  console.log(err.toString);
+                                                  res.status(200).json({
+                                                    status: 0,
+                                                    message: err.message
+                                                  })
                                                 });
                                             }
                                           });
@@ -1647,8 +1660,20 @@ router.post("/partnerCashier/sendMoney", jwtTokenAuth, function (req, res) {
                                                         message: result.toString(),
                                                       });
                                                     }
+                                                  }).catch((err) => {
+                                                    console.log(err.toString);
+                                                    res.status(200).json({
+                                                      status: 0,
+                                                      message: err.message
+                                                    })
                                                   });
                                               }
+                                            }).catch((err) => {
+                                              console.log(err.toString);
+                                              res.status(200).json({
+                                                status: 0,
+                                                message: err.message
+                                              })
                                             });
                                         }
                                       });
@@ -2120,6 +2145,12 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
                                                               "Something went wrong, please try again",
                                                           });
                                                         }
+                                                      }).catch((err) => {
+                                                        console.log(err.toString);
+                                                        res.status(200).json({
+                                                          status: 0,
+                                                          message: err.message
+                                                        })
                                                       });
                                                   });
                                                 }
@@ -3265,6 +3296,12 @@ router.post("/partnerCashier/getHistory", jwtTokenAuth, function (req, res) {
                 });
               }
             });
+          }).catch((err) => {
+            console.log(err.toString);
+            res.status(200).json({
+              status: 0,
+              message: err.message
+            })
           });
         });
       }

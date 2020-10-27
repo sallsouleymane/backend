@@ -243,7 +243,7 @@ router.post("/user/checkFee", jwtTokenAuth, function (req, res) {
 					} else if (fe == null) {
 						res.status(200).json({
 							status: 0,
-							message: "Transaction cannot be done at this time",
+							message: "Fee rule not found",
 						});
 					} else {
 						amount = Number(amount);
@@ -375,6 +375,12 @@ router.get("/user/getBalance", jwtTokenAuth, (req, res) => {
 						message: "User wallet balance",
 						balance: result,
 					});
+				}).catch((err) => {
+					console.log(err.toString);
+					res.status(200).json({
+						status: 0,
+						message: err.message
+					})
 				});
 			}
 		}
@@ -1203,6 +1209,12 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																						message: result.toString(),
 																					});
 																				}
+																			}).catch((err) => {
+																				console.log(err.toString);
+																				res.status(200).json({
+																					status: 0,
+																					message: err.message
+																				})
 																			});
 																	}
 																});
@@ -1590,6 +1602,12 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																					message: result.toString(),
 																				});
 																			}
+																		}).catch((err) => {
+																			console.log(err.toString);
+																			res.status(200).json({
+																				status: 0,
+																				message: err.message
+																			})
 																		});
 																}
 															});

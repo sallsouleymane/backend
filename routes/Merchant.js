@@ -1344,6 +1344,12 @@ router.get("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 										});
 									}
 								});
+							}).catch((err) => {
+								console.log(err.toString);
+								res.status(200).json({
+									status: 0,
+									message: err.message
+								})
 							});
 						}
 					}
@@ -2829,6 +2835,12 @@ router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 								status: 1,
 								balance: result,
 							});
+						}).catch((err) => {
+							console.log(err.toString);
+							res.status(200).json({
+								status: 0,
+								message: err.message
+							})
 						});
 					}
 				});

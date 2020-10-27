@@ -324,13 +324,13 @@ router.post("/partnerCashier/interBank/sendToOperational", JWTTokenAuth, functio
                                                                                         res.status(200).json(result)
                                                                                     }
 
-                                                                                })
-                                                                                .catch((err) => {
+                                                                                }).catch((err) => {
+                                                                                    console.log(err.toString);
                                                                                     res.status(200).json({
                                                                                         status: 0,
                                                                                         message: err.message
                                                                                     })
-                                                                                })
+                                                                                });
                                                                         }
                                                                     })
                                                                 }
@@ -636,11 +636,12 @@ router.post("/cashier/interBank/sendToOperational", function (req, res) {
 
                                                                                 })
                                                                                 .catch((err) => {
+                                                                                    console.log(err.toString);
                                                                                     res.status(200).json({
                                                                                         status: 0,
                                                                                         message: err.message
                                                                                     })
-                                                                                })
+                                                                                });
                                                                         }
                                                                     })
                                                                 }
@@ -1296,6 +1297,12 @@ router.post("/partnerCashier/interBank/sendMoneyToWallet", JWTTokenAuth, functio
                                                                                                                             message: result.toString(),
                                                                                                                         });
                                                                                                                     }
+                                                                                                                }).catch((err) => {
+                                                                                                                    console.log(err.toString);
+                                                                                                                    res.status(200).json({
+                                                                                                                        status: 0,
+                                                                                                                        message: err.message
+                                                                                                                    })
                                                                                                                 });
                                                                                                         }
                                                                                                     });
@@ -1748,6 +1755,12 @@ router.post("/cashier/interBank/sendMoneyToWallet", function (req, res) {
                                                                                                                 message: result.toString(),
                                                                                                             });
                                                                                                         }
+                                                                                                    }).catch((err) => {
+                                                                                                        console.log(err.toString);
+                                                                                                        res.status(200).json({
+                                                                                                            status: 0,
+                                                                                                            message: err.message
+                                                                                                        })
                                                                                                     });
                                                                                             }
                                                                                         });
@@ -2323,6 +2336,12 @@ router.post("/partnerCashier/interBank/claimMoney", JWTTokenAuth, function (req,
                                                                                                                     console.log(result.toString());
                                                                                                                     res.status(200).json(result);
                                                                                                                 }
+                                                                                                            }).catch((err) => {
+                                                                                                                console.log(err.toString);
+                                                                                                                res.status(200).json({
+                                                                                                                    status: 0,
+                                                                                                                    message: err.message
+                                                                                                                })
                                                                                                             });
                                                                                                     }
                                                                                                 });
@@ -2756,6 +2775,12 @@ router.post("/partnerCashier/interBank/SendMoneyToNonWallet", JWTTokenAuth, func
                                                                                             } else {
                                                                                                 res.status(200).json(result);
                                                                                             }
+                                                                                        }).catch((err) => {
+                                                                                            console.log(err.toString);
+                                                                                            res.status(200).json({
+                                                                                                status: 0,
+                                                                                                message: err.message
+                                                                                            })
                                                                                         });
 
 
@@ -3005,7 +3030,13 @@ router.post("/cashier/interBank/claimMoney", function (req, res) {
                                                                                                     amount: cs.amount,
                                                                                                     isInclusive: cs.is_inclusive
                                                                                                 }
-                                                                                                interBankClaimMoney(transfer, sendingBank, bank, branch, rule1, rule2)
+                                                                                                interBankClaimMoney(
+                                                                                                    transfer,
+                                                                                                    sendingBank,
+                                                                                                    bank,
+                                                                                                    branch,
+                                                                                                    rule1,
+                                                                                                    rule2)
                                                                                                     .then(function (result) {
                                                                                                         if (result.status == 1) {
                                                                                                             CashierClaim.findByIdAndUpdate(
@@ -3115,6 +3146,12 @@ router.post("/cashier/interBank/claimMoney", function (req, res) {
                                                                                                             console.log(result.toString());
                                                                                                             res.status(200).json(result);
                                                                                                         }
+                                                                                                    }).catch((err) => {
+                                                                                                        console.log(err.toString);
+                                                                                                        res.status(200).json({
+                                                                                                            status: 0,
+                                                                                                            message: err.message
+                                                                                                        })
                                                                                                     });
                                                                                             }
                                                                                         });
@@ -3524,6 +3561,12 @@ router.post("/cashier/interBank/SendMoneyToNonWallet", function (req, res) {
                                                                                     } else {
                                                                                         res.status(200).json(result);
                                                                                     }
+                                                                                }).catch((err) => {
+                                                                                    console.log(err.toString);
+                                                                                    res.status(200).json({
+                                                                                        status: 0,
+                                                                                        message: err.message
+                                                                                    })
                                                                                 });
 
 

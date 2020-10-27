@@ -83,6 +83,12 @@ router.post("/partner/transferMasterToOp", jwtTokenAuth, function (req, res) {
                             }
                             blockchain.initiateTransfer(trans).then((result) => {
                                 res.status(200).json(result)
+                            }).catch((err) => {
+                                console.log(err.toString);
+                                res.status(200).json({
+                                    status: 0,
+                                    message: err.message
+                                })
                             });
                         }
                     });
@@ -177,7 +183,13 @@ router.post("/partner/getBalance", jwtTokenAuth, function (req, res) {
                         status: 1,
                         balance: balance,
                     });
-                });
+                }).catch((err) => {
+                    console.log(err.toString);
+                    res.status(200).json({
+                        status: 0,
+                        message: err.message
+                    })
+                });;
 
             }
         }
@@ -246,6 +258,12 @@ router.post("/partner/getHistoryTotal", jwtTokenAuth, function (req, res) {
                                     count: count
                                 });
                             }
+                        }).catch((err) => {
+                            console.log(err.toString);
+                            res.status(200).json({
+                                status: 0,
+                                message: err.message
+                            })
                         });
 
                     }
@@ -302,6 +320,12 @@ router.post("/partner/getHistory", jwtTokenAuth, function (req, res) {
                             });
                         }
                     });
+                }).catch((err) => {
+                    console.log(err.toString);
+                    res.status(200).json({
+                        status: 0,
+                        message: err.message
+                    })
                 });
 
             }
@@ -361,7 +385,13 @@ router.get("/partner/getOperationalBalance", jwtTokenAuth, function (req, res) {
                                 status: 1,
                                 balance: result,
                             });
-                        })
+                        }).catch((err) => {
+                            console.log(err.toString);
+                            res.status(200).json({
+                                status: 0,
+                                message: err.message
+                            })
+                        });
                     }
                 });
 
@@ -874,7 +904,7 @@ router.post("/partner/addCashier", jwtTokenAuth, (req, res) => {
                                 data.opening_balance = branch.cash_in_hand;
                                 data.cash_in_hand = branch.cash_in_hand;
                             }
-                            data.save((err, d) => {
+                            data.save((err) => {
                                 if (err) {
                                     console.log(err);
                                     var message = err;
@@ -904,8 +934,20 @@ router.post("/partner/addCashier", jwtTokenAuth, (req, res) => {
                                                 PartnerBranch.updateOne(
                                                     { _id: branch._id },
                                                     { $inc: { total_cashiers: 1 } },
-                                                    function (e) {
-                                                        return res.status(200).json({ status: 1, data: data });
+                                                    function (err) {
+                                                        if (err) {
+                                                            console.log(err);
+                                                            var message = err;
+                                                            if (err.message) {
+                                                                message = err.message;
+                                                            }
+                                                            res.status(200).json({
+                                                                status: 0,
+                                                                message: message,
+                                                            });
+                                                        } else {
+                                                            res.status(200).json({ status: 1, data: data });
+                                                        }
                                                     }
                                                 );
 
@@ -1162,6 +1204,12 @@ router.post("/partner/addBranch", jwtTokenAuth, (req, res) => {
                                 }
                             });
                         }
+                    }).catch((err) => {
+                        console.log(err.toString);
+                        res.status(200).json({
+                            status: 0,
+                            message: err.message
+                        })
                     });
                 });
             }
@@ -1318,6 +1366,12 @@ router.post("/partner/activate", jwtTokenAuth, function (req, res) {
                                 }
                             );
                         }
+                    }).catch((err) => {
+                        console.log(err.toString);
+                        res.status(200).json({
+                            status: 0,
+                            message: err.message
+                        })
                     });
                 })
             }

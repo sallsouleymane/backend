@@ -104,15 +104,7 @@ module.exports = async function (
             master_code: master_code
         };
     } catch (err) {
-        console.log(err);
-        var message = err;
-        if (err && err.message) {
-            message = err.message;
-        }
-        return {
-            status: 0,
-            message: message,
-        }
+        throw err;
     }
 
 }

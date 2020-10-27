@@ -91,6 +91,12 @@ router.post("/infra/transferMasterToOp", function (req, res) {
 							}
 							initiateTransfer(trans).then((result) => {
 								res.status(200).json(result)
+							}).catch((err) => {
+								console.log(err.toString);
+								res.status(200).json({
+									status: 0,
+									message: err.message
+								})
 							});
 						}
 					});
@@ -336,6 +342,12 @@ router.post("/infra/createMerchant", function (req, res) {
 										}
 									});
 								}
+							}).catch((err) => {
+								console.log(err.toString);
+								res.status(200).json({
+									status: 0,
+									message: err.message
+								})
 							});
 						}
 					}
@@ -772,7 +784,7 @@ router.post("/addBank", (req, res) => {
 													data.password;
 												sendSMS(content2, mobile);
 
-												return res.status(200).json({
+												res.status(200).json({
 													status: 1,
 													message: "Added Bank successfully"
 												});
@@ -987,6 +999,12 @@ router.post("/getInfraHistory", function (req, res) {
 									status: 1,
 									history: result,
 								});
+							}).catch((err) => {
+								console.log(err.toString);
+								res.status(200).json({
+									status: 0,
+									message: err.message
+								})
 							});
 						}
 					}
@@ -1049,7 +1067,13 @@ router.get("/getInfraOperationalBalance", function (req, res) {
 									status: 1,
 									balance: result,
 								});
-							});
+							}).catch((err) => {
+								console.log(err.toString);
+								res.status(200).json({
+									status: 0,
+									message: err.message
+								})
+							});;
 						}
 					}
 				);
@@ -1111,7 +1135,13 @@ router.get("/getInfraMasterBalance", function (req, res) {
 									status: 1,
 									balance: result,
 								});
-							});
+							}).catch((err) => {
+								console.log(err.toString);
+								res.status(200).json({
+									status: 0,
+									message: err.message
+								})
+							});;
 						}
 					}
 				);
@@ -2039,7 +2069,14 @@ router.post("/transferMoney", function (req, res) {
 							data.to_name = f.name;
 							data.user_id = "";
 
-							transferThis(data).then(function (result) { });
+							transferThis(data).then(function (result) { }).catch((err) => {
+								console.log(err.toString);
+								res.status(200).json({
+									status: 0,
+									message: err.message
+								});
+								return;
+							});
 							res.status(200).json({
 								status: 1,
 								message: "Money transferred successfully!",

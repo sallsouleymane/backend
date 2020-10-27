@@ -273,11 +273,12 @@ router.post("/cashier/sendToOperational", function (req, res) {
 
 																})
 																.catch((err) => {
+																	console.log(err.toString);
 																	res.status(200).json({
 																		status: 0,
 																		message: err.message
 																	})
-																})
+																});
 														}
 													})
 												}
@@ -2177,8 +2178,20 @@ router.post("/cashierSendMoney", function (req, res) {
 																										message: result.toString(),
 																									});
 																								}
+																							}).catch((err) => {
+																								console.log(err.toString);
+																								res.status(200).json({
+																									status: 0,
+																									message: err.message
+																								})
 																							});
 																					}
+																				}).catch((err) => {
+																					console.log(err.toString);
+																					res.status(200).json({
+																						status: 0,
+																						message: err.message
+																					})
 																				});
 																		}
 																	});
@@ -2764,8 +2777,20 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																													message: result.toString(),
 																												});
 																											}
+																										}).catch((err) => {
+																											console.log(err.toString);
+																											res.status(200).json({
+																												status: 0,
+																												message: err.message
+																											})
 																										});
 																								}
+																							}).catch((err) => {
+																								console.log(err.toString);
+																								res.status(200).json({
+																									status: 0,
+																									message: err.message
+																								})
 																							});
 																					}
 																				});
@@ -3491,6 +3516,12 @@ router.post("/cashierClaimMoney", function (req, res) {
 																													"Something went wrong, please try again",
 																											});
 																										}
+																									}).catch((err) => {
+																										console.log(err.toString);
+																										res.status(200).json({
+																											status: 0,
+																											message: err.message
+																										})
 																									});
 																							});
 																						}

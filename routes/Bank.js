@@ -29,6 +29,40 @@ const FailedTX = require("../models/FailedTXLedger");
 const Partner = require("../models/partner/Partner")
 const Document = require("../models/Document");
 const Infra = require("../models/Infra");
+const { getWalletIds } = require("./utils/getWalletIds");
+
+router.post("/bank/getMyWalletIds", function (req, res) {
+	const { token } = req.body;
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (bank == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				const result = getWalletIds("bank", bank.bcode, bank.bcode);
+				result.status = 1;
+				res.status(200).json();
+			}
+		});
+
+})
 
 router.post("/bank/transferMasterToOp", function (req, res) {
 	const { token, amount } = req.body;
@@ -69,9 +103,17 @@ router.post("/bank/transferMasterToOp", function (req, res) {
 					master_code: "",
 					child_code: ""
 				}
-				initiateTransfer(trans).then((result) => {
-					res.status(200).json(result)
-				});
+				initiateTransfer(trans)
+					.then((result) => {
+						res.status(200).json(result)
+					})
+					.catch((err) => {
+						console.log(err.toString);
+						res.status(200).json({
+							status: 0,
+							message: err.message
+						})
+					});
 			}
 		});
 });
@@ -568,7 +610,14 @@ router.post("/bankActivate", function (req, res) {
 									}
 								);
 							}
-						});
+						})
+							.catch((err) => {
+								console.log(err.toString);
+								res.status(200).json({
+									status: 0,
+									message: err.message
+								})
+							});
 					}
 				})
 			}
@@ -913,6 +962,12 @@ router.post("/addBranch", (req, res) => {
 							}
 						});
 					}
+				}).catch((err) => {
+					console.log(err.toString);
+					res.status(200).json({
+						status: 0,
+						message: err.message
+					})
 				});
 			}
 		}
@@ -1260,8 +1315,13 @@ router.post("/getBankHistory", function (req, res) {
 							});
 						}
 					});
+				}).catch((err) => {
+					console.log(err.toString);
+					res.status(200).json({
+						status: 0,
+						message: err.message
+					})
 				});
-				// });
 			}
 		}
 	);

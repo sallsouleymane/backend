@@ -11,94 +11,98 @@ module.exports = async function (
     receiver,
     rule1
 ) {
-    const senderWallet = sender.wallet_id;
-    const receiverWallet = receiver.wallet_id;
-    const bankOpWallet = bank.wallet_ids.operational;
+    try {
+        const senderWallet = sender.wallet_id;
+        const receiverWallet = receiver.wallet_id;
+        const bankOpWallet = bank.wallet_ids.operational;
 
-    // first transaction
-    var amount = Number(transfer.amount);
+        // first transaction
+        var amount = Number(transfer.amount);
 
-    var fee = calculateShare("bank", transfer.amount, rule1);
-    if (transfer.isInclusive) {
-        amount = amount - fee;
-    }
-
-    var balance = await blockchain.getBalance(senderWallet);
-
-    //Check balance first
-    if (
-        Number(balance) < amount + fee
-    ) {
-        throw new Error("Not enough balance in your wallet");
-
-    }
-
-    let master_code = getTransactionCode(sender.mobile, receiver.mobile)
-
-    let trans1 = {
-        from: senderWallet,
-        to: receiverWallet,
-        amount: amount,
-        note: "Transfer from " + sender.name + " to " + receiver.name + ": " + transfer.note,
-        email1: sender.email,
-        email2: receiver.email,
-        mobile1: sender.mobile,
-        mobile2: receiver.mobile,
-        from_name: sender.name,
-        to_name: receiver.name,
-        user_id: "",
-        master_code: master_code,
-        child_code: master_code + "1"
-    }
-
-    var result = await blockchain.initiateTransfer(trans1);
-
-    // return response
-    if (result.status == 0) {
-        return {
-            status: 0,
-            message: "Transaction failed!",
-            blockchain_message: result.message,
-        };
-    }
-
-    transfer.fee = fee;
-    if (fee > 0) {
-        let trans2 = {
-            from: senderWallet,
-            to: bankOpWallet,
-            amount: fee,
-            note: "Bank Inter Bank Fee",
-            email1: sender.email,
-            email2: bank.email,
-            mobile1: sender.mobile,
-            mobile2: bank.mobile,
-            from_name: sender.name,
-            to_name: bank.name,
-            user_id: "",
-            master_code: master_code,
-            child_code: master_code + "2",
+        var fee = calculateShare("bank", transfer.amount, rule1);
+        if (transfer.isInclusive) {
+            amount = amount - fee;
         }
 
-        await blockchain.initiateTransfer(trans2);
-    }
+        var balance = await blockchain.getBalance(senderWallet);
 
-    transfer.master_code = master_code;
-    distributeRevenue(
-        transfer,
-        infra,
-        bank,
-        receiverBank,
-        rule1
-    );
-    return {
-        status: 1,
-        message: "Transaction success!",
-        blockchain_message: result.message,
-        amount: amount,
-        fee: fee,
-        balance: balance
-    };
+        //Check balance first
+        if (
+            Number(balance) < amount + fee
+        ) {
+            throw new Error("Not enough balance in your wallet");
+
+        }
+
+        let master_code = getTransactionCode(sender.mobile, receiver.mobile)
+
+        let trans1 = {
+            from: senderWallet,
+            to: receiverWallet,
+            amount: amount,
+            note: "Transfer from " + sender.name + " to " + receiver.name + ": " + transfer.note,
+            email1: sender.email,
+            email2: receiver.email,
+            mobile1: sender.mobile,
+            mobile2: receiver.mobile,
+            from_name: sender.name,
+            to_name: receiver.name,
+            user_id: "",
+            master_code: master_code,
+            child_code: master_code + "1"
+        }
+
+        var result = await blockchain.initiateTransfer(trans1);
+
+        // return response
+        if (result.status == 0) {
+            return {
+                status: 0,
+                message: "Transaction failed!",
+                blockchain_message: result.message,
+            };
+        }
+
+        transfer.fee = fee;
+        if (fee > 0) {
+            let trans2 = {
+                from: senderWallet,
+                to: bankOpWallet,
+                amount: fee,
+                note: "Bank Inter Bank Fee",
+                email1: sender.email,
+                email2: bank.email,
+                mobile1: sender.mobile,
+                mobile2: bank.mobile,
+                from_name: sender.name,
+                to_name: bank.name,
+                user_id: "",
+                master_code: master_code,
+                child_code: master_code + "2",
+            }
+
+            await blockchain.initiateTransfer(trans2);
+        }
+
+        transfer.master_code = master_code;
+        distributeRevenue(
+            transfer,
+            infra,
+            bank,
+            receiverBank,
+            rule1
+        );
+        return {
+            status: 1,
+            message: "Transaction success!",
+            blockchain_message: result.message,
+            amount: amount,
+            fee: fee,
+            balance: balance
+        };
+    } catch (err) {
+        throw err;
+    }
 
 }
 

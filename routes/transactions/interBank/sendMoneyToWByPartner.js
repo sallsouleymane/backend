@@ -12,99 +12,103 @@ module.exports = async function (
     rule1,
     rule2
 ) {
-    const branchOpWallet = branch.wallet_ids.operational;
-    const receiverWallet = receiver.wallet_id;
-    const bankOpWallet = bank.wallet_ids.operational;
+    try {
+        const branchOpWallet = branch.wallet_ids.operational;
+        const receiverWallet = receiver.wallet_id;
+        const bankOpWallet = bank.wallet_ids.operational;
 
-    // first transaction
-    var amount = Number(transfer.amount);
-    var fee = calculateShare("bank", transfer.amount, rule1);
-    if (transfer.isInclusive) {
-        amount = amount - fee;
-    }
-
-    var balance = await blockchain.getBalance(branchOpWallet);
-
-    //Check balance first
-    if (
-        Number(balance) +
-        Number(branch.credit_limit) <
-        amount + fee
-    ) {
-        throw new Error("Not enough balance in branch operational wallet");
-    }
-
-    let master_code = getTransactionCode(branch.mobile, receiver.mobile)
-
-    let trans1 = {
-        from: branchOpWallet,
-        to: receiverWallet,
-        amount: amount,
-        note: "Partner Cashier Send Money",
-        email1: branch.email,
-        email2: receiver.email,
-        mobile1: branch.mobile,
-        mobile2: receiver.mobile,
-        from_name: branch.name,
-        to_name: receiver.name,
-        user_id: transfer.cashierId,
-        master_code: master_code,
-        child_code: master_code + "1"
-    }
-
-    var result = await blockchain.initiateTransfer(trans1);
-
-    // return response
-    if (result.status == 0) {
-        return {
-            status: 0,
-            message: "Transaction failed!",
-            blockchain_message: result.message,
-        };
-    }
-
-    transfer.fee = fee;
-    var sendingPartnerShare = 0;
-    if (fee > 0) {
-        let trans2 = {
-            from: branchOpWallet,
-            to: bankOpWallet,
-            amount: fee,
-            note: "Partner Cashier Send Bank Fee",
-            email1: branch.email,
-            email2: bank.email,
-            mobile1: branch.mobile,
-            mobile2: bank.mobile,
-            from_name: branch.name,
-            to_name: bank.name,
-            user_id: transfer.cashierId,
-            master_code: master_code,
-            child_code: master_code + "2",
+        // first transaction
+        var amount = Number(transfer.amount);
+        var fee = calculateShare("bank", transfer.amount, rule1);
+        if (transfer.isInclusive) {
+            amount = amount - fee;
         }
 
-        await blockchain.initiateTransfer(trans2);
-        sendingPartnerShare = calculateShare("sendPartner", transfer.amount, rule1, rule2, transfer.partnerCode);
-        transfer.sendingPartnerShare = sendingPartnerShare;
-    }
+        var balance = await blockchain.getBalance(branchOpWallet);
 
-    transfer.master_code = master_code;
-    distributeRevenue(
-        transfer,
-        infra,
-        bank,
-        receiverBank,
-        branch,
-        rule1
-    );
-    return {
-        status: 1,
-        message: "Transaction success!",
-        blockchain_message: result.message,
-        amount: amount,
-        fee: fee,
-        sendFee: sendingPartnerShare,
-        master_code: master_code
-    };
+        //Check balance first
+        if (
+            Number(balance) +
+            Number(branch.credit_limit) <
+            amount + fee
+        ) {
+            throw new Error("Not enough balance in branch operational wallet");
+        }
+
+        let master_code = getTransactionCode(branch.mobile, receiver.mobile)
+
+        let trans1 = {
+            from: branchOpWallet,
+            to: receiverWallet,
+            amount: amount,
+            note: "Partner Cashier Send Money",
+            email1: branch.email,
+            email2: receiver.email,
+            mobile1: branch.mobile,
+            mobile2: receiver.mobile,
+            from_name: branch.name,
+            to_name: receiver.name,
+            user_id: transfer.cashierId,
+            master_code: master_code,
+            child_code: master_code + "1"
+        }
+
+        var result = await blockchain.initiateTransfer(trans1);
+
+        // return response
+        if (result.status == 0) {
+            return {
+                status: 0,
+                message: "Transaction failed!",
+                blockchain_message: result.message,
+            };
+        }
+
+        transfer.fee = fee;
+        var sendingPartnerShare = 0;
+        if (fee > 0) {
+            let trans2 = {
+                from: branchOpWallet,
+                to: bankOpWallet,
+                amount: fee,
+                note: "Partner Cashier Send Bank Fee",
+                email1: branch.email,
+                email2: bank.email,
+                mobile1: branch.mobile,
+                mobile2: bank.mobile,
+                from_name: branch.name,
+                to_name: bank.name,
+                user_id: transfer.cashierId,
+                master_code: master_code,
+                child_code: master_code + "2",
+            }
+
+            await blockchain.initiateTransfer(trans2);
+            sendingPartnerShare = calculateShare("sendPartner", transfer.amount, rule1, rule2, transfer.partnerCode);
+            transfer.sendingPartnerShare = sendingPartnerShare;
+        }
+
+        transfer.master_code = master_code;
+        distributeRevenue(
+            transfer,
+            infra,
+            bank,
+            receiverBank,
+            branch,
+            rule1
+        );
+        return {
+            status: 1,
+            message: "Transaction success!",
+            blockchain_message: result.message,
+            amount: amount,
+            fee: fee,
+            sendFee: sendingPartnerShare,
+            master_code: master_code
+        };
+    } catch (err) {
+        throw err;
+    }
 
 }
 
