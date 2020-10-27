@@ -17,6 +17,90 @@ const PartnerCashier = require("../models/partner/Cashier");
 
 const jwtTokenAuth = require("./JWTTokenAuth");
 
+router.post("/bank/merchantRule/updateSharesForInterBank", async (req, res) => {
+	try {
+		const { token,
+			type,
+			merchant_id,
+			branch_share,
+			specific_branch_share,
+			partner_share,
+			specific_partner_share } = req.body;
+
+		var bank = await Bank.findOne({ token: token });
+		if (bank == null) {
+			throw new Error("Token is invalid");
+		}
+		var ib_type;
+		if (type == "IBNWM-F") {
+			ib_type = "NWM-F"
+		} else if (type == "IBNWM-C") {
+			ib_type = "NWM-C"
+		} else if (type == "IBWM-F") {
+			ib_type = "WM-F"
+		} else if (type == "IBWM-C") {
+			ib_type = "WM-C"
+		} else {
+			throw new Error("Unknown fee rule type")
+		}
+		result = await MerchantRule.findOneAndUpdate(
+			{
+				type: ib_type,
+				merchant_id: merchant_id
+			},
+			{
+				$set: {
+					branch_share: branch_share,
+					specific_branch_share: specific_branch_share,
+					partner_share: partner_share,
+					specific_partner_share: specific_partner_share,
+				},
+			}
+		);
+		if (result == null) {
+			throw new Error("Fee rule Not Found");
+		}
+
+		res.send({ status: 1, message: "Fee rule updated successfully." });
+	} catch (err) {
+		res.send({ status: 0, message: err.message });
+	}
+});
+
+router.post("/bank/merchantRule/getRevenueShareForInterBank", async (req, res) => {
+	try {
+		const { token, type, merchant_id } = req.body;
+		var bank = await Bank.findOne({ token: token });
+		if (bank == null) {
+			throw new Error(
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+		}
+		var ib_type;
+		if (type == "IBNWM-F") {
+			ib_type = "NWM-F"
+		} else if (type == "IBNWM-C") {
+			ib_type = "NWM-C"
+		} else if (type == "IBWM-F") {
+			ib_type = "WM-F"
+		} else if (type == "IBWM-C") {
+			ib_type = "WM-C"
+		}
+		const fee = await MerchantRule.findOne({ type: ib_type, merchant_id: merchant_id });
+		if (fee == null) throw new Error("No Fee Rule found");
+
+		res.send({
+			status: 1,
+			branch_share: fee.branch_share,
+			partner_share: fee.partner_share,
+			specific_branch_share: fee.specific_branch_share,
+			specific_partner_share: fee.specific_partner_share
+		});
+	} catch (err) {
+		res.status(200).send({ status: 0, message: err.message });
+	}
+});
+
 router.post("/cashier/interBank/checkMerchantFee", (req, res) => {
 	var { token, merchant_id, amount } = req.body;
 	Cashier.findOne(

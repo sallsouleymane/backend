@@ -275,9 +275,9 @@ router.post("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
 
 router.post("/bank/getRevenueFeeForInterBank", async (req, res) => {
 	try {
-		const { token, type, bank_id } = req.body;
-		var result = await Bank.findOne({ token: token });
-		if (result == null) {
+		const { token, type } = req.body;
+		var bank = await Bank.findOne({ token: token });
+		if (bank == null) {
 			throw new Error(
 				"Token changed or user not valid. Try to login again or contact system administrator."
 			);
@@ -292,7 +292,7 @@ router.post("/bank/getRevenueFeeForInterBank", async (req, res) => {
 		} else if (type == "IBNWW") {
 			ib_type = "Non Wallet to Wallet"
 		}
-		const fee = await Fee.findOne({ trans_type: ib_type, bank_id: bank_id });
+		const fee = await Fee.findOne({ trans_type: ib_type, bank_id: bank._id });
 		if (fee == null) throw new Error("No Fee Rule found");
 
 		res.send({
@@ -307,10 +307,10 @@ router.post("/bank/getRevenueFeeForInterBank", async (req, res) => {
 
 router.post("/bank/updateRevenueSharingRules", async (req, res) => {
 	try {
-		const { token, type, bank_id, revenue_sharing_rule } = req.body;
+		const { token, type, revenue_sharing_rule } = req.body;
 
-		var result = await Bank.findOne({ token: token });
-		if (result == null) {
+		var bank = await Bank.findOne({ token: token });
+		if (bank == null) {
 			throw new Error("Token is invalid");
 		}
 		var ib_type;
@@ -326,7 +326,7 @@ router.post("/bank/updateRevenueSharingRules", async (req, res) => {
 		result = await Fee.findOneAndUpdate(
 			{
 				trans_type: ib_type,
-				bank_id: bank_id
+				bank_id: bank._id
 			},
 			{
 				$set: {
