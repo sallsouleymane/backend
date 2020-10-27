@@ -744,73 +744,83 @@ router.post("/cashier/activateUser", function (req, res) {
 							message: "You are either not authorised or not logged in.",
 						});
 					} else {
-						let wallet_id = getWalletIds("user", mobile, bank.bcode);
-						let result = await blockchain.createWallet([wallet_id]);
-						if (result != "" && !result.includes("wallet already exists")) {
-							console.log(result);
+						try {
+							let wallet_id = getWalletIds("user", mobile, bank.bcode);
+							let result = await blockchain.createWallet([wallet_id]);
+							if (result != "" && !result.includes("wallet already exists")) {
+								console.log(result);
+								res.status(200).json({
+									status: 0,
+									message:
+										"Blockchain service was unavailable. Please try again.",
+									result: result,
+								});
+							} else {
+								User.findOneAndUpdate(
+									{ mobile },
+									{
+										$set: {
+											status: 1,
+											wallet_id: wallet_id
+										}
+									},
+									function (err, user) {
+										if (err) {
+											console.log(err);
+											var message = err;
+											if (err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+											});
+										} else if (user == null) {
+											res.status(200).json({
+												status: 0,
+												message: "User not found",
+											});
+										} else {
+											let content =
+												"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+												config.mainIP +
+												"/user";
+											"'>http://" +
+												config.mainIP +
+												"/user" +
+												"</a></p><p><p>Your username: " +
+												mobile +
+												"</p><p>Your password: " +
+												user.password +
+												"</p>";
+											sendMail(content, "Approved Ewallet Account", user.email);
+											let content2 =
+												"Your account is activated. Login URL: http://" +
+												config.mainIP +
+												"/user" +
+												" Your username: " +
+												mobile +
+												" Your password: " +
+												user.password;
+											sendSMS(content2, mobile);
+											res.status(200).json({
+												status: 1,
+												message: result.toString(),
+											});
+										}
+
+									}
+								);
+							}
+
+						} catch (err) {
+							console.log(err.toString);
 							res.status(200).json({
 								status: 0,
-								message:
-									"Blockchain service was unavailable. Please try again.",
-								result: result,
-							});
-						} else {
-							User.findOneAndUpdate(
-								{ mobile },
-								{
-									$set: {
-										status: 1,
-										wallet_id: wallet_id
-									}
-								},
-								function (err, user) {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (user == null) {
-										res.status(200).json({
-											status: 0,
-											message: "User not found",
-										});
-									} else {
-										let content =
-											"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-											config.mainIP +
-											"/user";
-										"'>http://" +
-											config.mainIP +
-											"/user" +
-											"</a></p><p><p>Your username: " +
-											mobile +
-											"</p><p>Your password: " +
-											user.password +
-											"</p>";
-										sendMail(content, "Approved Ewallet Account", user.email);
-										let content2 =
-											"Your account is activated. Login URL: http://" +
-											config.mainIP +
-											"/user" +
-											" Your username: " +
-											mobile +
-											" Your password: " +
-											user.password;
-										sendSMS(content2, mobile);
-										res.status(200).json({
-											status: 1,
-											message: result.toString(),
-										});
-									}
-
-								}
-							);
+								message: err.message
+							})
 						}
+
 					}
 				})
 			}

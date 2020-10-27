@@ -7,6 +7,7 @@ const makeid = require("./utils/idGenerator");
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
 const makeotp = require("./utils/makeotp");
+const getWalletIds = require("./utils/getWalletIds");
 
 //services
 const {
