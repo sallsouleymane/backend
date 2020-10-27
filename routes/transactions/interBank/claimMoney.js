@@ -9,7 +9,7 @@ module.exports = async function (
         const senderBankEsWallet = sendingBank.wallet_ids.escrow;
         const branchOpWallet = branch.wallet_ids.operational;
         const bankOpWallet = bank.wallet_ids.operational;
-        const senderBankOpWallet = sendingBank.operational;
+        const senderBankOpWallet = sendingBank.wallet_ids.operational;
 
         var amount = Number(transfer.amount);
         var fee = calculateShare("bank", transfer.amount, rule1);
