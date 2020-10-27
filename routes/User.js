@@ -665,7 +665,7 @@ router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 				message: "You are not allowed to assign bank.",
 			});
 		} else {
-			Bank.findOne({ bank_id: bank_id }, (err, result) => {
+			Bank.findOne({ _id: bank_id }, (err, result) => {
 				if (err) {
 					console.log(err);
 					var message = err;
