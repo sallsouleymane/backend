@@ -8,6 +8,7 @@ const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
 const makeotp = require("./utils/makeotp");
 const getTypeClass = require("./utils/getTypeClass");
+const getWalletIds = require("./utils/getWalletIds")
 
 //services
 const blockchain = require("../services/Blockchain.js");
