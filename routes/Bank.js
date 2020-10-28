@@ -56,9 +56,7 @@ router.post("/bank/getMyWalletIds", function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				const result = getWalletIds("bank", bank.bcode, bank.bcode);
-				result.status = 1;
-				res.status(200).json();
+				res.status(200).json({ status: 1, wallet_ids: bank.wallet_ids });
 			}
 		});
 
@@ -382,7 +380,7 @@ router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
 			throw new Error("Not Found");
 		}
 
-		res.send({ status: 1 });
+		res.send({ status: 1, message: "Revenue share updated successfully" });
 	} catch (err) {
 		res.send({ status: 0, message: err.message });
 	}
@@ -507,6 +505,7 @@ router.post("/bankSetupUpdate", function (req, res) {
 							});
 						} else {
 							res.status(200).json({
+								status: 1,
 								success: "Updated successfully",
 							});
 						}
@@ -600,7 +599,7 @@ router.post("/bankActivate", function (req, res) {
 											});
 										} else {
 											res.status(200).json({
-												status: "activated",
+												status: 1,
 												walletStatus: result,
 											});
 										}
@@ -657,6 +656,7 @@ router.post("/getBankDashStats", function (req, res) {
 					});
 
 					res.status(200).json({
+						status: 1,
 						totalBranches: branchCount,
 						totalMerchants: merchantCount,
 					});
@@ -738,7 +738,6 @@ router.post("/getBranches", function (req, res) {
 				});
 			} else {
 				const bank_id = bank._id;
-				// if (user.isAdmin) {
 				Branch.find({ bank_id: bank_id }, function (err, branch) {
 					if (err) {
 						console.log(err);
@@ -752,6 +751,7 @@ router.post("/getBranches", function (req, res) {
 						});
 					} else {
 						res.status(200).json({
+							status: 1,
 							branches: branch,
 						});
 					}
@@ -762,7 +762,6 @@ router.post("/getBranches", function (req, res) {
 });
 
 router.post("/getBankUsers", function (req, res) {
-	//res.send("hi");
 	const { token } = req.body;
 	Bank.findOne(
 		{
@@ -805,6 +804,7 @@ router.post("/getBankUsers", function (req, res) {
 							});
 						} else {
 							res.status(200).json({
+								status: 1,
 								users: bank,
 							});
 						}
@@ -947,9 +947,9 @@ router.post("/addBranch", (req, res) => {
 												" Your password: " +
 												data.password;
 											sendSMS(content2, mobile);
-											// return res.status(200).json(data);
 											res.status(200).json({
-												status: "Branch Created",
+												status: 1,
+												message: "Branch Created",
 												walletStatus: result.toString(),
 											});
 										}
@@ -1042,7 +1042,11 @@ router.post("/editBranch", (req, res) => {
 								message: message,
 							});
 						} else {
-							return res.status(200).json(data);
+							res.status(200).json({
+								status: 1,
+								message: "Branch edited successfully",
+								data: data
+							});
 						}
 					}
 				);
@@ -1095,7 +1099,8 @@ router.post("/branchStatus", function (req, res) {
 							});
 						} else {
 							res.status(200).json({
-								status: true,
+								status: 1,
+								message: "Branch status updated"
 							});
 						}
 					}
@@ -1182,8 +1187,9 @@ router.post("/addBankUser", (req, res) => {
 							" Your password: " +
 							password;
 						sendSMS(content2, mobile);
-						return res.status(200).json({
-							success: "True",
+						res.status(200).json({
+							status: 1,
+							message: "Added bank user successfully."
 						});
 					}
 				});
@@ -1253,8 +1259,9 @@ router.post("/editBankUser", (req, res) => {
 								message: message,
 							});
 						} else {
-							return res.status(200).json({
-								success: true,
+							res.status(200).json({
+								status: 1,
+								message: "Bank user edited sucessfully."
 							});
 						}
 					}
@@ -1480,7 +1487,10 @@ router.post("/addCashier", (req, res) => {
 																						message: message,
 																					});
 																				} else {
-																					return res.status(200).json(data);
+																					res.status(200).json({
+																						status: 1,
+																						data: data
+																					});
 																				}
 																			}
 																		);
@@ -1515,7 +1525,10 @@ router.post("/addCashier", (req, res) => {
 											branch_id,
 											{ $inc: { total_cashiers: 1 } },
 											function (e) {
-												return res.status(200).json(data);
+												res.status(200).json({
+													status: 1,
+													data: data
+												});
 											}
 										);
 									}
@@ -1738,6 +1751,7 @@ router.post("/generateBankOTP", function (req, res) {
 						sendMail(content, "OTP", email);
 
 						res.status(200).json({
+							status: 1,
 							id: ot._id,
 						});
 					}

@@ -46,7 +46,8 @@ router.post("/cashierSetupUpdate", function (req, res) {
 							});
 						} else {
 							res.status(200).json({
-								success: "Updated successfully",
+								status: 1,
+								message: "Updated successfully",
 							});
 						}
 					}

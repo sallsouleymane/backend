@@ -40,8 +40,9 @@ const Partner = require("../models/partner/Partner");
 const PartnerBranch = require("../models/partner/Branch");
 
 router.get("/testGet", function (req, res) {
-  return res.status(200).json({
-    status: "Internal error please try again",
+  res.status(200).json({
+    status: 0,
+    message: "Internal error please try again",
   });
 });
 
@@ -448,73 +449,73 @@ router.post("/:user/getOne", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/:user/reinitiateTransfer", jwtTokenAuth, (req, res) => {
-    const user = req.params.user;
-    const Type = getTypeClass(user);
-    const { trans_id } = req.body;
-    const username = req.sign_creds.username;
-    Type.findOne(
-      {
-        username,
-        status: 1,
-      },
-      function (err, details) {
-        if (err) {
-          console.log(err);
-          var message = err;
-          if (err.message) {
-            message = err.message;
-          }
-          res.status(200).json({
-            status: 0,
-            message: message,
-          });
-        } else if (details == null) {
-          res.status(200).json({
-            status: 0,
-            message: "Unauthorised",
-          });
-        } else {
-          FailedTX.findOne({ _id: trans_id }, async (err, trans) => {
-            if (err) {
-              console.log(err);
-              var message = err;
-              if (err.message) {
-                message = err.message;
-              }
-              res.status(200).json({
-                status: 0,
-                message: message,
-              });
-            } else {
-              try {
-                var result = await initiateTransfer(trans.transaction, trans_id);
-                if (result.status == 0) {
-                  res.status(200).json({
-                    status: 0,
-                    message: "Transaction failed again",
-                    blockchain_message: result.message,
-                  });
-                } else if (trans == null) {
-                  res.status(200).json({
-                    status: 0,
-                    message: "Transaction not found",
-                  });
-                } else {
-                  res.status(200).json({
-                    status: 0,
-                    message: "Transaction Success !!",
-                    blockchain_message: result.message,
-                  });
-                }
-              } catch (err) {
-                console.log(err.toString());
-                res.status(200).json({ status: 0, message: err.message });
-              }
-            }
-          });
+  const user = req.params.user;
+  const Type = getTypeClass(user);
+  const { trans_id } = req.body;
+  const username = req.sign_creds.username;
+  Type.findOne(
+    {
+      username,
+      status: 1,
+    },
+    function (err, details) {
+      if (err) {
+        console.log(err);
+        var message = err;
+        if (err.message) {
+          message = err.message;
         }
+        res.status(200).json({
+          status: 0,
+          message: message,
+        });
+      } else if (details == null) {
+        res.status(200).json({
+          status: 0,
+          message: "Unauthorised",
+        });
+      } else {
+        FailedTX.findOne({ _id: trans_id }, async (err, trans) => {
+          if (err) {
+            console.log(err);
+            var message = err;
+            if (err.message) {
+              message = err.message;
+            }
+            res.status(200).json({
+              status: 0,
+              message: message,
+            });
+          } else {
+            try {
+              var result = await initiateTransfer(trans.transaction, trans_id);
+              if (result.status == 0) {
+                res.status(200).json({
+                  status: 0,
+                  message: "Transaction failed again",
+                  blockchain_message: result.message,
+                });
+              } else if (trans == null) {
+                res.status(200).json({
+                  status: 0,
+                  message: "Transaction not found",
+                });
+              } else {
+                res.status(200).json({
+                  status: 0,
+                  message: "Transaction Success !!",
+                  blockchain_message: result.message,
+                });
+              }
+            } catch (err) {
+              console.log(err.toString());
+              res.status(200).json({ status: 0, message: err.message });
+            }
+          }
+        });
       }
-    );
+    }
+  );
 });
 
 router.post("/:user/changePassword", jwtTokenAuth, (req, res) => {
@@ -686,6 +687,7 @@ router.post("/getOne", function (req, res) {
       } else {
         if (page === type) {
           res.status(200).json({
+            status: 1,
             row: t1,
           });
         } else {
@@ -705,6 +707,7 @@ router.post("/getOne", function (req, res) {
               });
             } else {
               res.status(200).json({
+                status: 1,
                 row: data,
               });
             }
@@ -765,6 +768,7 @@ router.post("/getAll", function (req, res) {
             });
           } else {
             res.status(200).json({
+              status: 1,
               rows: data,
             });
           }
@@ -808,7 +812,10 @@ router.post("/editCashier", (req, res) => {
           message: message,
         });
       } else {
-        return res.status(200).json(true);
+        res.status(200).json({
+          status: 1,
+          message: "Edited successfully"
+        });
       }
     }
   );
@@ -866,7 +873,7 @@ router.post("/editBankBank", (req, res) => {
             mobile == "" ||
             email == ""
           ) {
-            return res.status(200).json({
+            res.status(200).json({
               status: 0,
               message: "Please provide valid inputs",
             });
@@ -906,8 +913,9 @@ router.post("/editBankBank", (req, res) => {
                 data2.bank_id = bank_id;
                 data2.contract = contract;
                 data2.save(() => { });
-                return res.status(200).json({
-                  success: true,
+                res.status(200).json({
+                  status: 1,
+                  message: "Edited Successfully",
                 });
               }
             }
@@ -933,7 +941,8 @@ router.get("/rechargeWallet", (req, res) => {
 
   rechargeNow([data]).then(function (result) {
     res.status(200).json({
-      status: result.toString(),
+      status: 1,
+      message: result.toString(),
     });
   });
 });
@@ -1048,7 +1057,8 @@ router.post("/createRules", (req, res) => {
                           name;
                         sendSMS(content2, bank.mobile);
                         res.status(200).json({
-                          success: true,
+                          status: 1,
+                          message: "Created Successfully",
                         });
                       }
                     });
@@ -1141,7 +1151,8 @@ router.post("/editRule", (req, res) => {
                       "Rule " + name + " has been updated, check it out";
                     sendSMS(content2, bank.mobile);
                     res.status(200).json({
-                      status: true,
+                      status: 1,
+                      message: "Edited successfully"
                     });
                   }
                 }
@@ -1155,7 +1166,6 @@ router.post("/editRule", (req, res) => {
 });
 
 router.post("/getBankByName", function (req, res) {
-  //res.send("hi");
   const { name } = req.body;
 
   Bank.findOne(
@@ -1180,6 +1190,7 @@ router.post("/getBankByName", function (req, res) {
         });
       } else {
         res.status(200).json({
+          status: 1,
           banks: bank,
         });
       }
@@ -1246,9 +1257,9 @@ router.post("/get-branch-details-by-id/:id", async (req, res) => {
     const branch = await Branch.find({ bank_id, bcode: branchId });
     if (branch.length == 0) throw { message: "Branch not found" };
 
-    res.send({ code: 1, branch });
+    res.send({ status: 1, branch });
   } catch (err) {
-    res.send({ code: 0, message: err.message });
+    res.send({ status: 0, message: err.message });
   }
 });
 
@@ -1306,6 +1317,7 @@ router.post("/getBranchByName", function (req, res) {
               obj["bcode"] = ba.bcode;
 
               res.status(200).json({
+                status: 1,
                 banks: obj,
               });
             }
@@ -1336,6 +1348,7 @@ router.post("/getWalletsOperational", function (req, res) {
         });
       } else {
         res.status(200).json({
+          status: 1,
           from: bank.wallet_ids.infra_operational,
           to: bank.wallet_ids.infra_master,
         });
@@ -1364,6 +1377,7 @@ router.post("/getWalletsMaster", function (req, res) {
         });
       } else {
         res.status(200).json({
+          status: 1,
           from: bank.wallet_ids.infra_master,
           to: bank.wallet_ids.master,
         });
@@ -1373,7 +1387,6 @@ router.post("/getWalletsMaster", function (req, res) {
 });
 
 router.post("/updateStatus", function (req, res) {
-  //res.send("hi");
   const { token, status, type_id, page, type } = req.body;
   const pageClass = getTypeClass(page);
   const typeClass = getTypeClass(type);
@@ -1418,7 +1431,8 @@ router.post("/updateStatus", function (req, res) {
               });
             } else {
               res.status(200).json({
-                status: true,
+                status: 1,
+                message: "Updated successfully"
               });
             }
           }
@@ -1429,7 +1443,6 @@ router.post("/updateStatus", function (req, res) {
 });
 
 router.post("/getDocs", function (req, res) {
-  //res.send("hi");
   const { bank_id } = req.body;
   Document.find(
     {
@@ -1448,6 +1461,7 @@ router.post("/getDocs", function (req, res) {
         });
       } else {
         res.status(200).json({
+          status: 1,
           docs: user,
         });
       }
@@ -1456,7 +1470,6 @@ router.post("/getDocs", function (req, res) {
 });
 
 router.post("/declineFee", function (req, res) {
-  //res.send("hi");
   const { id } = req.body;
   Bank.findOne(
     {
@@ -1499,7 +1512,8 @@ router.post("/declineFee", function (req, res) {
               });
             } else {
               res.status(200).json({
-                success: "Updated successfully",
+                status: 1,
+                message: "Updated successfully",
               });
             }
           }
@@ -1546,6 +1560,7 @@ router.put("/updateOne", function (req, res) {
             });
           } else {
             res.status(200).json({
+              status: 1,
               row: data,
             });
           }
@@ -1610,6 +1625,7 @@ router.put("/updateCashier", function (req, res) {
                   });
                 } else {
                   res.status(200).json({
+                    status: 1,
                     row: data,
                   });
                 }
@@ -1773,7 +1789,6 @@ router.post("/:user/verifyForgotPasswordOTP", function (req, res) {
 });
 
 router.post("/bankForgotPassword", function (req, res) {
-  //res.send("hi");
   let data = new OTP();
   const { mobile } = req.body;
   Bank.findOne(
@@ -1819,6 +1834,7 @@ router.post("/bankForgotPassword", function (req, res) {
             sendMail(content, "OTP", bank.email);
 
             res.status(200).json({
+              status: 1,
               mobile: mobile,
               username: bank.username,
             });
@@ -1830,7 +1846,6 @@ router.post("/bankForgotPassword", function (req, res) {
 });
 
 router.post("/branchForgotPassword", function (req, res) {
-  //res.send("hi");
   let data = new OTP();
   const { mobile } = req.body;
   Branch.findOne(
@@ -1876,6 +1891,7 @@ router.post("/branchForgotPassword", function (req, res) {
             sendMail(content, "OTP", bank.email);
 
             res.status(200).json({
+              status: 1,
               mobile: mobile,
               username: bank.username,
             });
@@ -1887,7 +1903,6 @@ router.post("/branchForgotPassword", function (req, res) {
 });
 
 router.post("/cashierForgotPassword", function (req, res) {
-  //res.send("hi");
   let data = new OTP();
   const { mobile } = req.body;
   BankUser.findOne(
@@ -1933,6 +1948,7 @@ router.post("/cashierForgotPassword", function (req, res) {
             sendMail(content, "OTP", bank.email);
 
             res.status(200).json({
+              status: 1,
               mobile: mobile,
               username: bank.username,
             });
@@ -1989,6 +2005,7 @@ router.post("/forgotPassword", function (req, res) {
             sendMail(content, "OTP", bank.email);
 
             res.status(200).json({
+              status: 1,
               mobile: mobile,
               username: bank.username,
             });
@@ -2048,6 +2065,7 @@ router.post("/sendOTP", function (req, res) {
             sendMail(content, "OTP", email);
 
             res.status(200).json({
+              status: 1,
               id: ot._id,
             });
           }
@@ -2088,6 +2106,7 @@ router.post("/generateOTPBank", function (req, res) {
           sendMail(content, "OTP", bank.email);
 
           res.status(200).json({
+            status: 1,
             id: ot._id,
           });
         }
@@ -2202,6 +2221,7 @@ router.post("/InfraVrifyOTP", function (req, res) {
                 });
               } else {
                 res.status(200).json({
+                  status: 1,
                   token: token,
                 });
               }
@@ -2262,6 +2282,7 @@ router.post("/getRule", function (req, res) {
               });
             } else {
               res.status(200).json({
+                status: 1,
                 rules: rule,
               });
             }
@@ -2654,9 +2675,9 @@ router.post("/save-currency", async (req, res) => {
     } else {
       await CurrencyModel.update({ _id: currencyData[0]._id }, { $set: input });
     }
-    res.status(200).json({ message: "saved", input });
+    res.status(200).json({ status: 1, message: "saved", input });
   } catch (err) {
-    res.status(200).json({ message: err.message });
+    res.status(200).json({ status: 0, message: err.message });
   }
 });
 
@@ -2719,25 +2740,25 @@ router.post("/save-country", async (req, res) => {
       });
     }
   } catch (err) {
-    res.status(200).json({ message: err.message });
+    res.status(200).json({ status: 0, message: err.message });
   }
 });
 
 router.get("/get-currency", async (req, res) => {
   try {
     const data = await CurrencyModel.find({});
-    res.status(200).json(data);
+    res.status(200).json({ status: 1, data });
   } catch (err) {
-    res.status(200).json({ message: err.message });
+    res.status(200).json({ status: 0, message: err.message });
   }
 });
 
 router.get("/get-country", async (req, res) => {
   try {
     const data = await CountryModel.find({});
-    res.status(200).json(data);
+    res.status(200).json({ status: 1, data });
   } catch (err) {
-    res.status(200).json({ message: err.message });
+    res.status(200).json({ status: 0, message: err.message });
   }
 });
 

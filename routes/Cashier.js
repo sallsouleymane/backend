@@ -509,6 +509,7 @@ router.post("/cashier/getMerchantPenaltyRule", function (req, res) {
 					});
 				} else {
 					res.status(200).json({
+						status: 1,
 						rule: setting.penalty_rule,
 					});
 				}
@@ -836,7 +837,11 @@ router.post("/cashier/activateUser", function (req, res) {
 		if (err.message) {
 			message = err.message;
 		}
-		res.status(200).json({ status: 0, message: message, err: err });
+		res.status(200).json({
+			status: 0,
+			message: message,
+			err: err
+		});
 	}
 });
 
@@ -866,6 +871,7 @@ router.post("/getCashierDashStats", function (req, res) {
 				});
 			} else {
 				res.status(200).json({
+					status: 1,
 					openingBalance: user.opening_balance,
 					closingBalance: user.closing_balance,
 					cashPaid: user.cash_paid,
@@ -915,6 +921,7 @@ router.post("/getCashierIncomingTransfer", function (req, res) {
 					},
 					(e, data) => {
 						res.status(200).json({
+							status: 1,
 							result: data,
 						});
 					}
@@ -1001,7 +1008,8 @@ router.post("/cashierAcceptIncoming", function (req, res) {
 												});
 											} else {
 												res.status(200).json({
-													success: 1,
+													status: 1,
+													message: "Success"
 												});
 											}
 										}
@@ -1056,6 +1064,7 @@ router.post("/getClosingBalance", function (req, res) {
 				da = c.closing_time;
 				var diff = Number(cb) - Number(user.cash_in_hand);
 				res.status(200).json({
+					status: 1,
 					cashInHand: user.cash_in_hand,
 					balance1: cb,
 					balance2: diff,
@@ -1189,7 +1198,10 @@ router.post("/addClosingBalance", (req, res) => {
 							function (e, v) { }
 						);
 
-						return res.status(200).json(true);
+						res.status(200).json({
+							status: 1,
+							message: "Added Successfully"
+						});
 					}
 				});
 			}
@@ -1345,7 +1357,7 @@ router.post("/cashierCancelTransfer", function (req, res) {
 																},
 																(e, data) => {
 																	res.status(200).json({
-																		success: true,
+																		status: 1,
 																	});
 																}
 															);
@@ -1402,40 +1414,13 @@ router.post("/getCashierTransLimit", function (req, res) {
 					(Number(t1.cash_received) + Number(t1.cash_paid));
 				limit = limit < 0 ? 0 : limit;
 				res.status(200).json({
+					status: 1,
 					limit: limit,
 					closingTime: t1.closing_time,
 					transactionStarted: t1.transaction_started,
 					cashInHand: t1.cash_in_hand,
 					isClosed: t1.is_closed,
 				});
-				// console.log(t1._id );
-
-				// CashierLedger.findOne({
-				//   cashier_id: t1._id,
-				//   created_at: {$gte: new Date(start), $lte: new Date(end)},
-				//   trans_type: "CR",
-				//   status : 1
-				// }, function (err, data) {
-
-				//           CashierLedger.findOne({
-				//           cashier_id : t1._id,
-				//           created_at: {$gte: new Date(start), $lte: new Date(end)},
-				//           trans_type : "DR",
-				//           status : 1
-				//         }, function (err, data2) {
-
-				//           var d1 = (data && data.amount != undefined  && data.amount != null && data.amount != '') ? Number(data.amount) : 0;
-				//          var d2 =  (data2 && data2.amount != undefined && data2.amount != null && data2.amount != '') ? Number(data2.amount) : 0;
-
-				//         let limit = Number(t1.max_trans_amt) - (d1+d2);
-				//         res.status(200)
-				//           .json({
-				//             limit: limit
-				//           });
-
-				//     });
-
-				//   });
 			}
 		}
 	);
@@ -1492,6 +1477,7 @@ router.post("/getCashier", function (req, res) {
 								});
 							} else {
 								res.status(200).json({
+									status: 1,
 									row: data,
 									row2: data2,
 								});
@@ -1524,7 +1510,7 @@ router.post("/checkCashierFee", function (req, res) {
 					message: message,
 				});
 			} else if (cashier == null) {
-				return res.status(200).json({
+				res.status(200).json({
 					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
@@ -1548,7 +1534,7 @@ router.post("/checkCashierFee", function (req, res) {
 							message: message,
 						});
 					} else if (fe == null) {
-						return res.status(200).json({
+						res.status(200).json({
 							status: 0,
 							message: "Transaction cannot be done at this time",
 						});
@@ -3039,14 +3025,15 @@ router.post("/cashierTransferMoney", function (req, res) {
 										{ cash_in_hand: cashInHand, cash_transferred: amount },
 										function (e, d) {
 											if (e)
-												return res.status(200).json({
+												res.status(200).json({
 													status: 0,
 													message: e.toString(),
 												});
-											res.status(200).json({
-												status: 1,
-												message: "Money transferred record saved",
-											});
+											else
+												res.status(200).json({
+													status: 1,
+													message: "Money transferred record saved",
+												});
 										}
 									);
 								}
@@ -3629,6 +3616,7 @@ router.post("/getClaimMoney", function (req, res) {
 										});
 									} else {
 										res.status(200).json({
+											status: 1,
 											row: cs,
 										});
 									}

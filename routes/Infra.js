@@ -802,7 +802,7 @@ router.post("/addBank", (req, res) => {
 								}
 							);
 						}
-					})
+					});
 			}
 		}
 	);
