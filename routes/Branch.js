@@ -191,6 +191,7 @@ router.post("/getBranchDashStats", function (req, res) {
 												}
 
 												res.status(200).json({
+													status: 1,
 													totalCashier: post4,
 													cashPaid: paid == null ? 0 : paid,
 													cashReceived: received == null ? 0 : received,
@@ -267,11 +268,11 @@ router.post("/addBranchCashier", (req, res) => {
 							message: message,
 						});
 					} else {
-						// let content = "<p>You are added as Cashier in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://"+config.mainIP+"/cashier/"+bankName+"'>http://"+config.mainIP+"/cashier/"+bankName+"</a></p><p><p>Your username: " + data.username + "</p><p>Your password: " + data.password + "</p>";
-						// sendMail(content, "Bank Account Created", email);
-						// let content2 = "You are added as Cashier in E-Wallet application Login URL: http://"+config.mainIP+"/cashier/"+bankName+" Your username: " + data.username + " Your password: " + data.password;
-						// sendSMS.js(content2, mobile);
-						return res.status(200).json(data);
+						res.status(200).json({
+							status: 1,
+							message: "Added cashier successfully",
+							data: data
+						});
 					}
 				});
 			}
@@ -347,7 +348,10 @@ router.post("/addOpeningBalance", (req, res) => {
 								cash_in_hand: total,
 							},
 							(err, d) => {
-								return res.status(200).json(true);
+								res.status(200).json({
+									status: 1,
+									message: "Added successfully"
+								});
 							}
 						);
 					}
@@ -358,7 +362,6 @@ router.post("/addOpeningBalance", (req, res) => {
 });
 
 router.post("/getBranch", function (req, res) {
-	//res.send("hi");
 	const { token, branch_id } = req.body;
 	Bank.findOne(
 		{
@@ -400,6 +403,7 @@ router.post("/getBranch", function (req, res) {
 							});
 						} else {
 							res.status(200).json({
+								status: 1,
 								branches: branch,
 							});
 						}
@@ -411,7 +415,6 @@ router.post("/getBranch", function (req, res) {
 });
 
 router.post("/getBranchInfo", function (req, res) {
-	//res.send("hi");
 	const { token } = req.body;
 
 	Branch.findOne(
@@ -443,6 +446,7 @@ router.post("/getBranchInfo", function (req, res) {
 					},
 					function (err, users) {
 						res.status(200).json({
+							status: 1,
 							branches: branch,
 							bankUsers: users,
 						});
@@ -497,7 +501,8 @@ router.post("/branchSetupUpdate", function (req, res) {
 							});
 						} else {
 							res.status(200).json({
-								success: "Updated successfully",
+								status: 1,
+								message: "Updated successfully",
 							});
 						}
 					}
@@ -576,7 +581,8 @@ router.post("/checkBranchFee", function (req, res) {
 									});
 								} else if (fe == null) {
 									res.status(200).json({
-										fee: "Transaction cannot be done at this time",
+										status: 0,
+										message: "Transaction cannot be done at this time",
 									});
 								} else {
 									let fee = 0;
@@ -591,6 +597,7 @@ router.post("/checkBranchFee", function (req, res) {
 										}
 
 										res.status(200).json({
+											status: 1,
 											fee: fee,
 										});
 									});
@@ -657,7 +664,8 @@ router.post("/updateCashierTransferStatus", function (req, res) {
 									{ pending_trans: pending },
 									function (err, d) {
 										res.status(200).json({
-											success: "true",
+											status: 1,
+											message: "Updated successfully"
 										});
 									}
 								);
@@ -1131,6 +1139,7 @@ router.post("/getBranchClaimMoney", function (req, res) {
 										});
 									} else {
 										res.status(200).json({
+											status: 1,
 											row: cs,
 										});
 									}
