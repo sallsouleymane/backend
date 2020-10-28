@@ -448,7 +448,6 @@ router.post("/:user/getOne", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/:user/reinitiateTransfer", jwtTokenAuth, (req, res) => {
-  try {
     const user = req.params.user;
     const Type = getTypeClass(user);
     const { trans_id } = req.body;
@@ -487,38 +486,35 @@ router.post("/:user/reinitiateTransfer", jwtTokenAuth, (req, res) => {
                 message: message,
               });
             } else {
-              var result = await initiateTransfer(trans.transaction, trans_id);
-              if (result.status == 0) {
-                res.status(200).json({
-                  status: 0,
-                  message: "Transaction failed again",
-                  blockchain_message: result.message,
-                });
-              } else if (trans == null) {
-                res.status(200).json({
-                  status: 0,
-                  message: "Transaction not found",
-                });
-              } else {
-                res.status(200).json({
-                  status: 0,
-                  message: "Transaction Success !!",
-                  blockchain_message: result.message,
-                });
+              try {
+                var result = await initiateTransfer(trans.transaction, trans_id);
+                if (result.status == 0) {
+                  res.status(200).json({
+                    status: 0,
+                    message: "Transaction failed again",
+                    blockchain_message: result.message,
+                  });
+                } else if (trans == null) {
+                  res.status(200).json({
+                    status: 0,
+                    message: "Transaction not found",
+                  });
+                } else {
+                  res.status(200).json({
+                    status: 0,
+                    message: "Transaction Success !!",
+                    blockchain_message: result.message,
+                  });
+                }
+              } catch (err) {
+                console.log(err.toString());
+                res.status(200).json({ status: 0, message: err.message });
               }
             }
           });
         }
       }
     );
-  } catch (err) {
-    console.log(err);
-    var message = err.toString();
-    if (err.message) {
-      message = err.message;
-    }
-    res.status(200).json({ status: 0, message: message, err: err });
-  }
 });
 
 router.post("/:user/changePassword", jwtTokenAuth, (req, res) => {

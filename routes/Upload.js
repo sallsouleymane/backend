@@ -269,8 +269,12 @@ async function fileUpload(path) {
 			file: fs.createReadStream(path),
 		},
 	};
-	let res = await doRequest(options);
-	return res;
+	try {
+		let res = await doRequest(options);
+		return res;
+	} catch (err) {
+		throw err;
+	}
 }
 
 module.exports = router;

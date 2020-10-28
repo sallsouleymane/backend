@@ -209,7 +209,7 @@ router.post("/merchantCashier/getCustomerForMobile", jwtTokenAuth, function (
 			username: jwtusername,
 			status: 1,
 		},
-		async function (err, cashier) {
+		function (err, cashier) {
 			if (err) {
 				console.log(err);
 				var message = err;
@@ -268,7 +268,7 @@ router.post("/merchantCashier/getCustomerForCode", jwtTokenAuth, function (
 			username: jwtusername,
 			status: 1,
 		},
-		async function (err, cashier) {
+		function (err, cashier) {
 			if (err) {
 				console.log(err);
 				var message = err;
@@ -336,7 +336,7 @@ router.post("/merchantCashier/createCustomer", jwtTokenAuth, (req, res) => {
 		docs_hash,
 	} = req.body;
 	const jwtusername = req.sign_creds.username;
-	MerchantCashier.findOne({ username: jwtusername, status: 1 }, async function (
+	MerchantCashier.findOne({ username: jwtusername, status: 1 }, function (
 		err,
 		cashier
 	) {
@@ -433,7 +433,7 @@ router.post("/merchantCashier/getUserFromMobile", jwtTokenAuth, function (
 			username: jwtusername,
 			status: 1,
 		},
-		async function (err, cashier) {
+		function (err, cashier) {
 			if (err) {
 				console.log(err);
 				var message = err;
@@ -488,7 +488,7 @@ router.post("/merchantCashier/listOfferings", jwtTokenAuth, function (
 			username: jwtusername,
 			status: 1,
 		},
-		async function (err, cashier) {
+		function (err, cashier) {
 			if (err) {
 				console.log(err);
 				var message = err;
@@ -538,7 +538,7 @@ router.post("/merchantCashier/listTaxes", jwtTokenAuth, function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		async function (err, cashier) {
+		function (err, cashier) {
 			if (err) {
 				console.log(err);
 				var message = err;
@@ -895,7 +895,7 @@ router.post("/merchantCashier/getSettings", jwtTokenAuth, function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		async function (err, cashier) {
+		function (err, cashier) {
 			if (err) {
 				console.log(err);
 				var message = err;
@@ -953,7 +953,7 @@ router.post("/merchantCashier/getCashierSettings", jwtTokenAuth, function (
 			username: jwtusername,
 			status: 1,
 		},
-		async function (err, cashier) {
+		function (err, cashier) {
 			if (err) {
 				console.log(err);
 				var message = err;
@@ -1045,7 +1045,7 @@ router.post("/merchantCashier/createInvoice", jwtTokenAuth, (req, res) => {
 			username: jwtusername,
 			status: 1,
 		},
-		async (err, cashier) => {
+		(err, cashier) => {
 			if (err) {
 				console.log(err);
 				var message = err;

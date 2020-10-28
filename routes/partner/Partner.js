@@ -427,23 +427,28 @@ router.post("/partner/dashStats", jwtTokenAuth, function (req, res) {
                             "Token changed or user not valid. Try to login again or contact system administrator.",
                     });
                 } else {
-                    const user_id = partner._id;
-                    var branchCount = await PartnerBranch.countDocuments({
-                        partner_id: user_id,
-                    });
+                    try {
+                        const user_id = partner._id;
+                        var branchCount = await PartnerBranch.countDocuments({
+                            partner_id: user_id,
+                        });
 
-                    var cashierCount = await PartnerCashier.countDocuments({
-                        partner_id: user_id,
-                    });
-                    var userCount = await PartnerUser.countDocuments({
-                        partner_id: user_id,
-                    });
+                        var cashierCount = await PartnerCashier.countDocuments({
+                            partner_id: user_id,
+                        });
+                        var userCount = await PartnerUser.countDocuments({
+                            partner_id: user_id,
+                        });
 
-                    res.status(200).json({
-                        totalBranches: branchCount,
-                        totalCashiers: cashierCount,
-                        totalUsers: userCount
-                    });
+                        res.status(200).json({
+                            totalBranches: branchCount,
+                            totalCashiers: cashierCount,
+                            totalUsers: userCount
+                        });
+                    } catch (err) {
+                        console.log(err.toString());
+                        res.status(200).json({ status: 0, message: err.message });
+                    }
                 }
             }
         );

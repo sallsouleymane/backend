@@ -33,7 +33,7 @@ router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		async function (err, merchant) {
+		function (err, merchant) {
 			if (err) {
 				console.log(err);
 				var message = err;
@@ -690,7 +690,7 @@ router.post("/merchant/getSettings", jwtTokenAuth, function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		async function (err, merchant) {
+		function (err, merchant) {
 			if (err) {
 				console.log(err);
 				var message = err;
@@ -745,7 +745,7 @@ router.post("/merchant/listTaxes", jwtTokenAuth, function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		async function (err, merchant) {
+		function (err, merchant) {
 			if (err) {
 				console.log(err);
 				var message = err;
@@ -1102,7 +1102,7 @@ router.post("/merchant/listOfferings", jwtTokenAuth, function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		async function (err, merchant) {
+		function (err, merchant) {
 			if (err) {
 				console.log(err);
 				var message = err;

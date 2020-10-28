@@ -4,6 +4,7 @@ const router = express.Router();
 //utils
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
+const getTypeClass = require("./utils/getTypeClass");
 
 const Bank = require("../models/Bank");
 const Infra = require("../models/Infra");
@@ -17,9 +18,10 @@ const PartnerCashier = require("../models/partner/Cashier");
 
 const jwtTokenAuth = require("./JWTTokenAuth");
 
-router.post("/bank/merchantRule/updateSharesForInterBank", async (req, res) => {
+router.post("/:user/merchantRule/updateSharesForInterBank", async (req, res) => {
 	try {
-		const { token,
+		const {
+			token,
 			type,
 			merchant_id,
 			branch_share,
@@ -27,8 +29,11 @@ router.post("/bank/merchantRule/updateSharesForInterBank", async (req, res) => {
 			partner_share,
 			specific_partner_share } = req.body;
 
-		var bank = await Bank.findOne({ token: token });
-		if (bank == null) {
+		const user = req.params.user;
+
+		const Coll = getTypeClass(user);
+		var data = await Coll.findOne({ token: token });
+		if (data == null) {
 			throw new Error("Token is invalid");
 		}
 		var ib_type;
@@ -67,15 +72,17 @@ router.post("/bank/merchantRule/updateSharesForInterBank", async (req, res) => {
 	}
 });
 
-router.post("/bank/merchantRule/getRevenueShareForInterBank", async (req, res) => {
+router.post("/:user/merchantRule/getRevenueShareForInterBank", async (req, res) => {
 	try {
 		const { token, type, merchant_id } = req.body;
-		var bank = await Bank.findOne({ token: token });
-		if (bank == null) {
-			throw new Error(
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
+		const user = req.params.user;
+
+		const Coll = getTypeClass(user);
+		var data = await Coll.findOne({ token: token });
+		if (data == null) {
+			throw new Error("Token is invalid");
 		}
+
 		var ib_type;
 		if (type == "IBNWM-F") {
 			ib_type = "NWM-F"
@@ -675,113 +682,118 @@ router.post("/infra/merchantRule/interBank/approve", function (req, res) {
 							} else if (rule == null) {
 								res.status(200).json({
 									status: 0,
-									message: "MerchantRule not found.",
+									message: "Merchant Rule not found.",
 								});
 							} else {
-								var merchant = Merchant.findOne({
-									_id: rule.merchant_id,
-									status: 1,
-								});
-								if (merchant == null) {
-									throw new Error("Rule's Merchant not found");
+								try {
+									var merchant = await Merchant.findOne({
+										_id: rule.merchant_id,
+										status: 1,
+									});
+									if (merchant == null) {
+										throw new Error("Rule's Merchant not found");
+									}
+									var bank = await Bank.findOne({ _id: merchant.bank_id, status: 1 });
+									if (bank == null) {
+										throw new Error("Merchant's bank not found");
+									}
+									if (
+										rule.infra_share_edit_status == 0 &&
+										rule.rule_edit_status == 1
+									) {
+										console.log("Condition 1");
+										await IBMerchantRule.updateOne(
+											{
+												_id: rule_id,
+											},
+											{
+												$set: {
+													active: rule.edited.active,
+													ranges: rule.edited.ranges,
+													status: 1,
+													infra_approve_status: 1,
+													rule_edit_status: 0,
+												},
+												$unset: { edited: {} },
+											}
+										);
+									} else if (
+										rule.infra_share_edit_status == 1 &&
+										rule.rule_edit_status == 1
+									) {
+										console.log("Condition 2");
+										await IBMerchantRule.updateOne(
+											{
+												_id: rule_id,
+											},
+											{
+												$set: {
+													active: rule.edited.active,
+													ranges: rule.edited.ranges,
+													"infra_share.fixed": rule.edited.infra_share.fixed,
+													"infra_share.percentage":
+														rule.edited.infra_share.percentage,
+													infra_share_edit_status: 0,
+													rule_edit_status: 0,
+													status: 1,
+												},
+												$unset: {
+													edited: {},
+												},
+											}
+										);
+									} else if (
+										rule.infra_share_edit_status == 1 &&
+										rule.rule_edit_status == 0
+									) {
+										console.log("Condition 3");
+										await IBMerchantRule.updateOne(
+											{
+												_id: rule_id,
+											},
+											{
+												$set: {
+													"infra_share.fixed": rule.edited.infra_share.fixed,
+													"infra_share.percentage":
+														rule.edited.infra_share.percentage,
+													infra_share_edit_status: 0,
+													status: 1,
+												},
+												$unset: {
+													edited: {},
+												},
+											}
+										);
+									} else {
+										console.log("Condition 4");
+										await IBMerchantRule.updateOne(
+											{
+												_id: rule_id,
+											},
+											{
+												$set: {
+													infra_approve_status: 1,
+													status: 1,
+												},
+											}
+										);
+									}
+									var content =
+										"Infra has approved the merchant rule " +
+										rule.name +
+										"in Ewallet Application";
+									sendMail(content, "Merchant rule approved", bank.email);
+									content =
+										"Ewallet: Infra has approved the merchant rule " + rule.name;
+									sendSMS(content, bank.mobile);
+									res.status(200).json({
+										status: 1,
+										message: "Approved",
+									});
+								} catch (err) {
+									console.log(err.toString());
+									res.status(200).json({ status: 0, message: err.message });
 								}
-								var bank = Bank.findOne({ _id: merchant.bank_id, status: 1 });
-								if (bank == null) {
-									throw new Error("Merchant's bank not found");
-								}
-								if (
-									rule.infra_share_edit_status == 0 &&
-									rule.rule_edit_status == 1
-								) {
-									console.log("Condition 1");
-									await IBMerchantRule.updateOne(
-										{
-											_id: rule_id,
-										},
-										{
-											$set: {
-												active: rule.edited.active,
-												ranges: rule.edited.ranges,
-												status: 1,
-												infra_approve_status: 1,
-												rule_edit_status: 0,
-											},
-											$unset: { edited: {} },
-										}
-									);
-								} else if (
-									rule.infra_share_edit_status == 1 &&
-									rule.rule_edit_status == 1
-								) {
-									console.log("Condition 2");
-									await IBMerchantRule.updateOne(
-										{
-											_id: rule_id,
-										},
-										{
-											$set: {
-												active: rule.edited.active,
-												ranges: rule.edited.ranges,
-												"infra_share.fixed": rule.edited.infra_share.fixed,
-												"infra_share.percentage":
-													rule.edited.infra_share.percentage,
-												infra_share_edit_status: 0,
-												rule_edit_status: 0,
-												status: 1,
-											},
-											$unset: {
-												edited: {},
-											},
-										}
-									);
-								} else if (
-									rule.infra_share_edit_status == 1 &&
-									rule.rule_edit_status == 0
-								) {
-									console.log("Condition 3");
-									await IBMerchantRule.updateOne(
-										{
-											_id: rule_id,
-										},
-										{
-											$set: {
-												"infra_share.fixed": rule.edited.infra_share.fixed,
-												"infra_share.percentage":
-													rule.edited.infra_share.percentage,
-												infra_share_edit_status: 0,
-												status: 1,
-											},
-											$unset: {
-												edited: {},
-											},
-										}
-									);
-								} else {
-									console.log("Condition 4");
-									await IBMerchantRule.updateOne(
-										{
-											_id: rule_id,
-										},
-										{
-											$set: {
-												infra_approve_status: 1,
-												status: 1,
-											},
-										}
-									);
-								}
-								var content =
-									"Infra has approved the merchant rule " +
-									rule.name +
-									"in Ewallet Application";
-								sendMail(content, "Merchant rule approved", bank.email);
-								content =
-									"Ewallet: Infra has approved the merchant rule " + rule.name;
-								sendSMS(content, bank.mobile);
-								res.status(200).json({
-									status: 1,
-									message: "Approved",
-								});
 							}
 						}
 					);
@@ -979,7 +991,7 @@ router.post("/infra/merchantRule/interBank/getAll", function (req, res) {
 							}
 						]
 					},
-					async (err, rules) => {
+					(err, rules) => {
 						if (err) {
 							console.log(err);
 							var message = err;
@@ -2395,7 +2407,7 @@ router.post("/infra/merchantRule/getAll", function (req, res) {
 							},
 						]
 					},
-					async (err, rules) => {
+					(err, rules) => {
 						if (err) {
 							console.log(err);
 							var message = err;

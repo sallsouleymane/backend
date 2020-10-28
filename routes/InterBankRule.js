@@ -3840,7 +3840,7 @@ router.post("/infra/interBank/getRules", function (req, res) {
                     {
                         bank_id: bank_id
                     },
-                    async (err, rules) => {
+                    (err, rules) => {
                         if (err) {
                             console.log(err);
                             var message = err;
@@ -3904,7 +3904,7 @@ router.post("/infra/interBank/declineShare", function (req, res) {
                     {
                         infra_approval_status: -1
                     },
-                    async (err, rule) => {
+                    (err, rule) => {
                         if (err) {
                             console.log(err);
                             var message = err;
@@ -4091,7 +4091,7 @@ router.post("/bank/interBank/updateOtherBankShares", function (req, res) {
                             other_bank_share: other_bank_share,
                         },
                     },
-                    async (err, rule) => {
+                    (err, rule) => {
                         if (err) {
                             console.log(err);
                             var message = err;
@@ -4158,7 +4158,7 @@ router.post("/bank/interBank/editRule", function (req, res) {
                             description: description,
                         }
                     }, { new: true },
-                    async (err, rule) => {
+                    (err, rule) => {
                         if (err) {
                             console.log(err);
                             var message = err;

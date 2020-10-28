@@ -455,14 +455,20 @@ router.post("/getDashStats", function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				var totalBanks = await Bank.countDocuments({}, () => { });
-				var totalmerchants = await Merchant.countDocuments({}, () => { });
+				try {
+					var totalBanks = await Bank.countDocuments({});
+					var totalmerchants = await Merchant.countDocuments({});
 
-				res.status(200).json({
-					status: 1,
-					totalBanks: totalBanks,
-					totalMerchants: totalmerchants,
-				});
+					res.status(200).json({
+						status: 1,
+						totalBanks: totalBanks,
+						totalMerchants: totalmerchants,
+					});
+
+				} catch (err) {
+					console.log(err.toString());
+					res.status(200).json({ status: 0, message: err.message });
+				}
 			}
 		}
 	);

@@ -356,12 +356,17 @@ router.post("/cashier/getTransactionHistory", function (req, res) {
 										"Bank not found.",
 								});
 							} else {
-								let result = await blockchain.getStatement(branch.wallet_ids.operational, cashier._id);
-								res.status(200).json({
-									status: 1,
-									message: "get cashier transaction history success",
-									history: result,
-								});
+								try {
+									let result = await blockchain.getStatement(branch.wallet_ids.operational, cashier._id);
+									res.status(200).json({
+										status: 1,
+										message: "get cashier transaction history success",
+										history: result,
+									});
+								} catch (err) {
+									console.log(err.toString());
+									res.status(200).json({ status: 0, message: err.message });
+								}
 							}
 						});
 					}
