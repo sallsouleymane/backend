@@ -8,6 +8,7 @@ module.exports = async function (
     try {
         const senderBankEsWallet = sendingBank.wallet_ids.escrow;
         const bankOpWallet = bank.wallet_ids.operational;
+        const branchOpWallet = branch.wallet_ids.operational;
         const senderBankOpWallet = sendingBank.wallet_ids.operational;
 
         var amount = Number(transfer.amount);
