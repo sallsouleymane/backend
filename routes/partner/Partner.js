@@ -85,7 +85,7 @@ router.post("/partner/transferMasterToOp", jwtTokenAuth, function (req, res) {
                             blockchain.initiateTransfer(trans).then((result) => {
                                 res.status(200).json(result)
                             }).catch((err) => {
-                                console.log(err.toString);
+                                console.log(err.toString());
                                 res.status(200).json({
                                     status: 0,
                                     message: err.message
@@ -185,7 +185,7 @@ router.post("/partner/getBalance", jwtTokenAuth, function (req, res) {
                         balance: balance,
                     });
                 }).catch((err) => {
-                    console.log(err.toString);
+                    console.log(err.toString());
                     res.status(200).json({
                         status: 0,
                         message: err.message
@@ -260,7 +260,7 @@ router.post("/partner/getHistoryTotal", jwtTokenAuth, function (req, res) {
                                 });
                             }
                         }).catch((err) => {
-                            console.log(err.toString);
+                            console.log(err.toString());
                             res.status(200).json({
                                 status: 0,
                                 message: err.message
@@ -322,7 +322,7 @@ router.post("/partner/getHistory", jwtTokenAuth, function (req, res) {
                         }
                     });
                 }).catch((err) => {
-                    console.log(err.toString);
+                    console.log(err.toString());
                     res.status(200).json({
                         status: 0,
                         message: err.message
@@ -387,7 +387,7 @@ router.get("/partner/getOperationalBalance", jwtTokenAuth, function (req, res) {
                                 balance: result,
                             });
                         }).catch((err) => {
-                            console.log(err.toString);
+                            console.log(err.toString());
                             res.status(200).json({
                                 status: 0,
                                 message: err.message
@@ -1210,7 +1210,7 @@ router.post("/partner/addBranch", jwtTokenAuth, (req, res) => {
                             });
                         }
                     }).catch((err) => {
-                        console.log(err.toString);
+                        console.log(err.toString());
                         res.status(200).json({
                             status: 0,
                             message: err.message
@@ -1371,7 +1371,7 @@ router.post("/partner/activate", jwtTokenAuth, function (req, res) {
                             );
                         }
                     }).catch((err) => {
-                        console.log(err.toString);
+                        console.log(err.toString());
                         res.status(200).json({
                             status: 0,
                             message: err.message

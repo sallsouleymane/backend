@@ -93,7 +93,7 @@ router.post("/infra/transferMasterToOp", function (req, res) {
 							initiateTransfer(trans).then((result) => {
 								res.status(200).json(result)
 							}).catch((err) => {
-								console.log(err.toString);
+								console.log(err.toString());
 								res.status(200).json({
 									status: 0,
 									message: err.message
@@ -344,7 +344,7 @@ router.post("/infra/createMerchant", function (req, res) {
 									});
 								}
 							}).catch((err) => {
-								console.log(err.toString);
+								console.log(err.toString());
 								res.status(200).json({
 									status: 0,
 									message: err.message
@@ -1007,7 +1007,7 @@ router.post("/getInfraHistory", function (req, res) {
 									history: result,
 								});
 							}).catch((err) => {
-								console.log(err.toString);
+								console.log(err.toString());
 								res.status(200).json({
 									status: 0,
 									message: err.message
@@ -1075,7 +1075,7 @@ router.get("/getInfraOperationalBalance", function (req, res) {
 									balance: result,
 								});
 							}).catch((err) => {
-								console.log(err.toString);
+								console.log(err.toString());
 								res.status(200).json({
 									status: 0,
 									message: err.message
@@ -1143,7 +1143,7 @@ router.get("/getInfraMasterBalance", function (req, res) {
 									balance: result,
 								});
 							}).catch((err) => {
-								console.log(err.toString);
+								console.log(err.toString());
 								res.status(200).json({
 									status: 0,
 									message: err.message
@@ -2077,7 +2077,7 @@ router.post("/transferMoney", function (req, res) {
 							data.user_id = "";
 
 							transferThis(data).then(function (result) { }).catch((err) => {
-								console.log(err.toString);
+								console.log(err.toString());
 								res.status(200).json({
 									status: 0,
 									message: err.message

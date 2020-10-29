@@ -376,7 +376,7 @@ router.get("/user/getBalance", jwtTokenAuth, (req, res) => {
 						balance: result,
 					});
 				}).catch((err) => {
-					console.log(err.toString);
+					console.log(err.toString());
 					res.status(200).json({
 						status: 0,
 						message: err.message
@@ -1222,7 +1222,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																						});
 																					}
 																				}).catch((err) => {
-																					console.log(err.toString);
+																					console.log(err.toString());
 																					res.status(200).json({
 																						status: 0,
 																						message: err.message
@@ -1620,7 +1620,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																					});
 																				}
 																			}).catch((err) => {
-																				console.log(err.toString);
+																				console.log(err.toString());
 																				res.status(200).json({
 																					status: 0,
 																					message: err.message

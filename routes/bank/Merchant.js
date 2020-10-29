@@ -194,7 +194,7 @@ router.post("/bank/createMerchant", function (req, res) {
                             });
                         }
                     }).catch((err) => {
-                        console.log(err.toString);
+                        console.log(err.toString());
                         res.status(200).json({
                             status: 0,
                             message: err.message

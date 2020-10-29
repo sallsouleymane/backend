@@ -86,7 +86,7 @@ router.post("/branch/transferMasterToOp", function (req, res) {
 							initiateTransfer(trans).then((result) => {
 								res.status(200).json(result)
 							}).catch((err) => {
-								console.log(err.toString);
+								console.log(err.toString());
 								res.status(200).json({
 									status: 0,
 									message: err.message
@@ -989,7 +989,7 @@ router.post("/branchClaimMoney", function (req, res) {
 																				});
 																			}
 																		}).catch((err) => {
-																			console.log(err.toString);
+																			console.log(err.toString());
 																			res.status(200).json({
 																				status: 0,
 																				message: err.message
@@ -1192,7 +1192,7 @@ router.post("/getBranchHistory", function (req, res) {
 						history: result,
 					});
 				}).catch((err) => {
-					console.log(err.toString);
+					console.log(err.toString());
 					res.status(200).json({
 						status: 0,
 						message: err.message
