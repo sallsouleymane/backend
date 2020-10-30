@@ -15,7 +15,7 @@ const {
 	createWallet,
 	getStatement,
 	getBalance,
-	initiateTransfer
+	initiateTransfer,
 } = require("../services/Blockchain.js");
 
 const Bank = require("../models/Bank");
@@ -27,7 +27,7 @@ const Fee = require("../models/Fee");
 const CashierLedger = require("../models/CashierLedger");
 const Merchant = require("../models/merchant/Merchant");
 const FailedTX = require("../models/FailedTXLedger");
-const Partner = require("../models/partner/Partner")
+const Partner = require("../models/partner/Partner");
 const Document = require("../models/Document");
 const Infra = require("../models/Infra");
 
@@ -58,62 +58,8 @@ router.post("/bank/getMyWalletIds", function (req, res) {
 			} else {
 				res.status(200).json({ status: 1, wallet_ids: bank.wallet_ids });
 			}
-		});
-
-})
-
-router.post("/bank/transferMasterToOp", function (req, res) {
-	const { token, amount } = req.body;
-	Bank.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				const masterWallet = bank.wallet_ids.master;
-				const opWallet = bank.wallet_ids.operational;
-				const trans = {
-					from: masterWallet,
-					to: opWallet,
-					amount: Number(amount),
-					note: "Master to operational",
-					email1: bank.email,
-					mobile1: bank.mobile,
-					from_name: bank.name,
-					to_name: bank.name,
-					master_code: "",
-					child_code: ""
-				}
-				initiateTransfer(trans)
-					.then((result) => {
-						res.status(200).json(result)
-					})
-					.catch((err) => {
-						console.log(err.toString());
-						res.status(200).json({
-							status: 0,
-							message: err.message
-						})
-					});
-			}
-		});
+		}
+	);
 });
 
 router.post("/bank/generateOTP", function (req, res) {
@@ -187,7 +133,11 @@ router.post("/bank/generateOTP", function (req, res) {
 							],
 						},
 						function (err, partner) {
-							if (partner == null || partner == undefined || partner.length == 0) {
+							if (
+								partner == null ||
+								partner == undefined ||
+								partner.length == 0
+							) {
 								data.mobile = bank.mobile;
 
 								data.save((err, ot) => {
@@ -218,8 +168,7 @@ router.post("/bank/generateOTP", function (req, res) {
 										status: 0,
 										message: "Name already taken",
 									});
-								}
-								else if (email == partner.email) {
+								} else if (email == partner.email) {
 									res.status(200).json({
 										status: 0,
 										message: "Email already taken",
@@ -282,13 +231,13 @@ router.post("/bank/getRevenueFeeForInterBank", async (req, res) => {
 		}
 		var ib_type;
 		if (type == "IBNWNW") {
-			ib_type = "Non Wallet to Non Wallet"
+			ib_type = "Non Wallet to Non Wallet";
 		} else if (type == "IBWNW") {
-			ib_type = "Wallet to Non Wallet"
+			ib_type = "Wallet to Non Wallet";
 		} else if (type == "IBWW") {
-			ib_type = "Wallet to Wallet"
+			ib_type = "Wallet to Wallet";
 		} else if (type == "IBNWW") {
-			ib_type = "Non Wallet to Wallet"
+			ib_type = "Non Wallet to Wallet";
 		}
 		const fee = await Fee.findOne({ trans_type: ib_type, bank_id: bank._id });
 		if (fee == null) throw new Error("No Fee Rule found");
@@ -313,18 +262,18 @@ router.post("/bank/updateRevenueSharingRules", async (req, res) => {
 		}
 		var ib_type;
 		if (type == "IBNWNW") {
-			ib_type = "Non Wallet to Non Wallet"
+			ib_type = "Non Wallet to Non Wallet";
 		} else if (type == "IBWNW") {
-			ib_type = "Wallet to Non Wallet"
+			ib_type = "Wallet to Non Wallet";
 		} else if (type == "IBWW") {
-			ib_type = "Wallet to Wallet"
+			ib_type = "Wallet to Wallet";
 		} else if (type == "IBNWW") {
-			ib_type = "Non Wallet to Wallet"
+			ib_type = "Non Wallet to Wallet";
 		}
 		result = await Fee.findOneAndUpdate(
 			{
 				trans_type: ib_type,
-				bank_id: bank._id
+				bank_id: bank._id,
 			},
 			{
 				$set: {
@@ -334,8 +283,10 @@ router.post("/bank/updateRevenueSharingRules", async (req, res) => {
 						revenue_sharing_rule.branch_share.send,
 					"revenue_sharing_rule.specific_branch_share":
 						revenue_sharing_rule.specific_branch_share,
-					"revenue_sharing_rule.partner_share.claim": revenue_sharing_rule.partner_share.claim,
-					"revenue_sharing_rule.partner_share.send": revenue_sharing_rule.partner_share.send,
+					"revenue_sharing_rule.partner_share.claim":
+						revenue_sharing_rule.partner_share.claim,
+					"revenue_sharing_rule.partner_share.send":
+						revenue_sharing_rule.partner_share.send,
 					"revenue_sharing_rule.specific_partner_share":
 						revenue_sharing_rule.specific_partner_share,
 				},
@@ -369,8 +320,10 @@ router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
 						revenue_sharing_rule.branch_share.send,
 					"revenue_sharing_rule.specific_branch_share":
 						revenue_sharing_rule.specific_branch_share,
-					"revenue_sharing_rule.partner_share.claim": revenue_sharing_rule.partner_share.claim,
-					"revenue_sharing_rule.partner_share.send": revenue_sharing_rule.partner_share.send,
+					"revenue_sharing_rule.partner_share.claim":
+						revenue_sharing_rule.partner_share.claim,
+					"revenue_sharing_rule.partner_share.send":
+						revenue_sharing_rule.partner_share.send,
 					"revenue_sharing_rule.specific_partner_share":
 						revenue_sharing_rule.specific_partner_share,
 				},
@@ -557,65 +510,75 @@ router.post("/bankActivate", function (req, res) {
 							message: "Infra not found.",
 						});
 					} else {
-						const bank_wallet_ids = getWalletIds("bank", bank.bcode, bank.bcode);
-						const infra_wallet_ids = getWalletIds("infra", infra.username, bank.bcode);
+						const bank_wallet_ids = getWalletIds(
+							"bank",
+							bank.bcode,
+							bank.bcode
+						);
+						const infra_wallet_ids = getWalletIds(
+							"infra",
+							infra.username,
+							bank.bcode
+						);
 						createWallet([
 							bank_wallet_ids.operational,
 							bank_wallet_ids.escrow,
 							bank_wallet_ids.master,
 							infra_wallet_ids.operational,
 							infra_wallet_ids.master,
-						]).then(function (result) {
-							if (result != "" && !result.includes("wallet already exists")) {
-								console.log(result);
-								res.status(200).json({
-									status: 0,
-									message: "Blockchain service was unavailable. Please try again.",
-									result: result,
-								});
-							} else {
-								Bank.findByIdAndUpdate(
-									bank._id,
-									{
-										status: 1,
-										wallet_ids: {
-											operational: bank_wallet_ids.operational,
-											master: bank_wallet_ids.master,
-											escrow: bank_wallet_ids.escrow,
-											infra_operational: infra_wallet_ids.operational,
-											infra_master: infra_wallet_ids.master
-										}
-									},
-									(err) => {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
+						])
+							.then(function (result) {
+								if (result != "" && !result.includes("wallet already exists")) {
+									console.log(result);
+									res.status(200).json({
+										status: 0,
+										message:
+											"Blockchain service was unavailable. Please try again.",
+										result: result,
+									});
+								} else {
+									Bank.findByIdAndUpdate(
+										bank._id,
+										{
+											status: 1,
+											wallet_ids: {
+												operational: bank_wallet_ids.operational,
+												master: bank_wallet_ids.master,
+												escrow: bank_wallet_ids.escrow,
+												infra_operational: infra_wallet_ids.operational,
+												infra_master: infra_wallet_ids.master,
+											},
+										},
+										(err) => {
+											if (err) {
+												console.log(err);
+												var message = err;
+												if (err.message) {
+													message = err.message;
+												}
+												res.status(200).json({
+													status: 0,
+													message: message,
+												});
+											} else {
+												res.status(200).json({
+													status: 1,
+													walletStatus: result,
+												});
 											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else {
-											res.status(200).json({
-												status: 1,
-												walletStatus: result,
-											});
 										}
-									}
-								);
-							}
-						})
+									);
+								}
+							})
 							.catch((err) => {
 								console.log(err.toString());
 								res.status(200).json({
 									status: 0,
-									message: err.message
-								})
+									message: err.message,
+								});
 							});
 					}
-				})
+				});
 			}
 		}
 	);
@@ -858,113 +821,113 @@ router.post("/addBranch", (req, res) => {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				const wallet_ids = getWalletIds("branch", bcode, bank.bcode)
-				createWallet([
-					wallet_ids.operational,
-					wallet_ids.master,
-				]).then(function (result) {
-					if (result != "" && !result.includes("wallet already exists")) {
-						console.log(result);
+				const wallet_ids = getWalletIds("branch", bcode, bank.bcode);
+				createWallet([wallet_ids.operational, wallet_ids.master])
+					.then(function (result) {
+						if (result != "" && !result.includes("wallet already exists")) {
+							console.log(result);
+							res.status(200).json({
+								status: 0,
+								message:
+									"Blockchain service was unavailable. Please try again.",
+								result: result,
+							});
+						} else {
+							data.name = name;
+							data.bcode = bcode;
+							if (credit_limit !== "" && credit_limit != null) {
+								data.credit_limit = credit_limit;
+							}
+							if (cash_in_hand !== "" && cash_in_hand != null) {
+								data.cash_in_hand = cash_in_hand;
+							}
+							data.username = username;
+							data.address1 = address1;
+							data.state = state;
+							data.country = country;
+							data.zip = zip;
+							data.ccode = ccode;
+							data.mobile = mobile;
+							data.email = email;
+							data.bank_id = bank._id;
+							data.password = makeid(10);
+							data.working_from = working_from;
+							data.working_to = working_to;
+							data.wallet_ids.operational = wallet_ids.operational;
+							data.wallet_ids.master = wallet_ids.master;
+							let bankName = bank.name;
+
+							data.save((err) => {
+								if (err) {
+									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message,
+									});
+								} else {
+									Bank.updateOne(
+										{ _id: bank._id },
+										{ $inc: { total_branches: 1 } },
+										(err) => {
+											if (err) {
+												console.log(err);
+												var message = err;
+												if (err.message) {
+													message = err.message;
+												}
+												res.status(200).json({
+													status: 0,
+													message: message,
+												});
+											} else {
+												let content =
+													"<p>Your branch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+													config.mainIP +
+													"/branch/" +
+													bankName +
+													"'>http://" +
+													config.mainIP +
+													"/branch/" +
+													bankName +
+													"</a></p><p><p>Your username: " +
+													data.username +
+													"</p><p>Your password: " +
+													data.password +
+													"</p>";
+												sendMail(content, "Bank Branch Created", email);
+												let content2 =
+													"Your branch is added in E-Wallet application Login URL: http://" +
+													config.mainIP +
+													"/branch/" +
+													bankName +
+													" Your username: " +
+													data.username +
+													" Your password: " +
+													data.password;
+												sendSMS(content2, mobile);
+												res.status(200).json({
+													status: 1,
+													message: "Branch Created",
+													walletStatus: result.toString(),
+												});
+											}
+										}
+									);
+								}
+							});
+						}
+					})
+					.catch((err) => {
+						console.log(err.toString());
 						res.status(200).json({
 							status: 0,
-							message: "Blockchain service was unavailable. Please try again.",
-							result: result,
+							message: err.message,
 						});
-					} else {
-						data.name = name;
-						data.bcode = bcode;
-						if (credit_limit !== "" && credit_limit != null) {
-							data.credit_limit = credit_limit;
-						}
-						if (cash_in_hand !== "" && cash_in_hand != null) {
-							data.cash_in_hand = cash_in_hand;
-						}
-						data.username = username;
-						data.address1 = address1;
-						data.state = state;
-						data.country = country;
-						data.zip = zip;
-						data.ccode = ccode;
-						data.mobile = mobile;
-						data.email = email;
-						data.bank_id = bank._id;
-						data.password = makeid(10);
-						data.working_from = working_from;
-						data.working_to = working_to;
-						data.wallet_ids.operational = wallet_ids.operational;
-						data.wallet_ids.master = wallet_ids.master;
-						let bankName = bank.name;
-
-						data.save((err) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else {
-								Bank.updateOne(
-									{ _id: bank._id },
-									{ $inc: { total_branches: 1 } },
-									(err) => {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
-											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else {
-											let content =
-												"<p>Your branch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-												config.mainIP +
-												"/branch/" +
-												bankName +
-												"'>http://" +
-												config.mainIP +
-												"/branch/" +
-												bankName +
-												"</a></p><p><p>Your username: " +
-												data.username +
-												"</p><p>Your password: " +
-												data.password +
-												"</p>";
-											sendMail(content, "Bank Branch Created", email);
-											let content2 =
-												"Your branch is added in E-Wallet application Login URL: http://" +
-												config.mainIP +
-												"/branch/" +
-												bankName +
-												" Your username: " +
-												data.username +
-												" Your password: " +
-												data.password;
-											sendSMS(content2, mobile);
-											res.status(200).json({
-												status: 1,
-												message: "Branch Created",
-												walletStatus: result.toString(),
-											});
-										}
-									}
-								);
-							}
-						});
-					}
-				}).catch((err) => {
-					console.log(err.toString());
-					res.status(200).json({
-						status: 0,
-						message: err.message
-					})
-				});
+					});
 			}
 		}
 	);
@@ -1045,7 +1008,7 @@ router.post("/editBranch", (req, res) => {
 							res.status(200).json({
 								status: 1,
 								message: "Branch edited successfully",
-								data: data
+								data: data,
 							});
 						}
 					}
@@ -1100,7 +1063,7 @@ router.post("/branchStatus", function (req, res) {
 						} else {
 							res.status(200).json({
 								status: 1,
-								message: "Branch status updated"
+								message: "Branch status updated",
 							});
 						}
 					}
@@ -1189,7 +1152,7 @@ router.post("/addBankUser", (req, res) => {
 						sendSMS(content2, mobile);
 						res.status(200).json({
 							status: 1,
-							message: "Added bank user successfully."
+							message: "Added bank user successfully.",
 						});
 					}
 				});
@@ -1261,7 +1224,7 @@ router.post("/editBankUser", (req, res) => {
 						} else {
 							res.status(200).json({
 								status: 1,
-								message: "Bank user edited sucessfully."
+								message: "Bank user edited sucessfully.",
 							});
 						}
 					}
@@ -1298,33 +1261,35 @@ router.post("/getBankHistory", function (req, res) {
 				});
 			} else {
 				const wallet = b.wallet_ids[from];
-				getStatement(wallet).then(function (history) {
-					FailedTX.find({ wallet_id: wallet }, (err, failed) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+				getStatement(wallet)
+					.then(function (history) {
+						FailedTX.find({ wallet_id: wallet }, (err, failed) => {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else {
+								res.status(200).json({
+									status: 1,
+									history: history,
+									failed: failed,
+								});
 							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								history: history,
-								failed: failed,
-							});
-						}
-					});
-				}).catch((err) => {
-					console.log(err.toString());
-					res.status(200).json({
-						status: 0,
-						message: err.message
+						});
 					})
-				});
+					.catch((err) => {
+						console.log(err.toString());
+						res.status(200).json({
+							status: 0,
+							message: err.message,
+						});
+					});
 			}
 		}
 	);
@@ -1489,7 +1454,7 @@ router.post("/addCashier", (req, res) => {
 																				} else {
 																					res.status(200).json({
 																						status: 1,
-																						data: data
+																						data: data,
 																					});
 																				}
 																			}
@@ -1527,7 +1492,7 @@ router.post("/addCashier", (req, res) => {
 											function (e) {
 												res.status(200).json({
 													status: 1,
-													data: data
+													data: data,
 												});
 											}
 										);

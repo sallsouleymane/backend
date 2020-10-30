@@ -21,84 +21,6 @@ const BranchSend = require("../models/BranchSend");
 const BranchClaim = require("../models/BranchClaim");
 const BranchLedger = require("../models/BranchLedger");
 
-router.post("/branch/transferMasterToOp", function (req, res) {
-	const { token, amount } = req.body;
-	Branch.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (err, branch) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (branch == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				Bank.findOne(
-					{
-						_id: branch.bank_id,
-						status: 1,
-					},
-					function (err, bank) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (bank == null) {
-							res.status(200).json({
-								status: 0,
-								message:
-									"Token changed or user not valid. Try to login again or contact system administrator.",
-							});
-						} else {
-							const masterWallet = branch.wallet_ids.master;
-							const opWallet = branch.wallet_ids.operational;
-							const trans = {
-								from: masterWallet,
-								to: opWallet,
-								amount: Number(amount),
-								note: "Master to operational",
-								email1: branch.email,
-								mobile1: branch.mobile,
-								from_name: branch.name,
-								to_name: branch.name,
-								master_code: "",
-								child_code: ""
-							}
-							initiateTransfer(trans).then((result) => {
-								res.status(200).json(result)
-							}).catch((err) => {
-								console.log(err.toString());
-								res.status(200).json({
-									status: 0,
-									message: err.message
-								})
-							});
-						}
-					});
-			}
-		});
-});
-
-
 router.post("/getBranchDashStats", function (req, res) {
 	var today = new Date();
 	today = today.toISOString();
@@ -271,7 +193,7 @@ router.post("/addBranchCashier", (req, res) => {
 						res.status(200).json({
 							status: 1,
 							message: "Added cashier successfully",
-							data: data
+							data: data,
 						});
 					}
 				});
@@ -350,7 +272,7 @@ router.post("/addOpeningBalance", (req, res) => {
 							(err, d) => {
 								res.status(200).json({
 									status: 1,
-									message: "Added successfully"
+									message: "Added successfully",
 								});
 							}
 						);
@@ -665,7 +587,7 @@ router.post("/updateCashierTransferStatus", function (req, res) {
 									function (err, d) {
 										res.status(200).json({
 											status: 1,
-											message: "Updated successfully"
+											message: "Updated successfully",
 										});
 									}
 								);
@@ -910,91 +832,91 @@ router.post("/branchClaimMoney", function (req, res) {
 																		trans1.user_id = "";
 																		trans1.master_code = master_code;
 																		trans1.child_code = child_code;
-																		transferThis(trans1).then(function (
-																			result
-																		) {
-																			if (result.length <= 0) {
-																				BranchClaim.findByIdAndUpdate(
-																					d._id,
-																					{
-																						status: 1,
-																					},
-																					(err) => {
-																						if (err) {
-																							console.log(err);
-																							var message = err;
-																							if (err.message) {
-																								message = err.message;
-																							}
-																							res.status(200).json({
-																								status: 0,
-																								message: message,
-																							});
-																						} else {
-																							BranchLedger.findOne(
-																								{
-																									branch_id: f._id,
-																									trans_type: "DR",
-																									created_at: {
-																										$gte: new Date(start),
-																										$lte: new Date(end),
-																									},
-																								},
-																								function (err, c) {
-																									if (err) {
-																										console.log(err);
-																										var message = err;
-																										if (err.message) {
-																											message = err.message;
-																										}
-																										res.status(200).json({
-																											status: 0,
-																											message: message,
-																										});
-																									} else if (c == null) {
-																										let data = new BranchLedger();
-																										data.amount = Number(
-																											oamount
-																										);
-																										data.trans_type = "DR";
-																										data.branch_id = f._id;
-																										data.save(function (
-																											err,
-																											c
-																										) { });
-																									} else {
-																										var amt =
-																											Number(c.amount) +
-																											Number(oamount);
-																										BranchLedger.findByIdAndUpdate(
-																											c._id,
-																											{ amount: amt },
-																											function (err, c) { }
-																										);
-																									}
+																		transferThis(trans1)
+																			.then(function (result) {
+																				if (result.length <= 0) {
+																					BranchClaim.findByIdAndUpdate(
+																						d._id,
+																						{
+																							status: 1,
+																						},
+																						(err) => {
+																							if (err) {
+																								console.log(err);
+																								var message = err;
+																								if (err.message) {
+																									message = err.message;
 																								}
-																							);
+																								res.status(200).json({
+																									status: 0,
+																									message: message,
+																								});
+																							} else {
+																								BranchLedger.findOne(
+																									{
+																										branch_id: f._id,
+																										trans_type: "DR",
+																										created_at: {
+																											$gte: new Date(start),
+																											$lte: new Date(end),
+																										},
+																									},
+																									function (err, c) {
+																										if (err) {
+																											console.log(err);
+																											var message = err;
+																											if (err.message) {
+																												message = err.message;
+																											}
+																											res.status(200).json({
+																												status: 0,
+																												message: message,
+																											});
+																										} else if (c == null) {
+																											let data = new BranchLedger();
+																											data.amount = Number(
+																												oamount
+																											);
+																											data.trans_type = "DR";
+																											data.branch_id = f._id;
+																											data.save(function (
+																												err,
+																												c
+																											) {});
+																										} else {
+																											var amt =
+																												Number(c.amount) +
+																												Number(oamount);
+																											BranchLedger.findByIdAndUpdate(
+																												c._id,
+																												{ amount: amt },
+																												function (err, c) {}
+																											);
+																										}
+																									}
+																								);
 
-																							res.status(200).json({
-																								status: 1,
-																								message: "Money claimed",
-																							});
+																								res.status(200).json({
+																									status: 1,
+																									message: "Money claimed",
+																								});
+																							}
 																						}
-																					}
-																				);
-																			} else {
+																					);
+																				} else {
+																					res.status(200).json({
+																						status: 0,
+																						message: result.toString(),
+																					});
+																				}
+																			})
+																			.catch((err) => {
+																				console.log(err.toString());
 																				res.status(200).json({
 																					status: 0,
-																					message: result.toString(),
+																					message: err.message,
 																				});
-																			}
-																		}).catch((err) => {
-																			console.log(err.toString());
-																			res.status(200).json({
-																				status: 0,
-																				message: err.message
-																			})
-																		});
+																			});
 																	}
 																}); //save
 															} //infra
@@ -1186,18 +1108,20 @@ router.post("/getBranchHistory", function (req, res) {
 			} else {
 				const wallet = b.wallet_ids[from];
 				console.log(wallet);
-				getStatement(wallet).then(function (result) {
-					res.status(200).json({
-						status: 1,
-						history: result,
-					});
-				}).catch((err) => {
-					console.log(err.toString());
-					res.status(200).json({
-						status: 0,
-						message: err.message
+				getStatement(wallet)
+					.then(function (result) {
+						res.status(200).json({
+							status: 1,
+							history: result,
+						});
 					})
-				});
+					.catch((err) => {
+						console.log(err.toString());
+						res.status(200).json({
+							status: 0,
+							message: err.message,
+						});
+					});
 			}
 		}
 	);

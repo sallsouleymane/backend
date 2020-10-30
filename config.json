@@ -1,11 +1,11 @@
 {
-	"dbHost": "beyondewallet-mongodb-clusterip",
+	"dbHost": "localhost",
 	"dbPort": "27017",
 	"dbName": "ewallet",
 	"mainFee": 10,
 	"defaultFee": 0,
 	"defaultAmt": 0,
-	"blockChainIP": "beyondewallet-app-clusterip",
-	"mainIP": "91d90ac373dc.sn.mynetname.net:31080",
-	"uploadPath": "/var/app/uploads/"
+	"blockChainIP": "91d90ac373dc.sn.mynetname.net",
+	"mainIP": "localhost",
+	"uploadPath": "./public/uploads/"
 }
