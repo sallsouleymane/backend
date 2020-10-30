@@ -1,4 +1,4 @@
-module.exports.getMasterCode = function (data1, data2) {
+module.exports.getTransactionCode = function (data1, data2) {
 	return (
 		(Math.random() + " ").substring(2, 10) +
 		(Math.random() + " ").substring(2, 10)
