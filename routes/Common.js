@@ -104,9 +104,9 @@ router.post("/:user/transferMasterToOp", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/:user/transferMasterToOp", function (req, res) {
+router.post("/transferMasterToOp", function (req, res) {
 	const { token, amount } = req.body;
-	const user = req.params.user;
+	const user = req.query.user;
 	const User = getTypeClass(user);
 	User.findOne(
 		{
@@ -240,70 +240,52 @@ router.post("/getPartnerBranchByName", function (req, res) {
 });
 
 router.post("/:user/getWalletBalance", jwtTokenAuth, function (req, res) {
-	const { page, wallet_id } = req.query;
-
-	if (wallet_id != null && wallet_id != undefined && wallet_id != "") {
-		getBalance(wallet_id)
-			.then(function (result) {
-				res.status(200).json({
-					status: 1,
-					balance: result,
-				});
-			})
-			.catch((err) => {
-				console.log(err.toString());
+	const { page } = req.query;
+	const user = req.params.user;
+	const jwtusername = req.sign_creds.username;
+	const Type = getTypeClass(user);
+	Type.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (e, b) {
+			if (e) {
+				console.log(e);
+				var message = e;
+				if (e.message) {
+					message = e.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: err.message,
+					message: message,
 				});
-			});
-	} else {
-		const user = req.params.user;
-		const jwtusername = req.sign_creds.username;
-		const Type = getTypeClass(user);
-		Type.findOne(
-			{
-				username: jwtusername,
-				status: 1,
-			},
-			function (e, b) {
-				if (e) {
-					console.log(e);
-					var message = e;
-					if (e.message) {
-						message = e.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (b == null) {
-					res.status(200).json({
-						status: 0,
-						message:
-							"Token changed or user not valid. Try to login again or contact system administrator.",
-					});
-				} else {
-					let wallet_id = b.wallet_ids[page];
+			} else if (b == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				let wallet_id = b.wallet_ids[page];
 
-					getBalance(wallet_id)
-						.then(function (result) {
-							res.status(200).json({
-								status: 1,
-								balance: result,
-							});
-						})
-						.catch((err) => {
-							console.log(err.toString());
-							res.status(200).json({
-								status: 0,
-								message: err.message,
-							});
+				getBalance(wallet_id)
+					.then(function (result) {
+						res.status(200).json({
+							status: 1,
+							balance: result,
 						});
-				}
+					})
+					.catch((err) => {
+						console.log(err.toString());
+						res.status(200).json({
+							status: 0,
+							message: err.message,
+						});
+					});
 			}
-		);
-	}
+		}
+	);
 });
 
 router.post("/getPartnerByName", function (req, res) {
