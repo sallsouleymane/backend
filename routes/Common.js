@@ -88,8 +88,7 @@ router.post("/:user/transferMasterToOp", jwtTokenAuth, function (req, res) {
 					master_code: "",
 					child_code: "",
 				};
-				blockchain
-					.initiateTransfer(trans)
+				initiateTransfer(trans)
 					.then((result) => {
 						res.status(200).json(result);
 					})
