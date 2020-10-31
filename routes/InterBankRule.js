@@ -123,7 +123,7 @@ router.post(
 											const Collection = getTypeClass(wallet_id.substr(0, 2));
 											Collection.findOne(
 												{
-													wallet_ids: { operational: wallet_id },
+													"wallet_ids.operational": wallet_id,
 												},
 												(err, toBranch) => {
 													if (err) {
@@ -464,7 +464,7 @@ router.post("/cashier/interBank/sendToOperational", function (req, res) {
 										const Collection = getTypeClass(wallet_id.substr(0, 2));
 										Collection.findOne(
 											{
-												wallet_ids: { operational: wallet_id },
+												"wallet_ids.operational": wallet_id,
 											},
 											(err, toBranch) => {
 												if (err) {
