@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const config = require("../config.json");
+const jwtTokenAuth = require("./JWTTokenAuth");
 
 //utils
 const makeid = require("./utils/idGenerator");
@@ -15,7 +16,7 @@ const {
 	createWallet,
 	transferThis,
 	getBalance,
-	initiateTransfer
+	initiateTransfer,
 } = require("../services/Blockchain.js");
 
 const Infra = require("../models/Infra");
@@ -29,11 +30,12 @@ const Country = require("../models/Country");
 
 const mainFee = config.mainFee;
 
-router.post("/infra/transferMasterToOp", function (req, res) {
-	const { token, bank_id, amount } = req.body;
+router.post("/infra/transferMasterToOp", jwtTokenAuth, function (req, res) {
+	const { bank_id, amount } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, infra) {
@@ -88,28 +90,33 @@ router.post("/infra/transferMasterToOp", function (req, res) {
 								from_name: infra.name,
 								to_name: infra.name,
 								master_code: "",
-								child_code: ""
-							}
-							initiateTransfer(trans).then((result) => {
-								res.status(200).json(result)
-							}).catch((err) => {
-								console.log(err.toString());
-								res.status(200).json({
-									status: 0,
-									message: err.message
+								child_code: "",
+							};
+							initiateTransfer(trans)
+								.then((result) => {
+									res.status(200).json(result);
 								})
-							});
+								.catch((err) => {
+									console.log(err.toString());
+									res.status(200).json({
+										status: 0,
+										message: err.message,
+									});
+								});
 						}
-					});
+					}
+				);
 			}
-		});
+		}
+	);
 });
 
-router.post("/infra/deleteCountry", (req, res) => {
-	const { token, ccode } = req.body;
+router.post("/infra/deleteCountry", jwtTokenAuth, function (req, res) {
+	const { ccode } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, infra) {
@@ -164,11 +171,12 @@ router.post("/infra/deleteCountry", (req, res) => {
 	);
 });
 
-router.post("/infra/bank/listMerchants", function (req, res) {
-	var { token, bank_id } = req.body;
+router.post("/infra/bank/listMerchants", jwtTokenAuth, function (req, res) {
+	var { bank_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, infra) {
@@ -213,9 +221,8 @@ router.post("/infra/bank/listMerchants", function (req, res) {
 	);
 });
 
-router.post("/infra/createMerchant", function (req, res) {
+router.post("/infra/createMerchant", jwtTokenAuth, function (req, res) {
 	var {
-		token,
 		code,
 		name,
 		logo,
@@ -225,9 +232,10 @@ router.post("/infra/createMerchant", function (req, res) {
 		mobile,
 		bank_id,
 	} = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, infra) {
@@ -271,85 +279,94 @@ router.post("/infra/createMerchant", function (req, res) {
 								message: "Code is a required field",
 							});
 						} else {
-							const wallet_ids = getWalletIds("infraMerchant", code, bank.bcode);
-							createWallet([wallet_ids.operational]).then((result) => {
-								if (result != "" && !result.includes("wallet already exists")) {
-									console.log(result);
+							const wallet_ids = getWalletIds(
+								"infraMerchant",
+								code,
+								bank.bcode
+							);
+							createWallet([wallet_ids.operational])
+								.then((result) => {
+									if (
+										result != "" &&
+										!result.includes("wallet already exists")
+									) {
+										console.log(result);
+										res.status(200).json({
+											status: 0,
+											message:
+												"Blockchain service was unavailable. Please try again.",
+											result: result,
+										});
+									} else {
+										const data = new Merchant();
+										data.name = name;
+										data.logo = logo;
+										data.description = description;
+										data.document_hash = document_hash;
+										data.email = email;
+										data.mobile = mobile;
+										data.code = code;
+										data.username = code;
+										data.password = makeid(8);
+										data.bank_id = bank_id;
+										data.infra_id = infra._id;
+										data.status = 0;
+										data.creator = 1;
+										data.wallet_ids.operational = wallet_ids.operational;
+
+										data.save((err) => {
+											if (err) {
+												console.log(err);
+												var message = err;
+												if (err.message) {
+													message = err.message;
+												}
+												res.status(200).json({
+													status: 0,
+													message: message,
+												});
+											} else {
+												let content =
+													"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+													config.mainIP +
+													"/merchant/" +
+													bank.name +
+													"'>http://" +
+													config.mainIP +
+													"/merchant/" +
+													bank.name +
+													"</a></p><p><p>Your username: " +
+													data.username +
+													"</p><p>Your password: " +
+													data.password +
+													"</p>";
+												sendMail(content, "Infra Merchant Created", email);
+												let content2 =
+													"You are added as a Merchant in E-Wallet application Login URL: http://" +
+													config.mainIP +
+													"/merchant/" +
+													bank.name +
+													" Your username: " +
+													data.username +
+													" Your password: " +
+													data.password;
+												sendSMS(content2, mobile);
+												res.status(200).json({
+													status: 1,
+													message: "Merchant created successfully",
+													blockchain_result: result,
+												});
+											}
+										});
+									}
+								})
+								.catch((err) => {
+									console.log(err.toString());
 									res.status(200).json({
 										status: 0,
-										message:
-											"Blockchain service was unavailable. Please try again.",
-										result: result,
+										message: err.message,
 									});
-								} else {
-									const data = new Merchant();
-									data.name = name;
-									data.logo = logo;
-									data.description = description;
-									data.document_hash = document_hash;
-									data.email = email;
-									data.mobile = mobile;
-									data.code = code;
-									data.username = code;
-									data.password = makeid(8);
-									data.bank_id = bank_id;
-									data.infra_id = infra._id;
-									data.status = 0;
-									data.creator = 1;
-									data.wallet_ids.operational = wallet_ids.operational;
-
-									data.save((err) => {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
-											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else {
-											let content =
-												"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-												config.mainIP +
-												"/merchant/" +
-												bank.name +
-												"'>http://" +
-												config.mainIP +
-												"/merchant/" +
-												bank.name +
-												"</a></p><p><p>Your username: " +
-												data.username +
-												"</p><p>Your password: " +
-												data.password +
-												"</p>";
-											sendMail(content, "Infra Merchant Created", email);
-											let content2 =
-												"You are added as a Merchant in E-Wallet application Login URL: http://" +
-												config.mainIP +
-												"/merchant/" +
-												bank.name +
-												" Your username: " +
-												data.username +
-												" Your password: " +
-												data.password;
-											sendSMS(content2, mobile);
-											res.status(200).json({
-												status: 1,
-												message: "Merchant created successfully",
-												blockchain_result: result,
-											});
-										}
-									});
-								}
-							}).catch((err) => {
-								console.log(err.toString());
-								res.status(200).json({
-									status: 0,
-									message: err.message
-								})
-							});
+								});
 						}
 					}
 				});
@@ -358,19 +375,12 @@ router.post("/infra/createMerchant", function (req, res) {
 	);
 });
 
-router.post("/infra/editMerchant", function (req, res) {
-	var {
-		token,
-		merchant_id,
-		name,
-		logo,
-		description,
-		document_hash,
-		email,
-	} = req.body;
+router.post("/infra/editMerchant", jwtTokenAuth, function (req, res) {
+	var { merchant_id, name, logo, description, document_hash, email } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, infra) {
@@ -429,12 +439,11 @@ router.post("/infra/editMerchant", function (req, res) {
 	);
 });
 
-router.post("/getDashStats", function (req, res) {
-	const { token } = req.body;
-
+router.post("/getDashStats", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		async function (err, infra) {
@@ -464,7 +473,6 @@ router.post("/getDashStats", function (req, res) {
 						totalBanks: totalBanks,
 						totalMerchants: totalmerchants,
 					});
-
 				} catch (err) {
 					console.log(err.toString());
 					res.status(200).json({ status: 0, message: err.message });
@@ -474,11 +482,12 @@ router.post("/getDashStats", function (req, res) {
 	);
 });
 
-router.post("/infraSetupUpdate", function (req, res) {
-	const { username, password, token } = req.body;
+router.post("/infraSetupUpdate", jwtTokenAuth, function (req, res) {
+	const { username, password } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOneAndUpdate(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		{
@@ -512,11 +521,11 @@ router.post("/infraSetupUpdate", function (req, res) {
 	);
 });
 
-router.post("/getBanks", function (req, res) {
-	const { token } = req.body;
+router.post("/getBanks", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -559,7 +568,7 @@ router.post("/getBanks", function (req, res) {
 	);
 });
 
-router.post("/setupUpdate", function (req, res) {
+router.post("/setupUpdate", jwtTokenAuth, function (req, res) {
 	let data = new Infra();
 	const { username, password, email, mobile, ccode } = req.body;
 
@@ -636,7 +645,7 @@ router.get("/checkInfra", function (req, res) {
 	});
 });
 
-router.post("/addBank", (req, res) => {
+router.post("/addBank", jwtTokenAuth, function (req, res) {
 	let data = new Bank();
 	const {
 		name,
@@ -648,7 +657,7 @@ router.post("/addBank", (req, res) => {
 		ccode,
 		mobile,
 		email,
-		token,
+
 		logo,
 		contract,
 		otp_id,
@@ -668,9 +677,10 @@ router.post("/addBank", (req, res) => {
 		});
 		return;
 	}
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -693,11 +703,7 @@ router.post("/addBank", (req, res) => {
 			} else {
 				Bank.findOne(
 					{
-						$or: [
-							{ bcode: bcode },
-							{ mobile: mobile },
-							{ email: email }
-						]
+						$or: [{ bcode: bcode }, { mobile: mobile }, { email: email }],
 					},
 					(err, bank) => {
 						if (err) {
@@ -769,7 +775,7 @@ router.post("/addBank", (req, res) => {
 												let data2 = new Document();
 												data2.bank_id = d._id;
 												data2.contract = contract;
-												data2.save((err) => { });
+												data2.save((err) => {});
 
 												let content =
 													"<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
@@ -793,22 +799,22 @@ router.post("/addBank", (req, res) => {
 
 												res.status(200).json({
 													status: 1,
-													message: "Added Bank successfully"
+													message: "Added Bank successfully",
 												});
 											}
 										});
-
 									}
 								}
 							);
 						}
-					});
+					}
+				);
 			}
 		}
 	);
 });
 
-router.post("/editBank", (req, res) => {
+router.post("/editBank", jwtTokenAuth, function (req, res) {
 	let data = new Bank();
 	const {
 		bank_id,
@@ -821,16 +827,16 @@ router.post("/editBank", (req, res) => {
 		ccode,
 		mobile,
 		email,
-		token,
 		logo,
 		contract,
 		otp_id,
 		otp,
 	} = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -851,7 +857,6 @@ router.post("/editBank", (req, res) => {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				// const user_id = user._id;
 				OTP.findOne(
 					{
 						_id: otp_id,
@@ -932,7 +937,7 @@ router.post("/editBank", (req, res) => {
 											let data2 = new Document();
 											data2.bank_id = bank_id;
 											data2.contract = contract;
-											data2.save((err) => { });
+											data2.save((err) => {});
 											return res.status(200).json(data);
 										}
 									}
@@ -951,12 +956,13 @@ router.post("/editBank", (req, res) => {
 	);
 });
 
-router.post("/getInfraHistory", function (req, res) {
-	const { from, bank_id, token } = req.body;
+router.post("/getInfraHistory", jwtTokenAuth, function (req, res) {
+	const { from, bank_id } = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, f) {
@@ -1001,18 +1007,20 @@ router.post("/getInfraHistory", function (req, res) {
 							wallet_type = "infra_" + from;
 							const wallet = b.wallet_ids[wallet_type];
 
-							getStatement(wallet).then(function (result) {
-								res.status(200).json({
-									status: 1,
-									history: result,
-								});
-							}).catch((err) => {
-								console.log(err.toString());
-								res.status(200).json({
-									status: 0,
-									message: err.message
+							getStatement(wallet)
+								.then(function (result) {
+									res.status(200).json({
+										status: 1,
+										history: result,
+									});
 								})
-							});
+								.catch((err) => {
+									console.log(err.toString());
+									res.status(200).json({
+										status: 0,
+										message: err.message,
+									});
+								});
 						}
 					}
 				);
@@ -1021,11 +1029,12 @@ router.post("/getInfraHistory", function (req, res) {
 	);
 });
 
-router.get("/getInfraOperationalBalance", function (req, res) {
-	const { bank, token } = req.query;
+router.get("/infra/getWalletBalance", jwtTokenAuth, function (req, res) {
+	const { from, bank } = req.query;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (e, b) {
@@ -1067,20 +1076,23 @@ router.get("/getInfraOperationalBalance", function (req, res) {
 								message: "Not found",
 							});
 						} else {
-							const wallet_id = ba.wallet_ids.infra_operational;
+							const wallet_type = "infra_" + from;
+							const wallet_id = b.wallet_ids[wallet_type];
 
-							getBalance(wallet_id).then(function (result) {
-								res.status(200).json({
-									status: 1,
-									balance: result,
-								});
-							}).catch((err) => {
-								console.log(err.toString());
-								res.status(200).json({
-									status: 0,
-									message: err.message
+							getBalance(wallet_id)
+								.then(function (result) {
+									res.status(200).json({
+										status: 1,
+										balance: result,
+									});
 								})
-							});;
+								.catch((err) => {
+									console.log(err.toString());
+									res.status(200).json({
+										status: 0,
+										message: err.message,
+									});
+								});
 						}
 					}
 				);
@@ -1089,80 +1101,28 @@ router.get("/getInfraOperationalBalance", function (req, res) {
 	);
 });
 
+router.get("/getInfraOperationalBalance", function (req, res) {
+	res.status(200).json({
+		status: 0,
+		message: "This API is Removed",
+		Replace:
+			"/infra/getWalletBalance - {from, bank} where from can be 'master' or 'operational'",
+	});
+});
 router.get("/getInfraMasterBalance", function (req, res) {
-	const { bank, token } = req.query;
-	Infra.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (e, b) {
-			if (e) {
-				console.log(e);
-				var message = e;
-				if (e.message) {
-					message = e.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (b == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				Bank.findOne(
-					{
-						_id: bank,
-					},
-					function (err, ba) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (ba == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Bank not found",
-							});
-						} else {
-							const wallet_id = ba.wallet_ids.infra_master;
-
-							getBalance(wallet_id).then(function (result) {
-								res.status(200).json({
-									status: 1,
-									balance: result,
-								});
-							}).catch((err) => {
-								console.log(err.toString());
-								res.status(200).json({
-									status: 0,
-									message: err.message
-								})
-							});;
-						}
-					}
-				);
-			}
-		}
-	);
+	res.status(200).json({
+		status: 0,
+		message: "This API is Removed",
+		Replace:
+			"/infra/getWalletBalance - {from, bank} where from can be 'master' or 'operational'",
+	});
 });
 
-router.post("/getPermission", function (req, res) {
-	const { token } = req.body;
-
+router.post("/getPermission", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1190,7 +1150,6 @@ router.post("/getPermission", function (req, res) {
 						function (err, profile) {
 							var p = JSON.parse(profile.permissions);
 							res.status(200).json({
-								token: token,
 								permissions: p,
 								name: user.name,
 								isAdmin: user.isAdmin,
@@ -1201,7 +1160,6 @@ router.post("/getPermission", function (req, res) {
 				} else {
 					if (user.isAdmin) {
 						res.status(200).json({
-							token: token,
 							permissions: "all",
 							name: user.name,
 							isAdmin: user.isAdmin,
@@ -1209,7 +1167,6 @@ router.post("/getPermission", function (req, res) {
 						});
 					} else {
 						res.status(200).json({
-							token: token,
 							permissions: "",
 							name: user.name,
 							isAdmin: user.isAdmin,
@@ -1222,7 +1179,7 @@ router.post("/getPermission", function (req, res) {
 	);
 });
 
-router.post("/addProfile", (req, res) => {
+router.post("/addProfile", jwtTokenAuth, function (req, res) {
 	let data = new Profile();
 	const {
 		pro_name,
@@ -1230,11 +1187,11 @@ router.post("/addProfile", (req, res) => {
 		create_bank,
 		edit_bank,
 		create_fee,
-		token,
 	} = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1289,7 +1246,7 @@ router.post("/addProfile", (req, res) => {
 	);
 });
 
-router.post("/editProfile", (req, res) => {
+router.post("/editProfile", jwtTokenAuth, function (req, res) {
 	let data = new Profile();
 	const {
 		pro_name,
@@ -1298,11 +1255,11 @@ router.post("/editProfile", (req, res) => {
 		edit_bank,
 		create_fee,
 		profile_id,
-		token,
 	} = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1362,7 +1319,7 @@ router.post("/editProfile", (req, res) => {
 	);
 });
 
-router.post("/addInfraUser", (req, res) => {
+router.post("/addInfraUser", jwtTokenAuth, function (req, res) {
 	let data = new Infra();
 	const {
 		name,
@@ -1372,11 +1329,11 @@ router.post("/addInfraUser", (req, res) => {
 		password,
 		profile_id,
 		logo,
-		token,
 	} = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1445,7 +1402,7 @@ router.post("/addInfraUser", (req, res) => {
 	);
 });
 
-router.post("/editInfraUser", (req, res) => {
+router.post("/editInfraUser", jwtTokenAuth, function (req, res) {
 	const {
 		name,
 		email,
@@ -1455,11 +1412,11 @@ router.post("/editInfraUser", (req, res) => {
 		profile_id,
 		logo,
 		user_id,
-		token,
 	} = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1517,12 +1474,12 @@ router.post("/editInfraUser", (req, res) => {
 	);
 });
 
-router.post("/getBank", function (req, res) {
-	//res.send("hi");
-	const { token, bank_id } = req.body;
+router.post("/getBank", jwtTokenAuth, function (req, res) {
+	const { bank_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1570,12 +1527,12 @@ router.post("/getBank", function (req, res) {
 	);
 });
 
-router.post("/getRules", function (req, res) {
-	//res.send("hi");
-	const { token, bank_id } = req.body;
+router.post("/getRules", jwtTokenAuth, function (req, res) {
+	const { bank_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1624,12 +1581,13 @@ router.post("/getRules", function (req, res) {
 	);
 });
 
-router.post("/bankStatus", function (req, res) {
-	const { token, status, bank_id } = req.body;
+router.post("/bankStatus", jwtTokenAuth, function (req, res) {
+	const { status, bank_id } = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1668,7 +1626,7 @@ router.post("/bankStatus", function (req, res) {
 							});
 						} else {
 							res.status(200).json({
-								status: true,
+								status: 1,
 							});
 						}
 					}
@@ -1678,12 +1636,11 @@ router.post("/bankStatus", function (req, res) {
 	);
 });
 
-router.post("/getRoles", function (req, res) {
-	//res.send("hi");
-	const { token } = req.body;
+router.post("/getRoles", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1732,12 +1689,11 @@ router.post("/getRoles", function (req, res) {
 	);
 });
 
-router.post("/getInfraUsers", function (req, res) {
-	//res.send("hi");
-	const { token } = req.body;
+router.post("/getInfraUsers", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1758,7 +1714,6 @@ router.post("/getInfraUsers", function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				const user_id = user._id;
 				Infra.find({}, function (err, bank) {
 					if (err) {
 						console.log(err);
@@ -1781,12 +1736,11 @@ router.post("/getInfraUsers", function (req, res) {
 	);
 });
 
-router.post("/getProfile", function (req, res) {
-	//res.send("hi");
-	const { token } = req.body;
+router.post("/getProfile", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1815,11 +1769,12 @@ router.post("/getProfile", function (req, res) {
 	);
 });
 
-router.post("/editInfraProfile", function (req, res) {
-	const { name, username, email, mobile, password, ccode, token } = req.body;
+router.post("/editInfraProfile", jwtTokenAuth, function (req, res) {
+	const { name, username, email, mobile, password, ccode } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1882,12 +1837,13 @@ router.post("/editInfraProfile", function (req, res) {
 	);
 });
 
-router.post("/generateOTP", function (req, res) {
+router.post("/generateOTP", jwtTokenAuth, function (req, res) {
 	let data = new OTP();
-	const { token, username, page, name, email, mobile, bcode } = req.body;
+	const { username, page, name, email, mobile, bcode } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -2013,7 +1969,6 @@ router.post("/generateOTP", function (req, res) {
 										message: "Can not add bank.",
 									});
 								}
-
 							}
 						}
 					);
@@ -2023,13 +1978,14 @@ router.post("/generateOTP", function (req, res) {
 	);
 });
 
-router.post("/transferMoney", function (req, res) {
-	const { from, to, note, amount, auth, token } = req.body;
+router.post("/transferMoney", jwtTokenAuth, function (req, res) {
+	const { from, to, note, amount, auth } = req.body;
 
 	if (auth == "infra") {
+		const jwtusername = req.sign_creds.username;
 		Infra.findOne(
 			{
-				token,
+				username: jwtusername,
 				status: 1,
 			},
 			function (err, f) {
@@ -2076,14 +2032,16 @@ router.post("/transferMoney", function (req, res) {
 							data.to_name = f.name;
 							data.user_id = "";
 
-							transferThis(data).then(function (result) { }).catch((err) => {
-								console.log(err.toString());
-								res.status(200).json({
-									status: 0,
-									message: err.message
+							transferThis(data)
+								.then(function (result) {})
+								.catch((err) => {
+									console.log(err.toString());
+									res.status(200).json({
+										status: 0,
+										message: err.message,
+									});
+									return;
 								});
-								return;
-							});
 							res.status(200).json({
 								status: 1,
 								message: "Money transferred successfully!",
@@ -2100,13 +2058,14 @@ router.post("/transferMoney", function (req, res) {
 	}
 });
 
-router.post("/checkFee", function (req, res) {
-	const { from, to, amount, auth, token } = req.body;
+router.post("/checkFee", jwtTokenAuth, function (req, res) {
+	const { amount, auth } = req.body;
 
 	if (auth == "infra") {
+		const jwtusername = req.sign_creds.username;
 		Infra.findOne(
 			{
-				token,
+				username: jwtusername,
 				status: 1,
 			},
 			function (err, f) {
@@ -2130,6 +2089,7 @@ router.post("/checkFee", function (req, res) {
 					var temp = (amount * mainFee) / 100;
 					var fee = temp;
 					res.status(200).json({
+						status: 1,
 						fee: fee,
 					});
 				}
@@ -2137,63 +2097,70 @@ router.post("/checkFee", function (req, res) {
 		);
 	} else {
 		res.status(200).json({
-			fee: null,
+			status: 1,
+			fee: 0,
 		});
 	}
 });
 
-router.post("/approveFee", function (req, res) {
-	const { token, id } = req.body;
-	Infra.findOne({ token: token }, function (err, infra) {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else if (infra == null) {
-			return res.status(200).json({
-				status: 0,
-				message:
-					"Token changed or user not valid. Try to login again or contact system administrator.",
-			});
-		}
-		Fee.findOneAndUpdate(
-			{
-				_id: id,
-				status: 2,
-			},
-			{
-				$set: { status: 1 },
-			},
-			function (err, fee) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (fee == null) {
-					return res.status(200).json({
-						status: 0,
-						message: "Infra share not updated",
-					});
+router.post("/approveFee", jwtTokenAuth, function (req, res) {
+	const { id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Infra.findOne(
+		{
+			username: jwtusername,
+		},
+		function (err, infra) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
 				}
 				res.status(200).json({
-					status: 1,
-					message: "Updated successfully",
+					status: 0,
+					message: message,
+				});
+			} else if (infra == null) {
+				return res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			}
-		);
-	});
+			Fee.findOneAndUpdate(
+				{
+					_id: id,
+					status: 2,
+				},
+				{
+					$set: { status: 1 },
+				},
+				function (err, fee) {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (fee == null) {
+						return res.status(200).json({
+							status: 0,
+							message: "Infra share not updated",
+						});
+					}
+					res.status(200).json({
+						status: 1,
+						message: "Updated successfully",
+					});
+				}
+			);
+		}
+	);
 });
 
 module.exports = router;
