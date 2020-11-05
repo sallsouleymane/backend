@@ -653,93 +653,48 @@ router.post("/:user/changePassword", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.get("/getBalance", (req, res) => {
-	const { token, wallet_id, type } = req.query;
+router.get("/getWalletBalance", function (req, res) {
+	const { type, page, token, wallet_id } = req.query;
+
 	const typeClass = getTypeClass(type);
 	typeClass.findOne(
 		{
 			token,
 			status: 1,
 		},
-		function (err, result) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
+		function (e, b) {
+			if (e) {
+				console.log(e);
+				var message = e;
+				if (e.message) {
+					message = e.message;
 				}
 				res.status(200).json({
 					status: 0,
 					message: message,
 				});
-			} else if (result == null) {
+			} else if (b == null) {
 				res.status(200).json({
 					status: 0,
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				getBalance(wallet_id)
-					.then(function (result) {
-						res.status(200).json({
-							status: 1,
-							balance: result,
+				if (wallet_id != null && wallet_id != undefined && wallet_id != "") {
+					getBalance(wallet_id)
+						.then(function (result) {
+							res.status(200).json({
+								status: 1,
+								balance: result,
+							});
+						})
+						.catch((err) => {
+							console.log(err.toString());
+							res.status(200).json({
+								status: 0,
+								message: err.message,
+							});
 						});
-					})
-					.catch((err) => {
-						console.log(err.toString());
-						res.status(200).json({
-							status: 0,
-							message: err.message,
-						});
-					});
-			}
-		}
-	);
-});
-
-router.get("/getWalletBalance", function (req, res) {
-	const { type, page, token, wallet_id } = req.query;
-
-	if (wallet_id != null && wallet_id != undefined && wallet_id != "") {
-		getBalance(wallet_id)
-			.then(function (result) {
-				res.status(200).json({
-					status: 1,
-					balance: result,
-				});
-			})
-			.catch((err) => {
-				console.log(err.toString());
-				res.status(200).json({
-					status: 0,
-					message: err.message,
-				});
-			});
-	} else {
-		const typeClass = getTypeClass(type);
-		typeClass.findOne(
-			{
-				token,
-				status: 1,
-			},
-			function (e, b) {
-				if (e) {
-					console.log(e);
-					var message = e;
-					if (e.message) {
-						message = e.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (b == null) {
-					res.status(200).json({
-						status: 0,
-						message:
-							"Token changed or user not valid. Try to login again or contact system administrator.",
-					});
 				} else {
 					let wallet_id = b.wallet_ids[page];
 
@@ -759,8 +714,8 @@ router.get("/getWalletBalance", function (req, res) {
 						});
 				}
 			}
-		);
-	}
+		}
+	);
 });
 
 router.post("/getOne", function (req, res) {

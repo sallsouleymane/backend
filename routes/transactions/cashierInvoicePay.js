@@ -1,6 +1,9 @@
 //services
 const blockchain = require("../../services/Blockchain.js");
-const { getTransactionCode, calculateShare } = require("../utils/calculateShare");
+const {
+	getTransactionCode,
+	calculateShare,
+} = require("../utils/calculateShare");
 
 module.exports = async function (
 	amount,
@@ -145,7 +148,6 @@ async function distributeRevenue(
 	}
 
 	if (bankFee > 0) {
-
 		//fourth transaction
 		partnerShare = calculateShare("branch", amount, fee, {}, branch.bcode);
 		let trans4 = {
@@ -238,8 +240,8 @@ async function distributeRevenue(
 			email2: branch.email,
 			mobile1: bank.mobile,
 			mobile2: branch.mobile,
-			from_name: branch.name,
-			to_name: bank.name,
+			from_name: bank.name,
+			to_name: branch.name,
 			master_code: master_code,
 			child_code: getTransactionCode(bank.mobile, branch.mobile) + "7",
 		};
