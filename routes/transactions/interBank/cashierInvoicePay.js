@@ -1,5 +1,8 @@
 const blockchain = require("../../../services/Blockchain.js");
-const { getTransactionCode, calculateShare } = require("../../utils/calculateShare");
+const {
+	getTransactionCode,
+	calculateShare,
+} = require("../../utils/calculateShare");
 
 module.exports = async function (
 	amount,
@@ -53,8 +56,20 @@ module.exports = async function (
 			};
 		} else {
 			const bankFee = calculateShare("bank", amount, rule1.fee);
-			const partnerFeeShare = calculateShare("branch", amount, rule1.fee, rule2.fee, branch.bcode);
-			const partnerCommShare = calculateShare("branch", amount, rule1.comm, rule2.comm, branch.bcode);
+			const partnerFeeShare = calculateShare(
+				"branch",
+				amount,
+				rule1.fee,
+				rule2.fee,
+				branch.bcode
+			);
+			const partnerCommShare = calculateShare(
+				"branch",
+				amount,
+				rule1.comm,
+				rule2.comm,
+				branch.bcode
+			);
 
 			var transfer = {};
 			transfer.amount = amount;
@@ -78,7 +93,7 @@ module.exports = async function (
 				blockchain_message: result.message,
 				bankFee: bankFee,
 				partnerFeeShare: partnerFeeShare,
-				partnerCommShare: partnerCommShare
+				partnerCommShare: partnerCommShare,
 			};
 		}
 	} catch (err) {
@@ -234,8 +249,8 @@ async function distributeRevenue(
 			to_name: merchantBank.name,
 			user_id: "",
 			master_code: transfer.master_code,
-			child_code: transfer.master_code + "1.1"
-		}
+			child_code: transfer.master_code + "1.1",
+		};
 
 		await blockchain.initiateTransfer(trans);
 	}
@@ -254,8 +269,8 @@ async function distributeRevenue(
 			to_name: merchantBank.name,
 			user_id: "",
 			master_code: transfer.master_code,
-			child_code: transfer.master_code + "1.2"
-		}
+			child_code: transfer.master_code + "1.2",
+		};
 
 		await blockchain.initiateTransfer(trans);
 	}
@@ -276,8 +291,8 @@ async function distributeRevenue(
 			to_name: merchantBank.name,
 			user_id: "",
 			master_code: transfer.master_code,
-			child_code: transfer.master_code + "1.1"
-		}
+			child_code: transfer.master_code + "1.1",
+		};
 
 		await blockchain.initiateTransfer(trans);
 	}
@@ -296,8 +311,8 @@ async function distributeRevenue(
 			to_name: merchantBank.name,
 			user_id: "",
 			master_code: transfer.master_code,
-			child_code: transfer.master_code + "1.2"
-		}
+			child_code: transfer.master_code + "1.2",
+		};
 
 		await blockchain.initiateTransfer(trans);
 	}
@@ -332,8 +347,8 @@ async function distributeRevenue(
 			email2: branch.email,
 			mobile1: bank.mobile,
 			mobile2: branch.mobile,
-			from_name: branch.name,
-			to_name: bank.name,
+			from_name: bank.name,
+			to_name: branch.name,
 			master_code: transfer.master_code,
 			child_code: getTransactionCode(bank.mobile, branch.mobile) + "7",
 		};
