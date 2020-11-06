@@ -256,7 +256,7 @@ router.post("/cashier/sendToOperational", function (req, res) {
 																	}
 																})
 																.catch((err) => {
-																	console.log(err.toString());
+																	console.log(err);
 																	res.status(200).json({
 																		status: 0,
 																		message: err.message,
@@ -348,7 +348,7 @@ router.post("/cashier/getTransactionHistory", function (req, res) {
 										history: result,
 									});
 								} catch (err) {
-									console.log(err.toString());
+									console.log(err);
 									res.status(200).json({ status: 0, message: err.message });
 								}
 							}
@@ -797,7 +797,7 @@ router.post("/cashier/activateUser", function (req, res) {
 								);
 							}
 						} catch (err) {
-							console.log(err.toString());
+							console.log(err);
 							res.status(200).json({
 								status: 0,
 								message: err.message,
@@ -2164,7 +2164,7 @@ router.post("/cashierSendMoney", function (req, res) {
 																								}
 																							})
 																							.catch((err) => {
-																								console.log(err.toString());
+																								console.log(err);
 																								res.status(200).json({
 																									status: 0,
 																									message: err.message,
@@ -2173,7 +2173,7 @@ router.post("/cashierSendMoney", function (req, res) {
 																					}
 																				})
 																				.catch((err) => {
-																					console.log(err.toString());
+																					console.log(err);
 																					res.status(200).json({
 																						status: 0,
 																						message: err.message,
@@ -2815,7 +2815,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																								}
 																							})
 																							.catch((err) => {
-																								console.log(err.toString());
+																								console.log(err);
 																								res.status(200).json({
 																									status: 0,
 																									message: err.message,
@@ -3598,7 +3598,7 @@ router.post("/cashierClaimMoney", function (req, res) {
 																										}
 																									})
 																									.catch((err) => {
-																										console.log(err.toString());
+																										console.log(err);
 																										res.status(200).json({
 																											status: 0,
 																											message: err.message,

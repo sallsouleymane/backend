@@ -357,7 +357,7 @@ router.post(
 																							}
 																						})
 																						.catch((err) => {
-																							console.log(err.toString());
+																							console.log(err);
 																							res.status(200).json({
 																								status: 0,
 																								message: err.message,
@@ -684,7 +684,7 @@ router.post("/cashier/interBank/sendToOperational", function (req, res) {
 																						}
 																					})
 																					.catch((err) => {
-																						console.log(err.toString());
+																						console.log(err);
 																						res.status(200).json({
 																							status: 0,
 																							message: err.message,
@@ -1895,7 +1895,7 @@ router.post("/cashier/interBank/sendMoneyToWallet", function (req, res) {
 																										}
 																									})
 																									.catch((err) => {
-																										console.log(err.toString());
+																										console.log(err);
 																										res.status(200).json({
 																											status: 0,
 																											message: err.message,
@@ -3061,7 +3061,7 @@ router.post(
 																								}
 																							})
 																							.catch((err) => {
-																								console.log(err.toString());
+																								console.log(err);
 																								res.status(200).json({
 																									status: 0,
 																									message: err.message,
@@ -3905,7 +3905,7 @@ router.post("/cashier/interBank/SendMoneyToNonWallet", function (req, res) {
 																					}
 																				})
 																				.catch((err) => {
-																					console.log(err.toString());
+																					console.log(err);
 																					res.status(200).json({
 																						status: 0,
 																						message: err.message,

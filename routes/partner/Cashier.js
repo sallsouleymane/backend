@@ -262,7 +262,7 @@ router.post("/partnerCashier/sendToOperational", jwtTokenAuth, function (
 																	}
 																})
 																.catch((err) => {
-																	console.log(err.toString());
+																	console.log(err);
 																	res.status(200).json({
 																		status: 0,
 																		message: err.message,
@@ -1111,7 +1111,7 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
 																									}
 																								})
 																								.catch((err) => {
-																									console.log(err.toString());
+																									console.log(err);
 																									res.status(200).json({
 																										status: 0,
 																										message: err.message,
@@ -1755,7 +1755,7 @@ router.post("/partnerCashier/sendMoney", jwtTokenAuth, function (req, res) {
 																										}
 																									})
 																									.catch((err) => {
-																										console.log(err.toString());
+																										console.log(err);
 																										res.status(200).json({
 																											status: 0,
 																											message: err.message,
@@ -1764,7 +1764,7 @@ router.post("/partnerCashier/sendMoney", jwtTokenAuth, function (req, res) {
 																							}
 																						})
 																						.catch((err) => {
-																							console.log(err.toString());
+																							console.log(err);
 																							res.status(200).json({
 																								status: 0,
 																								message: err.message,
@@ -3455,7 +3455,7 @@ router.post("/partnerCashier/getHistory", jwtTokenAuth, function (req, res) {
 							});
 						})
 						.catch((err) => {
-							console.log(err.toString());
+							console.log(err);
 							res.status(200).json({
 								status: 0,
 								message: err.message,

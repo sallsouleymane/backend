@@ -1324,33 +1324,36 @@ router.get("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 							});
 						} else {
 							const wallet = merchant.wallet_ids.operational;
-							blockchain.getStatement(wallet).then(function (history) {
-								FailedTX.find({ wallet_id: wallet }, (err, failed) => {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
+							blockchain
+								.getStatement(wallet)
+								.then(function (history) {
+									FailedTX.find({ wallet_id: wallet }, (err, failed) => {
+										if (err) {
+											console.log(err);
+											var message = err;
+											if (err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+											});
+										} else {
+											res.status(200).json({
+												status: 1,
+												history: history,
+												failed: failed,
+											});
 										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else {
-										res.status(200).json({
-											status: 1,
-											history: history,
-											failed: failed,
-										});
-									}
-								});
-							}).catch((err) => {
-								console.log(err.toString());
-								res.status(200).json({
-									status: 0,
-									message: err.message
+									});
 								})
-							});
+								.catch((err) => {
+									console.log(err);
+									res.status(200).json({
+										status: 0,
+										message: err.message,
+									});
+								});
 						}
 					}
 				);
@@ -2075,7 +2078,6 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 		ccode,
 		mobile,
 		username,
-		password,
 		branch_id,
 		logo,
 		staff_id,
@@ -2116,7 +2118,6 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 						ccode: ccode,
 						mobile: mobile,
 						username: username,
-						password: password,
 						branch_id: branch_id,
 						logo: logo,
 					},
@@ -2830,18 +2831,21 @@ router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 						});
 					} else {
 						const wallet_id = merchant.wallet_ids.operational;
-						blockchain.getBalance(wallet_id).then(function (result) {
-							res.status(200).json({
-								status: 1,
-								balance: result,
-							});
-						}).catch((err) => {
-							console.log(err.toString());
-							res.status(200).json({
-								status: 0,
-								message: err.message
+						blockchain
+							.getBalance(wallet_id)
+							.then(function (result) {
+								res.status(200).json({
+									status: 1,
+									balance: result,
+								});
 							})
-						});
+							.catch((err) => {
+								console.log(err);
+								res.status(200).json({
+									status: 0,
+									message: err.message,
+								});
+							});
 					}
 				});
 			}
