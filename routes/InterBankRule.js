@@ -46,6 +46,14 @@ router.post(
 	function (req, res) {
 		const { wallet_id, amount, is_inclusive } = req.body;
 		const jwtusername = req.sign_creds.username;
+		var code = wallet_id.substr(0, 2);
+		if (code != "BR" || code != "PB") {
+			res.status(200).json({
+				status: 0,
+				message: "You can only send to branch and partner branch",
+			});
+			return;
+		}
 		PartnerCashier.findOne(
 			{
 				username: jwtusername,
@@ -120,7 +128,7 @@ router.post(
 												message: "Infra not found",
 											});
 										} else {
-											const Collection = getTypeClass(wallet_id.substr(0, 2));
+											const Collection = getTypeClass(code);
 											Collection.findOne(
 												{
 													"wallet_ids.operational": wallet_id,
@@ -387,6 +395,14 @@ router.post(
 
 router.post("/cashier/interBank/sendToOperational", function (req, res) {
 	const { token, wallet_id, amount, is_inclusive } = req.body;
+	var code = wallet_id.substr(0, 2);
+	if (code != "BR" || code != "PB") {
+		res.status(200).json({
+			status: 0,
+			message: "You can only send to branch and partner branch",
+		});
+		return;
+	}
 	Cashier.findOne(
 		{
 			token,
@@ -461,7 +477,7 @@ router.post("/cashier/interBank/sendToOperational", function (req, res) {
 											message: "Infra not found",
 										});
 									} else {
-										const Collection = getTypeClass(wallet_id.substr(0, 2));
+										const Collection = getTypeClass(code);
 										Collection.findOne(
 											{
 												"wallet_ids.operational": wallet_id,

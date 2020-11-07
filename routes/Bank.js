@@ -572,9 +572,13 @@ router.post("/bankActivate", function (req, res) {
 							})
 							.catch((err) => {
 								console.log(err);
+								let message = err;
+								if (err && err.message) {
+									message = err.message;
+								}
 								res.status(200).json({
 									status: 0,
-									message: err.message,
+									message: message,
 								});
 							});
 					}

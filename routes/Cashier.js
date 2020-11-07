@@ -33,6 +33,15 @@ const transferToOperational = require("./transactions/transferToOperational");
 
 router.post("/cashier/sendToOperational", function (req, res) {
 	const { token, wallet_id, amount, is_inclusive } = req.body;
+
+	var code = wallet_id.substr(0, 2);
+	if (code != "BR" || code != "PB") {
+		res.status(200).json({
+			status: 0,
+			message: "You can only send to branch and partner branch",
+		});
+		return;
+	}
 	Cashier.findOne(
 		{
 			token,
@@ -73,7 +82,7 @@ router.post("/cashier/sendToOperational", function (req, res) {
 							message: "Branch not found",
 						});
 					} else {
-						const Collection = getTypeClass(wallet_id.substr(0, 2));
+						const Collection = getTypeClass(code);
 						Collection.findOne(
 							{
 								bank_id: branch.bank_id,
