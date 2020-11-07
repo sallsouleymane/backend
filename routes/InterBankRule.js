@@ -47,7 +47,7 @@ router.post(
 		const { wallet_id, amount, is_inclusive } = req.body;
 		const jwtusername = req.sign_creds.username;
 		var code = wallet_id.substr(0, 2);
-		if (code != "BR" || code != "PB") {
+		if (code != "BR" && code != "PB") {
 			res.status(200).json({
 				status: 0,
 				message: "You can only send to branch and partner branch",
@@ -396,7 +396,7 @@ router.post(
 router.post("/cashier/interBank/sendToOperational", function (req, res) {
 	const { token, wallet_id, amount, is_inclusive } = req.body;
 	var code = wallet_id.substr(0, 2);
-	if (code != "BR" || code != "PB") {
+	if (code != "BR" && code != "PB") {
 		res.status(200).json({
 			status: 0,
 			message: "You can only send to branch and partner branch",
