@@ -97,11 +97,7 @@ router.post("/infra/transferMasterToOp", jwtTokenAuth, function (req, res) {
 									res.status(200).json(result);
 								})
 								.catch((err) => {
-<<<<<<< HEAD
-									console.log(err.toString());
-=======
 									console.log(err);
->>>>>>> 1b258e03d07728830926d08cb40f578325f697f4
 									res.status(200).json({
 										status: 0,
 										message: err.message,
@@ -365,11 +361,7 @@ router.post("/infra/createMerchant", jwtTokenAuth, function (req, res) {
 									}
 								})
 								.catch((err) => {
-<<<<<<< HEAD
-									console.log(err.toString());
-=======
 									console.log(err);
->>>>>>> 1b258e03d07728830926d08cb40f578325f697f4
 									res.status(200).json({
 										status: 0,
 										message: err.message,
@@ -1023,11 +1015,7 @@ router.post("/getInfraHistory", jwtTokenAuth, function (req, res) {
 									});
 								})
 								.catch((err) => {
-<<<<<<< HEAD
-									console.log(err.toString());
-=======
 									console.log(err);
->>>>>>> 1b258e03d07728830926d08cb40f578325f697f4
 									res.status(200).json({
 										status: 0,
 										message: err.message,
@@ -1099,11 +1087,7 @@ router.get("/infra/getWalletBalance", jwtTokenAuth, function (req, res) {
 									});
 								})
 								.catch((err) => {
-<<<<<<< HEAD
-									console.log(err.toString());
-=======
 									console.log(err);
->>>>>>> 1b258e03d07728830926d08cb40f578325f697f4
 									res.status(200).json({
 										status: 0,
 										message: err.message,
@@ -1126,82 +1110,12 @@ router.get("/getInfraOperationalBalance", function (req, res) {
 	});
 });
 router.get("/getInfraMasterBalance", function (req, res) {
-<<<<<<< HEAD
 	res.status(200).json({
 		status: 0,
 		message: "This API is Removed",
 		Replace:
 			"/infra/getWalletBalance - {from, bank} where from can be 'master' or 'operational'",
 	});
-=======
-	const { bank, token } = req.query;
-	Infra.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (e, b) {
-			if (e) {
-				console.log(e);
-				var message = e;
-				if (e.message) {
-					message = e.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (b == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				Bank.findOne(
-					{
-						_id: bank,
-					},
-					function (err, ba) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (ba == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Bank not found",
-							});
-						} else {
-							const wallet_id = ba.wallet_ids.infra_master;
-
-							getBalance(wallet_id)
-								.then(function (result) {
-									res.status(200).json({
-										status: 1,
-										balance: result,
-									});
-								})
-								.catch((err) => {
-									console.log(err);
-									res.status(200).json({
-										status: 0,
-										message: err.message,
-									});
-								});
-						}
-					}
-				);
-			}
-		}
-	);
->>>>>>> 1b258e03d07728830926d08cb40f578325f697f4
 });
 
 router.post("/getPermission", jwtTokenAuth, function (req, res) {
@@ -2121,11 +2035,7 @@ router.post("/transferMoney", jwtTokenAuth, function (req, res) {
 							transferThis(data)
 								.then(function (result) {})
 								.catch((err) => {
-<<<<<<< HEAD
-									console.log(err.toString());
-=======
 									console.log(err);
->>>>>>> 1b258e03d07728830926d08cb40f578325f697f4
 									res.status(200).json({
 										status: 0,
 										message: err.message,
