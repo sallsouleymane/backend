@@ -169,29 +169,25 @@ router.get("/user/listMerchants", jwtTokenAuth, function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				Merchant.find(
-					{},
-					"-password",
-					(err, merchants) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								message: "Merchant List",
-								list: merchants,
-							});
+				Merchant.find({}, "-password", (err, merchants) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
 						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Merchant List",
+							list: merchants,
+						});
 					}
-				);
+				});
 			}
 		}
 	);
@@ -249,10 +245,7 @@ router.post("/user/checkFee", jwtTokenAuth, function (req, res) {
 						amount = Number(amount);
 						var temp;
 						fe.ranges.map((range) => {
-							if (
-								amount >= range.trans_from &&
-								amount <= range.trans_to
-							) {
+							if (amount >= range.trans_from && amount <= range.trans_to) {
 								temp = (amount * range.percentage) / 100;
 								fee = temp + range.fixed;
 								res.status(200).json({
@@ -264,7 +257,6 @@ router.post("/user/checkFee", jwtTokenAuth, function (req, res) {
 						});
 					}
 				});
-
 			}
 		}
 	);
@@ -369,19 +361,22 @@ router.get("/user/getBalance", jwtTokenAuth, (req, res) => {
 				});
 			} else {
 				const wallet_id = user.wallet_id;
-				blockchain.getBalance(wallet_id).then(function (result) {
-					res.status(200).json({
-						status: 1,
-						message: "User wallet balance",
-						balance: result,
-					});
-				}).catch((err) => {
-					console.log(err.toString());
-					res.status(200).json({
-						status: 0,
-						message: err.message
+				blockchain
+					.getBalance(wallet_id)
+					.then(function (result) {
+						res.status(200).json({
+							status: 1,
+							message: "User wallet balance",
+							balance: result,
+						});
 					})
-				});
+					.catch((err) => {
+						console.log(err);
+						res.status(200).json({
+							status: 0,
+							message: err.message,
+						});
+					});
 			}
 		}
 	);
@@ -572,7 +567,7 @@ router.post("/user/verify", (req, res) => {
 									message: "OTP sent to the email and mobile",
 								});
 							} catch (err) {
-								console.log(err.toString());
+								console.log(err);
 								res.status(200).json({ status: 0, message: err.message });
 							}
 						}
@@ -870,7 +865,7 @@ router.get("/user/getTransactionHistory", jwtTokenAuth, function (req, res) {
 						history: result,
 					});
 				} catch (err) {
-					console.log(err.toString());
+					console.log(err);
 					res.status(200).json({ status: 0, message: err.message });
 				}
 			}
@@ -1103,8 +1098,10 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																			//send transaction sms after actual transaction
 
 																			const receiverWallet = receiver.wallet_id;
-																			const bankOpWallet = bank.wallet_ids.operational;
-																			const infraOpWallet = bank.wallet_ids.infra_operational;
+																			const bankOpWallet =
+																				bank.wallet_ids.operational;
+																			const infraOpWallet =
+																				bank.wallet_ids.infra_operational;
 																			const {
 																				infra_share,
 																			} = fe.revenue_sharing_rule;
@@ -1221,12 +1218,13 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																							message: result.toString(),
 																						});
 																					}
-																				}).catch((err) => {
-																					console.log(err.toString());
+																				})
+																				.catch((err) => {
+																					console.log(err);
 																					res.status(200).json({
 																						status: 0,
-																						message: err.message
-																					})
+																						message: err.message,
+																					});
 																				});
 																		}
 																	});
@@ -1244,7 +1242,7 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 						); //branch
 					}
 				} catch (err) {
-					console.log(err.toString());
+					console.log(err);
 					res.status(200).json({ status: 0, message: err.message });
 				}
 			}
@@ -1309,7 +1307,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 						country: receiverCountry,
 					};
 
-					await NWUser.create(receiver, function (err) { });
+					await NWUser.create(receiver, function (err) {});
 
 					const senderWallet = sender.wallet_id;
 					var bal = await blockchain.getBalance(senderWallet);
@@ -1429,7 +1427,8 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																data.fee = fee;
 																var mns = sender.mobile.slice(-2);
 																var mnr = receiver.mobile.slice(-2);
-																var master_code = (child_code = mns + mnr + now);
+																var master_code = (child_code =
+																	mns + mnr + now);
 																data.master_code = master_code;
 
 																data.without_id = withoutID ? 1 : 0;
@@ -1437,7 +1436,8 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																	data.require_otp = 1;
 																	data.otp = makeotp(6);
 																	content =
-																		data.otp + " - Send this OTP to the Receiver";
+																		data.otp +
+																		" - Send this OTP to the Receiver";
 																	if (sender.mobile && sender.mobile != null) {
 																		sendSMS(content, sender.mobile);
 																	}
@@ -1465,8 +1465,10 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																		});
 																	} else {
 																		const bankEsWallet = bank.wallet_ids.escrow;
-																		const bankOpWallet = bank.wallet_ids.operational;
-																		const infraOpWallet = bank.wallet_ids.infra_operational;
+																		const bankOpWallet =
+																			bank.wallet_ids.operational;
+																		const infraOpWallet =
+																			bank.wallet_ids.infra_operational;
 
 																		const {
 																			infra_share,
@@ -1534,7 +1536,8 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																			mns = bank.mobile.slice(-2);
 																			mnr = infra.mobile.slice(-2);
 																			now = new Date().getTime();
-																			child_code = mns + "" + mnr + "" + now + "3.1";
+																			child_code =
+																				mns + "" + mnr + "" + now + "3.1";
 																			trans31.child_code = child_code;
 																			transArr.push(trans31);
 																		}
@@ -1556,7 +1559,8 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																			mns = bank.mobile.slice(-2);
 																			mnr = infra.mobile.slice(-2);
 																			now = new Date().getTime();
-																			child_code = mns + "" + mnr + "" + now + "3.2";
+																			child_code =
+																				mns + "" + mnr + "" + now + "3.2";
 																			trans32.child_code = child_code;
 																			transArr.push(trans32);
 																		}
@@ -1608,7 +1612,8 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																									message:
 																										sending_amount +
 																										" XOF is transferred to branch",
-																									balance: bal - (oamount + fee),
+																									balance:
+																										bal - (oamount + fee),
 																								});
 																							}
 																						}
@@ -1619,12 +1624,13 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																						message: result.toString(),
 																					});
 																				}
-																			}).catch((err) => {
-																				console.log(err.toString());
+																			})
+																			.catch((err) => {
+																				console.log(err);
 																				res.status(200).json({
 																					status: 0,
-																					message: err.message
-																				})
+																					message: err.message,
+																				});
 																			});
 																	}
 																});
@@ -1641,7 +1647,7 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 						); //branch
 					}
 				} catch (err) {
-					console.log(err.toString());
+					console.log(err);
 					res.status(200).json({ status: 0, message: err.message });
 				}
 			}

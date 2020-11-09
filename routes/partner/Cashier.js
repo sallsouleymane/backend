@@ -39,6 +39,14 @@ router.post("/partnerCashier/sendToOperational", jwtTokenAuth, function (
 ) {
 	const { wallet_id, amount, is_inclusive } = req.body;
 	const jwtusername = req.sign_creds.username;
+	var code = wallet_id.substr(0, 2);
+	if (code != "BR" && code != "PB") {
+		res.status(200).json({
+			status: 0,
+			message: "You can only send to branch and partner branch",
+		});
+		return;
+	}
 	PartnerCashier.findOne(
 		{
 			username: jwtusername,
@@ -79,7 +87,7 @@ router.post("/partnerCashier/sendToOperational", jwtTokenAuth, function (
 							message: "Branch not found",
 						});
 					} else {
-						const Collection = getTypeClass(wallet_id.substr(0, 2));
+						const Collection = getTypeClass(code);
 						Collection.findOne(
 							{
 								bank_id: cashier.bank_id,
@@ -262,7 +270,7 @@ router.post("/partnerCashier/sendToOperational", jwtTokenAuth, function (
 																	}
 																})
 																.catch((err) => {
-																	console.log(err.toString());
+																	console.log(err);
 																	res.status(200).json({
 																		status: 0,
 																		message: err.message,
@@ -1111,7 +1119,7 @@ router.post("/partnerCashier/sendMoneyToWallet", jwtTokenAuth, function (
 																									}
 																								})
 																								.catch((err) => {
-																									console.log(err.toString());
+																									console.log(err);
 																									res.status(200).json({
 																										status: 0,
 																										message: err.message,
@@ -1755,7 +1763,7 @@ router.post("/partnerCashier/sendMoney", jwtTokenAuth, function (req, res) {
 																										}
 																									})
 																									.catch((err) => {
-																										console.log(err.toString());
+																										console.log(err);
 																										res.status(200).json({
 																											status: 0,
 																											message: err.message,
@@ -1764,7 +1772,7 @@ router.post("/partnerCashier/sendMoney", jwtTokenAuth, function (req, res) {
 																							}
 																						})
 																						.catch((err) => {
-																							console.log(err.toString());
+																							console.log(err);
 																							res.status(200).json({
 																								status: 0,
 																								message: err.message,
@@ -3455,7 +3463,7 @@ router.post("/partnerCashier/getHistory", jwtTokenAuth, function (req, res) {
 							});
 						})
 						.catch((err) => {
-							console.log(err.toString());
+							console.log(err);
 							res.status(200).json({
 								status: 0,
 								message: err.message,

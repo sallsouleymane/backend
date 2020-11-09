@@ -135,26 +135,6 @@ async function distributeRevenue(
 		await blockchain.initiateTransfer(trans);
 	}
 
-	bankComm = calculateShare("bank", transfer.amount, rule1.comm);
-	if (bankComm > 0) {
-		let trans = {
-			from: merchantOpWallet,
-			to: bankOpWallet,
-			amount: bankComm,
-			note: "Bank commission on paid bill",
-			email1: merchant.email,
-			email2: bank.email,
-			mobile1: merchant.mobile,
-			mobile2: bank.mobile,
-			from_name: merchant.name,
-			to_name: bank.name,
-			master_code: transfer.master_code,
-			child_code: getTransactionCode(merchant.mobile, bank.mobile) + "5",
-		};
-
-		await blockchain.initiateTransfer(trans);
-	}
-
 	infraShare = calculateShare("infra", transfer.amount, rule1.fee);
 	if (infraShare.percentage_amount > 0) {
 		let trans = {
@@ -189,45 +169,6 @@ async function distributeRevenue(
 			master_code: transfer.master_code,
 			child_code: getTransactionCode(bank.mobile, infra.mobile) + "3.2",
 		};
-		await blockchain.initiateTransfer(trans);
-	}
-
-	infraShare = calculateShare("infra", transfer.amount, rule1.comm);
-	if (infraShare.percentage_amount > 0) {
-		let trans = {
-			from: bankOpWallet,
-			to: infraOpWallet,
-			amount: infraShare.percentage_amount,
-			note: "Commission share on paid bill",
-			email1: bank.email,
-			email2: infra.email,
-			mobile1: bank.mobile,
-			mobile2: infra.mobile,
-			from_name: bank.name,
-			to_name: infra.name,
-			master_code: transfer.master_code,
-			child_code: getTransactionCode(bank.mobile, infra.mobile) + "6.1",
-		};
-
-		await blockchain.initiateTransfer(trans);
-	}
-
-	if (infraShare.fixed_amount > 0) {
-		let trans = {
-			from: bankOpWallet,
-			to: infraOpWallet,
-			amount: infraShare.fixed_amount,
-			note: "Fixed Commission share on paid bill",
-			email1: bank.email,
-			email2: infra.email,
-			mobile1: bank.mobile,
-			mobile2: infra.mobile,
-			from_name: bank.name,
-			to_name: infra.name,
-			master_code: transfer.master_code,
-			child_code: getTransactionCode(bank.mobile, infra.mobile) + "6.2",
-		};
-
 		await blockchain.initiateTransfer(trans);
 	}
 
@@ -275,6 +216,85 @@ async function distributeRevenue(
 		await blockchain.initiateTransfer(trans);
 	}
 
+	//Branch sharing
+	if (transfer.bankFee > 0) {
+		let trans = {
+			from: bankOpWallet,
+			to: branchOpWallet,
+			amount: transfer.partnerFeeShare,
+			note: "Fee share on paid bill",
+			email1: bank.email,
+			email2: branch.email,
+			mobile1: bank.mobile,
+			mobile2: branch.mobile,
+			from_name: bank.name,
+			to_name: branch.name,
+			master_code: transfer.master_code,
+			child_code: getTransactionCode(bank.mobile, branch.mobile) + "4",
+		};
+
+		await blockchain.initiateTransfer(trans);
+	}
+
+	bankComm = calculateShare("bank", transfer.amount, rule1.comm);
+	if (bankComm > 0) {
+		let trans = {
+			from: merchantOpWallet,
+			to: bankOpWallet,
+			amount: bankComm,
+			note: "Bank commission on paid bill",
+			email1: merchant.email,
+			email2: bank.email,
+			mobile1: merchant.mobile,
+			mobile2: bank.mobile,
+			from_name: merchant.name,
+			to_name: bank.name,
+			master_code: transfer.master_code,
+			child_code: getTransactionCode(merchant.mobile, bank.mobile) + "5",
+		};
+
+		await blockchain.initiateTransfer(trans);
+	}
+
+	infraShare = calculateShare("infra", transfer.amount, rule1.comm);
+	if (infraShare.percentage_amount > 0) {
+		let trans = {
+			from: bankOpWallet,
+			to: infraOpWallet,
+			amount: infraShare.percentage_amount,
+			note: "Commission share on paid bill",
+			email1: bank.email,
+			email2: infra.email,
+			mobile1: bank.mobile,
+			mobile2: infra.mobile,
+			from_name: bank.name,
+			to_name: infra.name,
+			master_code: transfer.master_code,
+			child_code: getTransactionCode(bank.mobile, infra.mobile) + "6.1",
+		};
+
+		await blockchain.initiateTransfer(trans);
+	}
+
+	if (infraShare.fixed_amount > 0) {
+		let trans = {
+			from: bankOpWallet,
+			to: infraOpWallet,
+			amount: infraShare.fixed_amount,
+			note: "Fixed Commission share on paid bill",
+			email1: bank.email,
+			email2: infra.email,
+			mobile1: bank.mobile,
+			mobile2: infra.mobile,
+			from_name: bank.name,
+			to_name: infra.name,
+			master_code: transfer.master_code,
+			child_code: getTransactionCode(bank.mobile, infra.mobile) + "6.2",
+		};
+
+		await blockchain.initiateTransfer(trans);
+	}
+
 	OtherBankCommShare = calculateShare("claimBank", transfer.amount, rule1.comm);
 
 	if (OtherBankCommShare.percentage_amount > 0) {
@@ -312,26 +332,6 @@ async function distributeRevenue(
 			user_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "1.2",
-		};
-
-		await blockchain.initiateTransfer(trans);
-	}
-
-	//Branch sharing
-	if (transfer.bankFee > 0) {
-		let trans = {
-			from: bankOpWallet,
-			to: branchOpWallet,
-			amount: transfer.partnerFeeShare,
-			note: "Fee share on paid bill",
-			email1: bank.email,
-			email2: branch.email,
-			mobile1: bank.mobile,
-			mobile2: branch.mobile,
-			from_name: bank.name,
-			to_name: branch.name,
-			master_code: transfer.master_code,
-			child_code: getTransactionCode(bank.mobile, branch.mobile) + "4",
 		};
 
 		await blockchain.initiateTransfer(trans);

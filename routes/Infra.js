@@ -15,7 +15,7 @@ const {
 	createWallet,
 	transferThis,
 	getBalance,
-	initiateTransfer
+	initiateTransfer,
 } = require("../services/Blockchain.js");
 
 const Infra = require("../models/Infra");
@@ -88,21 +88,25 @@ router.post("/infra/transferMasterToOp", function (req, res) {
 								from_name: infra.name,
 								to_name: infra.name,
 								master_code: "",
-								child_code: ""
-							}
-							initiateTransfer(trans).then((result) => {
-								res.status(200).json(result)
-							}).catch((err) => {
-								console.log(err.toString());
-								res.status(200).json({
-									status: 0,
-									message: err.message
+								child_code: "",
+							};
+							initiateTransfer(trans)
+								.then((result) => {
+									res.status(200).json(result);
 								})
-							});
+								.catch((err) => {
+									console.log(err);
+									res.status(200).json({
+										status: 0,
+										message: err.message,
+									});
+								});
 						}
-					});
+					}
+				);
 			}
-		});
+		}
+	);
 });
 
 router.post("/infra/deleteCountry", (req, res) => {
@@ -271,85 +275,94 @@ router.post("/infra/createMerchant", function (req, res) {
 								message: "Code is a required field",
 							});
 						} else {
-							const wallet_ids = getWalletIds("infraMerchant", code, bank.bcode);
-							createWallet([wallet_ids.operational]).then((result) => {
-								if (result != "" && !result.includes("wallet already exists")) {
-									console.log(result);
+							const wallet_ids = getWalletIds(
+								"infraMerchant",
+								code,
+								bank.bcode
+							);
+							createWallet([wallet_ids.operational])
+								.then((result) => {
+									if (
+										result != "" &&
+										!result.includes("wallet already exists")
+									) {
+										console.log(result);
+										res.status(200).json({
+											status: 0,
+											message:
+												"Blockchain service was unavailable. Please try again.",
+											result: result,
+										});
+									} else {
+										const data = new Merchant();
+										data.name = name;
+										data.logo = logo;
+										data.description = description;
+										data.document_hash = document_hash;
+										data.email = email;
+										data.mobile = mobile;
+										data.code = code;
+										data.username = code;
+										data.password = makeid(8);
+										data.bank_id = bank_id;
+										data.infra_id = infra._id;
+										data.status = 0;
+										data.creator = 1;
+										data.wallet_ids.operational = wallet_ids.operational;
+
+										data.save((err) => {
+											if (err) {
+												console.log(err);
+												var message = err;
+												if (err.message) {
+													message = err.message;
+												}
+												res.status(200).json({
+													status: 0,
+													message: message,
+												});
+											} else {
+												let content =
+													"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+													config.mainIP +
+													"/merchant/" +
+													bank.name +
+													"'>http://" +
+													config.mainIP +
+													"/merchant/" +
+													bank.name +
+													"</a></p><p><p>Your username: " +
+													data.username +
+													"</p><p>Your password: " +
+													data.password +
+													"</p>";
+												sendMail(content, "Infra Merchant Created", email);
+												let content2 =
+													"You are added as a Merchant in E-Wallet application Login URL: http://" +
+													config.mainIP +
+													"/merchant/" +
+													bank.name +
+													" Your username: " +
+													data.username +
+													" Your password: " +
+													data.password;
+												sendSMS(content2, mobile);
+												res.status(200).json({
+													status: 1,
+													message: "Merchant created successfully",
+													blockchain_result: result,
+												});
+											}
+										});
+									}
+								})
+								.catch((err) => {
+									console.log(err);
 									res.status(200).json({
 										status: 0,
-										message:
-											"Blockchain service was unavailable. Please try again.",
-										result: result,
+										message: err.message,
 									});
-								} else {
-									const data = new Merchant();
-									data.name = name;
-									data.logo = logo;
-									data.description = description;
-									data.document_hash = document_hash;
-									data.email = email;
-									data.mobile = mobile;
-									data.code = code;
-									data.username = code;
-									data.password = makeid(8);
-									data.bank_id = bank_id;
-									data.infra_id = infra._id;
-									data.status = 0;
-									data.creator = 1;
-									data.wallet_ids.operational = wallet_ids.operational;
-
-									data.save((err) => {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
-											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else {
-											let content =
-												"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-												config.mainIP +
-												"/merchant/" +
-												bank.name +
-												"'>http://" +
-												config.mainIP +
-												"/merchant/" +
-												bank.name +
-												"</a></p><p><p>Your username: " +
-												data.username +
-												"</p><p>Your password: " +
-												data.password +
-												"</p>";
-											sendMail(content, "Infra Merchant Created", email);
-											let content2 =
-												"You are added as a Merchant in E-Wallet application Login URL: http://" +
-												config.mainIP +
-												"/merchant/" +
-												bank.name +
-												" Your username: " +
-												data.username +
-												" Your password: " +
-												data.password;
-											sendSMS(content2, mobile);
-											res.status(200).json({
-												status: 1,
-												message: "Merchant created successfully",
-												blockchain_result: result,
-											});
-										}
-									});
-								}
-							}).catch((err) => {
-								console.log(err.toString());
-								res.status(200).json({
-									status: 0,
-									message: err.message
-								})
-							});
+								});
 						}
 					}
 				});
@@ -464,9 +477,8 @@ router.post("/getDashStats", function (req, res) {
 						totalBanks: totalBanks,
 						totalMerchants: totalmerchants,
 					});
-
 				} catch (err) {
-					console.log(err.toString());
+					console.log(err);
 					res.status(200).json({ status: 0, message: err.message });
 				}
 			}
@@ -693,11 +705,7 @@ router.post("/addBank", (req, res) => {
 			} else {
 				Bank.findOne(
 					{
-						$or: [
-							{ bcode: bcode },
-							{ mobile: mobile },
-							{ email: email }
-						]
+						$or: [{ bcode: bcode }, { mobile: mobile }, { email: email }],
 					},
 					(err, bank) => {
 						if (err) {
@@ -769,7 +777,7 @@ router.post("/addBank", (req, res) => {
 												let data2 = new Document();
 												data2.bank_id = d._id;
 												data2.contract = contract;
-												data2.save((err) => { });
+												data2.save((err) => {});
 
 												let content =
 													"<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
@@ -793,16 +801,16 @@ router.post("/addBank", (req, res) => {
 
 												res.status(200).json({
 													status: 1,
-													message: "Added Bank successfully"
+													message: "Added Bank successfully",
 												});
 											}
 										});
-
 									}
 								}
 							);
 						}
-					});
+					}
+				);
 			}
 		}
 	);
@@ -932,7 +940,7 @@ router.post("/editBank", (req, res) => {
 											let data2 = new Document();
 											data2.bank_id = bank_id;
 											data2.contract = contract;
-											data2.save((err) => { });
+											data2.save((err) => {});
 											return res.status(200).json(data);
 										}
 									}
@@ -1001,18 +1009,20 @@ router.post("/getInfraHistory", function (req, res) {
 							wallet_type = "infra_" + from;
 							const wallet = b.wallet_ids[wallet_type];
 
-							getStatement(wallet).then(function (result) {
-								res.status(200).json({
-									status: 1,
-									history: result,
-								});
-							}).catch((err) => {
-								console.log(err.toString());
-								res.status(200).json({
-									status: 0,
-									message: err.message
+							getStatement(wallet)
+								.then(function (result) {
+									res.status(200).json({
+										status: 1,
+										history: result,
+									});
 								})
-							});
+								.catch((err) => {
+									console.log(err);
+									res.status(200).json({
+										status: 0,
+										message: err.message,
+									});
+								});
 						}
 					}
 				);
@@ -1069,18 +1079,20 @@ router.get("/getInfraOperationalBalance", function (req, res) {
 						} else {
 							const wallet_id = ba.wallet_ids.infra_operational;
 
-							getBalance(wallet_id).then(function (result) {
-								res.status(200).json({
-									status: 1,
-									balance: result,
-								});
-							}).catch((err) => {
-								console.log(err.toString());
-								res.status(200).json({
-									status: 0,
-									message: err.message
+							getBalance(wallet_id)
+								.then(function (result) {
+									res.status(200).json({
+										status: 1,
+										balance: result,
+									});
 								})
-							});;
+								.catch((err) => {
+									console.log(err);
+									res.status(200).json({
+										status: 0,
+										message: err.message,
+									});
+								});
 						}
 					}
 				);
@@ -1137,18 +1149,20 @@ router.get("/getInfraMasterBalance", function (req, res) {
 						} else {
 							const wallet_id = ba.wallet_ids.infra_master;
 
-							getBalance(wallet_id).then(function (result) {
-								res.status(200).json({
-									status: 1,
-									balance: result,
-								});
-							}).catch((err) => {
-								console.log(err.toString());
-								res.status(200).json({
-									status: 0,
-									message: err.message
+							getBalance(wallet_id)
+								.then(function (result) {
+									res.status(200).json({
+										status: 1,
+										balance: result,
+									});
 								})
-							});;
+								.catch((err) => {
+									console.log(err);
+									res.status(200).json({
+										status: 0,
+										message: err.message,
+									});
+								});
 						}
 					}
 				);
@@ -2013,7 +2027,6 @@ router.post("/generateOTP", function (req, res) {
 										message: "Can not add bank.",
 									});
 								}
-
 							}
 						}
 					);
@@ -2076,14 +2089,16 @@ router.post("/transferMoney", function (req, res) {
 							data.to_name = f.name;
 							data.user_id = "";
 
-							transferThis(data).then(function (result) { }).catch((err) => {
-								console.log(err.toString());
-								res.status(200).json({
-									status: 0,
-									message: err.message
+							transferThis(data)
+								.then(function (result) {})
+								.catch((err) => {
+									console.log(err);
+									res.status(200).json({
+										status: 0,
+										message: err.message,
+									});
+									return;
 								});
-								return;
-							});
 							res.status(200).json({
 								status: 1,
 								message: "Money transferred successfully!",

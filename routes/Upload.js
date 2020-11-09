@@ -112,7 +112,7 @@ router.post("/fileUpload", function (req, res) {
 									}
 								});
 
-								fs.unlink(oldpath, function (err) { });
+								fs.unlink(oldpath, function (err) {});
 							}
 						});
 					}
@@ -199,7 +199,7 @@ router.post("/:user/imageUpload", jwtTokenAuth, function (req, res) {
 								});
 							}
 
-							fs.unlink(oldpath, function (err) { });
+							fs.unlink(oldpath, function (err) {});
 						});
 					}
 				});
@@ -225,35 +225,37 @@ router.post("/ipfsUpload", function (req, res) {
 		// else {
 
 		var oldpath = files.file.path;
-		fileUpload(oldpath).then(function (result) {
-			// var out
-			if (result) {
-				result = JSON.parse(result);
-				if (!result.Hash) {
+		fileUpload(oldpath)
+			.then(function (result) {
+				// var out
+				if (result) {
+					result = JSON.parse(result);
+					if (!result.Hash) {
+						res.status(200).json({
+							status: 0,
+							message: "File Upload Error",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "File uploaded successfully",
+							hash: result.Hash,
+						});
+					}
+				} else {
 					res.status(200).json({
 						status: 0,
 						message: "File Upload Error",
 					});
-				} else {
-					res.status(200).json({
-						status: 1,
-						message: "File uploaded successfully",
-						hash: result.Hash,
-					});
 				}
-			} else {
+			})
+			.catch((err) => {
+				console.log(err);
 				res.status(200).json({
 					status: 0,
-					message: "File Upload Error",
+					message: err.message,
 				});
-			}
-		}).catch((err) => {
-			console.log(err.toString());
-			res.status(200).json({
-				status: 0,
-				message: err.message
-			})
-		});
+			});
 		// }
 	});
 });
