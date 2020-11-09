@@ -1156,7 +1156,8 @@ router.post("/partner/addBranch", jwtTokenAuth, (req, res) => {
 														sendSMS(content2, mobile);
 														// return res.status(200).json(data);
 														res.status(200).json({
-															status: "Partner Branch Created",
+															status: 1,
+															message: "Partner Branch Created",
 															walletStatus: result.toString(),
 														});
 													}
