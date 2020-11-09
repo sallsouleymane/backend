@@ -93,7 +93,7 @@ router.post("/:user/transferMasterToOp", jwtTokenAuth, function (req, res) {
 						res.status(200).json(result);
 					})
 					.catch((err) => {
-						console.log(err.toString());
+						console.log(err);
 						res.status(200).json({
 							status: 0,
 							message: err.message,
@@ -150,7 +150,7 @@ router.post("/transferMasterToOp", function (req, res) {
 						res.status(200).json(result);
 					})
 					.catch((err) => {
-						console.log(err.toString());
+						console.log(err);
 						res.status(200).json({
 							status: 0,
 							message: err.message,
@@ -277,7 +277,7 @@ router.post("/:user/getWalletBalance", jwtTokenAuth, function (req, res) {
 						});
 					})
 					.catch((err) => {
-						console.log(err.toString());
+						console.log(err);
 						res.status(200).json({
 							status: 0,
 							message: err.message,
@@ -609,7 +609,7 @@ router.post("/:user/reinitiateTransfer", jwtTokenAuth, (req, res) => {
 								});
 							}
 						} catch (err) {
-							console.log(err.toString());
+							console.log(err);
 							res.status(200).json({ status: 0, message: err.message });
 						}
 					}
@@ -689,7 +689,7 @@ router.get("/getWalletBalance", function (req, res) {
 							});
 						})
 						.catch((err) => {
-							console.log(err.toString());
+							console.log(err);
 							res.status(200).json({
 								status: 0,
 								message: err.message,
@@ -706,7 +706,7 @@ router.get("/getWalletBalance", function (req, res) {
 							});
 						})
 						.catch((err) => {
-							console.log(err.toString());
+							console.log(err);
 							res.status(200).json({
 								status: 0,
 								message: err.message,
@@ -1020,7 +1020,7 @@ router.get("/showBalance", (req, res) => {
 			});
 		})
 		.catch((err) => {
-			console.log(err.toString());
+			console.log(err);
 			res.status(200).json({
 				status: 0,
 				message: err.message,
@@ -2522,7 +2522,7 @@ router.post("/getTransHistory", function (req, res) {
 			});
 		})
 		.catch((err) => {
-			console.log(err.toString());
+			console.log(err);
 			res.status(200).json({
 				status: 0,
 				message: err.message,

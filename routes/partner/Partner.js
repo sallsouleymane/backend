@@ -111,7 +111,7 @@ router.post("/partner/getBalance", jwtTokenAuth, function (req, res) {
 						});
 					})
 					.catch((err) => {
-						console.log(err.toString());
+						console.log(err);
 						res.status(200).json({
 							status: 0,
 							message: err.message,
@@ -187,7 +187,7 @@ router.post("/partner/getHistoryTotal", jwtTokenAuth, function (req, res) {
 								}
 							})
 							.catch((err) => {
-								console.log(err.toString());
+								console.log(err);
 								res.status(200).json({
 									status: 0,
 									message: err.message,
@@ -251,7 +251,7 @@ router.post("/partner/getHistory", jwtTokenAuth, function (req, res) {
 						});
 					})
 					.catch((err) => {
-						console.log(err.toString());
+						console.log(err);
 						res.status(200).json({
 							status: 0,
 							message: err.message,
@@ -315,7 +315,7 @@ router.get("/partner/getOperationalBalance", jwtTokenAuth, function (req, res) {
 								});
 							})
 							.catch((err) => {
-								console.log(err.toString());
+								console.log(err);
 								res.status(200).json({
 									status: 0,
 									message: err.message,
@@ -373,7 +373,7 @@ router.post("/partner/dashStats", jwtTokenAuth, function (req, res) {
 							totalUsers: userCount,
 						});
 					} catch (err) {
-						console.log(err.toString());
+						console.log(err);
 						res.status(200).json({ status: 0, message: err.message });
 					}
 				}
@@ -1156,7 +1156,8 @@ router.post("/partner/addBranch", jwtTokenAuth, (req, res) => {
 														sendSMS(content2, mobile);
 														// return res.status(200).json(data);
 														res.status(200).json({
-															status: "Partner Branch Created",
+															status: 1,
+															message: "Partner Branch Created",
 															walletStatus: result.toString(),
 														});
 													}
@@ -1167,7 +1168,7 @@ router.post("/partner/addBranch", jwtTokenAuth, (req, res) => {
 								}
 							})
 							.catch((err) => {
-								console.log(err.toString());
+								console.log(err);
 								res.status(200).json({
 									status: 0,
 									message: err.message,
@@ -1330,7 +1331,7 @@ router.post("/partner/activate", jwtTokenAuth, function (req, res) {
 							}
 						})
 						.catch((err) => {
-							console.log(err.toString());
+							console.log(err);
 							res.status(200).json({
 								status: 0,
 								message: err.message,
