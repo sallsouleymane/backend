@@ -9,6 +9,7 @@ const sendMail = require("./utils/sendMail");
 const getTypeClass = require("./utils/getTypeClass");
 const makeotp = require("./utils/makeotp");
 const getWalletIds = require("./utils/getWalletIds");
+const jwtTokenAuth = require("./JWTTokenAuth");
 
 //services
 const {
@@ -31,11 +32,11 @@ const Partner = require("../models/partner/Partner");
 const Document = require("../models/Document");
 const Infra = require("../models/Infra");
 
-router.post("/bank/getMyWalletIds", function (req, res) {
-	const { token } = req.body;
+router.post("/bank/getMyWalletIds", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -62,12 +63,13 @@ router.post("/bank/getMyWalletIds", function (req, res) {
 	);
 });
 
-router.post("/bank/generateOTP", function (req, res) {
+router.post("/bank/generateOTP", jwtTokenAuth, function (req, res) {
 	let data = new OTP();
-	const { token, username, page, name, email, mobile, code } = req.body;
+	const { username, page, name, email, mobile, code } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -198,32 +200,40 @@ router.post("/bank/generateOTP", function (req, res) {
 	);
 });
 
-router.post("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
-	try {
-		const { token } = req.body;
-		var result = await Bank.findOne({ token: token });
-		if (result == null) {
-			throw new Error(
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
+router.post(
+	"/getRevenueFeeFromBankFeeId/:bankFeeId",
+	jwtTokenAuth,
+	async function (req, res) {
+		try {
+			const jwtusername = req.sign_creds.username;
+			var result = await Bank.findOne({ username: jwtusername, status: 1 });
+			if (result == null) {
+				throw new Error(
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+			}
+			const fee = await Fee.findById(req.params.bankFeeId);
+			if (fee == null) throw new Error("No Fee Rule found");
+
+			res.send({
+				status: 1,
+				fee: fee.revenue_sharing_rule,
+				infra_status: fee.status,
+			});
+		} catch (err) {
+			res.status(200).send({ status: 0, message: err.message });
 		}
-		const fee = await Fee.findById(req.params.bankFeeId);
-		if (fee == null) throw new Error("No Fee Rule found");
-
-		res.send({
-			status: 1,
-			fee: fee.revenue_sharing_rule,
-			infra_status: fee.status,
-		});
-	} catch (err) {
-		res.status(200).send({ status: 0, message: err.message });
 	}
-});
+);
 
-router.post("/bank/getRevenueFeeForInterBank", async (req, res) => {
+router.post("/bank/getRevenueFeeForInterBank", jwtTokenAuth, async function (
+	req,
+	res
+) {
 	try {
-		const { token, type } = req.body;
-		var bank = await Bank.findOne({ token: token });
+		const { type } = req.body;
+		const jwtusername = req.sign_creds.username;
+		var bank = await Bank.findOne({ username: jwtusername, status: 1 });
 		if (bank == null) {
 			throw new Error(
 				"Token changed or user not valid. Try to login again or contact system administrator."
@@ -252,11 +262,14 @@ router.post("/bank/getRevenueFeeForInterBank", async (req, res) => {
 	}
 });
 
-router.post("/bank/updateRevenueSharingRules", async (req, res) => {
+router.post("/bank/updateRevenueSharingRules", jwtTokenAuth, async function (
+	req,
+	res
+) {
 	try {
-		const { token, type, revenue_sharing_rule } = req.body;
-
-		var bank = await Bank.findOne({ token: token });
+		const { type, revenue_sharing_rule } = req.body;
+		const jwtusername = req.sign_creds.username;
+		var bank = await Bank.findOne({ username: jwtusername, status: 1 });
 		if (bank == null) {
 			throw new Error("Token is invalid");
 		}
@@ -302,11 +315,15 @@ router.post("/bank/updateRevenueSharingRules", async (req, res) => {
 	}
 });
 
-router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
+router.post("/save-revenue-sharing-rules/:id", jwtTokenAuth, async function (
+	req,
+	res
+) {
 	try {
-		const { token, revenue_sharing_rule } = req.body;
+		const { revenue_sharing_rule } = req.body;
 		const { id } = req.params;
-		var result = await Bank.findOne({ token: token });
+		const jwtusername = req.sign_creds.username;
+		var result = await Bank.findOne({ username: jwtusername, status: 1 });
 		if (result == null) {
 			throw new Error("Token is invalid");
 		}
@@ -339,11 +356,12 @@ router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
 	}
 });
 
-router.post("/bank/sendShareForApproval", function (req, res) {
-	const { token, trans_type, percentage, fixed } = req.body;
+router.post("/bank/sendShareForApproval", jwtTokenAuth, function (req, res) {
+	const { trans_type, percentage, fixed } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -414,11 +432,12 @@ router.post("/bank/sendShareForApproval", function (req, res) {
 	);
 });
 
-router.post("/bankSetupUpdate", function (req, res) {
-	const { username, password, token } = req.body;
+router.post("/bankSetupUpdate", jwtTokenAuth, function (req, res) {
+	const { username, password } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 		},
 		function (err, bank) {
 			if (err) {
@@ -469,11 +488,11 @@ router.post("/bankSetupUpdate", function (req, res) {
 	);
 });
 
-router.post("/bankActivate", function (req, res) {
-	const { token } = req.body;
+router.post("/bankActivate", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 		},
 		function (err, bank) {
 			if (err) {
@@ -588,12 +607,12 @@ router.post("/bankActivate", function (req, res) {
 	);
 });
 
-router.post("/getBankDashStats", function (req, res) {
+router.post("/getBankDashStats", jwtTokenAuth, function (req, res) {
 	try {
-		const { token } = req.body;
+		const jwtusername = req.sign_creds.username;
 		Bank.findOne(
 			{
-				token,
+				username: jwtusername,
 				status: 1,
 			},
 			async function (err, user) {
@@ -640,12 +659,11 @@ router.post("/getBankDashStats", function (req, res) {
 	}
 });
 
-router.get("/getBankOperationalBalance", function (req, res) {
-	const { bank } = req.query;
-
+router.get("/getBankOperationalBalance", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token: bank,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, ba) {
@@ -679,11 +697,11 @@ router.get("/getBankOperationalBalance", function (req, res) {
 	);
 });
 
-router.post("/getBranches", function (req, res) {
-	const { token } = req.body;
+router.post("/getBranches", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -728,11 +746,11 @@ router.post("/getBranches", function (req, res) {
 	);
 });
 
-router.post("/getBankUsers", function (req, res) {
-	const { token } = req.body;
+router.post("/getBankUsers", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -782,7 +800,7 @@ router.post("/getBankUsers", function (req, res) {
 	);
 });
 
-router.post("/addBranch", (req, res) => {
+router.post("/addBranch", jwtTokenAuth, function (req, res) {
 	let data = new Branch();
 	const {
 		name,
@@ -797,14 +815,14 @@ router.post("/addBranch", (req, res) => {
 		ccode,
 		mobile,
 		email,
-		token,
 		working_from,
 		working_to,
 	} = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -937,7 +955,7 @@ router.post("/addBranch", (req, res) => {
 	);
 });
 
-router.post("/editBranch", (req, res) => {
+router.post("/editBranch", jwtTokenAuth, function (req, res) {
 	let data = new Branch();
 	const {
 		branch_id,
@@ -952,14 +970,14 @@ router.post("/editBranch", (req, res) => {
 		ccode,
 		mobile,
 		email,
-		token,
 		working_from,
 		working_to,
 	} = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1022,12 +1040,13 @@ router.post("/editBranch", (req, res) => {
 	);
 });
 
-router.post("/branchStatus", function (req, res) {
-	const { token, status, branch_id } = req.body;
+router.post("/branchStatus", jwtTokenAuth, function (req, res) {
+	const { status, branch_id } = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1077,7 +1096,7 @@ router.post("/branchStatus", function (req, res) {
 	);
 });
 
-router.post("/addBankUser", (req, res) => {
+router.post("/addBankUser", jwtTokenAuth, function (req, res) {
 	let data = new BankUser();
 	const {
 		name,
@@ -1088,11 +1107,11 @@ router.post("/addBankUser", (req, res) => {
 		password,
 		branch_id,
 		logo,
-		token,
 	} = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1165,7 +1184,7 @@ router.post("/addBankUser", (req, res) => {
 	);
 });
 
-router.post("/editBankUser", (req, res) => {
+router.post("/editBankUser", jwtTokenAuth, function (req, res) {
 	const {
 		name,
 		email,
@@ -1176,11 +1195,12 @@ router.post("/editBankUser", (req, res) => {
 		branch_id,
 		logo,
 		user_id,
-		token,
 	} = req.body;
+
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 		},
 		function (err, user) {
 			if (err) {
@@ -1238,12 +1258,13 @@ router.post("/editBankUser", (req, res) => {
 	);
 });
 
-router.post("/getBankHistory", function (req, res) {
-	const { from, token } = req.body;
+router.post("/getBankHistory", jwtTokenAuth, function (req, res) {
+	const { from } = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, b) {
@@ -1299,7 +1320,7 @@ router.post("/getBankHistory", function (req, res) {
 	);
 });
 
-router.post("/addCashier", (req, res) => {
+router.post("/addCashier", jwtTokenAuth, function (req, res) {
 	let data = new Cashier();
 	const {
 		name,
@@ -1311,13 +1332,13 @@ router.post("/addCashier", (req, res) => {
 		per_trans_amt,
 		max_trans_amt,
 		max_trans_count,
-		token,
 		cashier_length,
 	} = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -1511,12 +1532,13 @@ router.post("/addCashier", (req, res) => {
 	);
 });
 
-router.post("/createBankRules", (req, res) => {
+router.post("/createBankRules", jwtTokenAuth, function (req, res) {
 	let fee = new Fee();
-	const { name, trans_type, active, ranges, token } = req.body;
+	const { name, trans_type, active, ranges } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -1611,11 +1633,12 @@ router.post("/createBankRules", (req, res) => {
 	);
 });
 
-router.post("/editBankBankRule", (req, res) => {
-	const { name, trans_type, active, ranges, token, rule_id } = req.body;
+router.post("/editBankBankRule", jwtTokenAuth, function (req, res) {
+	const { name, trans_type, active, ranges, rule_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -1673,12 +1696,13 @@ router.post("/editBankBankRule", (req, res) => {
 	);
 });
 
-router.post("/generateBankOTP", function (req, res) {
+router.post("/generateBankOTP", jwtTokenAuth, function (req, res) {
 	let data = new OTP();
-	const { token, page, email, mobile, txt } = req.body;
+	const { page, email, mobile, txt } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
