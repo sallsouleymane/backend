@@ -7,6 +7,7 @@ const sendMail = require("./utils/sendMail");
 const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
 const getTypeClass = require("./utils/getTypeClass");
+const JWTTokenAuth = require("./JWTTokenAuth");
 
 //transactions
 const interBankSendMoneyToNonWallet = require("./transactions/interBank/sendMoneyToNonWallet");
@@ -37,8 +38,6 @@ const InterBankRule = require("../models/InterBankRule");
 const Fee = require("../models/Fee");
 const User = require("../models/User");
 const NWUser = require("../models/NonWalletUsers");
-
-const JWTTokenAuth = require("./JWTTokenAuth");
 
 router.post(
 	"/partnerCashier/interBank/sendToOperational",
@@ -393,8 +392,11 @@ router.post(
 	}
 );
 
-router.post("/cashier/interBank/sendToOperational", function (req, res) {
-	const { token, wallet_id, amount, is_inclusive } = req.body;
+router.post("/cashier/interBank/sendToOperational", JWTTokenAuth, function (
+	req,
+	res
+) {
+	const { wallet_id, amount, is_inclusive } = req.body;
 	var code = wallet_id.substr(0, 2);
 	if (code != "BR" && code != "PB") {
 		res.status(200).json({
@@ -403,9 +405,10 @@ router.post("/cashier/interBank/sendToOperational", function (req, res) {
 		});
 		return;
 	}
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {
@@ -1465,15 +1468,16 @@ router.post(
 	}
 );
 
-router.post("/cashier/interBank/sendMoneyToWallet", function (req, res) {
+router.post("/cashier/interBank/sendMoneyToWallet", JWTTokenAuth, function (
+	req,
+	res
+) {
 	var today = new Date();
 	today = today.toISOString();
 	var s = today.split("T");
 	var start = s[0] + "T00:00:00.000Z";
 	var end = s[0] + "T23:59:59.999Z";
-
 	const {
-		token,
 		givenname,
 		familyname,
 		note,
@@ -1494,9 +1498,10 @@ router.post("/cashier/interBank/sendMoneyToWallet", function (req, res) {
 		isInclusive,
 	} = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {
@@ -3106,7 +3111,7 @@ router.post(
 	}
 );
 
-router.post("/cashier/interBank/claimMoney", function (req, res) {
+router.post("/cashier/interBank/claimMoney", JWTTokenAuth, function (req, res) {
 	var today = new Date();
 	today = today.toISOString();
 	var s = today.split("T");
@@ -3114,7 +3119,6 @@ router.post("/cashier/interBank/claimMoney", function (req, res) {
 	var end = s[0] + "T23:59:59.999Z";
 
 	const {
-		token,
 		transferCode,
 		proof,
 		givenname,
@@ -3124,9 +3128,10 @@ router.post("/cashier/interBank/claimMoney", function (req, res) {
 		mobile,
 	} = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {
@@ -3538,7 +3543,10 @@ router.post("/cashier/interBank/claimMoney", function (req, res) {
 	);
 });
 
-router.post("/cashier/interBank/SendMoneyToNonWallet", function (req, res) {
+router.post("/cashier/interBank/SendMoneyToNonWallet", JWTTokenAuth, function (
+	req,
+	res
+) {
 	var today = new Date();
 	today = today.toISOString();
 	var s = today.split("T");
@@ -3546,7 +3554,6 @@ router.post("/cashier/interBank/SendMoneyToNonWallet", function (req, res) {
 	var end = s[0] + "T23:59:59.999Z";
 
 	const {
-		token,
 		givenname,
 		familyname,
 		note,
@@ -3579,9 +3586,10 @@ router.post("/cashier/interBank/SendMoneyToNonWallet", function (req, res) {
 
 	const transactionCode = makeid(8);
 
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {
@@ -4035,12 +4043,13 @@ router.post("/partnerCashier/interBank/checkFee", JWTTokenAuth, function (
 	}
 });
 
-router.post("/cashier/interBank/checkFee", function (req, res) {
-	const { token, type, amount } = req.body;
+router.post("/cashier/interBank/checkFee", JWTTokenAuth, function (req, res) {
+	const { type, amount } = req.body;
 	if (type == "IBNWNW" || type == "IBNWW" || type == "IBNWO") {
+		const jwtusername = req.sign_creds.username;
 		Cashier.findOne(
 			{
-				token,
+				username: jwtusername,
 				status: 1,
 			},
 			function (err, cashier) {
@@ -4119,11 +4128,11 @@ router.post("/cashier/interBank/checkFee", function (req, res) {
 	}
 });
 
-router.post("/bank/interBank/getRules", function (req, res) {
-	const { token } = req.body;
+router.post("/bank/interBank/getRules", JWTTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -4168,11 +4177,12 @@ router.post("/bank/interBank/getRules", function (req, res) {
 	);
 });
 
-router.post("/infra/interBank/getRules", function (req, res) {
-	const { token, bank_id } = req.body;
+router.post("/infra/interBank/getRules", JWTTokenAuth, function (req, res) {
+	const { bank_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, infra) {
@@ -4228,11 +4238,12 @@ router.post("/infra/interBank/getRules", function (req, res) {
 	);
 });
 
-router.post("/infra/interBank/declineShare", function (req, res) {
-	const { token, rule_id } = req.body;
+router.post("/infra/interBank/declineShare", JWTTokenAuth, function (req, res) {
+	const { rule_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, infra) {
@@ -4317,11 +4328,12 @@ router.post("/infra/interBank/declineShare", function (req, res) {
 	);
 });
 
-router.post("/infra/interBank/approveShare", function (req, res) {
-	const { token, rule_id } = req.body;
+router.post("/infra/interBank/approveShare", JWTTokenAuth, function (req, res) {
+	const { rule_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, infra) {
@@ -4417,11 +4429,15 @@ router.post("/infra/interBank/approveShare", function (req, res) {
 	);
 });
 
-router.post("/bank/interBank/updateOtherBankShares", function (req, res) {
-	const { token, rule_id, other_bank_share } = req.body;
+router.post("/bank/interBank/updateOtherBankShares", JWTTokenAuth, function (
+	req,
+	res
+) {
+	const { rule_id, other_bank_share } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -4484,11 +4500,12 @@ router.post("/bank/interBank/updateOtherBankShares", function (req, res) {
 	);
 });
 
-router.post("/bank/interBank/editRule", function (req, res) {
-	const { token, rule_id, name, active, description, ranges } = req.body;
+router.post("/bank/interBank/editRule", JWTTokenAuth, function (req, res) {
+	const { rule_id, name, active, description, ranges } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -4563,11 +4580,12 @@ router.post("/bank/interBank/editRule", function (req, res) {
 	);
 });
 
-router.post("/bank/interBank/createRule", function (req, res) {
-	const { token, name, active, type, ranges, description } = req.body;
+router.post("/bank/interBank/createRule", JWTTokenAuth, function (req, res) {
+	const { name, active, type, ranges, description } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -4658,11 +4676,15 @@ router.post("/bank/interBank/createRule", function (req, res) {
 	);
 });
 
-router.post("/bank/interBank/sendShareForApproval", function (req, res) {
-	const { token, rule_id, infra_share } = req.body;
+router.post("/bank/interBank/sendShareForApproval", JWTTokenAuth, function (
+	req,
+	res
+) {
+	const { rule_id, infra_share } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {

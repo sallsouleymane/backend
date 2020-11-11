@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const config = require("../../config.json");
+const jwtTokenAuth = require("../JWTTokenAuth");
 
 //utils
 const makeid = require("../utils/idGenerator");
@@ -14,11 +15,11 @@ const Bank = require("../../models/Bank");
 const Merchant = require("../../models/merchant/Merchant");
 const getWalletIds = require("../utils/getWalletIds");
 
-router.post("/bank/listMerchants", function (req, res) {
-	var { token } = req.body;
+router.post("/bank/listMerchants", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -63,9 +64,8 @@ router.post("/bank/listMerchants", function (req, res) {
 	);
 });
 
-router.post("/bank/createMerchant", function (req, res) {
+router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 	var {
-		token,
 		code,
 		name,
 		logo,
@@ -74,9 +74,10 @@ router.post("/bank/createMerchant", function (req, res) {
 		email,
 		mobile,
 	} = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -206,19 +207,12 @@ router.post("/bank/createMerchant", function (req, res) {
 	);
 });
 
-router.post("/bank/editMerchant", function (req, res) {
-	var {
-		token,
-		merchant_id,
-		name,
-		logo,
-		description,
-		document_hash,
-		email,
-	} = req.body;
+router.post("/bank/editMerchant", jwtTokenAuth, function (req, res) {
+	var { merchant_id, name, logo, description, document_hash, email } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {

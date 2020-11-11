@@ -20,10 +20,10 @@ const jwtTokenAuth = require("./JWTTokenAuth");
 
 router.post(
 	"/:user/merchantRule/updateSharesForInterBank",
+	jwtTokenAuth,
 	async (req, res) => {
 		try {
 			const {
-				token,
 				type,
 				merchant_id,
 				branch_share,
@@ -35,7 +35,8 @@ router.post(
 			const user = req.params.user;
 
 			const Coll = getTypeClass(user);
-			var data = await Coll.findOne({ token: token });
+			const jwtusername = req.sign_creds.username;
+			var data = await Coll.findOne({ username: jwtusername });
 			if (data == null) {
 				throw new Error("Token is invalid");
 			}
@@ -78,13 +79,15 @@ router.post(
 
 router.post(
 	"/:user/merchantRule/getRevenueShareForInterBank",
+	jwtTokenAuth,
 	async (req, res) => {
 		try {
-			const { token, type, merchant_id } = req.body;
+			const { type, merchant_id } = req.body;
 			const user = req.params.user;
 
 			const Coll = getTypeClass(user);
-			var data = await Coll.findOne({ token: token });
+			const jwtusername = req.sign_creds.username;
+			var data = await Coll.findOne({ username: jwtusername });
 			if (data == null) {
 				throw new Error("Token is invalid");
 			}
@@ -118,11 +121,12 @@ router.post(
 	}
 );
 
-router.post("/cashier/interBank/checkMerchantFee", (req, res) => {
-	var { token, merchant_id, amount } = req.body;
+router.post("/cashier/interBank/checkMerchantFee", jwtTokenAuth, (req, res) => {
+	var { merchant_id, amount } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {
@@ -640,11 +644,15 @@ router.post("/merchant/merchantRule/interBank/decline", jwtTokenAuth, function (
 	);
 });
 
-router.post("/infra/merchantRule/interBank/approve", function (req, res) {
-	const { token, rule_id } = req.body;
+router.post("/infra/merchantRule/interBank/approve", jwtTokenAuth, function (
+	req,
+	res
+) {
+	const { rule_id } = req.body;
+	const username = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username,
 			status: 1,
 		},
 		function (err, infra) {
@@ -834,11 +842,15 @@ router.post("/infra/merchantRule/interBank/approve", function (req, res) {
 	);
 });
 
-router.post("/infra/merchantRule/interBank/decline", function (req, res) {
-	const { token, rule_id } = req.body;
+router.post("/infra/merchantRule/interBank/decline", jwtTokenAuth, function (
+	req,
+	res
+) {
+	const { rule_id } = req.body;
+	const username = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username,
 			status: 1,
 		},
 		function (err, infra) {
@@ -947,8 +959,11 @@ router.post("/infra/merchantRule/interBank/decline", function (req, res) {
 	);
 });
 
-router.post("/infra/merchantRule/interBank/getAll", function (req, res) {
-	const { token, page, merchant_id } = req.body;
+router.post("/infra/merchantRule/interBank/getAll", jwtTokenAuth, function (
+	req,
+	res
+) {
+	const { page, merchant_id } = req.body;
 	var query = [];
 	if (page == "fee") {
 		query = [{ type: "IBNWM-F" }, { type: "IBWM-F" }];
@@ -961,9 +976,10 @@ router.post("/infra/merchantRule/interBank/getAll", function (req, res) {
 		});
 		return;
 	}
+	const username = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username,
 			status: 1,
 		},
 		function (err, infra) {
@@ -1043,8 +1059,11 @@ router.post("/infra/merchantRule/interBank/getAll", function (req, res) {
 	);
 });
 
-router.post("/bank/merchantRule/interBank/getAll", function (req, res) {
-	const { token, page, merchant_id } = req.body;
+router.post("/bank/merchantRule/interBank/getAll", jwtTokenAuth, function (
+	req,
+	res
+) {
+	const { page, merchant_id } = req.body;
 	var query = [];
 	if (page == "fee") {
 		query = [{ type: "IBNWM-F" }, { type: "IBWM-F" }];
@@ -1057,9 +1076,10 @@ router.post("/bank/merchantRule/interBank/getAll", function (req, res) {
 		});
 		return;
 	}
+	const username = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username,
 			status: 1,
 		},
 		function (err, bank) {
@@ -1124,7 +1144,7 @@ router.post("/merchant/interBank/getRules", jwtTokenAuth, function (req, res) {
 	const username = req.sign_creds.username;
 	Merchant.findOne(
 		{
-			username: username,
+			username,
 			status: 1,
 		},
 		function (err, merchant) {
@@ -1178,199 +1198,210 @@ router.post("/merchant/interBank/getRules", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/bank/merchantRule/interBank/editInfraShare", function (req, res) {
-	const { token, rule_id, fixed, percentage } = req.body;
-	Bank.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				IBMerchantRule.findOneAndUpdate(
-					{
-						_id: rule_id,
-						$or: [
-							{ infra_approve_status: 1 },
-							{ infra_approve_status: 2 },
-							{ "edited.infra_approve_status": 2 },
-						],
-					},
-					{
-						$set: {
-							"edited.infra_share.fixed": fixed,
-							"edited.infra_share.percentage": percentage,
-							"edited.infra_approve_status": 3,
-							infra_share_edit_status: 1,
-						},
-					},
-					{ new: true },
-					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							res.status(200).json({
-								status: 0,
-								message: "This rule is not allowed to edit.",
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								message:
-									"Merchant Rule " +
-									rule.name +
-									" infra share edited successfully",
-								rule: rule,
-							});
-						}
+router.post(
+	"/bank/merchantRule/interBank/editInfraShare",
+	jwtTokenAuth,
+	function (req, res) {
+		const { rule_id, fixed, percentage } = req.body;
+		const username = req.sign_creds.username;
+		Bank.findOne(
+			{
+				username,
+				status: 1,
+			},
+			function (err, bank) {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
 					}
-				);
-			}
-		}
-	);
-});
-
-router.post("/bank/merchantRule/interBank/editRule", function (req, res) {
-	const { token, rule_id, name, active, description, ranges } = req.body;
-	Bank.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				IBMerchantRule.findOneAndUpdate(
-					{
-						_id: rule_id,
-						$or: [
-							{ merchant_approve_status: 1 },
-							{ merchant_approve_status: 2 },
-							{ "edited.merchant_approve_status": 2 },
-						],
-					},
-					{
-						$set: {
-							rule_edit_status: 1,
-							"edited.name": name,
-							"edited.active": active,
-							"edited.ranges": ranges,
-							"edited.description": description,
-							"edited.merchant_approve_status": 0,
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else if (bank == null) {
+					res.status(200).json({
+						status: 0,
+						message:
+							"Token changed or user not valid. Try to login again or contact system administrator.",
+					});
+				} else {
+					IBMerchantRule.findOneAndUpdate(
+						{
+							_id: rule_id,
+							$or: [
+								{ infra_approve_status: 1 },
+								{ infra_approve_status: 2 },
+								{ "edited.infra_approve_status": 2 },
+							],
 						},
-					},
-					{ new: true },
-					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							res.status(200).json({
-								status: 0,
-								message: "This rule is not allowed to edit.",
-							});
-						} else {
-							Merchant.findOne({ _id: rule.merchant_id }, (err, merchant) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (merchant == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Merchant not found",
-									});
-								} else {
-									let content =
-										"<p>Rule " +
-										rule.name +
-										" has been edited for merchant " +
-										merchant.name +
-										" for your bank in E-Wallet application</p><p>&nbsp;</p>";
-									sendMail(content, "Merchant Rule Edited", bank.email);
-									let content2 =
-										" E-Wallet: Rule " +
-										rule.name +
-										" has been edited for merchant " +
-										merchant.name;
-									sendSMS(content2, bank.mobile);
-
-									res.status(200).json({
-										status: 1,
-										message:
-											"Merchant Rule " + rule.name + " edited successfully",
-										rule: rule,
-									});
+						{
+							$set: {
+								"edited.infra_share.fixed": fixed,
+								"edited.infra_share.percentage": percentage,
+								"edited.infra_approve_status": 3,
+								infra_share_edit_status: 1,
+							},
+						},
+						{ new: true },
+						(err, rule) => {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
 								}
-							});
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else if (rule == null) {
+								res.status(200).json({
+									status: 0,
+									message: "This rule is not allowed to edit.",
+								});
+							} else {
+								res.status(200).json({
+									status: 1,
+									message:
+										"Merchant Rule " +
+										rule.name +
+										" infra share edited successfully",
+									rule: rule,
+								});
+							}
 						}
-					}
-				);
+					);
+				}
 			}
-		}
-	);
-});
+		);
+	}
+);
+
+router.post(
+	"/bank/merchantRule/interBank/editRule",
+	jwtTokenAuth,
+	(req, res) => {
+		const { rule_id, name, active, description, ranges } = req.body;
+		const jwtusername = req.sign_creds.username;
+		Bank.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, bank) {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else if (bank == null) {
+					res.status(200).json({
+						status: 0,
+						message:
+							"Token changed or user not valid. Try to login again or contact system administrator.",
+					});
+				} else {
+					IBMerchantRule.findOneAndUpdate(
+						{
+							_id: rule_id,
+							$or: [
+								{ merchant_approve_status: 1 },
+								{ merchant_approve_status: 2 },
+								{ "edited.merchant_approve_status": 2 },
+							],
+						},
+						{
+							$set: {
+								rule_edit_status: 1,
+								"edited.name": name,
+								"edited.active": active,
+								"edited.ranges": ranges,
+								"edited.description": description,
+								"edited.merchant_approve_status": 0,
+							},
+						},
+						{ new: true },
+						(err, rule) => {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else if (rule == null) {
+								res.status(200).json({
+									status: 0,
+									message: "This rule is not allowed to edit.",
+								});
+							} else {
+								Merchant.findOne({ _id: rule.merchant_id }, (err, merchant) => {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else if (merchant == null) {
+										res.status(200).json({
+											status: 0,
+											message: "Merchant not found",
+										});
+									} else {
+										let content =
+											"<p>Rule " +
+											rule.name +
+											" has been edited for merchant " +
+											merchant.name +
+											" for your bank in E-Wallet application</p><p>&nbsp;</p>";
+										sendMail(content, "Merchant Rule Edited", bank.email);
+										let content2 =
+											" E-Wallet: Rule " +
+											rule.name +
+											" has been edited for merchant " +
+											merchant.name;
+										sendSMS(content2, bank.mobile);
+
+										res.status(200).json({
+											status: 1,
+											message:
+												"Merchant Rule " + rule.name + " edited successfully",
+											rule: rule,
+										});
+									}
+								});
+							}
+						}
+					);
+				}
+			}
+		);
+	}
+);
 
 router.post("/bank/merchantRule/interBank/updateOtherBankShare", function (
 	req,
 	res
 ) {
-	var { token, rule_id, other_bank_share } = req.body;
+	var { rule_id, other_bank_share } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -1432,125 +1463,46 @@ router.post("/bank/merchantRule/interBank/updateOtherBankShare", function (
 	);
 });
 
-router.post("/bank/merchantRule/interBank/addInfraShare", function (req, res) {
-	const { token, rule_id, fixed, percentage } = req.body;
-	Bank.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				IBMerchantRule.findOneAndUpdate(
-					{
-						_id: rule_id,
-					},
-					{
-						infra_approve_status: 3,
-						"infra_share.fixed": fixed,
-						"infra_share.percentage": percentage,
-					},
-					{ new: true },
-					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Merchant Rule not found.",
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								message:
-									"Merchant Rule " +
-									rule.name +
-									" successfully updated with infra share",
-								rule: rule,
-							});
-						}
+router.post(
+	"/bank/merchantRule/interBank/addInfraShare",
+	jwtTokenAuth,
+	(req, res) => {
+		const { rule_id, fixed, percentage } = req.body;
+		const jwtusername = req.sign_creds.username;
+		Bank.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, bank) {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
 					}
-				);
-			}
-		}
-	);
-});
-
-router.post("/bank/merchantRule/interBank/createRule", function (req, res) {
-	const {
-		token,
-		name,
-		merchant_id,
-		active,
-		type,
-		ranges,
-		description,
-	} = req.body;
-	Bank.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				Merchant.findOne({ _id: merchant_id }, (err, merchant) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (merchant == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Merchant not found",
-						});
-					} else {
-						IBMerchantRule.findOne({ merchant_id, type }, (err, rule) => {
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else if (bank == null) {
+					res.status(200).json({
+						status: 0,
+						message:
+							"Token changed or user not valid. Try to login again or contact system administrator.",
+					});
+				} else {
+					IBMerchantRule.findOneAndUpdate(
+						{
+							_id: rule_id,
+						},
+						{
+							infra_approve_status: 3,
+							"infra_share.fixed": fixed,
+							"infra_share.percentage": percentage,
+						},
+						{ new: true },
+						(err, rule) => {
 							if (err) {
 								console.log(err);
 								var message = err;
@@ -1561,72 +1513,153 @@ router.post("/bank/merchantRule/interBank/createRule", function (req, res) {
 									status: 0,
 									message: message,
 								});
-							} else if (rule != null) {
+							} else if (rule == null) {
 								res.status(200).json({
 									status: 0,
-									message: "Rule already exist.",
+									message: "Merchant Rule not found.",
 								});
 							} else {
-								let merchantRule = new IBMerchantRule();
-								merchantRule.name = name;
-								merchantRule.merchant_id = merchant_id;
-								merchantRule.bank_id = bank._id;
-								merchantRule.active = active;
-								merchantRule.type = type;
-								merchantRule.description = description;
-								ranges.forEach((range) => {
-									var { trans_from, trans_to, fixed, percentage } = range;
-									merchantRule.ranges.push({
-										trans_from: trans_from,
-										trans_to: trans_to,
-										fixed: fixed,
-										percentage: percentage,
-									});
-								});
-								merchantRule.save((err, rule) => {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else {
-										let content =
-											"<p>New rule-" +
-											name +
-											" has been added for merchant " +
-											merchant.name +
-											" by your bank in E-Wallet application</p><p>&nbsp;</p>";
-										sendMail(content, "New Merchant Rule Added", bank.email);
-										sendMail(content, "New Rule Added", merchant.email);
-										let content2 =
-											" E-Wallet: New rule-" +
-											name +
-											" has been added for merchant " +
-											merchant.name;
-										sendSMS(content2, bank.mobile);
-										sendSMS(content2, merchant.mobile);
-
-										res.status(200).json({
-											status: 1,
-											message:
-												"Merchant Rule " + name + " created successfully",
-											rule: rule,
-										});
-									}
+								res.status(200).json({
+									status: 1,
+									message:
+										"Merchant Rule " +
+										rule.name +
+										" successfully updated with infra share",
+									rule: rule,
 								});
 							}
-						});
-					}
-				});
+						}
+					);
+				}
 			}
-		}
-	);
-});
+		);
+	}
+);
+
+router.post(
+	"/bank/merchantRule/interBank/createRule",
+	jwtTokenAuth,
+	(req, res) => {
+		const { name, merchant_id, active, type, ranges, description } = req.body;
+		const jwtusername = req.sign_creds.username;
+		Bank.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, bank) {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else if (bank == null) {
+					res.status(200).json({
+						status: 0,
+						message:
+							"Token changed or user not valid. Try to login again or contact system administrator.",
+					});
+				} else {
+					Merchant.findOne({ _id: merchant_id }, (err, merchant) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (merchant == null) {
+							res.status(200).json({
+								status: 0,
+								message: "Merchant not found",
+							});
+						} else {
+							IBMerchantRule.findOne({ merchant_id, type }, (err, rule) => {
+								if (err) {
+									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message,
+									});
+								} else if (rule != null) {
+									res.status(200).json({
+										status: 0,
+										message: "Rule already exist.",
+									});
+								} else {
+									let merchantRule = new IBMerchantRule();
+									merchantRule.name = name;
+									merchantRule.merchant_id = merchant_id;
+									merchantRule.bank_id = bank._id;
+									merchantRule.active = active;
+									merchantRule.type = type;
+									merchantRule.description = description;
+									ranges.forEach((range) => {
+										var { trans_from, trans_to, fixed, percentage } = range;
+										merchantRule.ranges.push({
+											trans_from: trans_from,
+											trans_to: trans_to,
+											fixed: fixed,
+											percentage: percentage,
+										});
+									});
+									merchantRule.save((err, rule) => {
+										if (err) {
+											console.log(err);
+											var message = err;
+											if (err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+											});
+										} else {
+											let content =
+												"<p>New rule-" +
+												name +
+												" has been added for merchant " +
+												merchant.name +
+												" by your bank in E-Wallet application</p><p>&nbsp;</p>";
+											sendMail(content, "New Merchant Rule Added", bank.email);
+											sendMail(content, "New Rule Added", merchant.email);
+											let content2 =
+												" E-Wallet: New rule-" +
+												name +
+												" has been added for merchant " +
+												merchant.name;
+											sendSMS(content2, bank.mobile);
+											sendSMS(content2, merchant.mobile);
+
+											res.status(200).json({
+												status: 1,
+												message:
+													"Merchant Rule " + name + " created successfully",
+												rule: rule,
+											});
+										}
+									});
+								}
+							});
+						}
+					});
+				}
+			}
+		);
+	}
+);
 
 router.post("/merchantCashier/checkMerchantFee", jwtTokenAuth, (req, res) => {
 	var { amount } = req.body;
@@ -1778,98 +1811,95 @@ router.post("/partnerCashier/checkMerchantFee", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/bank/merchantRule/updatePartnersShare", function (req, res) {
-	var {
-		token,
-		rule_id,
-		branch_share,
-		partner_share,
-		specific_branch_share,
-		specific_partner_share,
-	} = req.body;
-	if (!specific_partner_share) {
-		specific_partner_share = [];
-	}
-	Bank.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				MerchantRule.findOneAndUpdate(
-					{
-						_id: rule_id,
-					},
-					{
-						branch_share: branch_share,
-						specific_branch_share: specific_branch_share,
-						partner_share: partner_share,
-						specific_partner_share: specific_partner_share,
-					},
-					{ new: true },
-					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Merchant RUle not found.",
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								message:
-									"Merchant Rule " +
-									rule.name +
-									" successfully updated with branch and partner share",
-								rule: rule,
-							});
-						}
-					}
-				);
-			}
+router.post(
+	"/bank/merchantRule/updatePartnersShare",
+	jwtTokenAuth,
+	(req, res) => {
+		var {
+			rule_id,
+			branch_share,
+			partner_share,
+			specific_branch_share,
+			specific_partner_share,
+		} = req.body;
+		if (!specific_partner_share) {
+			specific_partner_share = [];
 		}
-	);
-});
+		const jwtusername = req.sign_creds.username;
+		Bank.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, bank) {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else if (bank == null) {
+					res.status(200).json({
+						status: 0,
+						message:
+							"Token changed or user not valid. Try to login again or contact system administrator.",
+					});
+				} else {
+					MerchantRule.findOneAndUpdate(
+						{
+							_id: rule_id,
+						},
+						{
+							branch_share: branch_share,
+							specific_branch_share: specific_branch_share,
+							partner_share: partner_share,
+							specific_partner_share: specific_partner_share,
+						},
+						{ new: true },
+						(err, rule) => {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else if (rule == null) {
+								res.status(200).json({
+									status: 0,
+									message: "Merchant RUle not found.",
+								});
+							} else {
+								res.status(200).json({
+									status: 1,
+									message:
+										"Merchant Rule " +
+										rule.name +
+										" successfully updated with branch and partner share",
+									rule: rule,
+								});
+							}
+						}
+					);
+				}
+			}
+		);
+	}
+);
 
-router.post("/bank/merchantRule/createRule", function (req, res) {
-	const {
-		token,
-		name,
-		merchant_id,
-		active,
-		type,
-		ranges,
-		description,
-	} = req.body;
+router.post("/bank/merchantRule/createRule", jwtTokenAuth, (req, res) => {
+	const { name, merchant_id, active, type, ranges, description } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -1985,11 +2015,12 @@ router.post("/bank/merchantRule/createRule", function (req, res) {
 	);
 });
 
-router.post("/bank/merchantRule/addInfraShare", function (req, res) {
-	const { token, rule_id, fixed, percentage } = req.body;
+router.post("/bank/merchantRule/addInfraShare", jwtTokenAuth, (req, res) => {
+	const { rule_id, fixed, percentage } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -2053,11 +2084,12 @@ router.post("/bank/merchantRule/addInfraShare", function (req, res) {
 	);
 });
 
-router.post("/bank/merchantRule/editRule", function (req, res) {
-	const { token, rule_id, name, active, description, ranges } = req.body;
+router.post("/bank/merchantRule/editRule", jwtTokenAuth, (req, res) => {
+	const { rule_id, name, active, description, ranges } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -2162,11 +2194,12 @@ router.post("/bank/merchantRule/editRule", function (req, res) {
 	);
 });
 
-router.post("/bank/merchantRule/editInfraShare", function (req, res) {
-	const { token, rule_id, fixed, percentage } = req.body;
+router.post("/bank/merchantRule/editInfraShare", jwtTokenAuth, (req, res) => {
+	const { rule_id, fixed, percentage } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -2309,8 +2342,8 @@ router.post("/merchant/getRules", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/bank/merchantRule/getAll", function (req, res) {
-	const { token, page, merchant_id } = req.body;
+router.post("/bank/merchantRule/getAll", jwtTokenAuth, (req, res) => {
+	const { page, merchant_id } = req.body;
 	var query = [];
 	if (page == "fee") {
 		query = [{ type: "NWM-F" }, { type: "WM-F" }, { type: "M-F" }];
@@ -2323,9 +2356,10 @@ router.post("/bank/merchantRule/getAll", function (req, res) {
 		});
 		return;
 	}
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -2373,8 +2407,8 @@ router.post("/bank/merchantRule/getAll", function (req, res) {
 	);
 });
 
-router.post("/infra/merchantRule/getAll", function (req, res) {
-	const { token, page, merchant_id } = req.body;
+router.post("/infra/merchantRule/getAll", jwtTokenAuth, (req, res) => {
+	const { page, merchant_id } = req.body;
 	var query = [];
 	if (page == "fee") {
 		query = [{ type: "NWM-F" }, { type: "WM-F" }, { type: "M-F" }];
@@ -2387,9 +2421,10 @@ router.post("/infra/merchantRule/getAll", function (req, res) {
 		});
 		return;
 	}
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, infra) {
@@ -2762,11 +2797,12 @@ router.post("/merchant/merchantRule/decline", jwtTokenAuth, function (
 	);
 });
 
-router.post("/infra/merchantRule/approve", function (req, res) {
-	const { token, rule_id } = req.body;
+router.post("/infra/merchantRule/approve", jwtTokenAuth, (req, res) => {
+	const { rule_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, infra) {
@@ -2947,11 +2983,12 @@ router.post("/infra/merchantRule/approve", function (req, res) {
 	);
 });
 
-router.post("/infra/merchantRule/decline", function (req, res) {
-	const { token, rule_id } = req.body;
+router.post("/infra/merchantRule/decline", jwtTokenAuth, (req, res) => {
+	const { rule_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, infra) {
@@ -3060,11 +3097,12 @@ router.post("/infra/merchantRule/decline", function (req, res) {
 	);
 });
 
-router.post("/cashier/checkMerchantFee", (req, res) => {
-	var { token, merchant_id, amount } = req.body;
+router.post("/cashier/checkMerchantFee", jwtTokenAuth, (req, res) => {
+	var { merchant_id, amount } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {

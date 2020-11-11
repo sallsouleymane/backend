@@ -9,6 +9,7 @@ const sendMail = require("./utils/sendMail");
 const makeotp = require("./utils/makeotp");
 const getTypeClass = require("./utils/getTypeClass");
 const getWalletIds = require("./utils/getWalletIds");
+const jwtTokenAuth = require("./JWTTokenAuth");
 
 //services
 const blockchain = require("../services/Blockchain.js");
@@ -31,8 +32,8 @@ const MerchantSettings = require("../models/merchant/MerchantSettings");
 const PartnerBranch = require("../models/partner/Branch");
 const transferToOperational = require("./transactions/transferToOperational");
 
-router.post("/cashier/sendToOperational", function (req, res) {
-	const { token, wallet_id, amount, is_inclusive } = req.body;
+router.post("/cashier/sendToOperational", jwtTokenAuth, function (req, res) {
+	const { wallet_id, amount, is_inclusive } = req.body;
 
 	var code = wallet_id.substr(0, 2);
 	if (code != "BR" && code != "PB") {
@@ -42,9 +43,10 @@ router.post("/cashier/sendToOperational", function (req, res) {
 		});
 		return;
 	}
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {
@@ -287,11 +289,14 @@ router.post("/cashier/sendToOperational", function (req, res) {
 	);
 });
 
-router.post("/cashier/getTransactionHistory", function (req, res) {
-	const { token } = req.body;
+router.post("/cashier/getTransactionHistory", jwtTokenAuth, function (
+	req,
+	res
+) {
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {
@@ -369,11 +374,11 @@ router.post("/cashier/getTransactionHistory", function (req, res) {
 	);
 });
 
-router.post("/cashier/listMerchants", function (req, res) {
-	var { token } = req.body;
+router.post("/cashier/listMerchants", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 		},
 		function (err, cashier) {
 			if (err) {
@@ -417,99 +422,111 @@ router.post("/cashier/listMerchants", function (req, res) {
 	);
 });
 
-router.post("/cashier/getUser", function (req, res) {
-	const { token, mobile } = req.body;
-	Cashier.findOne({ token }, function (err, cashier) {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else if (cashier == null) {
-			res.status(200).json({
-				status: 0,
-				message: "You are either not authorised or not logged in.",
-			});
-		} else {
-			User.findOne({ mobile }, "-password", function (err, user) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (user == null) {
-					res.status(200).json({
-						status: 0,
-						message: "User not found",
-					});
-				} else {
-					res.status(200).json({
-						status: 1,
-						data: user,
-					});
+router.post("/cashier/getUser", jwtTokenAuth, function (req, res) {
+	const { mobile } = req.body;
+	Cashier.findOne(
+		{
+			username: jwtusername,
+		},
+		function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
 				}
-			});
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "You are either not authorised or not logged in.",
+				});
+			} else {
+				User.findOne({ mobile }, "-password", function (err, user) {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (user == null) {
+						res.status(200).json({
+							status: 0,
+							message: "User not found",
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							data: user,
+						});
+					}
+				});
+			}
 		}
-	});
+	);
 });
 
-router.post("/cashier/getMerchantPenaltyRule", function (req, res) {
-	const { token, merchant_id } = req.body;
-	Cashier.findOne({ token }, function (err, cashier) {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else if (cashier == null) {
-			res.status(200).json({
-				status: 0,
-				message: "You are either not authorised or not logged in.",
-			});
-		} else {
-			MerchantSettings.findOne({ merchant_id: merchant_id }, function (
-				err,
-				setting
-			) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else {
-					res.status(200).json({
-						status: 1,
-						rule: setting.penalty_rule,
-					});
+router.post("/cashier/getMerchantPenaltyRule", jwtTokenAuth, function (
+	req,
+	res
+) {
+	const { merchant_id } = req.body;
+	Cashier.findOne(
+		{
+			username: jwtusername,
+		},
+		function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
 				}
-			});
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "You are either not authorised or not logged in.",
+				});
+			} else {
+				MerchantSettings.findOne({ merchant_id: merchant_id }, function (
+					err,
+					setting
+				) {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							rule: setting.penalty_rule,
+						});
+					}
+				});
+			}
 		}
-	});
+	);
 });
 
-router.post("/cashier/createUser", function (req, res) {
+router.post("/cashier/createUser", jwtTokenAuth, function (req, res) {
 	const {
-		token,
 		name,
 		last_name,
 		mobile,
@@ -550,73 +567,77 @@ router.post("/cashier/createUser", function (req, res) {
 		docs_hash: docs_hash,
 		status: 2,
 	};
-	Cashier.findOne({ token }, function (err, cashier) {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else if (cashier == null) {
-			res.status(200).json({
-				status: 0,
-				message: "You are either not authorised or not logged in.",
-			});
-		} else {
-			User.create(userDetails, function (err) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else {
-					let content =
-						"<p>You are added as a User in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-						config.mainIP +
-						"/user/" +
-						bank +
-						"'>http://" +
-						config.mainIP +
-						"/user/" +
-						bank +
-						"</a></p><p><p>Your username: " +
-						mobile +
-						"</p><p>Your password: " +
-						password +
-						"</p>";
-					sendMail(content, "Ewallet account created", email);
-					let content2 =
-						"You are added as a User in E-Wallet application Login URL: http://" +
-						config.mainIP +
-						"/user/" +
-						bank +
-						" Your username: " +
-						mobile +
-						" Your password: " +
-						password;
-					sendSMS(content2, mobile);
-					res.status(200).json({
-						status: 1,
-						message: "User created",
-					});
+	Cashier.findOne(
+		{
+			username: jwtusername,
+		},
+		function (err, cashier) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
 				}
-			});
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (cashier == null) {
+				res.status(200).json({
+					status: 0,
+					message: "You are either not authorised or not logged in.",
+				});
+			} else {
+				User.create(userDetails, function (err) {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						let content =
+							"<p>You are added as a User in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+							config.mainIP +
+							"/user/" +
+							bank +
+							"'>http://" +
+							config.mainIP +
+							"/user/" +
+							bank +
+							"</a></p><p><p>Your username: " +
+							mobile +
+							"</p><p>Your password: " +
+							password +
+							"</p>";
+						sendMail(content, "Ewallet account created", email);
+						let content2 =
+							"You are added as a User in E-Wallet application Login URL: http://" +
+							config.mainIP +
+							"/user/" +
+							bank +
+							" Your username: " +
+							mobile +
+							" Your password: " +
+							password;
+						sendSMS(content2, mobile);
+						res.status(200).json({
+							status: 1,
+							message: "User created",
+						});
+					}
+				});
+			}
 		}
-	});
+	);
 });
 
-router.post("/cashier/editUser", function (req, res) {
+router.post("/cashier/editUser", jwtTokenAuth, function (req, res) {
 	const {
-		token,
 		name,
 		last_name,
 		mobile,
@@ -654,57 +675,11 @@ router.post("/cashier/editUser", function (req, res) {
 			delete userDetails[detail];
 		}
 	}
-	Cashier.findOne({ token }, function (err, cashier) {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else if (cashier == null) {
-			res.status(200).json({
-				status: 0,
-				message: "You are either not authorised or not logged in.",
-			});
-		} else {
-			User.findOneAndUpdate({ mobile }, { $set: userDetails }, function (
-				err,
-				user
-			) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (user == null) {
-					res.status(200).json({
-						status: 0,
-						message: "User not found",
-					});
-				} else {
-					res.status(200).json({
-						status: 1,
-						message: "edit successfull",
-					});
-				}
-			});
-		}
-	});
-});
-
-router.post("/cashier/activateUser", function (req, res) {
-	try {
-		const { token, mobile } = req.body;
-		Cashier.findOne({ token }, function (err, cashier) {
+	Cashier.findOne(
+		{
+			username: jwtusername,
+		},
+		function (err, cashier) {
 			if (err) {
 				console.log(err);
 				var message = err;
@@ -721,7 +696,10 @@ router.post("/cashier/activateUser", function (req, res) {
 					message: "You are either not authorised or not logged in.",
 				});
 			} else {
-				Bank.findOne({ _id: cashier.bank_id }, async (err, bank) => {
+				User.findOneAndUpdate({ mobile }, { $set: userDetails }, function (
+					err,
+					user
+				) {
 					if (err) {
 						console.log(err);
 						var message = err;
@@ -732,90 +710,147 @@ router.post("/cashier/activateUser", function (req, res) {
 							status: 0,
 							message: message,
 						});
-					} else if (cashier == null) {
+					} else if (user == null) {
 						res.status(200).json({
 							status: 0,
-							message: "You are either not authorised or not logged in.",
+							message: "User not found",
 						});
 					} else {
-						try {
-							let wallet_id = getWalletIds("user", mobile, bank.bcode);
-							let result = await blockchain.createWallet([wallet_id]);
-							if (result != "" && !result.includes("wallet already exists")) {
-								console.log(result);
-								res.status(200).json({
-									status: 0,
-									message:
-										"Blockchain service was unavailable. Please try again.",
-									result: result,
-								});
-							} else {
-								User.findOneAndUpdate(
-									{ mobile },
-									{
-										$set: {
-											status: 1,
-											wallet_id: wallet_id,
-										},
-									},
-									function (err, user) {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
-											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else if (user == null) {
-											res.status(200).json({
-												status: 0,
-												message: "User not found",
-											});
-										} else {
-											let content =
-												"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-												config.mainIP +
-												"/user";
-											"'>http://" +
-												config.mainIP +
-												"/user" +
-												"</a></p><p><p>Your username: " +
-												mobile +
-												"</p><p>Your password: " +
-												user.password +
-												"</p>";
-											sendMail(content, "Approved Ewallet Account", user.email);
-											let content2 =
-												"Your account is activated. Login URL: http://" +
-												config.mainIP +
-												"/user" +
-												" Your username: " +
-												mobile +
-												" Your password: " +
-												user.password;
-											sendSMS(content2, mobile);
-											res.status(200).json({
-												status: 1,
-												message: result.toString(),
-											});
-										}
-									}
-								);
-							}
-						} catch (err) {
-							console.log(err);
-							res.status(200).json({
-								status: 0,
-								message: err.message,
-							});
-						}
+						res.status(200).json({
+							status: 1,
+							message: "edit successfull",
+						});
 					}
 				});
 			}
-		});
+		}
+	);
+});
+
+router.post("/cashier/activateUser", jwtTokenAuth, function (req, res) {
+	try {
+		const { mobile } = req.body;
+		Cashier.findOne(
+			{
+				username: jwtusername,
+			},
+			function (err, cashier) {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else if (cashier == null) {
+					res.status(200).json({
+						status: 0,
+						message: "You are either not authorised or not logged in.",
+					});
+				} else {
+					Bank.findOne({ _id: cashier.bank_id }, async (err, bank) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (cashier == null) {
+							res.status(200).json({
+								status: 0,
+								message: "You are either not authorised or not logged in.",
+							});
+						} else {
+							try {
+								let wallet_id = getWalletIds("user", mobile, bank.bcode);
+								let result = await blockchain.createWallet([wallet_id]);
+								if (result != "" && !result.includes("wallet already exists")) {
+									console.log(result);
+									res.status(200).json({
+										status: 0,
+										message:
+											"Blockchain service was unavailable. Please try again.",
+										result: result,
+									});
+								} else {
+									User.findOneAndUpdate(
+										{ mobile },
+										{
+											$set: {
+												status: 1,
+												wallet_id: wallet_id,
+											},
+										},
+										function (err, user) {
+											if (err) {
+												console.log(err);
+												var message = err;
+												if (err.message) {
+													message = err.message;
+												}
+												res.status(200).json({
+													status: 0,
+													message: message,
+												});
+											} else if (user == null) {
+												res.status(200).json({
+													status: 0,
+													message: "User not found",
+												});
+											} else {
+												let content =
+													"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+													config.mainIP +
+													"/user";
+												"'>http://" +
+													config.mainIP +
+													"/user" +
+													"</a></p><p><p>Your username: " +
+													mobile +
+													"</p><p>Your password: " +
+													user.password +
+													"</p>";
+												sendMail(
+													content,
+													"Approved Ewallet Account",
+													user.email
+												);
+												let content2 =
+													"Your account is activated. Login URL: http://" +
+													config.mainIP +
+													"/user" +
+													" Your username: " +
+													mobile +
+													" Your password: " +
+													user.password;
+												sendSMS(content2, mobile);
+												res.status(200).json({
+													status: 1,
+													message: result.toString(),
+												});
+											}
+										}
+									);
+								}
+							} catch (err) {
+								console.log(err);
+								res.status(200).json({
+									status: 0,
+									message: err.message,
+								});
+							}
+						}
+					});
+				}
+			}
+		);
 	} catch (err) {
 		console.log(err);
 		var message = err.toString();
@@ -830,11 +865,11 @@ router.post("/cashier/activateUser", function (req, res) {
 	}
 });
 
-router.post("/getCashierDashStats", function (req, res) {
-	const { token } = req.body;
+router.post("/getCashierDashStats", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -874,11 +909,11 @@ router.post("/getCashierDashStats", function (req, res) {
 	);
 });
 
-router.post("/getCashierIncomingTransfer", function (req, res) {
-	const { token } = req.body;
+router.post("/getCashierIncomingTransfer", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -916,11 +951,12 @@ router.post("/getCashierIncomingTransfer", function (req, res) {
 	);
 });
 
-router.post("/cashierAcceptIncoming", function (req, res) {
-	const { token, item } = req.body;
+router.post("/cashierAcceptIncoming", jwtTokenAuth, function (req, res) {
+	const { item } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1009,17 +1045,17 @@ router.post("/cashierAcceptIncoming", function (req, res) {
 	);
 });
 
-router.post("/getClosingBalance", function (req, res) {
+router.post("/getClosingBalance", jwtTokenAuth, function (req, res) {
 	var today = new Date();
 	today = today.toISOString();
 	var s = today.split("T");
 	var start = s[0] + "T00:00:00.000Z";
 	var end = s[0] + "T23:59:59.999Z";
 
-	const { token } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -1062,11 +1098,11 @@ router.post("/getClosingBalance", function (req, res) {
 	);
 });
 
-router.post("/openCashierBalance", (req, res) => {
-	const { token } = req.body;
+router.post("/openCashierBalance", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, ba) {
@@ -1126,11 +1162,12 @@ router.post("/openCashierBalance", (req, res) => {
 	);
 });
 
-router.post("/addClosingBalance", (req, res) => {
-	const { denomination, total, token, note } = req.body;
+router.post("/addClosingBalance", jwtTokenAuth, function (req, res) {
+	const { denomination, total, note } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, otpd) {
@@ -1194,12 +1231,11 @@ router.post("/addClosingBalance", (req, res) => {
 	);
 });
 
-router.post("/getCashierTransfers", function (req, res) {
-	const { token } = req.body;
-
+router.post("/getCashierTransfers", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, f) {
@@ -1233,14 +1269,15 @@ router.post("/getCashierTransfers", function (req, res) {
 	);
 });
 
-router.post("/cashierCancelTransfer", function (req, res) {
-	const { otpId, token, otp, transfer_id } = req.body;
+router.post("/cashierCancelTransfer", jwtTokenAuth, function (req, res) {
+	const { otpId, otp, transfer_id } = req.body;
 
 	// const transactionCode = makeid(8);
 
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, f) {
@@ -1362,18 +1399,17 @@ router.post("/cashierCancelTransfer", function (req, res) {
 	); //branch
 });
 
-router.post("/getCashierTransLimit", function (req, res) {
+router.post("/getCashierTransLimit", jwtTokenAuth, function (req, res) {
 	var today = new Date();
 	today = today.toISOString();
 	var s = today.split("T");
 	var start = s[0] + "T00:00:00.000Z";
 	var end = s[0] + "T23:59:59.999Z";
 
-	const { token } = req.body;
-
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, t1) {
@@ -1411,12 +1447,11 @@ router.post("/getCashierTransLimit", function (req, res) {
 	);
 });
 
-router.post("/getCashier", function (req, res) {
-	const { token } = req.body;
-
+router.post("/getCashier", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, t1) {
@@ -1475,12 +1510,13 @@ router.post("/getCashier", function (req, res) {
 	);
 });
 
-router.post("/checkCashierFee", function (req, res) {
-	var { token, amount, trans_type } = req.body;
+router.post("/checkCashierFee", jwtTokenAuth, function (req, res) {
+	var { amount, trans_type } = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {
@@ -1544,12 +1580,13 @@ router.post("/checkCashierFee", function (req, res) {
 	);
 });
 
-router.post("/cashierVerifyOTPClaim", function (req, res) {
-	const { transferCode, token, otp } = req.body;
+router.post("/cashierVerifyOTPClaim", jwtTokenAuth, function (req, res) {
+	const { transferCode, otp } = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, f) {
@@ -1604,7 +1641,7 @@ router.post("/cashierVerifyOTPClaim", function (req, res) {
 	);
 });
 
-router.post("/cashierSendMoney", function (req, res) {
+router.post("/cashierSendMoney", jwtTokenAuth, function (req, res) {
 	var today = new Date();
 	today = today.toISOString();
 	var s = today.split("T");
@@ -1613,7 +1650,6 @@ router.post("/cashierSendMoney", function (req, res) {
 	var now = new Date().getTime();
 
 	const {
-		token,
 		givenname,
 		familyname,
 		note,
@@ -1646,9 +1682,10 @@ router.post("/cashierSendMoney", function (req, res) {
 
 	const transactionCode = makeid(8);
 
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, f) {
@@ -2208,7 +2245,7 @@ router.post("/cashierSendMoney", function (req, res) {
 	);
 });
 
-router.post("/cashier/sendMoneyToWallet", function (req, res) {
+router.post("/cashier/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 	var today = new Date();
 	today = today.toISOString();
 	var s = today.split("T");
@@ -2217,7 +2254,6 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 	var now = new Date().getTime();
 
 	const {
-		token,
 		givenname,
 		familyname,
 		note,
@@ -2238,9 +2274,10 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 		isInclusive,
 	} = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {
@@ -2853,10 +2890,10 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 	);
 });
 
-router.post("/cashierSendMoneyPending", function (req, res) {
+router.post("/cashierSendMoneyPending", jwtTokenAuth, function (req, res) {
 	const {
 		otpId,
-		token,
+
 		otp,
 		givenname,
 		familyname,
@@ -2888,9 +2925,10 @@ router.post("/cashierSendMoneyPending", function (req, res) {
 		receiverIdentificationAmount,
 	} = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, f) {
@@ -2986,14 +3024,15 @@ router.post("/cashierSendMoneyPending", function (req, res) {
 	);
 });
 
-router.post("/cashierTransferMoney", function (req, res) {
-	const { otpId, token, otp, amount, receiver_id, receiver_name } = req.body;
+router.post("/cashierTransferMoney", jwtTokenAuth, function (req, res) {
+	const { otpId, otp, amount, receiver_id, receiver_name } = req.body;
 
 	// const transactionCode = makeid(8);
 
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, f) {
@@ -3082,12 +3121,13 @@ router.post("/cashierTransferMoney", function (req, res) {
 	); //branch
 });
 
-router.post("/cashierVerifyClaim", function (req, res) {
-	const { otpId, token, otp } = req.body;
+router.post("/cashierVerifyClaim", jwtTokenAuth, function (req, res) {
+	const { otpId, otp } = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, f) {
@@ -3142,7 +3182,7 @@ router.post("/cashierVerifyClaim", function (req, res) {
 	);
 });
 
-router.post("/cashierClaimMoney", function (req, res) {
+router.post("/cashierClaimMoney", jwtTokenAuth, function (req, res) {
 	var today = new Date();
 	today = today.toISOString();
 	var s = today.split("T");
@@ -3150,7 +3190,6 @@ router.post("/cashierClaimMoney", function (req, res) {
 	var end = s[0] + "T23:59:59.999Z";
 
 	const {
-		token,
 		transferCode,
 		proof,
 		givenname,
@@ -3160,9 +3199,10 @@ router.post("/cashierClaimMoney", function (req, res) {
 		mobile,
 	} = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, f) {
@@ -3638,12 +3678,13 @@ router.post("/cashierClaimMoney", function (req, res) {
 	);
 });
 
-router.post("/getClaimMoney", function (req, res) {
-	const { transferCode, token } = req.body;
+router.post("/getClaimMoney", jwtTokenAuth, function (req, res) {
+	const { transferCode } = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, f) {

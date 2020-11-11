@@ -9,6 +9,7 @@ const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
 const getTypeClass = require("./utils/getTypeClass");
 const makeotp = require("./utils/makeotp");
+const jwtsign = require("./utils/jwtsign");
 
 const jwtTokenAuth = require("./JWTTokenAuth");
 
@@ -105,60 +106,11 @@ router.post("/:user/transferMasterToOp", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/transferMasterToOp", function (req, res) {
-	const { token, amount } = req.body;
-	const user = req.query.user;
-	const User = getTypeClass(user);
-	User.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				const masterWallet = user.wallet_ids.master;
-				const opWallet = user.wallet_ids.operational;
-				const trans = {
-					from: masterWallet,
-					to: opWallet,
-					amount: Number(amount),
-					note: "Master to operational",
-					email1: user.email,
-					mobile1: user.mobile,
-					from_name: user.name,
-					to_name: user.name,
-					master_code: "",
-					child_code: "",
-				};
-				initiateTransfer(trans)
-					.then((result) => {
-						res.status(200).json(result);
-					})
-					.catch((err) => {
-						console.log(err);
-						res.status(200).json({
-							status: 0,
-							message: err.message,
-						});
-					});
-			}
-		}
-	);
+	res.status(200).json({
+		status: 0,
+		message: "This API is removed",
+		Replace: "/:user/transferMasterToOp",
+	});
 });
 
 router.post("/getPartner/:code", async (req, res) => {
@@ -240,7 +192,7 @@ router.post("/getPartnerBranchByName", function (req, res) {
 });
 
 router.post("/:user/getWalletBalance", jwtTokenAuth, function (req, res) {
-	const { page } = req.query;
+	const { page, wallet_id } = req.query;
 	const user = req.params.user;
 	const jwtusername = req.sign_creds.username;
 	const Type = getTypeClass(user);
@@ -267,22 +219,39 @@ router.post("/:user/getWalletBalance", jwtTokenAuth, function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				let wallet_id = b.wallet_ids[page];
+				if (wallet_id != null && wallet_id != undefined && wallet_id != "") {
+					getBalance(wallet_id)
+						.then(function (result) {
+							res.status(200).json({
+								status: 1,
+								balance: result,
+							});
+						})
+						.catch((err) => {
+							console.log(err);
+							res.status(200).json({
+								status: 0,
+								message: err.message,
+							});
+						});
+				} else {
+					let wallet_id = b.wallet_ids[page];
 
-				getBalance(wallet_id)
-					.then(function (result) {
-						res.status(200).json({
-							status: 1,
-							balance: result,
+					getBalance(wallet_id)
+						.then(function (result) {
+							res.status(200).json({
+								status: 1,
+								balance: result,
+							});
+						})
+						.catch((err) => {
+							console.log(err);
+							res.status(200).json({
+								status: 0,
+								message: err.message,
+							});
 						});
-					})
-					.catch((err) => {
-						console.log(err);
-						res.status(200).json({
-							status: 0,
-							message: err.message,
-						});
-					});
+				}
 			}
 		}
 	);
@@ -653,80 +622,24 @@ router.post("/:user/changePassword", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.get("/getWalletBalance", function (req, res) {
-	const { type, page, token, wallet_id } = req.query;
-
-	const typeClass = getTypeClass(type);
-	typeClass.findOne(
-		{
-			token,
-			status: 1,
-		},
-		function (e, b) {
-			if (e) {
-				console.log(e);
-				var message = e;
-				if (e.message) {
-					message = e.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (b == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				if (wallet_id != null && wallet_id != undefined && wallet_id != "") {
-					getBalance(wallet_id)
-						.then(function (result) {
-							res.status(200).json({
-								status: 1,
-								balance: result,
-							});
-						})
-						.catch((err) => {
-							console.log(err);
-							res.status(200).json({
-								status: 0,
-								message: err.message,
-							});
-						});
-				} else {
-					let wallet_id = b.wallet_ids[page];
-
-					getBalance(wallet_id)
-						.then(function (result) {
-							res.status(200).json({
-								status: 1,
-								balance: result,
-							});
-						})
-						.catch((err) => {
-							console.log(err);
-							res.status(200).json({
-								status: 0,
-								message: err.message,
-							});
-						});
-				}
-			}
-		}
-	);
+router.get("/getWalletBalance", jwtTokenAuth, function (req, res) {
+	res.status(200).json({
+		status: 0,
+		message: "This API is removed",
+		replcae: "/:user/getWalletBalance - {page, wallet_id}",
+	});
 });
 
-router.post("/getOne", function (req, res) {
-	const { page, type, page_id, token } = req.body;
+router.post("/getOne", jwtTokenAuth, function (req, res) {
+	const { page, type, page_id } = req.body;
 
 	const pageClass = getTypeClass(page);
 	const typeClass = getTypeClass(type);
+	const username = req.sign_creds.username;
 
 	typeClass.findOne(
 		{
-			token,
+			username,
 			status: 1,
 		},
 		function (err, t1) {
@@ -780,15 +693,15 @@ router.post("/getOne", function (req, res) {
 	);
 });
 
-router.post("/getAll", function (req, res) {
-	const { page, type, where, token } = req.body;
+router.post("/getAll", jwtTokenAuth, function (req, res) {
+	const { page, type, where } = req.body;
 
 	const pageClass = getTypeClass(page);
 	const typeClass = getTypeClass(type);
-
+	const username = req.sign_creds.username;
 	typeClass.findOne(
 		{
-			token,
+			username,
 			status: 1,
 		},
 		function (err, t1) {
@@ -1029,7 +942,6 @@ router.get("/showBalance", (req, res) => {
 });
 
 router.post("/createRules", (req, res) => {
-	//fee
 	let data = new Fee();
 	const {
 		name,
@@ -1041,7 +953,6 @@ router.post("/createRules", (req, res) => {
 	} = req.body;
 	Infra.findOne(
 		{
-			// token,
 			status: 1,
 		},
 		function (err, user) {
@@ -1146,7 +1057,6 @@ router.post("/editRule", (req, res) => {
 	const { name, trans_type, active, ranges, bank_id, rule_id } = req.body;
 	Infra.findOne(
 		{
-			// token,
 			status: 1,
 		},
 		function (err, user) {
@@ -1450,13 +1360,14 @@ router.post("/getWalletsMaster", function (req, res) {
 	);
 });
 
-router.post("/updateStatus", function (req, res) {
-	const { token, status, type_id, page, type } = req.body;
+router.post("/updateStatus", jwtTokenAuth, function (req, res) {
+	const { status, type_id, page, type } = req.body;
 	const pageClass = getTypeClass(page);
 	const typeClass = getTypeClass(type);
+	const username = req.sign_creds.username;
 	typeClass.findOne(
 		{
-			token,
+			username,
 			status: 1,
 		},
 		function (err, user) {
@@ -1537,7 +1448,6 @@ router.post("/declineFee", function (req, res) {
 	const { id } = req.body;
 	Bank.findOne(
 		{
-			// token,
 			status: 1,
 		},
 		function (err, user) {
@@ -1587,15 +1497,15 @@ router.post("/declineFee", function (req, res) {
 	);
 });
 
-router.put("/updateOne", function (req, res) {
-	const { page, type, page_id, updateData, token } = req.body;
+router.put("/updateOne", jwtTokenAuth, function (req, res) {
+	const { page, type, page_id, updateData } = req.body;
 
 	const pageClass = getTypeClass(page);
 	const typeClass = getTypeClass(type);
-
+	const username = req.sign_creds.username;
 	typeClass.findOne(
 		{
-			token,
+			username,
 			status: 1,
 		},
 		function (err, t1) {
@@ -1634,15 +1544,15 @@ router.put("/updateOne", function (req, res) {
 	);
 });
 
-router.put("/updateCashier", function (req, res) {
-	const { page, type, page_id, updateData, token } = req.body;
+router.put("/updateCashier", jwtTokenAuth, function (req, res) {
+	const { page, type, page_id, updateData } = req.body;
 
 	const pageClass = getTypeClass(page);
 	const typeClass = getTypeClass(type);
-
+	const username = req.sign_creds.username;
 	typeClass.findOne(
 		{
-			token,
+			username,
 			status: 1,
 		},
 		function (err, t1) {
@@ -2081,13 +1991,14 @@ router.post("/forgotPassword", function (req, res) {
 });
 /* Bank APIs end */
 
-router.post("/sendOTP", function (req, res) {
+router.post("/sendOTP", jwtTokenAuth, function (req, res) {
 	let data = new OTP();
-	const { token, page, type, email, mobile, txt } = req.body;
+	const { page, type, email, mobile, txt } = req.body;
 	const typeClass = getTypeClass(type);
+	const username = req.sign_creds.username;
 	typeClass.findOne(
 		{
-			token,
+			username,
 			status: 1,
 		},
 		function (err, user) {
@@ -2203,110 +2114,42 @@ router.post("/verifyOTP", function (req, res) {
 					message: "Invalid OTP!",
 				});
 			} else {
-				let token = makeid(10);
 				let page = Infra;
+				let userType = "infra";
 				if (ot.page == "bankForgotPassword") {
 					page = Bank;
+					userType = "bank";
 				} else if (ot.page == "branchForgotPassword") {
 					page = Branch;
+					userType = "branch";
 				} else if (ot.page == "cashierForgotPassword") {
 					page = BankUser;
+					userType = "cashier";
 				}
-				page.findByIdAndUpdate(
-					ot.user_id,
-					{
-						token: token,
-					},
-					(err) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								token: token,
-							});
-						}
-					}
-				);
+				let sign_creds = { username: username, type: userType };
+				const token = jwtsign(sign_creds);
+				res.status(200).json({
+					status: 1,
+					user: user,
+					token: token,
+				});
 			}
 		}
 	);
 });
 
 router.post("/InfraVrifyOTP", function (req, res) {
-	const { mobile, otp } = req.body;
-	OTP.findOne(
-		{
-			mobile,
-			otp,
-		},
-		function (err, ot) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (ot == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Invalid OTP!",
-				});
-			} else {
-				if (ot.otp == otp && ot.mobile == mobile) {
-					let token = makeid(10);
-					Infra.findByIdAndUpdate(
-						ot.user_id,
-						{
-							token: token,
-						},
-						(err) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else {
-								res.status(200).json({
-									status: 1,
-									token: token,
-								});
-							}
-						}
-					);
-				} else {
-					res.status(200).json({
-						status: 0,
-						message: "Invalid OTP!",
-					});
-				}
-			}
-		}
-	);
+	res.status(200).json({
+		status: 0,
+		message: "This API is removed",
+		replace: "/verifyOTP - {mobile, otp}",
+	});
 });
 
 router.post("/getRule", function (req, res) {
-	const { token, rule_id } = req.body;
+	const { rule_id } = req.body;
 	Infra.findOne(
 		{
-			// token,
 			status: 1,
 		},
 		function (err, user) {
@@ -2357,12 +2200,13 @@ router.post("/getRule", function (req, res) {
 	);
 });
 
-router.post("/getHistory", function (req, res) {
-	const { from, token, where } = req.body;
+router.post("/getHistory", jwtTokenAuth, function (req, res) {
+	const { from, where } = req.body;
 	const pageClass = getTypeClass(from);
+	const username = req.sign_creds.username;
 	pageClass.findOne(
 		{
-			token,
+			username,
 			status: 1,
 		},
 		function (err, f) {
@@ -2415,12 +2259,13 @@ router.post("/getHistory", function (req, res) {
 	);
 });
 
-router.post("/getCashierHistory", function (req, res) {
-	const { from, token, where } = req.body;
+router.post("/getCashierHistory", jwtTokenAuth, function (req, res) {
+	const { from, where } = req.body;
 	const pageClass = getTypeClass(from);
+	const username = req.sign_creds.username;
 	pageClass.findOne(
 		{
-			token,
+			username,
 			status: 1,
 		},
 		function (err, f) {
@@ -2465,12 +2310,13 @@ router.post("/getCashierHistory", function (req, res) {
 	);
 });
 
-router.post("/getBranchTransHistory", function (req, res) {
-	const { from, token, where } = req.body;
+router.post("/getBranchTransHistory", jwtTokenAuth, function (req, res) {
+	const { from, where } = req.body;
 	const pageClass = getTypeClass(from);
+	const username = req.sign_creds.username;
 	pageClass.findOne(
 		{
-			token,
+			username,
 			status: 1,
 		},
 		function (err, f) {
@@ -2530,12 +2376,13 @@ router.post("/getTransHistory", function (req, res) {
 		});
 });
 
-router.post("/getHistoryTotal", function (req, res) {
-	const { from, token } = req.body;
+router.post("/getHistoryTotal", jwtTokenAuth, function (req, res) {
+	const { from } = req.body;
 	const pageClass = getTypeClass(from);
+	const username = req.sign_creds.username;
 	pageClass.findOne(
 		{
-			token,
+			username,
 			status: 1,
 		},
 		function (err, f) {

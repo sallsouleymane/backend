@@ -1,10 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const jwt = require("jsonwebtoken");
-const secret = "jwt_secret_key_for_ewallet_of_32bit_string";
 
 //utils
-const makeid = require("./utils/idGenerator");
+const jwtsign = require("./utils/jwtsign");
 
 const Infra = require("../models/Infra");
 const User = require("../models/User");
@@ -21,19 +19,6 @@ const Partner = require("../models/partner/Partner");
 const PartnerBranch = require("../models/partner/Branch");
 const PartnerCashier = require("../models/partner/Cashier");
 const PartnerUser = require("../models/partner/User");
-
-function jwtsign(sign_creds) {
-	var token = jwt.sign(
-		{
-			sign_creds: sign_creds,
-		},
-		secret
-		// {
-		// 	expiresIn: "365d"
-		// }
-	);
-	return token;
-}
 
 router.post("/partnerCashier/login", function (req, res) {
 	const { username, password } = req.body;
@@ -64,7 +49,7 @@ router.post("/partnerCashier/login", function (req, res) {
 					message: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
-				let sign_creds = { username: username, password: password };
+				let sign_creds = { username: username, type: "partnerCashier" };
 				const token = jwtsign(sign_creds);
 				PartnerCashier.findOneAndUpdate(
 					{
@@ -153,7 +138,7 @@ router.post("/partnerBranch/login", function (req, res) {
 							});
 						} else {
 							let logo = partner.logo;
-							let sign_creds = { username: username, password: password };
+							let sign_creds = { username: username, type: "partnerBranch" };
 							const token = jwtsign(sign_creds);
 
 							res.status(200).json({
@@ -166,7 +151,7 @@ router.post("/partnerBranch/login", function (req, res) {
 								mobile: branch.mobile,
 								logo: logo,
 								id: branch._id,
-								partner_id: partner._id
+								partner_id: partner._id,
 							});
 						}
 					}
@@ -205,7 +190,7 @@ router.post("/partner/login", function (req, res) {
 					message: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
-				let sign_creds = { username: username, password: password };
+				let sign_creds = { username: username, type: "partner" };
 				const token = jwtsign(sign_creds);
 
 				res.status(200).json({
@@ -219,7 +204,6 @@ router.post("/partner/login", function (req, res) {
 					logo: partner.logo,
 					id: partner._id,
 				});
-
 			}
 		}
 	);
@@ -247,7 +231,7 @@ router.post("/merchantBranch/login", (req, res) => {
 					message: "User account not found or blocked.",
 				});
 			}
-			let sign_creds = { username: username, password: password };
+			let sign_creds = { username: username, type: "merchantBranch" };
 			const token = jwtsign(sign_creds);
 			res.status(200).json({
 				status: 1,
@@ -280,84 +264,84 @@ router.post("/merchantCashier/login", (req, res) => {
 					message: "User account not found or blocked.",
 				});
 			} else {
-				Merchant.findOne(
-					{ _id: staff.merchant_id },
-					(err, merchant) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (merchant == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Merchant is blocked",
-							});
-						} else {
-							MerchantBranch.findOne(
-								{ _id: staff.branch_id, status: 1 },
-								(err, branch) => {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (branch == null) {
-										res.status(200).json({
-											status: 0,
-											message: "Branch is blocked",
-										});
-									} else {
-										MerchantCashier.findOneAndUpdate(
-											{ staff_id: staff._id, status: 1 },
-											{ username: username },
-											{ new: true },
-											(err, cashier) => {
-												if (err) {
-													console.log(err);
-													var message = err;
-													if (err.message) {
-														message = err.message;
-													}
-													res.status(200).json({
-														status: 0,
-														message: message,
-													});
-												} else if (cashier == null) {
-													return res.status(200).json({
-														status: 0,
-														message: "Cashier not found or blocked",
-													});
-												} else {
-													let sign_creds = { username: username, password: password };
-													const token = jwtsign(sign_creds);
-													res.status(200).json({
-														status: 1,
-														token: token,
-														cashier: cashier,
-														staff: staff,
-														branch: branch,
-														merchant: merchant,
-													});
-												}
-											}
-										);
-									}
-								}
-							);
+				Merchant.findOne({ _id: staff.merchant_id }, (err, merchant) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
 						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (merchant == null) {
+						res.status(200).json({
+							status: 0,
+							message: "Merchant is blocked",
+						});
+					} else {
+						MerchantBranch.findOne(
+							{ _id: staff.branch_id, status: 1 },
+							(err, branch) => {
+								if (err) {
+									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message,
+									});
+								} else if (branch == null) {
+									res.status(200).json({
+										status: 0,
+										message: "Branch is blocked",
+									});
+								} else {
+									MerchantCashier.findOneAndUpdate(
+										{ staff_id: staff._id, status: 1 },
+										{ username: username },
+										{ new: true },
+										(err, cashier) => {
+											if (err) {
+												console.log(err);
+												var message = err;
+												if (err.message) {
+													message = err.message;
+												}
+												res.status(200).json({
+													status: 0,
+													message: message,
+												});
+											} else if (cashier == null) {
+												return res.status(200).json({
+													status: 0,
+													message: "Cashier not found or blocked",
+												});
+											} else {
+												let sign_creds = {
+													username: username,
+													type: "merchantCashier",
+												};
+												const token = jwtsign(sign_creds);
+												res.status(200).json({
+													status: 1,
+													token: token,
+													cashier: cashier,
+													staff: staff,
+													branch: branch,
+													merchant: merchant,
+												});
+											}
+										}
+									);
+								}
+							}
+						);
 					}
-				);
+				});
 			}
 		}
 	);
@@ -385,7 +369,7 @@ router.post("/merchant/login", (req, res) => {
 				message: "User account not found. Please signup",
 			});
 		} else {
-			let sign_creds = { username: username, password: password };
+			let sign_creds = { username: username, type: "merchant" };
 			const token = jwtsign(sign_creds);
 			res.status(200).json({
 				status: 1,
@@ -420,61 +404,42 @@ router.post("/login", function (req, res) {
 					message: "Incorrect username or password",
 				});
 			} else {
-				let token = makeid(10);
-				Infra.findByIdAndUpdate(
-					user._id,
-					{
-						token: token,
-					},
-					(err) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
+				let sign_creds = { username: username, type: "infra" };
+				const token = jwtsign(sign_creds);
+				if (user.profile_id && user.profile_id !== "") {
+					Profile.findOne(
+						{
+							_id: user.profile_id,
+						},
+						function (err, profile) {
 							res.status(200).json({
-								status: 0,
-								message: message,
+								token: token,
+								permissions: profile.permissions,
+								name: user.name,
+								isAdmin: user.isAdmin,
+								initial_setup: user.initial_setup,
 							});
-						} else {
-							if (user.profile_id && user.profile_id !== "") {
-								Profile.findOne(
-									{
-										_id: user.profile_id,
-									},
-									function (err, profile) {
-										res.status(200).json({
-											token: token,
-											permissions: profile.permissions,
-											name: user.name,
-											isAdmin: user.isAdmin,
-											initial_setup: user.initial_setup,
-										});
-									}
-								);
-							} else {
-								if (user.isAdmin) {
-									res.status(200).json({
-										token: token,
-										permissions: "all",
-										name: user.name,
-										isAdmin: user.isAdmin,
-										initial_setup: user.initial_setup,
-									});
-								} else {
-									res.status(200).json({
-										token: token,
-										permissions: "",
-										name: user.name,
-										isAdmin: user.isAdmin,
-										initial_setup: user.initial_setup,
-									});
-								}
-							}
 						}
+					);
+				} else {
+					if (user.isAdmin) {
+						res.status(200).json({
+							token: token,
+							permissions: "all",
+							name: user.name,
+							isAdmin: user.isAdmin,
+							initial_setup: user.initial_setup,
+						});
+					} else {
+						res.status(200).json({
+							token: token,
+							permissions: "",
+							name: user.name,
+							isAdmin: user.isAdmin,
+							initial_setup: user.initial_setup,
+						});
 					}
-				);
+				}
 			}
 		}
 	);
@@ -509,38 +474,19 @@ router.post("/bankLogin", function (req, res) {
 					message: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
-				let token = makeid(10);
-				Bank.findByIdAndUpdate(
-					bank._id,
-					{
-						token: token,
-					},
-					(err) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else {
-							res.status(200).json({
-								token: token,
-								name: bank.name,
-								initial_setup: bank.initial_setup,
-								username: bank.username,
-								mobile: bank.mobile,
-								status: bank.status,
-								contract: bank.contract,
-								logo: bank.logo,
-								id: bank._id,
-							});
-						}
-					}
-				);
+				let sign_creds = { username: username, type: "bank" };
+				const token = jwtsign(sign_creds);
+				res.status(200).json({
+					token: token,
+					name: bank.name,
+					initial_setup: bank.initial_setup,
+					username: bank.username,
+					mobile: bank.mobile,
+					status: bank.status,
+					contract: bank.contract,
+					logo: bank.logo,
+					id: bank._id,
+				});
 			}
 		}
 	);
@@ -581,39 +527,20 @@ router.post("/branchLogin", function (req, res) {
 					},
 					function (err, ba) {
 						let logo = ba.logo;
-						let token = makeid(10);
-						Branch.findByIdAndUpdate(
-							bank._id,
-							{
-								token: token,
-							},
-							(err) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else {
-									res.status(200).json({
-										token: token,
-										name: bank.name,
-										initial_setup: bank.initial_setup,
-										username: bank.username,
-										status: bank.status,
-										email: bank.email,
-										mobile: bank.mobile,
-										logo: logo,
-										bank_id: ba._id,
-										id: bank._id,
-									});
-								}
-							}
-						);
+						let sign_creds = { username: username, type: "branch" };
+						const token = jwtsign(sign_creds);
+						res.status(200).json({
+							token: token,
+							name: bank.name,
+							initial_setup: bank.initial_setup,
+							username: bank.username,
+							status: bank.status,
+							email: bank.email,
+							mobile: bank.mobile,
+							logo: logo,
+							bank_id: ba._id,
+							id: bank._id,
+						});
 					}
 				);
 			}
@@ -650,43 +577,19 @@ router.post("/cashierLogin", function (req, res) {
 					message: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
-				let token = makeid(10);
-				Cashier.findOneAndUpdate(
-					{
-						bank_user_id: bank._id,
-					},
-					{ $set: { token, token } },
-					function (err, cashier) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (cashier == null) {
-							return res.status(200).json({
-								status: 0,
-								message: "This user is not assigned as a cashier.",
-							});
-						} else {
-							res.status(200).json({
-								token: token,
-								name: cashier.name,
-								username: bank.username,
-								status: cashier.status,
-								email: bank.email,
-								mobile: bank.mobile,
-								cashier_id: cashier._id,
-								bank_id: cashier.bank_id,
-								id: bank._id,
-							});
-						}
-					}
-				);
+				let sign_creds = { username: username, type: "cashier" };
+				const token = jwtsign(sign_creds);
+				res.status(200).json({
+					token: token,
+					name: cashier.name,
+					username: bank.username,
+					status: cashier.status,
+					email: bank.email,
+					mobile: bank.mobile,
+					cashier_id: cashier._id,
+					bank_id: cashier.bank_id,
+					id: bank._id,
+				});
 			}
 		}
 	);
@@ -711,7 +614,7 @@ router.post("/user/login", (req, res) => {
 				message: "User account not found. Please signup",
 			});
 		} else {
-			let sign_creds = { username: username, password: password };
+			let sign_creds = { username: username, type: "user" };
 			const token = jwtsign(sign_creds);
 			res.status(200).json({
 				status: 1,

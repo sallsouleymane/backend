@@ -30,7 +30,6 @@ const CashierSchema = new mongoose.Schema({
 	transaction_started: { type: Boolean, default: false },
 	total_trans: { type: Number, required: false, default: 0 },
 	pending_trans: { type: Number, required: false, default: 0 },
-	token: { type: String, required: false, default: null },
 	central: { type: Boolean, required: false, default: false },
 });
 module.exports = mongoose.model("Cashier", CashierSchema);

@@ -8,6 +8,7 @@ const {
 	transferThis,
 	initiateTransfer,
 } = require("../services/Blockchain.js");
+const jwtTokenAuth = require("./JWTTokenAuth");
 
 const Infra = require("../models/Infra");
 const Bank = require("../models/Bank");
@@ -21,17 +22,17 @@ const BranchSend = require("../models/BranchSend");
 const BranchClaim = require("../models/BranchClaim");
 const BranchLedger = require("../models/BranchLedger");
 
-router.post("/getBranchDashStats", function (req, res) {
+router.post("/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	var today = new Date();
 	today = today.toISOString();
 	var s = today.split("T");
 	var start = s[0] + "T00:00:00.000Z";
 	var end = s[0] + "T23:59:59.999Z";
 
-	const { token } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Branch.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -63,10 +64,7 @@ router.post("/getBranchDashStats", function (req, res) {
 						let received = 0,
 							fee = 0;
 						if (post2 != null) {
-							// let fe = JSON.parse(post2.transaction_details);
-							// console.log(fe);
 							received = Number(post2.amount);
-							//fee = Number(fe.fee);
 						}
 						BranchLedger.findOne(
 							{
@@ -132,7 +130,7 @@ router.post("/getBranchDashStats", function (req, res) {
 	);
 });
 
-router.post("/addBranchCashier", (req, res) => {
+router.post("/addBranchCashier", jwtTokenAuth, function (req, res) {
 	let data = new Cashier();
 	const {
 		name,
@@ -142,12 +140,12 @@ router.post("/addBranchCashier", (req, res) => {
 		per_trans_amt,
 		max_trans_amt,
 		max_trans_count,
-		token,
 	} = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Branch.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -202,7 +200,7 @@ router.post("/addBranchCashier", (req, res) => {
 	);
 });
 
-router.post("/addOpeningBalance", (req, res) => {
+router.post("/addOpeningBalance", jwtTokenAuth, function (req, res) {
 	const {
 		cashier_id,
 		denom10,
@@ -212,11 +210,11 @@ router.post("/addOpeningBalance", (req, res) => {
 		denom1000,
 		denom2000,
 		total,
-		token,
 	} = req.body;
+	const jwtusername = req.sign_creds.username;
 	Branch.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, otpd) {
@@ -283,11 +281,12 @@ router.post("/addOpeningBalance", (req, res) => {
 	);
 });
 
-router.post("/getBranch", function (req, res) {
-	const { token, branch_id } = req.body;
-	Bank.findOne(
+router.post("/getBranch", jwtTokenAuth, function (req, res) {
+	const { branch_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Branch.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -336,12 +335,11 @@ router.post("/getBranch", function (req, res) {
 	);
 });
 
-router.post("/getBranchInfo", function (req, res) {
-	const { token } = req.body;
-
+router.post("/getBranchInfo", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Branch.findOne(
 		{
-			token: token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, branch) {
@@ -379,11 +377,12 @@ router.post("/getBranchInfo", function (req, res) {
 	);
 });
 
-router.post("/branchSetupUpdate", function (req, res) {
-	const { username, password, token } = req.body;
+router.post("/branchSetupUpdate", jwtTokenAuth, function (req, res) {
+	const { password } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Branch.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -434,12 +433,13 @@ router.post("/branchSetupUpdate", function (req, res) {
 	);
 });
 
-router.post("/checkBranchFee", function (req, res) {
-	const { amount, token, bankName } = req.body;
+router.post("/checkBranchFee", jwtTokenAuth, function (req, res) {
+	const { amount } = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Branch.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, f2) {
@@ -533,12 +533,13 @@ router.post("/checkBranchFee", function (req, res) {
 	);
 });
 
-router.post("/updateCashierTransferStatus", function (req, res) {
-	const { transfer_id, cashier_id, token, status } = req.body;
+router.post("/updateCashierTransferStatus", jwtTokenAuth, function (req, res) {
+	const { transfer_id, cashier_id, status } = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Branch.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, f) {
@@ -600,12 +601,13 @@ router.post("/updateCashierTransferStatus", function (req, res) {
 	);
 });
 
-router.post("/branchVerifyClaim", function (req, res) {
-	const { otpId, token, otp } = req.body;
+router.post("/branchVerifyClaim", jwtTokenAuth, function (req, res) {
+	const { otpId, otp } = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Branch.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, f) {
@@ -664,7 +666,7 @@ router.post("/branchVerifyClaim", function (req, res) {
 	);
 });
 
-router.post("/branchClaimMoney", function (req, res) {
+router.post("/branchClaimMoney", jwtTokenAuth, function (req, res) {
 	var today = new Date();
 	today = today.toISOString();
 	var s = today.split("T");
@@ -672,7 +674,6 @@ router.post("/branchClaimMoney", function (req, res) {
 	var end = s[0] + "T23:59:59.999Z";
 
 	const {
-		token,
 		transferCode,
 		proof,
 		givenname,
@@ -681,9 +682,10 @@ router.post("/branchClaimMoney", function (req, res) {
 		receiverFamilyName,
 	} = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Branch.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, f) {
@@ -936,12 +938,13 @@ router.post("/branchClaimMoney", function (req, res) {
 	);
 });
 
-router.post("/branchVerifyOTPClaim", function (req, res) {
-	const { transferCode, token, otp } = req.body;
+router.post("/branchVerifyOTPClaim", jwtTokenAuth, function (req, res) {
+	const { transferCode, otp } = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Branch.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, f) {
@@ -996,12 +999,13 @@ router.post("/branchVerifyOTPClaim", function (req, res) {
 	);
 });
 
-router.post("/getBranchClaimMoney", function (req, res) {
-	const { transferCode, token } = req.body;
+router.post("/getBranchClaimMoney", jwtTokenAuth, function (req, res) {
+	const { transferCode } = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Branch.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, f) {
@@ -1080,12 +1084,13 @@ router.post("/getBranchClaimMoney", function (req, res) {
 	);
 });
 
-router.post("/getBranchHistory", function (req, res) {
-	const { from, token } = req.body;
+router.post("/getBranchHistory", jwtTokenAuth, function (req, res) {
+	const { from } = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Branch.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, b) {
