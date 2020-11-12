@@ -97,6 +97,7 @@ router.post("/partnerCashier/login", function (req, res) {
 								mobile: user.mobile,
 								cashier_id: cashier._id,
 								bank_id: cashier.bank_id,
+								branch_id: cashier.branch_id,
 								id: user._id,
 							});
 						}
@@ -166,7 +167,7 @@ router.post("/partnerBranch/login", function (req, res) {
 								mobile: branch.mobile,
 								logo: logo,
 								id: branch._id,
-								partner_id: partner._id
+								partner_id: partner._id,
 							});
 						}
 					}
@@ -219,7 +220,6 @@ router.post("/partner/login", function (req, res) {
 					logo: partner.logo,
 					id: partner._id,
 				});
-
 			}
 		}
 	);
@@ -280,84 +280,84 @@ router.post("/merchantCashier/login", (req, res) => {
 					message: "User account not found or blocked.",
 				});
 			} else {
-				Merchant.findOne(
-					{ _id: staff.merchant_id },
-					(err, merchant) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (merchant == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Merchant is blocked",
-							});
-						} else {
-							MerchantBranch.findOne(
-								{ _id: staff.branch_id, status: 1 },
-								(err, branch) => {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (branch == null) {
-										res.status(200).json({
-											status: 0,
-											message: "Branch is blocked",
-										});
-									} else {
-										MerchantCashier.findOneAndUpdate(
-											{ staff_id: staff._id, status: 1 },
-											{ username: username },
-											{ new: true },
-											(err, cashier) => {
-												if (err) {
-													console.log(err);
-													var message = err;
-													if (err.message) {
-														message = err.message;
-													}
-													res.status(200).json({
-														status: 0,
-														message: message,
-													});
-												} else if (cashier == null) {
-													return res.status(200).json({
-														status: 0,
-														message: "Cashier not found or blocked",
-													});
-												} else {
-													let sign_creds = { username: username, password: password };
-													const token = jwtsign(sign_creds);
-													res.status(200).json({
-														status: 1,
-														token: token,
-														cashier: cashier,
-														staff: staff,
-														branch: branch,
-														merchant: merchant,
-													});
-												}
-											}
-										);
-									}
-								}
-							);
+				Merchant.findOne({ _id: staff.merchant_id }, (err, merchant) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
 						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else if (merchant == null) {
+						res.status(200).json({
+							status: 0,
+							message: "Merchant is blocked",
+						});
+					} else {
+						MerchantBranch.findOne(
+							{ _id: staff.branch_id, status: 1 },
+							(err, branch) => {
+								if (err) {
+									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message,
+									});
+								} else if (branch == null) {
+									res.status(200).json({
+										status: 0,
+										message: "Branch is blocked",
+									});
+								} else {
+									MerchantCashier.findOneAndUpdate(
+										{ staff_id: staff._id, status: 1 },
+										{ username: username },
+										{ new: true },
+										(err, cashier) => {
+											if (err) {
+												console.log(err);
+												var message = err;
+												if (err.message) {
+													message = err.message;
+												}
+												res.status(200).json({
+													status: 0,
+													message: message,
+												});
+											} else if (cashier == null) {
+												return res.status(200).json({
+													status: 0,
+													message: "Cashier not found or blocked",
+												});
+											} else {
+												let sign_creds = {
+													username: username,
+													password: password,
+												};
+												const token = jwtsign(sign_creds);
+												res.status(200).json({
+													status: 1,
+													token: token,
+													cashier: cashier,
+													staff: staff,
+													branch: branch,
+													merchant: merchant,
+												});
+											}
+										}
+									);
+								}
+							}
+						);
 					}
-				);
+				});
 			}
 		}
 	);
@@ -365,7 +365,7 @@ router.post("/merchantCashier/login", (req, res) => {
 
 router.post("/merchant/login", (req, res) => {
 	const { username, password } = req.body;
-	Merchant.findOne({ username, password }, "-password", function (
+	Merchant.findOne({ username, password, status: 1 }, "-password", function (
 		err,
 		merchant
 	) {
@@ -682,6 +682,7 @@ router.post("/cashierLogin", function (req, res) {
 								mobile: bank.mobile,
 								cashier_id: cashier._id,
 								bank_id: cashier.bank_id,
+								branch_id: cashier.branch_id,
 								id: bank._id,
 							});
 						}

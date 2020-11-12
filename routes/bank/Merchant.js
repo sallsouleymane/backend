@@ -14,6 +14,128 @@ const Bank = require("../../models/Bank");
 const Merchant = require("../../models/merchant/Merchant");
 const getWalletIds = require("../utils/getWalletIds");
 
+router.post("/bank/blockMerchant", function (req, res) {
+	var { token, merchant_id } = req.body;
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (bank == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				Merchant.findOneAndUpdate(
+					{ _id: merchant_id },
+					{
+						$set: {
+							status: 0,
+						},
+					},
+					(err, merchant) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (merchant == null) {
+							res.status(200).json({
+								status: 1,
+								data: "Merchant not found",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								data: "blocked Merchant",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/bank/unblockMerchant", function (req, res) {
+	var { token, merchant_id } = req.body;
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (bank == null) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				Merchant.findOneAndUpdate(
+					{ _id: merchant_id },
+					{
+						$set: {
+							status: 1,
+						},
+					},
+					(err, merchant) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (merchant == null) {
+							res.status(200).json({
+								status: 1,
+								data: "Merchant not found",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								data: "Unblocked Merchant",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/bank/listMerchants", function (req, res) {
 	var { token } = req.body;
 	Bank.findOne(
