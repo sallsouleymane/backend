@@ -5,6 +5,7 @@ const secret = "jwt_secret_key_for_ewallet_of_32bit_string";
 
 //utils
 const makeid = require("./utils/idGenerator");
+const { errorMessage, catchError } = require("./utils/errorHandler");
 
 const Infra = require("../models/Infra");
 const User = require("../models/User");
@@ -43,21 +44,9 @@ router.post("/partnerCashier/login", function (req, res) {
 			password,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Incorrect username or password",
-				});
+			var result = errorMessage(err, user, "Incorrect username or password");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else if (user.status == -1) {
 				res.status(200).json({
 					status: 0,
@@ -72,21 +61,13 @@ router.post("/partnerCashier/login", function (req, res) {
 					},
 					{ $set: { username: user.username } },
 					function (err, cashier) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (cashier == null) {
-							return res.status(200).json({
-								status: 0,
-								message: "This user is not assigned as a cashier.",
-							});
+						var result = errorMessage(
+							err,
+							cashier,
+							"This user is not assigned as a cashier."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								token: token,
@@ -116,21 +97,9 @@ router.post("/partnerBranch/login", function (req, res) {
 			password,
 		},
 		function (err, branch) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (!branch) {
-				res.status(200).json({
-					status: 0,
-					message: "Incorrect username or password",
-				});
+			var result = errorMessage(err, branch, "Incorrect username or password");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else if (branch.status == -1) {
 				res.status(200).json({
 					status: 0,
@@ -143,15 +112,7 @@ router.post("/partnerBranch/login", function (req, res) {
 					},
 					function (err, partner) {
 						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
+							return catchError(err);
 						} else {
 							let logo = partner.logo;
 							let sign_creds = { username: username, password: password };
@@ -186,21 +147,9 @@ router.post("/partner/login", function (req, res) {
 			password,
 		},
 		function (err, partner) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (!partner) {
-				res.status(200).json({
-					status: 0,
-					message: "Incorrect username or password",
-				});
+			var result = errorMessage(err, partner, "Incorrect username or password");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else if (partner.status == -1) {
 				res.status(200).json({
 					status: 0,
@@ -232,29 +181,22 @@ router.post("/merchantBranch/login", (req, res) => {
 		{ username, password, status: { $ne: 2 } },
 		"-password",
 		function (err, branch) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
+			var result = errorMessage(
+				err,
+				branch,
+				"User account not found or blocked."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				let sign_creds = { username: username, password: password };
+				const token = jwtsign(sign_creds);
 				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (branch == null) {
-				return res.status(200).json({
-					status: 0,
-					message: "User account not found or blocked.",
+					status: 1,
+					details: branch,
+					token: token,
 				});
 			}
-			let sign_creds = { username: username, password: password };
-			const token = jwtsign(sign_creds);
-			res.status(200).json({
-				status: 1,
-				details: branch,
-				token: token,
-			});
 		}
 	);
 });
@@ -265,78 +207,38 @@ router.post("/merchantCashier/login", (req, res) => {
 		{ username, password, status: { $ne: 2 } },
 		"-password",
 		function (err, staff) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (staff == null) {
-				res.status(200).json({
-					status: 0,
-					message: "User account not found or blocked.",
-				});
+			var result = errorMessage(
+				err,
+				staff,
+				"User account not found or blocked."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Merchant.findOne({ _id: staff.merchant_id }, (err, merchant) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (merchant == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Merchant is blocked",
-						});
+					var result = errorMessage(err, merchant, "Merchant is blocked");
+					if (result.status == 0) {
+						res.status(200).json(result);
 					} else {
 						MerchantBranch.findOne(
 							{ _id: staff.branch_id, status: 1 },
 							(err, branch) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (branch == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Branch is blocked",
-									});
+								var result = errorMessage(err, branch, "Branch is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
 								} else {
 									MerchantCashier.findOneAndUpdate(
 										{ staff_id: staff._id, status: 1 },
 										{ username: username },
 										{ new: true },
 										(err, cashier) => {
-											if (err) {
-												console.log(err);
-												var message = err;
-												if (err.message) {
-													message = err.message;
-												}
-												res.status(200).json({
-													status: 0,
-													message: message,
-												});
-											} else if (cashier == null) {
-												return res.status(200).json({
-													status: 0,
-													message: "Cashier not found or blocked",
-												});
+											var result = errorMessage(
+												err,
+												cashier,
+												"Cashier not found or blocked"
+											);
+											if (result.status == 0) {
+												res.status(200).json(result);
 											} else {
 												let sign_creds = {
 													username: username,
@@ -370,21 +272,13 @@ router.post("/merchant/login", (req, res) => {
 		err,
 		merchant
 	) {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else if (merchant == null) {
-			return res.status(200).json({
-				status: 0,
-				message: "User account not found. Please signup",
-			});
+		var result = errorMessage(
+			err,
+			merchant,
+			"User account not found. Please signup"
+		);
+		if (result.status == 0) {
+			res.status(200).json(result);
 		} else {
 			let sign_creds = { username: username, password: password };
 			const token = jwtsign(sign_creds);
@@ -405,21 +299,9 @@ router.post("/login", function (req, res) {
 			password,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (!user) {
-				res.status(200).json({
-					status: 0,
-					message: "Incorrect username or password",
-				});
+			var result = errorMessage(err, user, "Incorrect username or password");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				let token = makeid(10);
 				Infra.findByIdAndUpdate(
@@ -429,15 +311,7 @@ router.post("/login", function (req, res) {
 					},
 					(err) => {
 						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
+							return catchError(err);
 						} else {
 							if (user.profile_id && user.profile_id !== "") {
 								Profile.findOne(
@@ -489,21 +363,9 @@ router.post("/bankLogin", function (req, res) {
 			password,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (!bank) {
-				res.status(200).json({
-					status: 0,
-					message: "Incorrect username or password",
-				});
+			var result = errorMessage(err, bank, "Incorrect username or password");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else if (bank.status == -1) {
 				res.status(200).json({
 					status: 0,
@@ -518,15 +380,7 @@ router.post("/bankLogin", function (req, res) {
 					},
 					(err) => {
 						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
+							return catchError(err);
 						} else {
 							res.status(200).json({
 								token: token,
@@ -555,21 +409,9 @@ router.post("/branchLogin", function (req, res) {
 			password,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (!bank) {
-				res.status(200).json({
-					status: 0,
-					message: "Incorrect username or password",
-				});
+			var result = errorMessage(err, bank, "Incorrect username or password");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else if (bank.status == -1) {
 				res.status(200).json({
 					status: 0,
@@ -581,41 +423,38 @@ router.post("/branchLogin", function (req, res) {
 						_id: bank.bank_id,
 					},
 					function (err, ba) {
-						let logo = ba.logo;
-						let token = makeid(10);
-						Branch.findByIdAndUpdate(
-							bank._id,
-							{
-								token: token,
-							},
-							(err) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
+						var result = errorMessage(err, ba, "Bank not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							let logo = ba.logo;
+							let token = makeid(10);
+							Branch.findByIdAndUpdate(
+								bank._id,
+								{
+									token: token,
+								},
+								(err) => {
+									if (err) {
+										return catchError(err);
+									} else {
+										res.status(200).json({
+											token: token,
+											name: bank.name,
+											initial_setup: bank.initial_setup,
+											username: bank.username,
+											status: bank.status,
+											email: bank.email,
+											mobile: bank.mobile,
+											logo: logo,
+											bank_id: ba._id,
+											id: bank._id,
+											credit_limit: bank.credit_limit,
+										});
 									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else {
-									res.status(200).json({
-										token: token,
-										name: bank.name,
-										initial_setup: bank.initial_setup,
-										username: bank.username,
-										status: bank.status,
-										email: bank.email,
-										mobile: bank.mobile,
-										logo: logo,
-										bank_id: ba._id,
-										id: bank._id,
-										credit_limit: bank.credit_limit,
-									});
 								}
-							}
-						);
+							);
+						}
 					}
 				);
 			}
@@ -631,21 +470,9 @@ router.post("/cashierLogin", function (req, res) {
 			password,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Incorrect username or password",
-				});
+			var result = errorMessage(err, bank, "Incorrect username or password");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else if (bank.status == -1) {
 				res.status(200).json({
 					status: 0,
@@ -659,21 +486,13 @@ router.post("/cashierLogin", function (req, res) {
 					},
 					{ $set: { token, token } },
 					function (err, cashier) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (cashier == null) {
-							return res.status(200).json({
-								status: 0,
-								message: "This user is not assigned as a cashier.",
-							});
+						var result = errorMessage(
+							err,
+							cashier,
+							"This user is not assigned as a cashier."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								token: token,
@@ -698,21 +517,13 @@ router.post("/cashierLogin", function (req, res) {
 router.post("/user/login", (req, res) => {
 	const { username, password } = req.body;
 	User.findOne({ username, password }, "-password", function (err, user) {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else if (user == null) {
-			return res.status(200).json({
-				status: 0,
-				message: "User account not found. Please signup",
-			});
+		var result = errorMessage(
+			err,
+			user,
+			"User account not found. Please signup"
+		);
+		if (result.status == 0) {
+			res.status(200).json(result);
 		} else {
 			let sign_creds = { username: username, password: password };
 			const token = jwtsign(sign_creds);
