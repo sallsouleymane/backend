@@ -168,6 +168,7 @@ router.post("/partnerBranch/login", function (req, res) {
 								logo: logo,
 								id: branch._id,
 								partner_id: partner._id,
+								credit_limit: branch.credit_limit,
 							});
 						}
 					}
@@ -610,6 +611,7 @@ router.post("/branchLogin", function (req, res) {
 										logo: logo,
 										bank_id: ba._id,
 										id: bank._id,
+										credit_limit: bank.credit_limit,
 									});
 								}
 							}
