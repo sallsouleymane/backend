@@ -204,6 +204,7 @@ router.post("/user/interBank/payInvoice", jwtTokenAuth, (req, res) => {
 														{
 															paid: 1,
 															paid_by: "US",
+															payer_id: user._id,
 														}
 													);
 													if (i == null) {
@@ -540,6 +541,7 @@ router.post(
 																				{
 																					paid: 1,
 																					paid_by: "PC",
+																					payer_id: cashier._id,
 																				}
 																			);
 																			if (i == null) {
@@ -892,6 +894,7 @@ router.post("/cashier/interBank/payInvoice", (req, res) => {
 																		{
 																			paid: 1,
 																			paid_by: "BC",
+																			payer_id: cashier._id,
 																		}
 																	);
 																	if (i == null) {
@@ -1271,6 +1274,7 @@ router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
 								} else {
 									try {
 										var total_amount = 0;
+										var penalty_amount = 0;
 										for (invoice of invoices) {
 											var { id, penalty } = invoice;
 											var inv = await Invoice.findOne({
@@ -1289,6 +1293,7 @@ router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
 											if (isNaN(penalty)) {
 												throw new Error("Penalty is not a number");
 											}
+											penalty_amount += penalty;
 											total_amount += inv.amount + penalty;
 										}
 										if (total_amount < 0) {
@@ -1334,6 +1339,7 @@ router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
 													{
 														paid: 1,
 														paid_by: "MC",
+														payer_id: cashier._id,
 													}
 												);
 												if (i == null) {
@@ -1363,6 +1369,8 @@ router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
 													{
 														$set: { last_paid_at: last_paid_at },
 														$inc: {
+															amount_collected: total_amount,
+															penalty_collected: penalty_amount,
 															bills_paid: 1,
 														},
 													}
@@ -1596,6 +1604,7 @@ router.post("/partnerCashier/payInvoice", jwtTokenAuth, (req, res) => {
 																{
 																	paid: 1,
 																	paid_by: "PC",
+																	payer_id: cashier._id,
 																}
 															);
 															if (i == null) {
@@ -2238,6 +2247,7 @@ router.post("/cashier/payInvoice", (req, res) => {
 															{
 																paid: 1,
 																paid_by: "BC",
+																payer_id: cashier._id,
 															}
 														);
 														if (i == null) {
@@ -2741,6 +2751,7 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 															{
 																paid: 1,
 																paid_by: "US",
+																payer_id: user._id,
 															}
 														);
 														if (i == null) {

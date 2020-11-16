@@ -723,6 +723,8 @@ router.get("/merchantCashier/todaysStatus", jwtTokenAuth, function (req, res) {
 					message: "Today's Status",
 					bills_paid: cashier.bills_paid,
 					bills_raised: cashier.bills_raised,
+					amount_collected: cashier.amount_collected,
+					penalty_collected: cashier.penalty_collected,
 				});
 			}
 		}
@@ -1149,9 +1151,12 @@ router.post("/merchantCashier/createInvoice", jwtTokenAuth, (req, res) => {
 								await invoiceObj.save();
 
 								if (is_counter) {
-									await Invoice.updateOne({
-										_id: referenceFound._id,
-									}, { has_counter_invoice: true });
+									await Invoice.updateOne(
+										{
+											_id: referenceFound._id,
+										},
+										{ has_counter_invoice: true }
+									);
 								}
 								var branch = await MerchantBranch.findOneAndUpdate(
 									{ _id: cashier.branch_id },
@@ -1359,9 +1364,12 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 											}
 										);
 										if (is_counter) {
-											await Invoice.updateOne({
-												_id: referenceFound._id,
-											}, { has_counter_invoice: true });
+											await Invoice.updateOne(
+												{
+													_id: referenceFound._id,
+												},
+												{ has_counter_invoice: true }
+											);
 										}
 									} else if (invoiceFound && invoiceFound.is_created == 1) {
 										throw new Error(
@@ -1394,9 +1402,12 @@ router.post("/merchantCashier/uploadInvoices", jwtTokenAuth, (req, res) => {
 										await invoiceObj.save();
 
 										if (is_counter) {
-											await Invoice.updateOne({
-												_id: referenceFound._id,
-											}, { has_counter_invoice: true });
+											await Invoice.updateOne(
+												{
+													_id: referenceFound._id,
+												},
+												{ has_counter_invoice: true }
+											);
 										}
 
 										var branch = await MerchantBranch.findOneAndUpdate(

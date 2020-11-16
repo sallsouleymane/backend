@@ -9,6 +9,7 @@ const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
 const getTypeClass = require("./utils/getTypeClass");
 const makeotp = require("./utils/makeotp");
+const { errorMessage, catchError } = require("./utils/errorHandler");
 
 const jwtTokenAuth = require("./JWTTokenAuth");
 
@@ -38,12 +39,58 @@ const CountryModel = require("../models/Country");
 const FailedTX = require("../models/FailedTXLedger");
 const Partner = require("../models/partner/Partner");
 const PartnerBranch = require("../models/partner/Branch");
+const Invoice = require("../models/merchant/Invoice");
 
 router.get("/testGet", function (req, res) {
 	res.status(200).json({
 		status: 0,
 		message: "Internal error please try again",
 	});
+});
+
+router.post("/:user/getPaidInvoiceList", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const user = req.params.user;
+	const User = getTypeClass(user);
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, user) {
+			var result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				var paid_by;
+				if (user == "merchantCashier") {
+					paid_by = "MC";
+				} else if (user == "partnerCashier") {
+					paid_by = "PC";
+				} else if (user == "user") {
+					paid_by = "US";
+				}
+				Invoice.find(
+					{ paid_by: paid_by, payer_id: user._id },
+					(err, invoices) => {
+						if (err) {
+							return catchError(err);
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "List of paid invoices",
+								invoices: invoices,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
 });
 
 router.post("/:user/transferMasterToOp", jwtTokenAuth, function (req, res) {
