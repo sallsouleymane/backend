@@ -8,6 +8,7 @@ const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
 const makeotp = require("./utils/makeotp");
 const getWalletIds = require("./utils/getWalletIds");
+const { errorMessage, catchError } = require("./utils/errorHandler");
 
 //services
 const {
@@ -37,22 +38,13 @@ router.post("/infra/transferMasterToOp", function (req, res) {
 			status: 1,
 		},
 		function (err, infra) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (infra == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				infra,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Bank.findOne(
 					{
@@ -60,21 +52,9 @@ router.post("/infra/transferMasterToOp", function (req, res) {
 						status: 1,
 					},
 					function (err, bank) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (bank == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Bank not found.",
-							});
+						let result = errorMessage(err, bank, "Bank not found.");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							const masterWallet = bank.wallet_ids.infra_master;
 							const opWallet = bank.wallet_ids.infra_operational;
@@ -117,44 +97,25 @@ router.post("/infra/deleteCountry", (req, res) => {
 			status: 1,
 		},
 		function (err, infra) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (infra == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				infra,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Country.update(
 					{},
 					{ country_list: { $pull: { ccode: ccode } } },
 					function (err, country) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (country == null) {
-							console.log(err);
-							res.status(200).json({
-								status: 0,
-								message: "Setting not found",
-								err: err,
-							});
+						let result = errorMessage(
+							err,
+							country,
+							"Token changed or user not valid. Try to login again or contact system administrator."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -176,22 +137,13 @@ router.post("/infra/bank/listMerchants", function (req, res) {
 			status: 1,
 		},
 		function (err, infra) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (infra == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				infra,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Merchant.find({ bank_id: bank_id }, "-password", (err, merchants) => {
 					if (err) {
@@ -253,21 +205,9 @@ router.post("/infra/createMerchant", function (req, res) {
 				});
 			} else {
 				Bank.findOne({ _id: bank_id }, (err, bank) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (bank == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Bank not found",
-						});
+					var result = errorMessage(err, bank, "Bank not found");
+					if (result.status == 0) {
+						res.status(200).json(result);
 					} else {
 						if (!code) {
 							res.status(200).json({
@@ -414,21 +354,9 @@ router.post("/infra/editMerchant", function (req, res) {
 						email: email,
 					},
 					(err, merchant) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (merchant == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Merchant not found.",
-							});
+						var result = errorMessage(err, merchant, "Merchant not found.");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -451,22 +379,13 @@ router.post("/getDashStats", function (req, res) {
 			status: 1,
 		},
 		async function (err, infra) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (infra == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				infra,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				try {
 					var totalBanks = await Bank.countDocuments({});
@@ -500,21 +419,9 @@ router.post("/infraSetupUpdate", function (req, res) {
 			},
 		},
 		function (err, infra) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (infra == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Incorrect username or password",
-				});
+			var result = errorMessage(err, infra, "Incorrect username or password");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				res.status(200).json({
 					success: "Updated successfully",
@@ -532,22 +439,13 @@ router.post("/getBanks", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Bank.find({}, function (err, bank) {
 					if (err) {
@@ -686,22 +584,13 @@ router.post("/addBank", (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			var result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Bank.findOne(
 					{
@@ -866,21 +755,9 @@ router.post("/editBank", (req, res) => {
 						otp: otp,
 					},
 					function (err, otpd) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (otpd == null) {
-							res.status(200).json({
-								status: 0,
-								message: err,
-							});
+						let result = errorMessage(err, otpd, err);
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							if (otpd.otp === otp) {
 								if (
@@ -990,21 +867,9 @@ router.post("/getInfraHistory", function (req, res) {
 						_id: bank_id,
 					},
 					function (err, b) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (b == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Bank not found",
-							});
+						let result = errorMessage(err, b, "Bank not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							wallet_type = "infra_" + from;
 							const wallet = b.wallet_ids[wallet_type];
@@ -1061,21 +926,9 @@ router.get("/getInfraOperationalBalance", function (req, res) {
 						_id: bank,
 					},
 					function (err, ba) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (ba == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Not found",
-							});
+						let result = errorMessage(err, ba, "Not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							const wallet_id = ba.wallet_ids.infra_operational;
 
@@ -1131,21 +984,9 @@ router.get("/getInfraMasterBalance", function (req, res) {
 						_id: bank,
 					},
 					function (err, ba) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (ba == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Bank not found",
-							});
+						let result = errorMessage(err, ba, "Bank not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							const wallet_id = ba.wallet_ids.infra_master;
 
@@ -1180,21 +1021,9 @@ router.post("/getPermission", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Incorrect username or password",
-				});
+			let result = errorMessage(err, user, "Incorrect username or password");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				if (user.profile_id && user.profile_id != "") {
 					Profile.findOne(
@@ -1252,22 +1081,13 @@ router.post("/addProfile", (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				const user_id = user._id;
 
@@ -1837,22 +1657,13 @@ router.post("/editInfraProfile", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				let upd = {};
 				if (password == "" || password == undefined || password == null) {
@@ -2046,22 +1857,13 @@ router.post("/transferMoney", function (req, res) {
 				status: 1,
 			},
 			function (err, f) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (f == null) {
-					res.status(200).json({
-						status: 0,
-						message:
-							"Token changed or user not valid. Try to login again or contact system administrator.",
-					});
+				let result = errorMessage(
+					err,
+					f,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
 				} else {
 					const infra_email = f.email;
 					const infra_mobile = f.mobile;
@@ -2125,22 +1927,13 @@ router.post("/checkFee", function (req, res) {
 				status: 1,
 			},
 			function (err, f) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (f == null) {
-					res.status(200).json({
-						status: 0,
-						message:
-							"Token changed or user not valid. Try to login again or contact system administrator.",
-					});
+				let result = errorMessage(
+					err,
+					f,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
 				} else {
 					var temp = (amount * mainFee) / 100;
 					var fee = temp;
@@ -2160,22 +1953,13 @@ router.post("/checkFee", function (req, res) {
 router.post("/approveFee", function (req, res) {
 	const { token, id } = req.body;
 	Infra.findOne({ token: token }, function (err, infra) {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else if (infra == null) {
-			return res.status(200).json({
-				status: 0,
-				message:
-					"Token changed or user not valid. Try to login again or contact system administrator.",
-			});
+		let result = errorMessage(
+			err,
+			infra,
+			"Token changed or user not valid. Try to login again or contact system administrator."
+		);
+		if (result.status == 0) {
+			res.status(200).json(result);
 		}
 		Fee.findOneAndUpdate(
 			{
@@ -2186,21 +1970,9 @@ router.post("/approveFee", function (req, res) {
 				$set: { status: 1 },
 			},
 			function (err, fee) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (fee == null) {
-					return res.status(200).json({
-						status: 0,
-						message: "Infra share not updated",
-					});
+				let result = errorMessage(err, fee, "Infra share not updated");
+				if (result.status == 0) {
+					res.status(200).json(result);
 				}
 				res.status(200).json({
 					status: 1,
