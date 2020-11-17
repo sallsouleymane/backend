@@ -218,10 +218,10 @@ router.post("/user/checkFee", jwtTokenAuth, function (req, res) {
 router.post("/user/getUser", jwtTokenAuth, function (req, res) {
 	const { mobile } = req.body;
 	const username = req.sign_creds.username;
-	User.findOne({ username }, function (err, result) {
+	User.findOne({ username }, function (err, user) {
 		let result = errorMessage(
 			err,
-			result,
+			user,
 			"You are either not authorised or not logged in."
 		);
 		if (result.status == 0) {
