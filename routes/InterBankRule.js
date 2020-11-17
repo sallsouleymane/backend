@@ -1664,9 +1664,9 @@ router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (
 			},
 		},
 		async function (err, sender) {
-			let result = errorMessage(err, sender, "Sender not found");
-			if (result.status == 0) {
-				res.status(200).json(result);
+			let result1 = errorMessage(err, sender, "Sender not found");
+			if (result1.status == 0) {
+				res.status(200).json(result1);
 			} else {
 				var receiver = {
 					name: receiverGivenName,
