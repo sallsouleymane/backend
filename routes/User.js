@@ -503,12 +503,12 @@ router.post("/user/signup", (req, res) => {
 	const { name, mobile, email, address, password, otp } = req.body;
 	OTP.findOne(
 		{ page: "signup", mobile: mobile, otp: otp, user_id: email },
-		function (err, result) {
-			let result = errorMessage(err, result, "OTP Mismatch");
+		function (err, otpres) {
+			let result = errorMessage(err, otpres, "OTP Mismatch");
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				OTP.deleteOne(result, function (err, obj) {
+				OTP.deleteOne(otpres, function (err, obj) {
 					if (err) {
 						console.log(err);
 						var message = err;
@@ -520,7 +520,7 @@ router.post("/user/signup", (req, res) => {
 							message: message,
 						});
 					} else {
-						console.log("document deleted: ", result);
+						console.log("document deleted: ", otpres);
 						let user = new User();
 						user.name = name;
 						user.mobile = mobile;
@@ -563,8 +563,8 @@ router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 		if (result.status == 0) {
 			res.status(200).json(result);
 		} else {
-			Bank.findOne({ _id: bank_id }, (err, result) => {
-				let result = errorMessage(err, result, "This bank do not exist");
+			Bank.findOne({ _id: bank_id }, (err, bank) => {
+				let result = errorMessage(err, bank, "This bank do not exist");
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
@@ -599,10 +599,10 @@ router.post("/user/saveUploadedDocsHash", jwtTokenAuth, (req, res) => {
 	User.findOneAndUpdate(
 		{ username, status: 0 },
 		{ $set: { docs_hash: hashes, status: 2 } }, //Status 2: Waiting for cashier approval
-		(err, result) => {
+		(err, user) => {
 			let result = errorMessage(
 				err,
-				result,
+				user,
 				"You are either not authorised or not logged in."
 			);
 			if (result.status == 0) {
@@ -622,11 +622,11 @@ router.post("/user/skipDocsUpload", jwtTokenAuth, (req, res) => {
 	User.findOneAndUpdate(
 		{ username: username, status: 2 },
 		{ $set: { status: 3 } },
-		(err, result) => {
+		(err, user) => {
 			//status 3: Go to the nearest branch and get docs uploaded
 			let result = errorMessage(
 				err,
-				result,
+				user,
 				"You can not perform this step. Either the docs are already uploaded or you are not authorised,login again and try."
 			);
 			if (result.status == 0) {
