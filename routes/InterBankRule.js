@@ -156,13 +156,13 @@ router.post(
 																						rule1,
 																						rule2
 																					)
-																						.then((result) => {
-																							if (result == 1) {
+																						.then((result1) => {
+																							if (result1 == 1) {
 																								CashierSend.findByIdAndUpdate(
 																									d._id,
 																									{
 																										status: 1,
-																										fee: result.fee,
+																										fee: result1.fee,
 																									},
 																									(err) => {
 																										if (err) {
@@ -284,7 +284,7 @@ router.post(
 																									}
 																								);
 																							} else {
-																								res.status(200).json(result);
+																								res.status(200).json(result1);
 																							}
 																						})
 																						.catch((err) => {
@@ -427,13 +427,13 @@ router.post("/cashier/interBank/sendToOperational", function (req, res) {
 																					rule1,
 																					rule2
 																				)
-																					.then((result) => {
-																						if (result == 1) {
+																					.then((result1) => {
+																						if (result1 == 1) {
 																							CashierSend.findByIdAndUpdate(
 																								d._id,
 																								{
 																									status: 1,
-																									fee: result.fee,
+																									fee: result1.fee,
 																								},
 																								(err) => {
 																									if (err) {
@@ -541,7 +541,7 @@ router.post("/cashier/interBank/sendToOperational", function (req, res) {
 																								}
 																							);
 																						} else {
-																							res.status(200).json(result);
+																							res.status(200).json(result1);
 																						}
 																					})
 																					.catch((err) => {
@@ -707,7 +707,7 @@ router.post("/user/interBank/sendMoneyToWallet", JWTTokenAuth, async function (
 			isInclusive: isInclusive,
 			note: note,
 		};
-		const result = await interBankSendMoneyToWByUser(
+		const result1 = await interBankSendMoneyToWByUser(
 			transfer,
 			infra,
 			bank,
@@ -716,17 +716,17 @@ router.post("/user/interBank/sendMoneyToWallet", JWTTokenAuth, async function (
 			receiver,
 			rule1
 		);
-		console.log("Result: " + result);
-		if (result.status == 1) {
+		console.log("Result: " + result1);
+		if (result1.status == 1) {
 			res.status(200).json({
 				status: 1,
 				message: sending_amount + " XOF is transferred to " + receiver.name,
-				balance: result.balance - (result.amount + result.fee),
+				balance: result1.balance - (result1.amount + result1.fee),
 			});
 		} else {
 			res.status(200).json({
 				status: 0,
-				message: result.toString(),
+				message: result1.toString(),
 			});
 		}
 	} catch (err) {
