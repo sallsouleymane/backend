@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const jwtTokenAuth = require("./JWTTokenAuth");
+const { errorMessage, catchError } = require("./utils/errorHandler");
 
 //models
 const User = require("../models/User");
@@ -31,22 +32,13 @@ router.post("/user/getMerchantPenaltyRule", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantSettings.findOne({ merchant_id: merchant_id }, function (
 					err,
@@ -82,22 +74,13 @@ router.post("/user/getMerchantDetails", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Merchant.findOne(
 					{ _id: merchant_id },
@@ -152,22 +135,13 @@ router.get("/user/listMerchants", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Merchant.find({}, "-password", (err, merchants) => {
 					if (err) {
@@ -202,22 +176,13 @@ router.post("/user/checkFee", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				const find = {
 					bank_id: user.bank_id,
@@ -226,21 +191,9 @@ router.post("/user/checkFee", jwtTokenAuth, function (req, res) {
 					active: "Active",
 				};
 				Fee.findOne(find, function (err, fe) {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (fe == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Fee rule not found",
-						});
+					let result = errorMessage(err, fe, "Fee rule not found");
+					if (result.status == 0) {
+						res.status(200).json(result);
 					} else {
 						amount = Number(amount);
 						var temp;
@@ -266,41 +219,21 @@ router.post("/user/getUser", jwtTokenAuth, function (req, res) {
 	const { mobile } = req.body;
 	const username = req.sign_creds.username;
 	User.findOne({ username }, function (err, result) {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else if (result == null) {
-			res.status(200).json({
-				status: 0,
-				message: "You are either not authorised or not logged in.",
-			});
+		let result = errorMessage(
+			err,
+			result,
+			"You are either not authorised or not logged in."
+		);
+		if (result.status == 0) {
+			res.status(200).json(result);
 		} else {
 			User.findOne({ mobile }, "-password -docs_hash -contact_list", function (
 				err,
 				user
 			) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (user == null) {
-					res.status(200).json({
-						status: 0,
-						message: "User not found",
-					});
+				let result = errorMessage(err, user, "User not found");
+				if (result.status == 0) {
+					res.status(200).json(result);
 				} else {
 					res.status(200).json({
 						status: 1,
@@ -344,21 +277,9 @@ router.get("/user/getBalance", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message: "User not found",
-				});
+			let result = errorMessage(err, user, "User not found");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				const wallet_id = user.wallet_id;
 				blockchain
@@ -583,21 +504,9 @@ router.post("/user/signup", (req, res) => {
 	OTP.findOne(
 		{ page: "signup", mobile: mobile, otp: otp, user_id: email },
 		function (err, result) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (result == null) {
-				res.status(200).json({
-					status: 0,
-					message: "OTP Mismatch",
-				});
+			let result = errorMessage(err, result, "OTP Mismatch");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				OTP.deleteOne(result, function (err, obj) {
 					if (err) {
@@ -650,58 +559,26 @@ router.post("/user/assignBank", jwtTokenAuth, (req, res) => {
 	const { bank_id } = req.body;
 	const username = req.sign_creds.username;
 	User.findOne({ username, status: 0 }, (err, user) => {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else if (user == null) {
-			res.status(200).json({
-				status: 0,
-				message: "You are not allowed to assign bank.",
-			});
+		let result = errorMessage(err, user, "You are not allowed to assign bank.");
+		if (result.status == 0) {
+			res.status(200).json(result);
 		} else {
 			Bank.findOne({ _id: bank_id }, (err, result) => {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (result == null) {
-					res.status(200).json({
-						status: 0,
-						message: "This bank do not exist",
-					});
+				let result = errorMessage(err, result, "This bank do not exist");
+				if (result.status == 0) {
+					res.status(200).json(result);
 				} else {
 					User.updateOne(
 						{ username },
 						{ $set: { bank_id: bank_id } },
 						(err, user) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else if (user == null) {
-								res.status(200).json({
-									status: 0,
-									message: "You are either not authorised or not logged in.",
-								});
+							let result = errorMessage(
+								err,
+								user,
+								"You are either not authorised or not logged in."
+							);
+							if (result.status == 0) {
+								res.status(200).json(result);
 							} else {
 								res.status(200).json({
 									status: 1,
@@ -723,21 +600,13 @@ router.post("/user/saveUploadedDocsHash", jwtTokenAuth, (req, res) => {
 		{ username, status: 0 },
 		{ $set: { docs_hash: hashes, status: 2 } }, //Status 2: Waiting for cashier approval
 		(err, result) => {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (result == null) {
-				res.status(200).json({
-					status: 0,
-					message: "You are either not authorised or not logged in.",
-				});
+			let result = errorMessage(
+				err,
+				result,
+				"You are either not authorised or not logged in."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				res.status(200).json({
 					status: 1,
@@ -755,22 +624,13 @@ router.post("/user/skipDocsUpload", jwtTokenAuth, (req, res) => {
 		{ $set: { status: 3 } },
 		(err, result) => {
 			//status 3: Go to the nearest branch and get docs uploaded
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (result == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"You can not perform this step. Either the docs are already uploaded or you are not authorised,login again and try.",
-				});
+			let result = errorMessage(
+				err,
+				result,
+				"You can not perform this step. Either the docs are already uploaded or you are not authorised,login again and try."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				res.status(200).json({
 					status: 1,
@@ -789,21 +649,13 @@ router.get("/user/getBanks", jwtTokenAuth, function (req, res) {
 			username,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message: "You are either not authorised or not logged in.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"You are either not authorised or not logged in."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Bank.find({ initial_setup: { $eq: true } }, function (
 					err,
@@ -840,21 +692,13 @@ router.get("/user/getTransactionHistory", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		async function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message: "You are either not authorised or not logged in.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"You are either not authorised or not logged in."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				try {
 					const wallet = user.wallet_id;
@@ -881,21 +725,13 @@ router.get("/user/getContactList", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message: "You are either not authorised or not logged in.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"You are either not authorised or not logged in."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				User.find(
 					{ mobile: { $in: user.contact_list } },
@@ -963,22 +799,13 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 			},
 		},
 		async function (err, sender) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (sender == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				sender,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				try {
 					const senderWallet = sender.wallet_id;
@@ -994,63 +821,35 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 								mobile: receiverMobile,
 							},
 							(err, receiver) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (receiver == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Receiver's wallet do not exist",
-									});
+								let result = errorMessage(
+									err,
+									receiver,
+									"Receiver's wallet do not exist"
+								);
+								if (result.status == 0) {
+									res.status(200).json(result);
 								} else {
 									Bank.findOne(
 										{
 											_id: sender.bank_id,
 										},
 										function (err, bank) {
-											if (err) {
-												console.log(err);
-												var message = err;
-												if (err.message) {
-													message = err.message;
-												}
-												res.status(200).json({
-													status: 0,
-													message: message,
-												});
-											} else if (bank == null) {
-												res.status(200).json({
-													status: 0,
-													message: "Bank Not Found",
-												});
+											let result = errorMessage(err, bank, "Bank Not Found");
+											if (result.status == 0) {
+												res.status(200).json(result);
 											} else {
 												Infra.findOne(
 													{
 														_id: bank.user_id,
 													},
 													function (err, infra) {
-														if (err) {
-															console.log(err);
-															var message = err;
-															if (err.message) {
-																message = err.message;
-															}
-															res.status(200).json({
-																status: 0,
-																message: message,
-															});
-														} else if (infra == null) {
-															res.status(200).json({
-																status: 0,
-																message: "Infra Not Found",
-															});
+														let result = errorMessage(
+															err,
+															infra,
+															"Infra Not Found"
+														);
+														if (result.status == 0) {
+															res.status(200).json(result);
 														} else {
 															const find = {
 																bank_id: bank._id,
@@ -1059,21 +858,13 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 																active: "Active",
 															};
 															Fee.findOne(find, function (err, fe) {
-																if (err) {
-																	console.log(err);
-																	var message = err;
-																	if (err.message) {
-																		message = err.message;
-																	}
-																	res.status(200).json({
-																		status: 0,
-																		message: message,
-																	});
-																} else if (fe == null) {
-																	res.status(200).json({
-																		status: 0,
-																		message: "Revenue Rule Not Found",
-																	});
+																let result = errorMessage(
+																	err,
+																	fe,
+																	"Revenue Rule Not Found"
+																);
+																if (result.status == 0) {
+																	res.status(200).json(result);
 																} else {
 																	var fee = 0;
 																	oamount = Number(sending_amount);
@@ -1282,21 +1073,9 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 			},
 		},
 		async function (err, sender) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (sender == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Sender not found",
-				});
+			let result = errorMessage(err, sender, "Sender not found");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				try {
 					receiver = {
@@ -1322,42 +1101,18 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 								_id: sender.bank_id,
 							},
 							function (err, bank) {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (bank == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Bank Not Found",
-									});
+								let result = errorMessage(err, bank, "Bank Not Found");
+								if (result.status == 0) {
+									res.status(200).json(result);
 								} else {
 									Infra.findOne(
 										{
 											_id: bank.user_id,
 										},
 										function (err, infra) {
-											if (err) {
-												console.log(err);
-												var message = err;
-												if (err.message) {
-													message = err.message;
-												}
-												res.status(200).json({
-													status: 0,
-													message: message,
-												});
-											} else if (infra == null) {
-												res.status(200).json({
-													status: 0,
-													message: "Infra Not Found",
-												});
+											let result = errorMessage(err, infra, "Infra Not Found");
+											if (result.status == 0) {
+												res.status(200).json(result);
 											} else {
 												const find = {
 													bank_id: bank._id,
@@ -1366,21 +1121,13 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 													active: "Active",
 												};
 												Fee.findOne(find, function (err, fe) {
-													if (err) {
-														console.log(err);
-														var message = err;
-														if (err.message) {
-															message = err.message;
-														}
-														res.status(200).json({
-															status: 0,
-															message: message,
-														});
-													} else if (fe == null) {
-														res.status(200).json({
-															status: 0,
-															message: "Revenue Rule Not Found",
-														});
+													let result = errorMessage(
+														err,
+														fe,
+														"Revenue Rule Not Found"
+													);
+													if (result.status == 0) {
+														res.status(200).json(result);
 													} else {
 														var fee = 0;
 
@@ -1401,6 +1148,12 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																temp = {
 																	mobile: sender.mobile,
 																	note: note,
+																	givenname: sender.name,
+																	familyname: sender.last_name,
+																	address1: sender.address,
+																	state: sender.state,
+																	country: sender.country,
+																	email: sender.email,
 																};
 																data.sender_info = JSON.stringify(temp);
 																temp = {

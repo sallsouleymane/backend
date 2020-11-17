@@ -7,6 +7,7 @@ const sendMail = require("./utils/sendMail");
 const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
 const getTypeClass = require("./utils/getTypeClass");
+const { errorMessage, catchError } = require("./utils/errorHandler");
 
 //transactions
 const interBankSendMoneyToNonWallet = require("./transactions/interBank/sendMoneyToNonWallet");
@@ -60,73 +61,28 @@ router.post(
 				status: 1,
 			},
 			function (err, cashier) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (cashier == null) {
-					res.status(200).json({
-						status: 0,
-						message:
-							"Token changed or user not valid. Try to login again or contact system administrator.",
-					});
+				let result = errorMessage(
+					err,
+					cashier,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
 				} else {
 					PartnerBranch.findOne({ _id: cashier.branch_id }, (err, branch) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (branch == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Branch not found",
-							});
+						let result = errorMessage(err, branch, "Branch not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							Bank.findOne({ _id: branch.bank_id }, (err, bank) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (bank == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Bank not found",
-									});
+								let result = errorMessage(err, bank, "Bank not found");
+								if (result.status == 0) {
+									res.status(200).json(result);
 								} else {
 									Infra.findOne({ _id: bank.user_id }, (err, infra) => {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
-											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else if (infra == null) {
-											res.status(200).json({
-												status: 0,
-												message: "Infra not found",
-											});
+										let result = errorMessage(err, infra, "Infra not found");
+										if (result.status == 0) {
+											res.status(200).json(result);
 										} else {
 											const Collection = getTypeClass(code);
 											Collection.findOne(
@@ -134,40 +90,24 @@ router.post(
 													"wallet_ids.operational": wallet_id,
 												},
 												(err, toBranch) => {
-													if (err) {
-														console.log(err);
-														var message = err;
-														if (err.message) {
-															message = err.message;
-														}
-														res.status(200).json({
-															status: 0,
-															message: message,
-														});
-													} else if (toBranch == null) {
-														res.status(200).json({
-															status: 0,
-															message: "Invalid wallet ID",
-														});
+													let result = errorMessage(
+														err,
+														toBranch,
+														"Invalid wallet ID"
+													);
+													if (result.status == 0) {
+														res.status(200).json(result);
 													} else {
 														Bank.findOne(
 															{ _id: toBranch.bank_id },
 															(err, toBank) => {
-																if (err) {
-																	console.log(err);
-																	var message = err;
-																	if (err.message) {
-																		message = err.message;
-																	}
-																	res.status(200).json({
-																		status: 0,
-																		message: message,
-																	});
-																} else if (toBank == null) {
-																	res.status(200).json({
-																		status: 0,
-																		message: "To Branch's bank not found",
-																	});
+																let result = errorMessage(
+																	err,
+																	toBank,
+																	"To Branch's bank not found"
+																);
+																if (result.status == 0) {
+																	res.status(200).json(result);
 																} else {
 																	var find = {
 																		bank_id: bank._id,
@@ -179,22 +119,13 @@ router.post(
 																		err,
 																		rule1
 																	) {
-																		if (err) {
-																			console.log(err);
-																			var message = err;
-																			if (err.message) {
-																				message = err.message;
-																			}
-																			res.status(200).json({
-																				status: 0,
-																				message: message,
-																			});
-																		} else if (rule1 == null) {
-																			res.status(200).json({
-																				status: 0,
-																				message:
-																					"Inter Bank Revenue Rule Not Found",
-																			});
+																		let result = errorMessage(
+																			err,
+																			rule1,
+																			"Inter Bank Revenue Rule Not Found"
+																		);
+																		if (result.status == 0) {
+																			res.status(200).json(result);
 																		} else {
 																			const find = {
 																				bank_id: bank._id,
@@ -203,21 +134,13 @@ router.post(
 																				active: "Active",
 																			};
 																			Fee.findOne(find, (err, rule2) => {
-																				if (err) {
-																					console.log(err);
-																					var message = err;
-																					if (err.message) {
-																						message = err.message;
-																					}
-																					res.status(200).json({
-																						status: 0,
-																						message: message,
-																					});
-																				} else if (rule2 == null) {
-																					res.status(200).json({
-																						status: 0,
-																						message: "Rule not found",
-																					});
+																				let result = errorMessage(
+																					err,
+																					rule2,
+																					"Rule not found"
+																				);
+																				if (result.status == 0) {
+																					res.status(200).json(result);
 																				} else {
 																					const transfer = {
 																						amount: amount,
@@ -409,73 +332,28 @@ router.post("/cashier/interBank/sendToOperational", function (req, res) {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Branch.findOne({ _id: cashier.branch_id }, (err, branch) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (branch == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Branch not found",
-						});
+					let result = errorMessage(err, branch, "Branch not found");
+					if (result.status == 0) {
+						res.status(200).json(result);
 					} else {
 						Bank.findOne({ _id: branch.bank_id }, (err, bank) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else if (bank == null) {
-								res.status(200).json({
-									status: 0,
-									message: "Bank not found",
-								});
+							let result = errorMessage(err, bank, "Bank not found");
+							if (result.status == 0) {
+								res.status(200).json(result);
 							} else {
 								Infra.findOne({ _id: bank.user_id }, (err, infra) => {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (infra == null) {
-										res.status(200).json({
-											status: 0,
-											message: "Infra not found",
-										});
+									let result = errorMessage(err, infra, "Infra not found");
+									if (result.status == 0) {
+										res.status(200).json(result);
 									} else {
 										const Collection = getTypeClass(code);
 										Collection.findOne(
@@ -483,40 +361,24 @@ router.post("/cashier/interBank/sendToOperational", function (req, res) {
 												"wallet_ids.operational": wallet_id,
 											},
 											(err, toBranch) => {
-												if (err) {
-													console.log(err);
-													var message = err;
-													if (err.message) {
-														message = err.message;
-													}
-													res.status(200).json({
-														status: 0,
-														message: message,
-													});
-												} else if (toBranch == null) {
-													res.status(200).json({
-														status: 0,
-														message: "Invalid wallet ID",
-													});
+												let result = errorMessage(
+													err,
+													toBranch,
+													"Invalid wallet ID"
+												);
+												if (result.status == 0) {
+													res.status(200).json(result);
 												} else {
 													Bank.findOne(
 														{ _id: toBranch.bank_id },
 														(err, toBank) => {
-															if (err) {
-																console.log(err);
-																var message = err;
-																if (err.message) {
-																	message = err.message;
-																}
-																res.status(200).json({
-																	status: 0,
-																	message: message,
-																});
-															} else if (toBank == null) {
-																res.status(200).json({
-																	status: 0,
-																	message: "To Branch's bank not found",
-																});
+															let result = errorMessage(
+																err,
+																toBank,
+																"To Branch's bank not found"
+															);
+															if (result.status == 0) {
+																res.status(200).json(result);
 															} else {
 																var find = {
 																	bank_id: bank._id,
@@ -528,22 +390,13 @@ router.post("/cashier/interBank/sendToOperational", function (req, res) {
 																	err,
 																	rule1
 																) {
-																	if (err) {
-																		console.log(err);
-																		var message = err;
-																		if (err.message) {
-																			message = err.message;
-																		}
-																		res.status(200).json({
-																			status: 0,
-																			message: message,
-																		});
-																	} else if (rule1 == null) {
-																		res.status(200).json({
-																			status: 0,
-																			message:
-																				"Inter Bank Revenue Rule Not Found",
-																		});
+																	let result = errorMessage(
+																		err,
+																		rule1,
+																		"Inter Bank Revenue Rule Not Found"
+																	);
+																	if (result.status == 0) {
+																		res.status(200).json(result);
 																	} else {
 																		const find = {
 																			bank_id: bank._id,
@@ -552,21 +405,13 @@ router.post("/cashier/interBank/sendToOperational", function (req, res) {
 																			active: "Active",
 																		};
 																		Fee.findOne(find, (err, rule2) => {
-																			if (err) {
-																				console.log(err);
-																				var message = err;
-																				if (err.message) {
-																					message = err.message;
-																				}
-																				res.status(200).json({
-																					status: 0,
-																					message: message,
-																				});
-																			} else if (rule2 == null) {
-																				res.status(200).json({
-																					status: 0,
-																					message: "Rule not found",
-																				});
+																			let result = errorMessage(
+																				err,
+																				rule2,
+																				"Rule not found"
+																			);
+																			if (result.status == 0) {
+																				res.status(200).json(result);
 																			} else {
 																				const transfer = {
 																					amount: amount,
@@ -737,22 +582,13 @@ router.post("/user/interBank/checkFee", JWTTokenAuth, function (req, res) {
 				status: 1,
 			},
 			function (err, user) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (user == null) {
-					return res.status(200).json({
-						status: 0,
-						message:
-							"Token changed or user not valid. Try to login again or contact system administrator.",
-					});
+				let result = errorMessage(
+					err,
+					user,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
 				} else {
 					const find = {
 						bank_id: user.bank_id,
@@ -761,21 +597,13 @@ router.post("/user/interBank/checkFee", JWTTokenAuth, function (req, res) {
 						active: 1,
 					};
 					InterBankRule.findOne(find, function (err, rule) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							return res.status(200).json({
-								status: 0,
-								message: "Transaction cannot be done at this time",
-							});
+						let result = errorMessage(
+							err,
+							rule,
+							"Transaction cannot be done at this time"
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							var amnt = Number(amount);
 							var fee = 0;
@@ -952,142 +780,81 @@ router.post(
 				status: 1,
 			},
 			function (err, cashier) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (cashier == null) {
-					res.status(200).json({
-						status: 0,
-						message:
-							"Token changed or user not valid. Try to login again or contact system administrator.",
-					});
+				let result = errorMessage(
+					err,
+					cashier,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
 				} else {
 					Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (partner == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Partner not found",
-							});
+						let result = errorMessage(err, partner, "Partner not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							User.findOne(
 								{
 									mobile: receiverMobile,
 								},
 								function (err, receiver) {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (receiver == null) {
-										res.status(200).json({
-											status: 0,
-											message: "Receiver Not Found",
-										});
+									let result = errorMessage(
+										err,
+										receiver,
+										"Receiver Not Found"
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
 									} else {
 										Bank.findOne(
 											{ _id: receiver.bank_id },
 											(err, receiverBank) => {
-												if (err) {
-													console.log(err);
-													var message = err;
-													if (err.message) {
-														message = err.message;
-													}
-													res.status(200).json({
-														status: 0,
-														message: message,
-													});
-												} else if (receiverBank == null) {
-													res.status(200).json({
-														status: 0,
-														message: "Receiver Bank Not Found",
-													});
+												let result = errorMessage(
+													err,
+													receiverBank,
+													"Receiver Bank Not Found"
+												);
+												if (result.status == 0) {
+													res.status(200).json(result);
 												} else {
 													PartnerBranch.findOne(
 														{
 															_id: cashier.branch_id,
 														},
 														function (err, branch) {
-															if (err) {
-																console.log(err);
-																var message = err;
-																if (err.message) {
-																	message = err.message;
-																}
-																res.status(200).json({
-																	status: 0,
-																	message: message,
-																});
-															} else if (branch == null) {
-																res.status(200).json({
-																	status: 0,
-																	message: "Branch Not Found",
-																});
+															let result = errorMessage(
+																err,
+																branch,
+																"Branch Not Found"
+															);
+															if (result.status == 0) {
+																res.status(200).json(result);
 															} else {
 																Bank.findOne(
 																	{
 																		_id: cashier.bank_id,
 																	},
 																	function (err, bank) {
-																		if (err) {
-																			console.log(err);
-																			var message = err;
-																			if (err.message) {
-																				message = err.message;
-																			}
-																			res.status(200).json({
-																				status: 0,
-																				message: message,
-																			});
-																		} else if (bank == null) {
-																			res.status(200).json({
-																				status: 0,
-																				message: "Bank Not Found",
-																			});
+																		let result = errorMessage(
+																			err,
+																			bank,
+																			"Bank Not Found"
+																		);
+																		if (result.status == 0) {
+																			res.status(200).json(result);
 																		} else {
 																			Infra.findOne(
 																				{
 																					_id: bank.user_id,
 																				},
 																				function (err, infra) {
-																					if (err) {
-																						console.log(err);
-																						var message = err;
-																						if (err.message) {
-																							message = err.message;
-																						}
-																						res.status(200).json({
-																							status: 0,
-																							message: message,
-																						});
-																					} else if (infra == null) {
-																						res.status(200).json({
-																							status: 0,
-																							message: "Infra Not Found",
-																						});
+																					let result = errorMessage(
+																						err,
+																						infra,
+																						"Infra Not Found"
+																					);
+																					if (result.status == 0) {
+																						res.status(200).json(result);
 																					} else {
 																						let data = new CashierSend();
 																						let temp = {
@@ -1169,22 +936,15 @@ router.post(
 																								InterBankRule.findOne(
 																									find,
 																									function (err, rule1) {
-																										if (err) {
-																											console.log(err);
-																											var message = err;
-																											if (err.message) {
-																												message = err.message;
-																											}
-																											res.status(200).json({
-																												status: 0,
-																												message: message,
-																											});
-																										} else if (rule1 == null) {
-																											res.status(200).json({
-																												status: 0,
-																												message:
-																													"Inter Bank Revenue Rule Not Found",
-																											});
+																										let result = errorMessage(
+																											err,
+																											rule1,
+																											"Inter Bank Revenue Rule Not Found"
+																										);
+																										if (result.status == 0) {
+																											res
+																												.status(200)
+																												.json(result);
 																										} else {
 																											find = {
 																												bank_id: bank._id,
@@ -1500,123 +1260,70 @@ router.post("/cashier/interBank/sendMoneyToWallet", function (req, res) {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				User.findOne(
 					{
 						mobile: receiverMobile,
 					},
 					function (err, receiver) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (receiver == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Receiver Not Found",
-							});
+						let result = errorMessage(err, receiver, "Receiver Not Found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							Bank.findOne({ _id: receiver.bank_id }, (err, receiverBank) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (receiverBank == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Receiver Not Found",
-									});
+								let result = errorMessage(
+									err,
+									receiverBank,
+									"Receiver Not Found"
+								);
+								if (result.status == 0) {
+									res.status(200).json(result);
 								} else {
 									Branch.findOne(
 										{
 											_id: cashier.branch_id,
 										},
 										function (err, branch) {
-											if (err) {
-												console.log(err);
-												var message = err;
-												if (err.message) {
-													message = err.message;
-												}
-												res.status(200).json({
-													status: 0,
-													message: message,
-												});
-											} else if (branch == null) {
-												res.status(200).json({
-													status: 0,
-													message: "Branch Not Found",
-												});
+											let result = errorMessage(
+												err,
+												branch,
+												"Branch Not Found"
+											);
+											if (result.status == 0) {
+												res.status(200).json(result);
 											} else {
 												Bank.findOne(
 													{
 														_id: cashier.bank_id,
 													},
 													function (err, bank) {
-														if (err) {
-															console.log(err);
-															var message = err;
-															if (err.message) {
-																message = err.message;
-															}
-															res.status(200).json({
-																status: 0,
-																message: message,
-															});
-														} else if (bank == null) {
-															res.status(200).json({
-																status: 0,
-																message: "Bank Not Found",
-															});
+														let result = errorMessage(
+															err,
+															bank,
+															"Bank Not Found"
+														);
+														if (result.status == 0) {
+															res.status(200).json(result);
 														} else {
 															Infra.findOne(
 																{
 																	_id: bank.user_id,
 																},
 																function (err, infra) {
-																	if (err) {
-																		console.log(err);
-																		var message = err;
-																		if (err.message) {
-																			message = err.message;
-																		}
-																		res.status(200).json({
-																			status: 0,
-																			message: message,
-																		});
-																	} else if (infra == null) {
-																		res.status(200).json({
-																			status: 0,
-																			message: "Infra Not Found",
-																		});
+																	let result = errorMessage(
+																		err,
+																		infra,
+																		"Infra Not Found"
+																	);
+																	if (result.status == 0) {
+																		res.status(200).json(result);
 																	} else {
 																		let data = new CashierSend();
 																		let temp = {
@@ -1692,22 +1399,13 @@ router.post("/cashier/interBank/sendMoneyToWallet", function (req, res) {
 																					err,
 																					rule1
 																				) {
-																					if (err) {
-																						console.log(err);
-																						var message = err;
-																						if (err.message) {
-																							message = err.message;
-																						}
-																						res.status(200).json({
-																							status: 0,
-																							message: message,
-																						});
-																					} else if (rule1 == null) {
-																						res.status(200).json({
-																							status: 0,
-																							message:
-																								"Inter Bank Revenue Rule Not Found",
-																						});
+																					let result = errorMessage(
+																						err,
+																						rule1,
+																						"Inter Bank Revenue Rule Not Found"
+																					);
+																					if (result.status == 0) {
+																						res.status(200).json(result);
 																					} else {
 																						find = {
 																							bank_id: bank._id,
@@ -1721,22 +1419,13 @@ router.post("/cashier/interBank/sendMoneyToWallet", function (req, res) {
 																							err,
 																							rule2
 																						) {
-																							if (err) {
-																								console.log(err);
-																								var message = err;
-																								if (err.message) {
-																									message = err.message;
-																								}
-																								res.status(200).json({
-																									status: 0,
-																									message: message,
-																								});
-																							} else if (rule2 == null) {
-																								res.status(200).json({
-																									status: 0,
-																									message:
-																										"Revenue Rule Not Found",
-																								});
+																							let result = errorMessage(
+																								err,
+																								rule2,
+																								"Revenue Rule Not Found"
+																							);
+																							if (result.status == 0) {
+																								res.status(200).json(result);
 																							} else {
 																								//End
 																								var transfer = {
@@ -1975,21 +1664,9 @@ router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (
 			},
 		},
 		async function (err, sender) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (sender == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Sender not found",
-				});
+			let result = errorMessage(err, sender, "Sender not found");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				var receiver = {
 					name: receiverGivenName,
@@ -2027,6 +1704,12 @@ router.post("/user/interBank/sendMoneyToNonWallet", JWTTokenAuth, function (
 					temp = {
 						mobile: sender.mobile,
 						note: note,
+						givenname: sender.name,
+						familyname: sender.last_name,
+						address1: sender.address,
+						state: sender.state,
+						country: sender.country,
+						email: sender.email,
 					};
 					data.sender_info = JSON.stringify(temp);
 					temp = {
@@ -2155,22 +1838,13 @@ router.post("/partnerCashier/interBank/claimMoney", JWTTokenAuth, function (
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				CashierClaim.findOne(
 					{
@@ -2199,82 +1873,46 @@ router.post("/partnerCashier/interBank/claimMoney", JWTTokenAuth, function (
 									transaction_code: transferCode,
 								},
 								function (err, cs) {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (cs == null) {
-										res.status(200).json({
-											status: 0,
-											message: "Transaction Not Found",
-										});
+									let result = errorMessage(err, cs, "Transaction Not Found");
+									if (result.status == 0) {
+										res.status(200).json(result);
 									} else {
 										PartnerBranch.findOne(
 											{
 												_id: cashier.branch_id,
 											},
 											function (err, branch) {
-												if (err) {
-													console.log(err);
-													var message = err;
-													if (err.message) {
-														message = err.message;
-													}
-													res.status(200).json({
-														status: 0,
-														message: message,
-													});
-												} else if (branch == null) {
-													res.status(200).json({
-														status: 0,
-														message: "Branch Not Found",
-													});
+												let result = errorMessage(
+													err,
+													branch,
+													"Branch Not Found"
+												);
+												if (result.status == 0) {
+													res.status(200).json(result);
 												} else {
 													Partner.findOne(
 														{ _id: branch.partner_id },
 														(err, partner) => {
-															if (err) {
-																console.log(err);
-																var message = err;
-																if (err.message) {
-																	message = err.message;
-																}
-																res.status(200).json({
-																	status: 0,
-																	message: message,
-																});
-															} else if (partner == null) {
-																res.status(200).json({
-																	status: 0,
-																	message: "Partner Not Found",
-																});
+															let result = errorMessage(
+																err,
+																partner,
+																"Partner Not Found"
+															);
+															if (result.status == 0) {
+																res.status(200).json(result);
 															} else {
 																Bank.findOne(
 																	{
 																		_id: cashier.bank_id,
 																	},
 																	function (err, bank) {
-																		if (err) {
-																			console.log(err);
-																			var message = err;
-																			if (err.message) {
-																				message = err.message;
-																			}
-																			res.status(200).json({
-																				status: 0,
-																				message: message,
-																			});
-																		} else if (bank == null) {
-																			res.status(200).json({
-																				status: 0,
-																				message: "Bank Not Found",
-																			});
+																		let result = errorMessage(
+																			err,
+																			bank,
+																			"Bank Not Found"
+																		);
+																		if (result.status == 0) {
+																			res.status(200).json(result);
 																		} else {
 																			Bank.findOne(
 																				{ _id: cs.sending_bank_id },
