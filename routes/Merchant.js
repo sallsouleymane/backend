@@ -9,6 +9,7 @@ const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
 const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
+const { errorMessage, catchError } = require("./utils/errorHandler");
 const blockchain = require("../services/Blockchain");
 
 //models
@@ -34,21 +35,9 @@ router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Merchant is not valid",
-				});
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Customer.find({ merchant_id: merchant._id }, (err, customers) => {
 					if (err) {
@@ -80,21 +69,13 @@ router.post("/merchant/uploadCustomers", jwtTokenAuth, (req, res) => {
 		err,
 		merchant
 	) {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else if (merchant == null) {
-			res.status(200).json({
-				status: 0,
-				message: "You are either not authorised or not logged in.",
-			});
+		let result = errorMessage(
+			err,
+			merchant,
+			"You are either not authorised or not logged in."
+		);
+		if (result.status == 0) {
+			res.status(200).json(result);
 		} else {
 			let failed = [];
 			for (customer of customers) {
@@ -157,22 +138,13 @@ router.post("/merchant/zoneSetting", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantSettings.countDocuments(
 					{ merchant_id: merchant._id },
@@ -262,22 +234,13 @@ router.post("/merchant/editPenaltyRule", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantSettings.countDocuments(
 					{ merchant_id: merchant._id },
@@ -366,22 +329,13 @@ router.post("/merchant/addBillPeriod", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantSettings.countDocuments(
 					{ merchant_id: merchant._id },
@@ -469,43 +423,22 @@ router.post("/merchant/setDefaultBillPeriod", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantSettings.findOneAndUpdate(
 					{ merchant_id: merchant._id },
 					{ default_bill_period: period },
 					{ new: true },
 					(err, setting) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (setting == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Setting not found",
-							});
+						let result = errorMessage(err, setting, "Setting not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -531,43 +464,22 @@ router.post("/merchant/setDefaultBillterm", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantSettings.findOneAndUpdate(
 					{ merchant_id: merchant._id },
 					{ default_bill_term: term },
 					{ new: true },
 					(err, setting) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (setting == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Setting not found",
-							});
+						let result = errorMessage(err, setting, "Setting not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -593,22 +505,13 @@ router.post("/merchant/addBillTerm", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantSettings.countDocuments(
 					{ merchant_id: merchant._id },
@@ -691,21 +594,9 @@ router.post("/merchant/getSettings", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Merchant is not valid",
-				});
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantSettings.findOne(
 					{ merchant_id: merchant._id },
@@ -746,21 +637,9 @@ router.post("/merchant/listTaxes", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Merchant is not valid",
-				});
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Tax.find({ merchant_id: merchant._id }, (err, taxes) => {
 					if (err) {
@@ -794,21 +673,9 @@ router.post("/merchant/deleteTax", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Merchant is not valid",
-				});
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Tax.deleteOne({ _id: tax_id }, (err) => {
 					if (err) {
@@ -842,42 +709,18 @@ router.post("/merchant/editTax", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Merchant is not valid",
-				});
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Tax.findOneAndUpdate(
 					{ _id: tax_id },
 					{ code, name, value },
 					{ new: true },
 					(err, tax) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (tax == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Tax not found",
-							});
+						let result = errorMessage(err, tax, "Tax not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -901,21 +744,9 @@ router.post("/merchant/createTax", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Merchant is not valid",
-				});
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Tax.findOne(
 					{
@@ -979,21 +810,9 @@ router.post("/merchant/deleteOffering", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Merchant is not valid",
-				});
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Offering.deleteOne({ _id: offering_id }, (err) => {
 					if (err) {
@@ -1036,22 +855,13 @@ router.post("/merchant/editOffering", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Offering.findOneAndUpdate(
 					{ _id: offering_id, merchant_id: merchant._id },
@@ -1066,21 +876,9 @@ router.post("/merchant/editOffering", jwtTokenAuth, (req, res) => {
 					},
 					{ new: true },
 					(err, offering) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (offering == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Offering not found",
-							});
+						let result = errorMessage(err, offering, "Offering not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -1103,21 +901,9 @@ router.post("/merchant/listOfferings", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Merchant is not valid",
-				});
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Offering.find({ merchant_id: merchant._id }, (err, offerings) => {
 					if (err) {
@@ -1151,21 +937,9 @@ router.post("/merchant/uploadOfferings", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		async function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Merchant is not valid",
-				});
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				let failed = [];
 				for (offering of offerings) {
@@ -1225,22 +999,9 @@ router.get("/merchant/todaysStatus", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				console.log(err);
-				res.status(200).json({
-					status: 0,
-					message: "Merchant is not valid",
-				});
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				const today = new Date(); // "2020-06-09T18:30:00.772Z"
 				Merchant.findOneAndUpdate(
@@ -1290,22 +1051,13 @@ router.get("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Bank.findOne(
 					{
@@ -1381,22 +1133,13 @@ router.post("/merchant/editDetails", jwtTokenAuth, function (req, res) {
 		},
 		{ new: true },
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				res.status(200).json({
 					status: 1,
@@ -1417,42 +1160,21 @@ router.post("/merchant/editZone", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Zone.findOneAndUpdate(
 					{ _id: zone_id },
 					{ code: code, name: name, description: description, type: type },
 					(err, zone) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (zone == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Zone not found",
-							});
+						let result = errorMessage(err, zone, "Zone not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -1474,22 +1196,13 @@ router.get("/merchant/getZoneList", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Zone.find({ merchant_id: merchant._id }, (err, zones) => {
 					if (err) {
@@ -1524,22 +1237,13 @@ router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				data.code = code;
 				data.name = name;
@@ -1578,22 +1282,13 @@ router.post("/merchant/createSubzone", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				data.code = code;
 				data.name = name;
@@ -1638,22 +1333,13 @@ router.post("/merchant/listSubzonesByZoneId", jwtTokenAuth, function (
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Subzone.find(
 					{ merchant_id: merchant._id, zone_id: zone_id },
@@ -1691,42 +1377,21 @@ router.post("/merchant/editSubzone", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Subzone.findOneAndUpdate(
 					{ _id: subzone_id },
 					{ code: code, name: name, description: description, type: type },
 					(err, subzone) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (subzone == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Subzone not found",
-							});
+						let result = errorMessage(err, subzone, "Subzone not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -1750,39 +1415,18 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantBranch.findOne({ _id: branch_id }, function (err, branch) {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (branch == null) {
-						return res.json({
-							status: 0,
-							message: "Invalid branch",
-						});
+					let result = errorMessage(err, branch, "Invalid branch");
+					if (result.status == 0) {
+						res.status(200).json(result);
 					} else {
 						data.name = name;
 						data.working_from = working_from;
@@ -1805,23 +1449,9 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 									{ _id: branch_id },
 									{ $inc: { total_cashiers: 1 } },
 									function (err, branch) {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
-											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else if (branch == null) {
-											console.log(err);
-											return res.json({
-												status: 0,
-												message: "Branch not found",
-												err: err,
-											});
+										let result = errorMessage(err, branch, "Branch not found");
+										if (result.status == 0) {
+											res.status(200).json(result);
 										} else {
 											let ig = new InvoiceGroup();
 											ig.code = "group-" + name;
@@ -1869,21 +1499,9 @@ router.post("/merchant/editCashier", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Merchant is not valid",
-				});
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantCashier.findOneAndUpdate(
 					{ _id: cashier_id, merchant_id: merchant._id },
@@ -1893,21 +1511,9 @@ router.post("/merchant/editCashier", jwtTokenAuth, (req, res) => {
 						working_to: working_to,
 					},
 					(err, cashier) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (cashier == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Cashier not found",
-							});
+						let result = errorMessage(err, cashier, "Cashier not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -1930,21 +1536,9 @@ router.post("/merchant/listCashier", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Merchant is not vaid",
-				});
+			let result = errorMessage(err, merchant, "Merchant is not vaid");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantCashier.find(
 					{ merchant_id: merchant._id, branch_id: branch_id },
@@ -1993,22 +1587,13 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				data.role = role;
 				data.code = code;
@@ -2089,22 +1674,13 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantStaff.findOneAndUpdate(
 					{
@@ -2122,21 +1698,9 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 						logo: logo,
 					},
 					(err, staff) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (staff == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Staff not found",
-							});
+						let result = errorMessage(err, staff, "Staff not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -2158,22 +1722,13 @@ router.get("/merchant/listStaff", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantStaff.find(
 					{ merchant_id: merchant._id },
@@ -2211,22 +1766,13 @@ router.post("/merchant/blockStaff", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantStaff.findOneAndUpdate(
 					{ _id: staff_id, merchant_id: merchant._id },
@@ -2236,21 +1782,9 @@ router.post("/merchant/blockStaff", jwtTokenAuth, (req, res) => {
 						},
 					},
 					(err, staff) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (staff == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Staff not found",
-							});
+						let result = errorMessage(err, staff, "Staff not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -2273,22 +1807,13 @@ router.post("/merchant/unblockStaff", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantStaff.findOneAndUpdate(
 					{ _id: staff_id, merchant_id: merchant._id, status: 2 },
@@ -2296,21 +1821,9 @@ router.post("/merchant/unblockStaff", jwtTokenAuth, (req, res) => {
 						status: 1,
 					},
 					(err, staff) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (staff == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Staff not found",
-							});
+						let result = errorMessage(err, staff, "Staff not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -2333,22 +1846,9 @@ router.post("/merchant/blockBranch", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				console.log(err);
-				res.status(200).json({
-					status: 0,
-					message: "Merchant is not valid",
-				});
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantBranch.findOneAndUpdate(
 					{ _id: branch_id, merchant_id: merchant._id },
@@ -2356,21 +1856,9 @@ router.post("/merchant/blockBranch", jwtTokenAuth, (req, res) => {
 						status: 2,
 					},
 					(err, branch) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (branch == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Branch not found",
-							});
+						let result = errorMessage(err, branch, "Branch not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -2393,22 +1881,9 @@ router.post("/merchant/unblockBranch", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				console.log(err);
-				res.status(200).json({
-					status: 0,
-					message: "Merchant is not valid",
-				});
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantBranch.findOneAndUpdate(
 					{ _id: branch_id, merchant_id: merchant._id, status: 2 },
@@ -2416,21 +1891,13 @@ router.post("/merchant/unblockBranch", jwtTokenAuth, (req, res) => {
 						status: 1,
 					},
 					(err, branch) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (branch == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Branch not found/ not blocked",
-							});
+						let result = errorMessage(
+							err,
+							branch,
+							"Branch not found/ not blocked"
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -2470,22 +1937,13 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 		},
 		"-password",
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				data.name = name;
 				data.code = code;
@@ -2532,23 +1990,9 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 									{ _id: subzone_id },
 									{ $inc: { branch_count: 1 } },
 									function (err, subzone) {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
-											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else if (subzone == null) {
-											console.log(err);
-											res.status(200).json({
-												status: 0,
-												message: "Subone not found",
-												err: err,
-											});
+										let result = errorMessage(err, subzone, "Subone not found");
+										if (result.status == 0) {
+											res.status(200).json(result);
 										} else {
 											let content =
 												"<p>You are added as a branch for merchant " +
@@ -2623,22 +2067,13 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantBranch.findOneAndUpdate(
 					{ _id: branch_id, merchant_id: merchant._id },
@@ -2688,22 +2123,13 @@ router.get("/merchant/listBranches", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantBranch.find(
 					{ merchant_id: merchant._id },
@@ -2744,22 +2170,13 @@ router.post("/merchant/listBranchesBySubzoneId", jwtTokenAuth, function (
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantBranch.find(
 					{ merchant_id: merchant._id, subzone_id: subzone_id },
@@ -2796,39 +2213,18 @@ router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Bank.findOne({ _id: merchant.bank_id }, (err, bank) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (bank == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Bank not found",
-						});
+					let result = errorMessage(err, bank, "Bank not found");
+					if (result.status == 0) {
+						res.status(200).json(result);
 					} else {
 						const wallet_id = merchant.wallet_ids.operational;
 						blockchain

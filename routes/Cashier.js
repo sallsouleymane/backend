@@ -9,6 +9,7 @@ const sendMail = require("./utils/sendMail");
 const makeotp = require("./utils/makeotp");
 const getTypeClass = require("./utils/getTypeClass");
 const getWalletIds = require("./utils/getWalletIds");
+const { errorMessage, catchError } = require("./utils/errorHandler");
 
 //services
 const blockchain = require("../services/Blockchain.js");
@@ -28,7 +29,6 @@ const CashierLedger = require("../models/CashierLedger");
 const CashierTransfer = require("../models/CashierTransfer");
 const Merchant = require("../models/merchant/Merchant");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
-const PartnerBranch = require("../models/partner/Branch");
 const transferToOperational = require("./transactions/transferToOperational");
 
 router.post("/cashier/sendToOperational", function (req, res) {
@@ -48,39 +48,18 @@ router.post("/cashier/sendToOperational", function (req, res) {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Branch.findOne({ _id: cashier.branch_id }, (err, branch) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (branch == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Branch not found",
-						});
+					let result = errorMessage(err, branch, "Branch not found");
+					if (result.status == 0) {
+						res.status(200).json(result);
 					} else {
 						const Collection = getTypeClass(code);
 						Collection.findOne(
@@ -89,21 +68,9 @@ router.post("/cashier/sendToOperational", function (req, res) {
 								"wallet_ids.operational": wallet_id,
 							},
 							(err, toBranch) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (toBranch == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Invalid wallet ID",
-									});
+								let result = errorMessage(err, toBranch, "Invalid wallet ID");
+								if (result.status == 0) {
+									res.status(200).json(result);
 								} else {
 									const find = {
 										bank_id: branch.bank_id,
@@ -112,55 +79,23 @@ router.post("/cashier/sendToOperational", function (req, res) {
 										active: "Active",
 									};
 									Fee.findOne(find, (err, rule) => {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
-											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else if (rule == null) {
-											res.status(200).json({
-												status: 0,
-												message: "Rule not found",
-											});
+										let result = errorMessage(err, rule, "Rule not found");
+										if (result.status == 0) {
+											res.status(200).json(result);
 										} else {
 											Bank.findOne({ _id: branch.bank_id }, (err, bank) => {
-												if (err) {
-													console.log(err);
-													var message = err;
-													if (err.message) {
-														message = err.message;
-													}
-													res.status(200).json({
-														status: 0,
-														message: message,
-													});
-												} else if (bank == null) {
-													res.status(200).json({
-														status: 0,
-														message: "Bank not found",
-													});
+												let result = errorMessage(err, bank, "Bank not found");
+												if (result.status == 0) {
+													res.status(200).json(result);
 												} else {
 													Infra.findOne({ _id: bank.user_id }, (err, infra) => {
-														if (err) {
-															console.log(err);
-															var message = err;
-															if (err.message) {
-																message = err.message;
-															}
-															res.status(200).json({
-																status: 0,
-																message: message,
-															});
-														} else if (infra == null) {
-															res.status(200).json({
-																status: 0,
-																message: "Infra not found",
-															});
+														let result = errorMessage(
+															err,
+															infra,
+															"Infra not found"
+														);
+														if (result.status == 0) {
+															res.status(200).json(result);
 														} else {
 															const transfer = {
 																amount: amount,
@@ -295,56 +230,23 @@ router.post("/cashier/getTransactionHistory", function (req, res) {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Branch.findOne({ _id: cashier.branch_id }, (err, branch) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (branch == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Branch not found.",
-						});
+					let result = errorMessage(err, branch, "Branch not found.");
+					if (result.status == 0) {
+						res.status(200).json(result);
 					} else {
 						Bank.findOne({ _id: branch.bank_id }, async (err, bank) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else if (bank == null) {
-								res.status(200).json({
-									status: 0,
-									message: "Bank not found.",
-								});
+							let result = errorMessage(err, bank, "Bank not found.");
+							if (result.status == 0) {
+								res.status(200).json(result);
 							} else {
 								try {
 									let result = await blockchain.getStatement(
@@ -376,22 +278,13 @@ router.post("/cashier/listMerchants", function (req, res) {
 			token,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Merchant.find({ status: 1 }, "-password", (err, merchants) => {
 					if (err) {
@@ -420,38 +313,18 @@ router.post("/cashier/listMerchants", function (req, res) {
 router.post("/cashier/getUser", function (req, res) {
 	const { token, mobile } = req.body;
 	Cashier.findOne({ token }, function (err, cashier) {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else if (cashier == null) {
-			res.status(200).json({
-				status: 0,
-				message: "You are either not authorised or not logged in.",
-			});
+		let result = errorMessage(
+			err,
+			cashier,
+			"You are either not authorised or not logged in."
+		);
+		if (result.status == 0) {
+			res.status(200).json(result);
 		} else {
 			User.findOne({ mobile }, "-password", function (err, user) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (user == null) {
-					res.status(200).json({
-						status: 0,
-						message: "User not found",
-					});
+				let result = errorMessage(err, user, "User not found");
+				if (result.status == 0) {
+					res.status(200).json(result);
 				} else {
 					res.status(200).json({
 						status: 1,
@@ -466,21 +339,13 @@ router.post("/cashier/getUser", function (req, res) {
 router.post("/cashier/getMerchantPenaltyRule", function (req, res) {
 	const { token, merchant_id } = req.body;
 	Cashier.findOne({ token }, function (err, cashier) {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else if (cashier == null) {
-			res.status(200).json({
-				status: 0,
-				message: "You are either not authorised or not logged in.",
-			});
+		let result = errorMessage(
+			err,
+			cashier,
+			"You are either not authorised or not logged in."
+		);
+		if (result.status == 0) {
+			res.status(200).json(result);
 		} else {
 			MerchantSettings.findOne({ merchant_id: merchant_id }, function (
 				err,
@@ -551,21 +416,13 @@ router.post("/cashier/createUser", function (req, res) {
 		status: 2,
 	};
 	Cashier.findOne({ token }, function (err, cashier) {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else if (cashier == null) {
-			res.status(200).json({
-				status: 0,
-				message: "You are either not authorised or not logged in.",
-			});
+		let result = errorMessage(
+			err,
+			cashier,
+			"You are either not authorised or not logged in."
+		);
+		if (result.status == 0) {
+			res.status(200).json(result);
 		} else {
 			User.create(userDetails, function (err) {
 				if (err) {
@@ -655,41 +512,21 @@ router.post("/cashier/editUser", function (req, res) {
 		}
 	}
 	Cashier.findOne({ token }, function (err, cashier) {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else if (cashier == null) {
-			res.status(200).json({
-				status: 0,
-				message: "You are either not authorised or not logged in.",
-			});
+		let result = errorMessage(
+			err,
+			cashier,
+			"You are either not authorised or not logged in."
+		);
+		if (result.status == 0) {
+			res.status(200).json(result);
 		} else {
 			User.findOneAndUpdate({ mobile }, { $set: userDetails }, function (
 				err,
 				user
 			) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (user == null) {
-					res.status(200).json({
-						status: 0,
-						message: "User not found",
-					});
+				let result = errorMessage(err, user, "User not found");
+				if (result.status == 0) {
+					res.status(200).json(result);
 				} else {
 					res.status(200).json({
 						status: 1,
@@ -705,38 +542,22 @@ router.post("/cashier/activateUser", function (req, res) {
 	try {
 		const { token, mobile } = req.body;
 		Cashier.findOne({ token }, function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message: "You are either not authorised or not logged in.",
-				});
+			let result = errorMessage(
+				err,
+				cashier,
+				"You are either not authorised or not logged in."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Bank.findOne({ _id: cashier.bank_id }, async (err, bank) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (cashier == null) {
-						res.status(200).json({
-							status: 0,
-							message: "You are either not authorised or not logged in.",
-						});
+					let result = errorMessage(
+						err,
+						cashier,
+						"You are either not authorised or not logged in."
+					);
+					if (result.status == 0) {
+						res.status(200).json(result);
 					} else {
 						try {
 							let wallet_id = getWalletIds("user", mobile, bank.bcode);
@@ -759,21 +580,9 @@ router.post("/cashier/activateUser", function (req, res) {
 										},
 									},
 									function (err, user) {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
-											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else if (user == null) {
-											res.status(200).json({
-												status: 0,
-												message: "User not found",
-											});
+										let result = errorMessage(err, user, "User not found");
+										if (result.status == 0) {
+											res.status(200).json(result);
 										} else {
 											let content =
 												"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
@@ -838,22 +647,13 @@ router.post("/getCashierDashStats", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				res.status(200).json({
 					status: 1,
@@ -882,22 +682,13 @@ router.post("/getCashierIncomingTransfer", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				CashierTransfer.find(
 					{
@@ -924,44 +715,26 @@ router.post("/cashierAcceptIncoming", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Cashier.findOne(
 					{
 						_id: item.receiver_id,
 					},
 					function (err, u) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (u == null) {
-							res.status(200).json({
-								status: 0,
-								message:
-									"Token changed or user not valid. Try to login again or contact system administrator.",
-							});
+						let result = errorMessage(
+							err,
+							u,
+							"Token changed or user not valid. Try to login again or contact system administrator."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							let cashInHand = Number(u.cash_in_hand) + Number(item.amount);
 							CashierTransfer.findByIdAndUpdate(
@@ -976,21 +749,13 @@ router.post("/cashierAcceptIncoming", function (req, res) {
 											cash_in_hand: cashInHand,
 										},
 										(err, data) => {
-											if (err) {
-												console.log(err);
-												var message = err;
-												if (err.message) {
-													message = err.message;
-												}
-												res.status(200).json({
-													status: 0,
-													message: message,
-												});
-											} else if (data == null) {
-												res.status(200).json({
-													status: 0,
-													message: "Cashier transfer record not found",
-												});
+											let result = errorMessage(
+												err,
+												data,
+												"Cashier transfer record not found"
+											);
+											if (result.status == 0) {
+												res.status(200).json(result);
 											} else {
 												res.status(200).json({
 													status: 1,
@@ -1023,22 +788,13 @@ router.post("/getClosingBalance", function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				let cb = 0,
 					cr = 0,
@@ -1070,22 +826,13 @@ router.post("/openCashierBalance", (req, res) => {
 			status: 1,
 		},
 		function (err, ba) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (ba == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				ba,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				var bal =
 					Number(ba.closing_balance) > 0
@@ -1134,22 +881,13 @@ router.post("/addClosingBalance", (req, res) => {
 			status: 1,
 		},
 		function (err, otpd) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (otpd == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				otpd,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				let data = new CashierLedger();
 				data.amount = total;
@@ -1203,22 +941,13 @@ router.post("/getCashierTransfers", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (f == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				CashierTransfer.find({
 					$or: [{ sender_id: f._id }, { receiver_id: f._id }],
@@ -1244,22 +973,13 @@ router.post("/cashierCancelTransfer", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (f == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				OTP.findOne(
 					{
@@ -1267,65 +987,35 @@ router.post("/cashierCancelTransfer", function (req, res) {
 						otp: otp,
 					},
 					function (err, otpd) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (otpd == null) {
-							res.status(200).json({
-								status: 0,
-								message: "OTP Missmatch",
-							});
+						let result = errorMessage(err, otpd, "OTP Missmatch");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							CashierTransfer.findOne(
 								{
 									_id: transfer_id,
 								},
 								function (err, item) {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (item == null) {
-										res.status(200).json({
-											status: 0,
-											message:
-												"Token changed or user not valid. Try to login again or contact system administrator.",
-										});
+									let result = errorMessage(
+										err,
+										item,
+										"Token changed or user not valid. Try to login again or contact system administrator."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
 									} else {
 										Cashier.findOne(
 											{
 												_id: item.sender_id,
 											},
 											function (err, u) {
-												if (err) {
-													console.log(err);
-													var message = err;
-													if (err.message) {
-														message = err.message;
-													}
-													res.status(200).json({
-														status: 0,
-														message: message,
-													});
-												} else if (u == null) {
-													res.status(200).json({
-														status: 0,
-														message:
-															"Token changed or user not valid. Try to login again or contact system administrator.",
-													});
+												let result = errorMessage(
+													err,
+													u,
+													"Token changed or user not valid. Try to login again or contact system administrator."
+												);
+												if (result.status == 0) {
+													res.status(200).json(result);
 												} else {
 													let cashInHand =
 														Number(u.cash_in_hand) + Number(item.amount);
@@ -1377,22 +1067,13 @@ router.post("/getCashierTransLimit", function (req, res) {
 			status: 1,
 		},
 		function (err, t1) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (t1 == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				t1,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				let limit =
 					Number(t1.max_trans_amt) -
@@ -1420,22 +1101,13 @@ router.post("/getCashier", function (req, res) {
 			status: 1,
 		},
 		function (err, t1) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (t1 == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				t1,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Cashier.findOne({ _id: t1._id }, function (err, data) {
 					if (err) {
@@ -1484,22 +1156,13 @@ router.post("/checkCashierFee", function (req, res) {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				const find = {
 					bank_id: cashier.bank_id,
@@ -1508,21 +1171,13 @@ router.post("/checkCashierFee", function (req, res) {
 					active: "Active",
 				};
 				Fee.findOne(find, function (err, fe) {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (fe == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Transaction cannot be done at this time",
-						});
+					let result = errorMessage(
+						err,
+						fe,
+						"Transaction cannot be done at this time"
+					);
+					if (result.status == 0) {
+						res.status(200).json(result);
 					} else {
 						amount = Number(amount);
 						var temp;
@@ -1553,22 +1208,13 @@ router.post("/cashierVerifyOTPClaim", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (f == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				CashierSend.findOne(
 					{
@@ -1576,21 +1222,9 @@ router.post("/cashierVerifyOTPClaim", function (req, res) {
 						otp: otp,
 					},
 					function (err, otpd) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (otpd == null) {
-							res.status(200).json({
-								status: 0,
-								message: "OTP Missmatch",
-							});
+						let result = errorMessage(err, otpd, "OTP Missmatch");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -1652,85 +1286,40 @@ router.post("/cashierSendMoney", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (f == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Branch.findOne(
 					{
 						_id: f.branch_id,
 					},
 					function (err, f2) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (f2 == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Branch Not Found",
-							});
+						let result = errorMessage(err, f2, "Branch Not Found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							Bank.findOne(
 								{
 									_id: f.bank_id,
 								},
 								function (err, f3) {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (f3 == null) {
-										res.status(200).json({
-											status: 0,
-											message: "Bank Not Found",
-										});
+									let result = errorMessage(err, f3, "Bank Not Found");
+									if (result.status == 0) {
+										res.status(200).json(result);
 									} else {
 										Infra.findOne(
 											{
 												_id: f3.user_id,
 											},
 											function (err, f4) {
-												if (err) {
-													console.log(err);
-													var message = err;
-													if (err.message) {
-														message = err.message;
-													}
-													res.status(200).json({
-														status: 0,
-														message: message,
-													});
-												} else if (f4 == null) {
-													res.status(200).json({
-														status: 0,
-														message: "Infra Not Found",
-													});
+												let result = errorMessage(err, f4, "Infra Not Found");
+												if (result.status == 0) {
+													res.status(200).json(result);
 												} else {
 													let data = new CashierSend();
 													let temp = {
@@ -1825,21 +1414,13 @@ router.post("/cashierSendMoney", function (req, res) {
 
 															const amount = receiverIdentificationAmount;
 															Fee.findOne(find, function (err, fe) {
-																if (err) {
-																	console.log(err);
-																	var message = err;
-																	if (err.message) {
-																		message = err.message;
-																	}
-																	res.status(200).json({
-																		status: 0,
-																		message: message,
-																	});
-																} else if (fe == null) {
-																	res.status(200).json({
-																		status: 0,
-																		message: "Revenue Rule Not Found",
-																	});
+																let result = errorMessage(
+																	err,
+																	fe,
+																	"Revenue Rule Not Found"
+																);
+																if (result.status == 0) {
+																	res.status(200).json(result);
 																} else {
 																	fe.ranges.map((range) => {
 																		if (
@@ -2244,106 +1825,53 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				User.findOne(
 					{
 						mobile: receiverMobile,
 					},
 					function (err, receiver) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (receiver == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Receiver Not Found",
-							});
+						let result = errorMessage(err, receiver, "Receiver Not Found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							Branch.findOne(
 								{
 									_id: cashier.branch_id,
 								},
 								function (err, branch) {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (branch == null) {
-										res.status(200).json({
-											status: 0,
-											message: "Branch Not Found",
-										});
+									let result = errorMessage(err, branch, "Branch Not Found");
+									if (result.status == 0) {
+										res.status(200).json(result);
 									} else {
 										Bank.findOne(
 											{
 												_id: cashier.bank_id,
 											},
 											function (err, bank) {
-												if (err) {
-													console.log(err);
-													var message = err;
-													if (err.message) {
-														message = err.message;
-													}
-													res.status(200).json({
-														status: 0,
-														message: message,
-													});
-												} else if (bank == null) {
-													res.status(200).json({
-														status: 0,
-														message: "Bank Not Found",
-													});
+												let result = errorMessage(err, bank, "Bank Not Found");
+												if (result.status == 0) {
+													res.status(200).json(result);
 												} else {
 													Infra.findOne(
 														{
 															_id: bank.user_id,
 														},
 														function (err, f4) {
-															if (err) {
-																console.log(err);
-																var message = err;
-																if (err.message) {
-																	message = err.message;
-																}
-																res.status(200).json({
-																	status: 0,
-																	message: message,
-																});
-															} else if (f4 == null) {
-																res.status(200).json({
-																	status: 0,
-																	message: "Infra Not Found",
-																});
+															let result = errorMessage(
+																err,
+																f4,
+																"Infra Not Found"
+															);
+															if (result.status == 0) {
+																res.status(200).json(result);
 															} else {
 																let data = new CashierSend();
 																let temp = {
@@ -2427,21 +1955,13 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 
 																		const amount = receiverIdentificationAmount;
 																		Fee.findOne(find, function (err, fe) {
-																			if (err) {
-																				console.log(err);
-																				var message = err;
-																				if (err.message) {
-																					message = err.message;
-																				}
-																				res.status(200).json({
-																					status: 0,
-																					message: message,
-																				});
-																			} else if (fe == null) {
-																				res.status(200).json({
-																					status: 0,
-																					message: "Revenue Rule Not Found",
-																				});
+																			let result = errorMessage(
+																				err,
+																				fe,
+																				"Revenue Rule Not Found"
+																			);
+																			if (result.status == 0) {
+																				res.status(200).json(result);
 																			} else {
 																				var fee = 0;
 																				fe.ranges.map((range) => {
@@ -2894,22 +2414,13 @@ router.post("/cashierSendMoneyPending", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (f == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				let data = new CashierPending();
 				let temp = {
@@ -2997,22 +2508,13 @@ router.post("/cashierTransferMoney", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (f == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				OTP.findOne(
 					{
@@ -3020,21 +2522,9 @@ router.post("/cashierTransferMoney", function (req, res) {
 						otp: otp,
 					},
 					function (err, otpd) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (otpd == null) {
-							res.status(200).json({
-								status: 0,
-								message: "OTP Missmatch",
-							});
+						let result = errorMessage(err, otpd, "OTP Missmatch");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							let data = new CashierTransfer();
 							data.amount = amount;
@@ -3091,22 +2581,13 @@ router.post("/cashierVerifyClaim", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (f == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				OTP.findOne(
 					{
@@ -3114,21 +2595,9 @@ router.post("/cashierVerifyClaim", function (req, res) {
 						otp: otp,
 					},
 					function (err, otpd) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (otpd == null) {
-							res.status(200).json({
-								status: 0,
-								message: "OTP Missmatch",
-							});
+						let result = errorMessage(err, otpd, "OTP Missmatch");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -3166,22 +2635,13 @@ router.post("/cashierClaimMoney", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (f == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				CashierClaim.findOne(
 					{
@@ -3210,84 +2670,44 @@ router.post("/cashierClaimMoney", function (req, res) {
 									transaction_code: transferCode,
 								},
 								function (err, otpd) {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (otpd == null) {
-										res.status(200).json({
-											status: 0,
-											message: "Transaction Not Found",
-										});
+									let result = errorMessage(err, otpd, "Transaction Not Found");
+									if (result.status == 0) {
+										res.status(200).json(result);
 									} else {
 										Branch.findOne(
 											{
 												_id: f.branch_id,
 											},
 											function (err, f2) {
-												if (err) {
-													console.log(err);
-													var message = err;
-													if (err.message) {
-														message = err.message;
-													}
-													res.status(200).json({
-														status: 0,
-														message: message,
-													});
-												} else if (f2 == null) {
-													res.status(200).json({
-														status: 0,
-														message: "Branch Not Found",
-													});
+												let result = errorMessage(err, f2, "Branch Not Found");
+												if (result.status == 0) {
+													res.status(200).json(result);
 												} else {
 													Bank.findOne(
 														{
 															_id: f.bank_id,
 														},
 														function (err, f3) {
-															if (err) {
-																console.log(err);
-																var message = err;
-																if (err.message) {
-																	message = err.message;
-																}
-																res.status(200).json({
-																	status: 0,
-																	message: message,
-																});
-															} else if (f3 == null) {
-																res.status(200).json({
-																	status: 0,
-																	message: "Bank Not Found",
-																});
+															let result = errorMessage(
+																err,
+																f3,
+																"Bank Not Found"
+															);
+															if (result.status == 0) {
+																res.status(200).json(result);
 															} else {
 																Infra.findOne(
 																	{
 																		_id: f3.user_id,
 																	},
 																	function (err, f4) {
-																		if (err) {
-																			console.log(err);
-																			var message = err;
-																			if (err.message) {
-																				message = err.message;
-																			}
-																			res.status(200).json({
-																				status: 0,
-																				message: message,
-																			});
-																		} else if (f4 == null) {
-																			res.status(200).json({
-																				status: 0,
-																				message: "Infra Not Found",
-																			});
+																		let result = errorMessage(
+																			err,
+																			f4,
+																			"Infra Not Found"
+																		);
+																		if (result.status == 0) {
+																			res.status(200).json(result);
 																		} else {
 																			var oamount = (amount = otpd.amount);
 																			if (otpd.is_inclusive) {
@@ -3335,22 +2755,13 @@ router.post("/cashierClaimMoney", function (req, res) {
 																						active: "Active",
 																					};
 																					Fee.findOne(find, function (err, fe) {
-																						if (err) {
-																							console.log(err);
-																							var message = err;
-																							if (err.message) {
-																								message = err.message;
-																							}
-																							res.status(200).json({
-																								status: 0,
-																								message: message,
-																							});
-																						} else if (fe == null) {
-																							res.status(200).json({
-																								status: 0,
-																								message:
-																									"Revenue Rule Not Found",
-																							});
+																						let result = errorMessage(
+																							err,
+																							fe,
+																							"Revenue Rule Not Found"
+																						);
+																						if (result.status == 0) {
+																							res.status(200).json(result);
 																						} else {
 																							fe.ranges.map((range) => {
 																								let fee = 0;
@@ -3647,22 +3058,13 @@ router.post("/getClaimMoney", function (req, res) {
 			status: 1,
 		},
 		function (err, f) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (f == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				CashierClaim.findOne(
 					{

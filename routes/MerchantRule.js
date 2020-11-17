@@ -5,6 +5,7 @@ const router = express.Router();
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
 const getTypeClass = require("./utils/getTypeClass");
+const { errorMessage, catchError } = require("./utils/errorHandler");
 
 const Bank = require("../models/Bank");
 const Infra = require("../models/Infra");
@@ -126,41 +127,20 @@ router.post("/cashier/interBank/checkMerchantFee", (req, res) => {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				IBMerchantRule.findOne(
 					{ merchant_id: merchant_id, type: "IBNWM-F", status: 1 },
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							return res.status(200).json({
-								status: 0,
-								message: "Fee rule not found",
-							});
+						let result = errorMessage(err, rule, "Fee rule not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							amount = Number(amount);
 							var charge = 0;
@@ -202,41 +182,24 @@ router.post("/user/interBank/checkMerchantFee", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				IBMerchantRule.findOne(
 					{ merchant_id: merchant_id, type: "IBWM-F", status: 1 },
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							return res.status(200).json({
-								status: 0,
-								message: "Inter Bank Fee rule not found",
-							});
+						let result = errorMessage(
+							err,
+							rule,
+							"Inter Bank Fee rule not found"
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							amount = Number(amount);
 							var charge = 0;
@@ -280,41 +243,20 @@ router.post(
 				status: 1,
 			},
 			function (err, cashier) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (cashier == null) {
-					res.status(200).json({
-						status: 0,
-						message:
-							"Token changed or user not valid. Try to login again or contact system administrator.",
-					});
+				let result = errorMessage(
+					err,
+					cashier,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
 				} else {
 					IBMerchantRule.findOne(
 						{ merchant_id: merchant_id, type: "IBNWM-F", status: 1 },
 						(err, rule) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else if (rule == null) {
-								return res.status(200).json({
-									status: 0,
-									message: "Fee rule not found",
-								});
+							let result = errorMessage(err, rule, "Fee rule not found");
+							if (result.status == 0) {
+								res.status(200).json(result);
 							} else {
 								amount = Number(amount);
 								var charge = 0;
@@ -359,39 +301,18 @@ router.post("/merchant/merchantRule/interBank/approve", jwtTokenAuth, function (
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Bank.findOne({ _id: merchant.bank_id }, (err, bank) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (bank == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Merchant's bank not found.",
-						});
+					let result = errorMessage(err, bank, "Merchant's bank not found.");
+					if (result.status == 0) {
+						res.status(200).json(result);
 					} else {
 						IBMerchantRule.findOne(
 							{
@@ -402,21 +323,13 @@ router.post("/merchant/merchantRule/interBank/approve", jwtTokenAuth, function (
 								],
 							},
 							(err, rule) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (rule == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Merchant Rule not found.",
-									});
+								let result = errorMessage(
+									err,
+									rule,
+									"Merchant Rule not found."
+								);
+								if (result.status == 0) {
+									res.status(200).json(result);
 								} else {
 									if (rule.rule_edit_status == 1) {
 										console.log("Condition 1");
@@ -535,22 +448,13 @@ router.post("/merchant/merchantRule/interBank/decline", jwtTokenAuth, function (
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				IBMerchantRule.findOne(
 					{
@@ -561,21 +465,9 @@ router.post("/merchant/merchantRule/interBank/decline", jwtTokenAuth, function (
 						],
 					},
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							res.status(200).json({
-								status: 0,
-								message: "MerchantRule not found.",
-							});
+						let result = errorMessage(err, rule, "MerchantRule not found.");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							if (rule.rule_edit_status == 1) {
 								console.log("Condition 1");
@@ -648,22 +540,13 @@ router.post("/infra/merchantRule/interBank/approve", function (req, res) {
 			status: 1,
 		},
 		function (err, infra) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (infra == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				infra,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				try {
 					IBMerchantRule.findOne(
@@ -689,21 +572,9 @@ router.post("/infra/merchantRule/interBank/approve", function (req, res) {
 							],
 						},
 						async (err, rule) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else if (rule == null) {
-								res.status(200).json({
-									status: 0,
-									message: "Merchant Rule not found.",
-								});
+							let result = errorMessage(err, rule, "Merchant Rule not found.");
+							if (result.status == 0) {
+								res.status(200).json(result);
 							} else {
 								try {
 									var merchant = await Merchant.findOne({
@@ -842,22 +713,13 @@ router.post("/infra/merchantRule/interBank/decline", function (req, res) {
 			status: 1,
 		},
 		function (err, infra) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (infra == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				infra,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				IBMerchantRule.findOne(
 					{
@@ -868,21 +730,9 @@ router.post("/infra/merchantRule/interBank/decline", function (req, res) {
 						],
 					},
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							res.status(200).json({
-								status: 0,
-								message: "MerchantRule not found.",
-							});
+						let result = errorMessage(err, rule, "MerchantRule not found.");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							if (rule.infra_share_edit_status == 1) {
 								console.log("Condition 1");
@@ -1186,22 +1036,13 @@ router.post("/bank/merchantRule/interBank/editInfraShare", function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				IBMerchantRule.findOneAndUpdate(
 					{
@@ -1222,21 +1063,13 @@ router.post("/bank/merchantRule/interBank/editInfraShare", function (req, res) {
 					},
 					{ new: true },
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							res.status(200).json({
-								status: 0,
-								message: "This rule is not allowed to edit.",
-							});
+						let result = errorMessage(
+							err,
+							rule,
+							"This rule is not allowed to edit."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -1262,22 +1095,13 @@ router.post("/bank/merchantRule/interBank/editRule", function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				IBMerchantRule.findOneAndUpdate(
 					{
@@ -1300,38 +1124,18 @@ router.post("/bank/merchantRule/interBank/editRule", function (req, res) {
 					},
 					{ new: true },
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							res.status(200).json({
-								status: 0,
-								message: "This rule is not allowed to edit.",
-							});
+						let result = errorMessage(
+							err,
+							rule,
+							"This rule is not allowed to edit."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							Merchant.findOne({ _id: rule.merchant_id }, (err, merchant) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (merchant == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Merchant not found",
-									});
+								let result = errorMessage(err, merchant, "Merchant not found");
+								if (result.status == 0) {
+									res.status(200).json(result);
 								} else {
 									let content =
 										"<p>Rule " +
@@ -1374,22 +1178,13 @@ router.post("/bank/merchantRule/interBank/updateOtherBankShare", function (
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				IBMerchantRule.findOneAndUpdate(
 					{
@@ -1400,21 +1195,9 @@ router.post("/bank/merchantRule/interBank/updateOtherBankShare", function (
 					},
 					{ new: true },
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Merchant Rule not found.",
-							});
+						let result = errorMessage(err, rule, "Merchant Rule not found.");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -1440,22 +1223,13 @@ router.post("/bank/merchantRule/interBank/addInfraShare", function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				IBMerchantRule.findOneAndUpdate(
 					{
@@ -1468,21 +1242,9 @@ router.post("/bank/merchantRule/interBank/addInfraShare", function (req, res) {
 					},
 					{ new: true },
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Merchant Rule not found.",
-							});
+						let result = errorMessage(err, rule, "Merchant Rule not found.");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -1516,39 +1278,18 @@ router.post("/bank/merchantRule/interBank/createRule", function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Merchant.findOne({ _id: merchant_id }, (err, merchant) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (merchant == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Merchant not found",
-						});
+					let result = errorMessage(err, merchant, "Merchant not found");
+					if (result.status == 0) {
+						res.status(200).json(result);
 					} else {
 						IBMerchantRule.findOne({ merchant_id, type }, (err, rule) => {
 							if (err) {
@@ -1637,41 +1378,20 @@ router.post("/merchantCashier/checkMerchantFee", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantRule.findOne(
 					{ merchant_id: cashier.merchant_id, type: "M-F", status: 1 },
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							return res.status(200).json({
-								status: 0,
-								message: "Fee rule not found",
-							});
+						let result = errorMessage(err, rule, "Fee rule not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							amount = Number(amount);
 							var charge = 0;
@@ -1712,41 +1432,20 @@ router.post("/partnerCashier/checkMerchantFee", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantRule.findOne(
 					{ merchant_id: merchant_id, type: "NWM-F", status: 1 },
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							return res.status(200).json({
-								status: 0,
-								message: "Fee rule not found",
-							});
+						let result = errorMessage(err, rule, "Fee rule not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							amount = Number(amount);
 							var charge = 0;
@@ -1796,22 +1495,13 @@ router.post("/bank/merchantRule/updatePartnersShare", function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantRule.findOneAndUpdate(
 					{
@@ -1825,21 +1515,9 @@ router.post("/bank/merchantRule/updatePartnersShare", function (req, res) {
 					},
 					{ new: true },
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Merchant RUle not found.",
-							});
+						let result = errorMessage(err, rule, "Merchant RUle not found.");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -1873,39 +1551,18 @@ router.post("/bank/merchantRule/createRule", function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Merchant.findOne({ _id: merchant_id }, (err, merchant) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (merchant == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Merchant not found",
-						});
+					let result = errorMessage(err, merchant, "Merchant not found");
+					if (result.status == 0) {
+						res.status(200).json(result);
 					} else {
 						MerchantRule.findOne({ merchant_id, type }, (err, rule) => {
 							if (err) {
@@ -1993,22 +1650,13 @@ router.post("/bank/merchantRule/addInfraShare", function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantRule.findOneAndUpdate(
 					{
@@ -2021,21 +1669,9 @@ router.post("/bank/merchantRule/addInfraShare", function (req, res) {
 					},
 					{ new: true },
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Merchant Rule not found.",
-							});
+						let result = errorMessage(err, rule, "Merchant Rule not found.");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -2061,22 +1697,13 @@ router.post("/bank/merchantRule/editRule", function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantRule.findOneAndUpdate(
 					{
@@ -2099,38 +1726,18 @@ router.post("/bank/merchantRule/editRule", function (req, res) {
 					},
 					{ new: true },
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							res.status(200).json({
-								status: 0,
-								message: "This rule is not allowed to edit.",
-							});
+						let result = errorMessage(
+							err,
+							rule,
+							"This rule is not allowed to edit."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							Merchant.findOne({ _id: rule.merchant_id }, (err, merchant) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (merchant == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Merchant not found",
-									});
+								let result = errorMessage(err, merchant, "Merchant not found");
+								if (result.status == 0) {
+									res.status(200).json(result);
 								} else {
 									let content =
 										"<p>Rule " +
@@ -2170,22 +1777,13 @@ router.post("/bank/merchantRule/editInfraShare", function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantRule.findOneAndUpdate(
 					{
@@ -2206,21 +1804,13 @@ router.post("/bank/merchantRule/editInfraShare", function (req, res) {
 					},
 					{ new: true },
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							res.status(200).json({
-								status: 0,
-								message: "This rule is not allowed to edit.",
-							});
+						let result = errorMessage(
+							err,
+							rule,
+							"This rule is not allowed to edit."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -2481,39 +2071,18 @@ router.post("/merchant/merchantRule/approve", jwtTokenAuth, function (
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Bank.findOne({ _id: merchant.bank_id }, (err, bank) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (bank == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Merchant's bank not found.",
-						});
+					let result = errorMessage(err, bank, "Merchant's bank not found.");
+					if (result.status == 0) {
+						res.status(200).json(result);
 					} else {
 						MerchantRule.findOne(
 							{
@@ -2524,21 +2093,13 @@ router.post("/merchant/merchantRule/approve", jwtTokenAuth, function (
 								],
 							},
 							(err, rule) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (rule == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Merchant Rule not found.",
-									});
+								let result = errorMessage(
+									err,
+									rule,
+									"Merchant Rule not found."
+								);
+								if (result.status == 0) {
+									res.status(200).json(result);
 								} else {
 									if (rule.rule_edit_status == 1) {
 										console.log("Condition 1");
@@ -2657,22 +2218,13 @@ router.post("/merchant/merchantRule/decline", jwtTokenAuth, function (
 			status: 1,
 		},
 		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantRule.findOne(
 					{
@@ -2683,21 +2235,9 @@ router.post("/merchant/merchantRule/decline", jwtTokenAuth, function (
 						],
 					},
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							res.status(200).json({
-								status: 0,
-								message: "MerchantRule not found.",
-							});
+						let result = errorMessage(err, rule, "MerchantRule not found.");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							if (rule.rule_edit_status == 1) {
 								console.log("Condition 1");
@@ -2770,22 +2310,13 @@ router.post("/infra/merchantRule/approve", function (req, res) {
 			status: 1,
 		},
 		function (err, infra) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (infra == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				infra,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				try {
 					MerchantRule.findOne(
@@ -2811,21 +2342,9 @@ router.post("/infra/merchantRule/approve", function (req, res) {
 							],
 						},
 						async (err, rule) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else if (rule == null) {
-								res.status(200).json({
-									status: 0,
-									message: "MerchantRule not found.",
-								});
+							let result = errorMessage(err, rule, "MerchantRule not found.");
+							if (result.status == 0) {
+								res.status(200).json(result);
 							} else {
 								var merchant = Merchant.findOne({
 									_id: rule.merchant_id,
@@ -2955,22 +2474,13 @@ router.post("/infra/merchantRule/decline", function (req, res) {
 			status: 1,
 		},
 		function (err, infra) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (infra == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				infra,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantRule.findOne(
 					{
@@ -2981,21 +2491,9 @@ router.post("/infra/merchantRule/decline", function (req, res) {
 						],
 					},
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							res.status(200).json({
-								status: 0,
-								message: "MerchantRule not found.",
-							});
+						let result = errorMessage(err, rule, "MerchantRule not found.");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							if (rule.infra_share_edit_status == 1) {
 								console.log("Condition 1");
@@ -3068,41 +2566,20 @@ router.post("/cashier/checkMerchantFee", (req, res) => {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantRule.findOne(
 					{ merchant_id: merchant_id, type: "NWM-F", status: 1 },
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							return res.status(200).json({
-								status: 0,
-								message: "Fee rule not found",
-							});
+						let result = errorMessage(err, rule, "Fee rule not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							amount = Number(amount);
 							var charge = 0;
@@ -3144,41 +2621,20 @@ router.post("/user/checkMerchantFee", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantRule.findOne(
 					{ merchant_id: merchant_id, type: "WM-F", status: 1 },
 					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (rule == null) {
-							return res.status(200).json({
-								status: 0,
-								message: "Fee rule not found",
-							});
+						let result = errorMessage(err, rule, "Fee rule not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							amount = Number(amount);
 							var charge = 0;

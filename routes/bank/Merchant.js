@@ -6,6 +6,7 @@ const config = require("../../config.json");
 const makeid = require("../utils/idGenerator");
 const sendSMS = require("../utils/sendSMS");
 const sendMail = require("../utils/sendMail");
+const { errorMessage, catchError } = require("../utils/errorHandler");
 
 //services
 const { createWallet } = require("../../services/Blockchain.js");
@@ -22,22 +23,13 @@ router.post("/bank/blockMerchant", function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Merchant.findOneAndUpdate(
 					{ _id: merchant_id },
@@ -47,21 +39,9 @@ router.post("/bank/blockMerchant", function (req, res) {
 						},
 					},
 					(err, merchant) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (merchant == null) {
-							res.status(200).json({
-								status: 1,
-								data: "Merchant not found",
-							});
+						let result = errorMessage(err, merchant, "Merchant not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -83,22 +63,13 @@ router.post("/bank/unblockMerchant", function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Merchant.findOneAndUpdate(
 					{ _id: merchant_id },
@@ -108,21 +79,9 @@ router.post("/bank/unblockMerchant", function (req, res) {
 						},
 					},
 					(err, merchant) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (merchant == null) {
-							res.status(200).json({
-								status: 1,
-								data: "Merchant not found",
-							});
+						let result = errorMessage(err, merchant, "Merchant not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -144,22 +103,13 @@ router.post("/bank/listMerchants", function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Merchant.find({ bank_id: bank._id }, "-password", (err, merchants) => {
 					if (err) {
@@ -202,22 +152,13 @@ router.post("/bank/createMerchant", function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				if (!code) {
 					res.status(200).json({
@@ -344,22 +285,13 @@ router.post("/bank/editMerchant", function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Merchant.findOneAndUpdate(
 					{ _id: merchant_id, creator: 0, bank_id: bank._id },
@@ -371,21 +303,9 @@ router.post("/bank/editMerchant", function (req, res) {
 						email: email,
 					},
 					(err, merchant) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (merchant == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Merchant not found.",
-							});
+						let result = errorMessage(err, merchant, "Merchant not found.");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,

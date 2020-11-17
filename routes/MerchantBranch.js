@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const jwtTokenAuth = require("./JWTTokenAuth");
+const { errorMessage, catchError } = require("./utils/errorHandler");
 
 //models
 const MerchantBranch = require("../models/merchant/MerchantBranch");
@@ -45,22 +46,13 @@ router.post("/merchantBranch/editDetails", jwtTokenAuth, (req, res) => {
 			new: true,
 		},
 		function (err, branch) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (branch == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				branch,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				res.status(200).json({
 					status: 1,
@@ -79,22 +71,9 @@ router.get("/merchantBranch/todaysStatus", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, branch) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (branch == null) {
-				console.log(err);
-				res.status(200).json({
-					status: 0,
-					message: "Merchant branch is not valid",
-				});
+			let result = errorMessage(err, branch, "Merchant branch is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				const today = new Date();
 				MerchantBranch.findOneAndUpdate(
@@ -154,17 +133,13 @@ router.post("/merchantBranch/editCashier", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, branch) {
-			if (err) {
-				res.status(200).json({
-					status: 0,
-					message: "Internal Server Error",
-				});
-			} else if (branch == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				branch,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantCashier.findOneAndUpdate(
 					{ _id: cashier_id, branch_id: branch._id },
@@ -178,17 +153,9 @@ router.post("/merchantBranch/editCashier", jwtTokenAuth, (req, res) => {
 						counter_invoice_access: counter_invoice_access,
 					},
 					(err, cashier) => {
-						if (err) {
-							res.status(200).json({
-								status: 0,
-								message: "Internal server error",
-								err: err,
-							});
-						} else if (cashier == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Cashier not found",
-							});
+						let result = errorMessage(err, cashier, "Cashier not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -210,21 +177,9 @@ router.get("/merchantBranch/listCashier", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, branch) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (branch == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Branch is blocked",
-				});
+			let result = errorMessage(err, branch, "Branch is blocked");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantCashier.find({ branch_id: branch._id }, (err, cashiers) => {
 					if (err) {
@@ -258,21 +213,9 @@ router.get("/merchantBranch/listStaff", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, branch) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (branch == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Branch is blocked",
-				});
+			let result = errorMessage(err, branch, "Branch is blocked");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantStaff.find({ branch_id: branch._id }, (err, staffs) => {
 					if (err) {
@@ -307,60 +250,24 @@ router.post("/merchantBranch/assignStaff", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, branch) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (branch == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Branch is blocked",
-				});
+			let result = errorMessage(err, branch, "Branch is blocked");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantStaff.findOne(
 					{ _id: staff_id, status: 1, branch_id: branch._id },
 					(err, staff) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (staff == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Staff not found",
-							});
+						let result = errorMessage(err, staff, "Staff not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							MerchantCashier.findOneAndUpdate(
 								{ _id: cashier_id, branch_id: branch._id },
 								{ staff_id: staff_id },
 								(err, cashier) => {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (cashier == null) {
-										res.status(200).json({
-											status: 0,
-											message: "Cashier not found",
-										});
+									let result = errorMessage(err, cashier, "Cashier not found");
+									if (result.status == 0) {
+										res.status(200).json(result);
 									} else {
 										res.status(200).json({
 											status: 1,
@@ -386,21 +293,9 @@ router.post("/merchantBranch/blockCashier", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, branch) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (branch == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Branch is blocked",
-				});
+			let result = errorMessage(err, branch, "Branch is blocked");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantCashier.findOneAndUpdate(
 					{ _id: cashier_id, branch_id: branch._id },
@@ -410,21 +305,9 @@ router.post("/merchantBranch/blockCashier", jwtTokenAuth, (req, res) => {
 						},
 					},
 					(err, cashier) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (cashier == null) {
-							res.status(200).json({
-								status: 1,
-								data: "Cashier not found",
-							});
+						let result = errorMessage(err, cashier, "Cashier not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -447,21 +330,9 @@ router.post("/merchantBranch/unblockCashier", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, branch) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (branch == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Branch is blocked",
-				});
+			let result = errorMessage(err, branch, "Branch is blocked");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				MerchantCashier.findOneAndUpdate(
 					{ _id: cashier_id, branch_id: branch._id },
@@ -471,21 +342,9 @@ router.post("/merchantBranch/unblockCashier", jwtTokenAuth, (req, res) => {
 						},
 					},
 					(err, cashier) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (cashier == null) {
-							res.status(200).json({
-								status: 1,
-								data: "Cashier not found",
-							});
+						let result = errorMessage(err, cashier, "Cashier not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
