@@ -64,7 +64,7 @@ module.exports = async function (
 			};
 		}
 
-		let trans = {
+		trans = {
 			from: bankOpWallet,
 			to: receiverBankOpWallet,
 			amount: amount,
@@ -80,7 +80,7 @@ module.exports = async function (
 			child_code: master_code + "1",
 		};
 
-		let result = await blockchain.initiateTransfer(trans);
+		result = await blockchain.initiateTransfer(trans);
 
 		// return response
 		if (result.status == 0) {
@@ -91,7 +91,7 @@ module.exports = async function (
 			};
 		}
 
-		let trans = {
+		trans = {
 			from: receiverBankOpWallet,
 			to: receiverWallet,
 			amount: amount,
@@ -107,7 +107,7 @@ module.exports = async function (
 			child_code: master_code + "1",
 		};
 
-		let result = await blockchain.initiateTransfer(trans);
+		result = await blockchain.initiateTransfer(trans);
 
 		// return response
 		if (result.status == 0) {

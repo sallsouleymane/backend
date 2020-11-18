@@ -53,7 +53,7 @@ module.exports = async function (
 			};
 		}
 
-		let trans = {
+		trans = {
 			from: bankOpWallet,
 			to: branchOpWallet,
 			amount: amount,
@@ -69,7 +69,7 @@ module.exports = async function (
 			child_code: master_code,
 		};
 
-		let result = await blockchain.initiateTransfer(trans);
+		result = await blockchain.initiateTransfer(trans);
 
 		// return response
 		if (result.status == 0) {
