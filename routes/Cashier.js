@@ -286,25 +286,35 @@ router.post("/cashier/listMerchants", function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Merchant.find({ status: 1 }, "-password", (err, merchants) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Merchant.find(
+					{
+						status: 1,
+						$or: [
+							{ is_public: true },
+							{ $and: [{ is_public: false }, { bank_id: cashier.bank_id }] },
+						],
+					},
+					"-password",
+					(err, merchants) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Merchants List",
+								list: merchants,
+							});
 						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							message: "Merchants List",
-							list: merchants,
-						});
 					}
-				});
+				);
 			}
 		}
 	);
