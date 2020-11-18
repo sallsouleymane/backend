@@ -268,7 +268,7 @@ router.post("/merchantCashier/login", (req, res) => {
 
 router.post("/merchant/login", (req, res) => {
 	const { username, password } = req.body;
-	Merchant.findOne({ username, password, status: 1 }, "-password", function (
+	Merchant.findOne({ username, password }, "-password", function (
 		err,
 		merchant
 	) {
