@@ -145,22 +145,22 @@ router.post("/bank/generateOTP", function (req, res) {
 									}
 								});
 							} else {
-								if (name == partner.name) {
+								if (name == partner[0].name) {
 									res.status(200).json({
 										status: 0,
 										message: "Name already taken",
 									});
-								} else if (email == partner.email) {
+								} else if (email == partner[0].email) {
 									res.status(200).json({
 										status: 0,
 										message: "Email already taken",
 									});
-								} else if (mobile == partner.mobile) {
+								} else if (mobile == partner[0].mobile) {
 									res.status(200).json({
 										status: 0,
 										message: "Mobile already taken",
 									});
-								} else if (code == partner.code) {
+								} else if (code == partner[0].code) {
 									res.status(200).json({
 										status: 0,
 										message: "Code already taken",
