@@ -46,39 +46,14 @@ router.post("/user/interBank/payInvoice", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				console.log(err);
-				res.status(200).json({
-					status: 0,
-					message: "User is not valid",
-				});
+			let errRes = errorMessage(err, user, "User is not valid");
+			if (errRes.status == 0) {
+				res.status(200).json(errRes);
 			} else {
 				Bank.findOne({ _id: user.bank_id }, (err, bank) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (bank == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Bank not found",
-						});
+					let errRes = errorMessage(err, bank, "Bank not found");
+					if (errRes.status == 0) {
+						res.status(200).json(errRes);
 					} else {
 						var find = {
 							merchant_id: merchant_id,
@@ -87,21 +62,13 @@ router.post("/user/interBank/payInvoice", jwtTokenAuth, (req, res) => {
 							active: 1,
 						};
 						IBMerchantRule.findOne(find, (err, fee) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else if (fee == null) {
-								res.status(200).json({
-									status: 0,
-									message: "Inter Bank Fee rule not found",
-								});
+							let errRes = errorMessage(
+								err,
+								fee,
+								"Inter Bank Fee rule not found"
+							);
+							if (errRes.status == 0) {
+								res.status(200).json(errRes);
 							} else {
 								find = {
 									merchant_id: merchant_id,
@@ -110,21 +77,13 @@ router.post("/user/interBank/payInvoice", jwtTokenAuth, (req, res) => {
 									active: 1,
 								};
 								IBMerchantRule.findOne(find, async (err, comm) => {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (comm == null) {
-										res.status(200).json({
-											status: 0,
-											message: "Inter Bank Commission rule not found",
-										});
+									let errRes = errorMessage(
+										err,
+										comm,
+										"Inter Bank Commission rule not found"
+									);
+									if (errRes.status == 0) {
+										res.status(200).json(errRes);
 									} else {
 										try {
 											var total_amount = 0;
@@ -317,22 +276,13 @@ router.post(
 				status: 1,
 			},
 			function (err, cashier) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (cashier == null) {
-					res.status(200).json({
-						status: 0,
-						message:
-							"Token changed or user not valid. Try to login again or contact system administrator.",
-					});
+				let errRes = errorMessage(
+					err,
+					cashier,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (errRes.status == 0) {
+					res.status(200).json(errRes);
 				} else {
 					Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
 						var find = {
@@ -342,21 +292,13 @@ router.post(
 							active: 1,
 						};
 						IBMerchantRule.findOne(find, (err, fee1) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else if (fee1 == null) {
-								res.status(200).json({
-									status: 0,
-									message: "Inter Bank Fee rule not found",
-								});
+							let errRes = errorMessage(
+								err,
+								fee1,
+								"Inter Bank Fee rule not found"
+							);
+							if (errRes.status == 0) {
+								res.status(200).json(errRes);
 							} else {
 								find = {
 									merchant_id: merchant_id,
@@ -365,21 +307,13 @@ router.post(
 									active: 1,
 								};
 								IBMerchantRule.findOne(find, (err, comm1) => {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (comm1 == null) {
-										res.status(200).json({
-											status: 0,
-											message: "Inter Bank Commission rule not found",
-										});
+									let errRes = errorMessage(
+										err,
+										comm1,
+										"Inter Bank Commission rule not found"
+									);
+									if (errRes.status == 0) {
+										res.status(200).json(errRes);
 									} else {
 										MerchantRule.findOne(
 											{
@@ -389,21 +323,13 @@ router.post(
 												active: 1,
 											},
 											(err, fee2) => {
-												if (err) {
-													console.log(err);
-													var message = err;
-													if (err.message) {
-														message = err.message;
-													}
-													res.status(200).json({
-														status: 0,
-														message: message,
-													});
-												} else if (fee2 == null) {
-													res.status(200).json({
-														status: 0,
-														message: "Fee rule not found",
-													});
+												let errRes = errorMessage(
+													err,
+													fee2,
+													"Fee rule not found"
+												);
+												if (errRes.status == 0) {
+													res.status(200).json(errRes);
 												} else {
 													MerchantRule.findOne(
 														{
@@ -413,21 +339,13 @@ router.post(
 															active: 1,
 														},
 														async (err, comm2) => {
-															if (err) {
-																console.log(err);
-																var message = err;
-																if (err.message) {
-																	message = err.message;
-																}
-																res.status(200).json({
-																	status: 0,
-																	message: message,
-																});
-															} else if (comm2 == null) {
-																res.status(200).json({
-																	status: 0,
-																	message: "Commission rule not found",
-																});
+															let errRes = errorMessage(
+																err,
+																comm2,
+																"Commission rule not found"
+															);
+															if (errRes.status == 0) {
+																res.status(200).json(errRes);
 															} else {
 																try {
 																	var total_amount = 0;
@@ -680,22 +598,13 @@ router.post("/cashier/interBank/payInvoice", (req, res) => {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let errRes = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errRes.status == 0) {
+				res.status(200).json(errRes);
 			} else {
 				var find = {
 					merchant_id: merchant_id,
@@ -704,21 +613,9 @@ router.post("/cashier/interBank/payInvoice", (req, res) => {
 					active: 1,
 				};
 				IBMerchantRule.findOne(find, (err, fee1) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (fee1 == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Inter Bank Fee rule not found",
-						});
+					let errRes = errorMessage(err, fee1, "Inter Bank Fee rule not found");
+					if (errRes.status == 0) {
+						res.status(200).json(errRes);
 					} else {
 						find = {
 							merchant_id: merchant_id,
@@ -727,21 +624,13 @@ router.post("/cashier/interBank/payInvoice", (req, res) => {
 							active: 1,
 						};
 						IBMerchantRule.findOne(find, (err, comm1) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else if (comm1 == null) {
-								res.status(200).json({
-									status: 0,
-									message: "Inter Bank Commission rule not found",
-								});
+							let errRes = errorMessage(
+								err,
+								comm1,
+								"Inter Bank Commission rule not found"
+							);
+							if (errRes.status == 0) {
+								res.status(200).json(errRes);
 							} else {
 								MerchantRule.findOne(
 									{
@@ -751,21 +640,9 @@ router.post("/cashier/interBank/payInvoice", (req, res) => {
 										active: 1,
 									},
 									(err, fee2) => {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
-											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else if (fee2 == null) {
-											res.status(200).json({
-												status: 0,
-												message: "Fee rule not found",
-											});
+										let errRes = errorMessage(err, fee2, "Fee rule not found");
+										if (errRes.status == 0) {
+											res.status(200).json(errRes);
 										} else {
 											MerchantRule.findOne(
 												{
@@ -775,21 +652,13 @@ router.post("/cashier/interBank/payInvoice", (req, res) => {
 													active: 1,
 												},
 												async (err, comm2) => {
-													if (err) {
-														console.log(err);
-														var message = err;
-														if (err.message) {
-															message = err.message;
-														}
-														res.status(200).json({
-															status: 0,
-															message: message,
-														});
-													} else if (comm2 == null) {
-														res.status(200).json({
-															status: 0,
-															message: "Commission rule not found",
-														});
+													let errRes = errorMessage(
+														err,
+														comm2,
+														"Commission rule not found"
+													);
+													if (errRes.status == 0) {
+														res.status(200).json(errRes);
 													} else {
 														try {
 															var total_amount = 0;
@@ -1035,21 +904,9 @@ router.post(
 				status: 1,
 			},
 			function (err, cashier) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (cashier == null) {
-					res.status(200).json({
-						status: 0,
-						message: "Cashier is not activated.",
-					});
+				let errRes = errorMessage(err, cashier, "Cashier is not activated.");
+				if (errRes.status == 0) {
+					res.status(200).json(errRes);
 				} else {
 					Invoice.find(
 						{
@@ -1099,21 +956,9 @@ router.post(
 				status: 1,
 			},
 			function (err, cashier) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (cashier == null) {
-					res.status(200).json({
-						status: 0,
-						message: "Cashier is not activated.",
-					});
+				let errRes = errorMessage(err, cashier, "Cashier is not activated.");
+				if (errRes.status == 0) {
+					res.status(200).json(errRes);
 				} else {
 					Invoice.find(
 						{
@@ -1163,22 +1008,9 @@ router.post(
 				status: 1,
 			},
 			function (err, cashier) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (cashier == null) {
-					console.log(err);
-					res.status(200).json({
-						status: 0,
-						message: "Cashier is not valid",
-					});
+				let errRes = errorMessage(err, cashier, "Cashier is not valid");
+				if (errRes.status == 0) {
+					res.status(200).json(errRes);
 				} else {
 					Invoice.find(
 						{
@@ -1220,58 +1052,33 @@ router.post("/merchantCashier/payInvoice", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let errRes = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errRes.status == 0) {
+				res.status(200).json(errRes);
 			} else {
 				Merchant.findOne({ _id: cashier.merchant_id }, (err, merchant) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else if (merchant == null) {
-						res.status(200).json({
-							status: 0,
-							message: "Cashier's Merchant not found",
-						});
+					let errRes = errorMessage(
+						err,
+						merchant,
+						"Cashier's Merchant not found"
+					);
+					if (errRes.status == 0) {
+						res.status(200).json(errRes);
 					} else {
 						MerchantRule.findOne(
 							{ merchant_id: merchant._id, type: "M-C", status: 1, active: 1 },
 							async (err, comm) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else if (comm == null) {
-									res.status(200).json({
-										status: 0,
-										message: "Commission rule not found",
-									});
+								let errRes = errorMessage(
+									err,
+									comm,
+									"Commission rule not found"
+								);
+								if (errRes.status == 0) {
+									res.status(200).json(errRes);
 								} else {
 									try {
 										var total_amount = 0;
@@ -1452,42 +1259,21 @@ router.post("/partnerCashier/payInvoice", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let errRes = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errRes.status == 0) {
+				res.status(200).json(errRes);
 			} else {
 				Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
 					MerchantRule.findOne(
 						{ merchant_id: merchant_id, type: "NWM-F", status: 1, active: 1 },
 						(err, fee) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else if (fee == null) {
-								res.status(200).json({
-									status: 0,
-									message: "Fee rule not found",
-								});
+							let errRes = errorMessage(err, fee, "Fee rule not found");
+							if (errRes.status == 0) {
+								res.status(200).json(errRes);
 							} else {
 								MerchantRule.findOne(
 									{
@@ -1497,21 +1283,13 @@ router.post("/partnerCashier/payInvoice", jwtTokenAuth, (req, res) => {
 										active: 1,
 									},
 									async (err, comm) => {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
-											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else if (comm == null) {
-											res.status(200).json({
-												status: 0,
-												message: "Commission rule not found",
-											});
+										let errRes = errorMessage(
+											err,
+											comm,
+											"Commission rule not found"
+										);
+										if (errRes.status == 0) {
+											res.status(200).json(errRes);
 										} else {
 											try {
 												var total_amount = 0;
@@ -1753,22 +1531,13 @@ router.post(
 				status: 1,
 			},
 			function (err, cashier) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (cashier == null) {
-					res.status(200).json({
-						status: 0,
-						message:
-							"Token changed or user not valid. Try to login again or contact system administrator.",
-					});
+				let errRes = errorMessage(
+					err,
+					cashier,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (errRes.status == 0) {
+					res.status(200).json(errRes);
 				} else {
 					Invoice.find(
 						{
@@ -1815,22 +1584,13 @@ router.post("/partnerCashier/getInvoiceDetails", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let errRes = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errRes.status == 0) {
+				res.status(200).json(errRes);
 			} else {
 				Invoice.find(
 					{
@@ -1876,22 +1636,13 @@ router.post("/partnerCashier/getUserInvoices", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let errRes = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errRes.status == 0) {
+				res.status(200).json(errRes);
 			} else {
 				Invoice.find(
 					{ mobile: mobile, merchant_id: merchant_id, is_validated: 1 },
@@ -1927,21 +1678,9 @@ router.post("/cashier/getInvoicesForCustomerCode", (req, res) => {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Cashier is not activated.",
-				});
+			let errRes = errorMessage(err, cashier, "Cashier is not activated.");
+			if (errRes.status == 0) {
+				res.status(200).json(errRes);
 			} else {
 				Invoice.find(
 					{
@@ -1986,21 +1725,9 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Cashier is not activated.",
-				});
+			let errRes = errorMessage(err, cashier, "Cashier is not activated.");
+			if (errRes.status == 0) {
+				res.status(200).json(errRes);
 			} else {
 				Invoice.find(
 					{
@@ -2045,22 +1772,9 @@ router.post("/cashier/getUserInvoices", (req, res) => {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				console.log(err);
-				res.status(200).json({
-					status: 0,
-					message: "Cashier is not valid",
-				});
+			let errRes = errorMessage(err, cashier, "Cashier is not valid");
+			if (errRes.status == 0) {
+				res.status(200).json(errRes);
 			} else {
 				Invoice.find(
 					{ mobile: mobile, merchant_id: merchant_id, is_validated: 1 },
@@ -2096,41 +1810,20 @@ router.post("/cashier/payInvoice", (req, res) => {
 			status: 1,
 		},
 		function (err, cashier) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (cashier == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let errRes = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errRes.status == 0) {
+				res.status(200).json(errRes);
 			} else {
 				MerchantRule.findOne(
 					{ merchant_id: merchant_id, type: "NWM-F", status: 1, active: 1 },
 					(err, fee) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (fee == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Fee rule not found",
-							});
+						let errRes = errorMessage(err, fee, "Fee rule not found");
+						if (errRes.status == 0) {
+							res.status(200).json(errRes);
 						} else {
 							MerchantRule.findOne(
 								{
@@ -2140,21 +1833,13 @@ router.post("/cashier/payInvoice", (req, res) => {
 									active: 1,
 								},
 								async (err, comm) => {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (comm == null) {
-										res.status(200).json({
-											status: 0,
-											message: "Commission rule not found",
-										});
+									let errRes = errorMessage(
+										err,
+										comm,
+										"Commission rule not found"
+									);
+									if (errRes.status == 0) {
+										res.status(200).json(errRes);
 									} else {
 										try {
 											var total_amount = 0;
@@ -2388,21 +2073,9 @@ router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message: "User is not activated.",
-				});
+			let errRes = errorMessage(err, user, "User is not activated.");
+			if (errRes.status == 0) {
+				res.status(200).json(errRes);
 			} else {
 				Invoice.find(
 					{ mobile: user.mobile, merchant_id: merchant_id, is_validated: 1 },
@@ -2439,21 +2112,9 @@ router.post("/user/getInvoicesByNumber", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message: "User is not Valid.",
-				});
+			let errRes = errorMessage(err, user, "User is not Valid.");
+			if (errRes.status == 0) {
+				res.status(200).json(errRes);
 			} else {
 				Invoice.find(
 					{
@@ -2499,21 +2160,9 @@ router.post("/user/getInvoicesForCustomerCode", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, payer) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (payer == null) {
-				res.status(200).json({
-					status: 0,
-					message: "User is not valid",
-				});
+			let errRes = errorMessage(err, payer, "User is not valid");
+			if (errRes.status == 0) {
+				res.status(200).json(errRes);
 			} else {
 				Invoice.find(
 					{
@@ -2559,21 +2208,9 @@ router.post("/user/getInvoicesForMobile", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, payer) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (payer == null) {
-				res.status(200).json({
-					status: 0,
-					message: "User is not valid",
-				});
+			let errRes = errorMessage(err, payer, "User is not valid");
+			if (errRes.status == 0) {
+				res.status(200).json(errRes);
 			} else {
 				Invoice.find(
 					{ mobile: mobile, merchant_id: merchant_id, is_validated: 1 },
@@ -2610,41 +2247,16 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				console.log(err);
-				res.status(200).json({
-					status: 0,
-					message: "User is not valid",
-				});
+			let errRes = errorMessage(err, user, "User is not valid");
+			if (errRes.status == 0) {
+				res.status(200).json(errRes);
 			} else {
 				MerchantRule.findOne(
 					{ merchant_id: merchant_id, type: "WM-F", status: 1, active: 1 },
 					(err, fee) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (fee == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Fee rule not found",
-							});
+						let errRes = errorMessage(err, fee, "Fee rule not found");
+						if (errRes.status == 0) {
+							res.status(200).json(errRes);
 						} else {
 							MerchantRule.findOne(
 								{
@@ -2654,21 +2266,13 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 									active: 1,
 								},
 								async (err, comm) => {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (comm == null) {
-										res.status(200).json({
-											status: 0,
-											message: "Commission rule not found",
-										});
+									let errRes = errorMessage(
+										err,
+										comm,
+										"Commission rule not found"
+									);
+									if (errRes.status == 0) {
+										res.status(200).json(errRes);
 									} else {
 										try {
 											var total_amount = 0;

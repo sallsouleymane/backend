@@ -18,6 +18,7 @@ module.exports = async function (
 		const senderWallet = sender.wallet_id;
 		const receiverWallet = receiver.wallet_id;
 		const bankOpWallet = bank.wallet_ids.operational;
+		const receiverBankOpWallet = receiverBank.wallet_ids.operational;
 
 		// first transaction
 		var amount = Number(transfer.amount);
@@ -38,7 +39,7 @@ module.exports = async function (
 
 		let trans1 = {
 			from: senderWallet,
-			to: receiverWallet,
+			to: bankOpWallet,
 			amount: amount,
 			note:
 				"Transfer from " +
@@ -48,17 +49,65 @@ module.exports = async function (
 				": " +
 				transfer.note,
 			email1: sender.email,
-			email2: receiver.email,
+			email2: bank.email,
 			mobile1: sender.mobile,
-			mobile2: receiver.mobile,
+			mobile2: bank.mobile,
 			from_name: sender.name,
+			to_name: bank.name,
+			user_id: "",
+			master_code: master_code,
+			child_code: master_code + "1",
+		};
+
+		let result = await blockchain.initiateTransfer(trans1);
+
+		let trans1 = {
+			from: bankOpWallet,
+			to: receiverBankOpWallet,
+			amount: amount,
+			note:
+				"Transfer from " +
+				sender.name +
+				" to " +
+				receiver.name +
+				": " +
+				transfer.note,
+			email1: bank.email,
+			email2: receiverBank.email,
+			mobile1: bank.mobile,
+			mobile2: receiverBank.mobile,
+			from_name: bank.name,
+			to_name: receiverBank.name,
+			user_id: "",
+			master_code: master_code,
+			child_code: master_code + "1",
+		};
+
+		let result = await blockchain.initiateTransfer(trans1);
+
+		let trans1 = {
+			from: receiverBankOpWallet,
+			to: receiverWallet,
+			amount: amount,
+			note:
+				"Transfer from " +
+				sender.name +
+				" to " +
+				receiver.name +
+				": " +
+				transfer.note,
+			email1: receiverBank.email,
+			email2: receiver.email,
+			mobile1: receiverBank.mobile,
+			mobile2: receiver.mobile,
+			from_name: receiverBank.name,
 			to_name: receiver.name,
 			user_id: "",
 			master_code: master_code,
 			child_code: master_code + "1",
 		};
 
-		var result = await blockchain.initiateTransfer(trans1);
+		let result = await blockchain.initiateTransfer(trans1);
 
 		// return response
 		if (result.status == 0) {
@@ -70,28 +119,16 @@ module.exports = async function (
 		}
 
 		transfer.fee = fee;
-		if (fee > 0) {
-			let trans2 = {
-				from: senderWallet,
-				to: bankOpWallet,
-				amount: fee,
-				note: "Bank Inter Bank Fee",
-				email1: sender.email,
-				email2: bank.email,
-				mobile1: sender.mobile,
-				mobile2: bank.mobile,
-				from_name: sender.name,
-				to_name: bank.name,
-				user_id: "",
-				master_code: master_code,
-				child_code: master_code + "2",
-			};
-
-			await blockchain.initiateTransfer(trans2);
-		}
-
 		transfer.master_code = master_code;
-		distributeRevenue(transfer, infra, bank, receiverBank, rule1);
+		distributeRevenue(
+			transfer,
+			infra,
+			bank,
+			receiverBank,
+			sender,
+			receiver,
+			rule1
+		);
 		return {
 			status: 1,
 			message: "Transaction success!",
@@ -105,10 +142,38 @@ module.exports = async function (
 	}
 };
 
-async function distributeRevenue(transfer, infra, bank, receiverBank, rule1) {
+async function distributeRevenue(
+	transfer,
+	infra,
+	bank,
+	receiverBank,
+	sender,
+	rule1
+) {
+	const senderWallet = sender.wallet_id;
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 	const receiverBankOpWallet = receiverBank.wallet_ids.operational;
+
+	if (transfer.fee > 0) {
+		let trans2 = {
+			from: senderWallet,
+			to: bankOpWallet,
+			amount: transfer.fee,
+			note: "Bank Inter Bank Fee",
+			email1: sender.email,
+			email2: bank.email,
+			mobile1: sender.mobile,
+			mobile2: bank.mobile,
+			from_name: sender.name,
+			to_name: bank.name,
+			user_id: "",
+			master_code: master_code,
+			child_code: master_code + "2",
+		};
+
+		await blockchain.initiateTransfer(trans2);
+	}
 
 	var infraShare = calculateShare("infra", transfer.amount, rule1);
 

@@ -73,6 +73,12 @@ router.post("/:user/getPaidInvoiceList", jwtTokenAuth, function (req, res) {
 					paid_by = "PC";
 				} else if (user == "user") {
 					paid_by = "US";
+				} else {
+					res.status(200).json({
+						status: 0,
+						message: "The user does not have API support",
+					});
+					return;
 				}
 				Invoice.find(
 					{ paid_by: paid_by, payer_id: user._id },
@@ -618,11 +624,7 @@ router.get("/getWalletBalance", function (req, res) {
 							});
 						})
 						.catch((err) => {
-							console.log(err);
-							res.status(200).json({
-								status: 0,
-								message: err.message,
-							});
+							return catchError(err);
 						});
 				}
 			}
