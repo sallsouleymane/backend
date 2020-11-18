@@ -79,11 +79,20 @@ module.exports = async function (
 				blockchain_message: result.message,
 			};
 		}
-
+		var claimerBranchShare = 0;
+		if (fee > 0) {
+			claimerBranchShare = calculateShare(
+				"claimBranch",
+				transfer.amount,
+				rule1,
+				rule2
+			);
+		}
 		claimerBankShare = calculateShare("claimBank", transfer.amount, rule1);
 
 		transfer.claimerBankShare = claimerBankShare;
 		transfer.fee = fee;
+		transfer.claimerBranchShare = claimerBranchShare;
 		distributeRevenue(transfer, sendingBank, bank, branch, rule1, rule2);
 
 		return {
@@ -152,19 +161,11 @@ async function distributeRevenue(
 		await blockchain.initiateTransfer(trans2);
 	}
 
-	var claimerBranchShare = 0;
 	if (fee > 0) {
-		claimerBranchShare = calculateShare(
-			"claimPartner",
-			transfer.amount,
-			rule1,
-			rule2,
-			transfer.partnerCode
-		);
 		let trans3 = {
 			from: bankOpWallet,
 			to: branchOpWallet,
-			amount: claimerBranchShare,
+			amount: transfer.claimerBranchShare,
 			note: "Claim Revenue for Inter Bank transaction",
 			email1: bank.email,
 			email2: branch.email,
