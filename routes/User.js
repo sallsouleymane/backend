@@ -148,7 +148,7 @@ router.get("/user/listMerchants", jwtTokenAuth, function (req, res) {
 						status: 1,
 						$or: [
 							{ is_public: true },
-							{ $and: [{ is_public: false }, { bank_id: cashier.bank_id }] },
+							{ $and: [{ is_public: false }, { bank_id: user.bank_id }] },
 						],
 					},
 					"-password",
@@ -715,8 +715,7 @@ router.get("/user/getTransactionHistory", jwtTokenAuth, function (req, res) {
 						history: result,
 					});
 				} catch (err) {
-					console.log(err);
-					res.status(200).json({ status: 0, message: err.message });
+					return catchError(err);
 				}
 			}
 		}

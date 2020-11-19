@@ -8,13 +8,6 @@ const sendSMS = require("../utils/sendSMS");
 const sendMail = require("../utils/sendMail");
 const { errorMessage, catchError } = require("../utils/errorHandler");
 
-//services
-const {
-	createWallet,
-	getStatement,
-	getBalance,
-} = require("../../services/Blockchain.js");
-
 const Bank = require("../../models/Bank");
 const OTP = require("../../models/OTP");
 const Branch = require("../../models/Branch");

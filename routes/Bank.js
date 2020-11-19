@@ -602,12 +602,16 @@ router.get("/getBankOperationalBalance", function (req, res) {
 			} else {
 				const wallet_id = ba.wallet_ids.operational;
 
-				getBalance(wallet_id).then(function (result) {
-					res.status(200).json({
-						status: 1,
-						balance: result,
+				getBalance(wallet_id)
+					.then(function (result) {
+						res.status(200).json({
+							status: 1,
+							balance: result,
+						});
+					})
+					.catch((err) => {
+						return catchError(err);
 					});
-				});
 			}
 		}
 	);
@@ -1150,11 +1154,7 @@ router.post("/getBankHistory", function (req, res) {
 						});
 					})
 					.catch((err) => {
-						console.log(err);
-						res.status(200).json({
-							status: 0,
-							message: err.message,
-						});
+						return catchError(err);
 					});
 			}
 		}

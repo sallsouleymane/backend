@@ -259,8 +259,7 @@ router.post("/cashier/getTransactionHistory", function (req, res) {
 										history: result,
 									});
 								} catch (err) {
-									console.log(err);
-									res.status(200).json({ status: 0, message: err.message });
+									return catchError(err);
 								}
 							}
 						});
@@ -1773,11 +1772,7 @@ router.post("/cashierSendMoney", function (req, res) {
 																					}
 																				})
 																				.catch((err) => {
-																					console.log(err);
-																					res.status(200).json({
-																						status: 0,
-																						message: err.message,
-																					});
+																					return catchError(err);
 																				});
 																		}
 																	});
@@ -2354,11 +2349,7 @@ router.post("/cashier/sendMoneyToWallet", function (req, res) {
 																								}
 																							})
 																							.catch((err) => {
-																								console.log(err);
-																								res.status(200).json({
-																									status: 0,
-																									message: err.message,
-																								});
+																								return catchError(err);
 																							});
 																					}
 																				});

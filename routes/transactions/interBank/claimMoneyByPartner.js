@@ -88,12 +88,9 @@ module.exports = async function (
 				rule2
 			);
 		}
-		claimerBankShare = calculateShare("claimBank", transfer.amount, rule1);
-
-		transfer.claimerBankShare = claimerBankShare;
 		transfer.fee = fee;
 		transfer.claimerBranchShare = claimerBranchShare;
-		distributeRevenue(transfer, sendingBank, bank, branch, rule1, rule2);
+		distributeRevenue(transfer, sendingBank, bank, branch, rule1);
 
 		return {
 			status: 1,
@@ -106,19 +103,12 @@ module.exports = async function (
 	}
 };
 
-async function distributeRevenue(
-	transfer,
-	sendingBank,
-	bank,
-	branch,
-	rule1,
-	rule2
-) {
+async function distributeRevenue(transfer, sendingBank, bank, branch, rule1) {
 	const branchOpWallet = branch.wallet_ids.operational;
 	const bankOpWallet = bank.wallet_ids.operational;
 	const senderBankOpWallet = sendingBank.wallet_ids.operational;
 
-	let claimerBankShare = transfer.claimerBankShare;
+	let claimerBankShare = calculateShare("claimBank", transfer.amount, rule1);
 	let fee = transfer.fee;
 
 	if (claimerBankShare.percentage_amount > 0) {

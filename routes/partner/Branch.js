@@ -164,11 +164,7 @@ router.post("/partnerBranch/getHistory", jwtTokenAuth, function (req, res) {
 						});
 					})
 					.catch((err) => {
-						console.log(err);
-						res.status(200).json({
-							status: 0,
-							message: err.message,
-						});
+						return catchError(err);
 					});
 			}
 		}

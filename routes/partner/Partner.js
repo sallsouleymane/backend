@@ -66,44 +66,6 @@ router.post("/partner/updateBranchStatus", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/partner/getBalance", jwtTokenAuth, function (req, res) {
-	const { from } = req.body;
-	const jwtusername = req.sign_creds.username;
-	Partner.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, partner) {
-			let result = errorMessage(
-				err,
-				partner,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				const wallet = partner.wallet_ids[from];
-				blockchain
-					.getBalance(wallet)
-					.then(function (count) {
-						res.status(200).json({
-							status: 1,
-							balance: balance,
-						});
-					})
-					.catch((err) => {
-						console.log(err);
-						res.status(200).json({
-							status: 0,
-							message: err.message,
-						});
-					});
-			}
-		}
-	);
-});
-
 router.post("/partner/getHistoryTotal", jwtTokenAuth, function (req, res) {
 	const { from } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -207,61 +169,8 @@ router.post("/partner/getHistory", jwtTokenAuth, function (req, res) {
 						});
 					})
 					.catch((err) => {
-						console.log(err);
-						res.status(200).json({
-							status: 0,
-							message: err.message,
-						});
+						return catchError(err);
 					});
-			}
-		}
-	);
-});
-
-router.get("/partner/getOperationalBalance", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	Partner.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, partner) {
-			let result = errorMessage(
-				err,
-				partner,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
-					let result = errorMessage(
-						err,
-						bank,
-						"Bank of the partner is not valid."
-					);
-					if (result.status == 0) {
-						res.status(200).json(result);
-					} else {
-						const wallet_id = partner.wallet_ids.operational;
-
-						blockchain
-							.getBalance(wallet_id)
-							.then(function (result) {
-								res.status(200).json({
-									status: 1,
-									balance: result,
-								});
-							})
-							.catch((err) => {
-								console.log(err);
-								res.status(200).json({
-									status: 0,
-									message: err.message,
-								});
-							});
-					}
-				});
 			}
 		}
 	);
