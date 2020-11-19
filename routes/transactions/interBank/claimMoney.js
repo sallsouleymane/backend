@@ -91,6 +91,7 @@ module.exports = async function (
 		}
 		transfer.fee = fee;
 		transfer.claimerBranchShare = claimerBranchShare;
+		transfer.master_code = master_code;
 		distributeRevenue(transfer, sendingBank, bank, branch, rule1);
 
 		return {
@@ -111,6 +112,7 @@ async function distributeRevenue(transfer, sendingBank, bank, branch, rule1) {
 
 	let claimerBankShare = calculateShare("claimBank", transfer.amount, rule1);
 	let fee = transfer.fee;
+	let master_code = transfer.master_code;
 
 	if (claimerBankShare.percentage_amount > 0) {
 		let trans2 = {

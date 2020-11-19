@@ -168,8 +168,8 @@ async function distributeRevenue(
 			from_name: sender.name,
 			to_name: bank.name,
 			user_id: "",
-			master_code: master_code,
-			child_code: master_code + "2",
+			master_code: transfer.master_code,
+			child_code: transfer.master_code + "2",
 		};
 
 		await blockchain.initiateTransfer(trans2);
