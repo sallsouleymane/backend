@@ -51,7 +51,8 @@ router.post("/partner/getBranchWalletBalnce", jwtTokenAuth, function (
 					} else {
 						let wallet_id = branch.wallet_ids[wallet_type];
 
-						getBalance(wallet_id)
+						blockchain
+							.getBalance(wallet_id)
 							.then(function (result) {
 								res.status(200).json({
 									status: 1,
