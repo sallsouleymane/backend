@@ -120,15 +120,7 @@ module.exports = async function (
 
 		transfer.fee = fee;
 		transfer.master_code = master_code;
-		distributeRevenue(
-			transfer,
-			infra,
-			bank,
-			receiverBank,
-			sender,
-			receiver,
-			rule1
-		);
+		distributeRevenue(transfer, infra, bank, receiverBank, sender, rule1);
 		return {
 			status: 1,
 			message: "Transaction success!",
