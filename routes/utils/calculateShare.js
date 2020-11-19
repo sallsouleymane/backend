@@ -58,7 +58,7 @@ module.exports.calculateShare = function (
 		bankBShare = bankBShare + otherBankShare.percentage_amount;
 	}
 	if (rule.other_bank_share && rule.other_bank_share.fixed > 0) {
-		otherBankShare.fixed_amount = Number(rule.other_bank_share.fixed) / 100;
+		otherBankShare.fixed_amount = Number(rule.other_bank_share.fixed);
 		console.log("Other bank fixed amount: ", otherBankShare.fixed_amount);
 		bankBShare = bankBShare + otherBankShare.fixed_amount;
 	}
