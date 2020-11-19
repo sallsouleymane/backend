@@ -57,10 +57,10 @@ router.post("/:user/getPaidInvoiceList", jwtTokenAuth, function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, user) {
+		function (err, data) {
 			var result = errorMessage(
 				err,
-				user,
+				data,
 				"Token changed or user not valid. Try to login again or contact system administrator."
 			);
 			if (result.status == 0) {
@@ -81,7 +81,7 @@ router.post("/:user/getPaidInvoiceList", jwtTokenAuth, function (req, res) {
 					return;
 				}
 				Invoice.find(
-					{ paid_by: paid_by, payer_id: user._id },
+					{ paid_by: paid_by, payer_id: data._id },
 					(err, invoices) => {
 						if (err) {
 							return catchError(err);

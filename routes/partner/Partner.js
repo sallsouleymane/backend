@@ -20,6 +20,54 @@ const PartnerUser = require("../../models/partner/User");
 const FailedTX = require("../../models/FailedTXLedger");
 const getWalletIds = require("../utils/getWalletIds");
 
+router.post("/partner/getBranchWalletBalnce", jwtTokenAuth, function (
+	req,
+	res
+) {
+	const { branch_id, wallet_type } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Partner.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, partner) {
+			let errMsg = errorMessage(
+				err,
+				partner,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errMsg.status == 0) {
+				res.status(200).json(result);
+			} else {
+				PartnerBranch.findById(branch_id, (err, branch) => {
+					let errMsg = errorMessage(
+						err,
+						branch,
+						"Token changed or user not valid. Try to login again or contact system administrator."
+					);
+					if (errMsg.status == 0) {
+						res.status(200).json(result);
+					} else {
+						let wallet_id = branch.wallet_ids[wallet_type];
+
+						getBalance(wallet_id)
+							.then(function (result) {
+								res.status(200).json({
+									status: 1,
+									balance: result,
+								});
+							})
+							.catch((err) => {
+								return catchError(err);
+							});
+					}
+				});
+			}
+		}
+	);
+});
+
 router.post("/partner/updateBranchStatus", jwtTokenAuth, function (req, res) {
 	const { status, branch_id } = req.body;
 	const jwtusername = req.sign_creds.username;
