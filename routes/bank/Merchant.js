@@ -44,7 +44,7 @@ router.post("/bank/changeMerchantAcces", function (req, res) {
 							res.status(200).json(errMsg);
 						} else {
 							res.status(200).json({
-								status: 0,
+								status: 1,
 								message: "Changed Access successfully",
 							});
 						}
@@ -85,7 +85,7 @@ router.post("/bank/blockMerchant", function (req, res) {
 						} else {
 							res.status(200).json({
 								status: 1,
-								data: "blocked Merchant",
+								message: "blocked Merchant",
 							});
 						}
 					}
