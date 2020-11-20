@@ -147,8 +147,9 @@ router.get("/user/listMerchants", jwtTokenAuth, function (req, res) {
 					{
 						status: 1,
 						$or: [
-							{ is_public: true },
-							{ $and: [{ is_public: false }, { bank_id: user.bank_id }] },
+							{ is_private: { $exists: false } },
+							{ is_private: false },
+							{ $and: [{ is_private: true }, { bank_id: user.bank_id }] },
 						],
 					},
 					"-password",

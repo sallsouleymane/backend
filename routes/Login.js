@@ -201,7 +201,7 @@ router.post("/merchantBranch/login", (req, res) => {
 	);
 });
 
-router.post("/merchantCashier/login", (req, res) => {
+router.post("/merchantStaff/login", (req, res) => {
 	const { username, password } = req.body;
 	MerchantStaff.findOne(
 		{ username, password, status: { $ne: 2 } },

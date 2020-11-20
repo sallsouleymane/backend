@@ -17,6 +17,7 @@ const MerchantSettings = require("../models/merchant/MerchantSettings");
 const MerchantCashierSettings = require("../models/merchant/MerchantCashierSettings");
 const Customer = require("../models/merchant/Customer");
 const { promises } = require("fs-extra");
+const MerchantStaff = require("../models/merchant/MerchantStaff");
 
 router.post("/merchantCashier/getDetails", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
@@ -517,6 +518,30 @@ router.post("/merchantCashier/increaseCounter", jwtTokenAuth, function (
 	);
 });
 
+router.get("/merchantCashier/cashierDash", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	MerchantCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			let result = errorMessage(err, cashier, "Cashier is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				res.status(200).json({
+					status: 1,
+					message: "Today's Status",
+					bills_paid: cashier.bills_paid,
+					amount_collected: cashier.amount_collected,
+					penalty_collected: cashier.penalty_collected,
+				});
+			}
+		}
+	);
+});
+
 router.get("/merchantCashier/todaysStatus", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	MerchantCashier.findOne(
@@ -534,8 +559,6 @@ router.get("/merchantCashier/todaysStatus", jwtTokenAuth, function (req, res) {
 					message: "Today's Status",
 					bills_paid: cashier.bills_paid,
 					bills_raised: cashier.bills_raised,
-					amount_collected: cashier.amount_collected,
-					penalty_collected: cashier.penalty_collected,
 				});
 			}
 		}

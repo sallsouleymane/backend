@@ -289,8 +289,9 @@ router.post("/cashier/listMerchants", function (req, res) {
 					{
 						status: 1,
 						$or: [
-							{ is_public: true },
-							{ $and: [{ is_public: false }, { bank_id: cashier.bank_id }] },
+							{ is_private: { $exists: false } },
+							{ is_private: false },
+							{ $and: [{ is_private: true }, { bank_id: cashier.bank_id }] },
 						],
 					},
 					"-password",

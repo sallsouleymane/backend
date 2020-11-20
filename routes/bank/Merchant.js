@@ -15,6 +15,46 @@ const Bank = require("../../models/Bank");
 const Merchant = require("../../models/merchant/Merchant");
 const getWalletIds = require("../utils/getWalletIds");
 
+router.post("/bank/changeMerchantAcces", function (req, res) {
+	const { token, merchant_id, is_private } = req.body;
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			let errMsg = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errMsg.status == 0) {
+				res.status(200).json(errMsg);
+			} else {
+				Merchant.findOneAndUpdate(
+					{ _id: merchant_id },
+					{ is_private: is_private },
+					function (err, merchant) {
+						let errMsg = errorMessage(
+							err,
+							merchant,
+							"Token changed or user not valid. Try to login again or contact system administrator."
+						);
+						if (errMsg.status == 0) {
+							res.status(200).json(errMsg);
+						} else {
+							res.status(200).json({
+								status: 0,
+								message: "Changed Access successfully",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/bank/blockMerchant", function (req, res) {
 	var { token, merchant_id } = req.body;
 	Bank.findOne(
@@ -145,7 +185,6 @@ router.post("/bank/createMerchant", function (req, res) {
 		document_hash,
 		email,
 		mobile,
-		is_public,
 	} = req.body;
 	Bank.findOne(
 		{
@@ -190,10 +229,9 @@ router.post("/bank/createMerchant", function (req, res) {
 								data.bank_id = bank._id;
 								data.status = 0;
 								data.creator = 0;
-								data.is_public = is_public;
 								data.wallet_ids.operational = wallet_ids.operational;
 
-								data.save((err, merchant) => {
+								data.save((err) => {
 									if (err) {
 										console.log(err);
 										res.status(200).json({
@@ -280,7 +318,6 @@ router.post("/bank/editMerchant", function (req, res) {
 		description,
 		document_hash,
 		email,
-		is_public,
 	} = req.body;
 	Bank.findOne(
 		{
@@ -304,7 +341,6 @@ router.post("/bank/editMerchant", function (req, res) {
 						description: description,
 						document_hash: document_hash,
 						email: email,
-						is_public: is_public,
 					},
 					(err, merchant) => {
 						let result = errorMessage(err, merchant, "Merchant not found.");

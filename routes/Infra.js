@@ -180,7 +180,6 @@ router.post("/infra/createMerchant", function (req, res) {
 		email,
 		mobile,
 		bank_id,
-		is_public,
 	} = req.body;
 	Infra.findOne(
 		{
@@ -240,7 +239,6 @@ router.post("/infra/createMerchant", function (req, res) {
 										data.infra_id = infra._id;
 										data.status = 0;
 										data.creator = 1;
-										data.is_public = is_public;
 										data.wallet_ids.operational = wallet_ids.operational;
 
 										data.save((err) => {
@@ -313,7 +311,6 @@ router.post("/infra/editMerchant", function (req, res) {
 		description,
 		document_hash,
 		email,
-		is_public,
 	} = req.body;
 	Infra.findOne(
 		{
@@ -337,7 +334,6 @@ router.post("/infra/editMerchant", function (req, res) {
 						description: description,
 						document_hash: document_hash,
 						email: email,
-						is_public: is_public,
 					},
 					(err, merchant) => {
 						var result = errorMessage(err, merchant, "Merchant not found.");

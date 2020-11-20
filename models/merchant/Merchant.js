@@ -28,7 +28,7 @@ const MerchantSchema = new mongoose.Schema({
 	wallet_ids: {
 		operational: { type: String, required: false },
 	},
-	is_public: { type: Boolean, required: false, default: true },
+	is_private: { type: Boolean, required: true, default: false },
 });
 
 MerchantSchema.plugin(uniqueValidator, {
