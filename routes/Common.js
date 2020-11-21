@@ -68,7 +68,7 @@ router.post("/:user/getPaidInvoiceList", jwtTokenAuth, function (req, res) {
 			} else {
 				var paid_by;
 				if (user == "merchantStaff") {
-					paid_by = "MS";
+					paid_by = "MC";
 				} else if (user == "partnerCashier") {
 					paid_by = "PC";
 				} else if (user == "user") {
