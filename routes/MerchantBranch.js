@@ -257,13 +257,13 @@ router.post("/merchantBranch/assignStaff", jwtTokenAuth, (req, res) => {
 							res.status(200).json(result);
 						} else {
 							MerchantPosition.findOneAndUpdate(
-								{ _id: position_id, branch_id: branch._id },
+								{ _id: position_id, branch_id: branch._id, type: staff.role },
 								{ staff_id: staff_id, username: staff.username },
 								(err, position) => {
 									let result = errorMessage(
 										err,
 										position,
-										"Position not found"
+										"Position not found or role does not match"
 									);
 									if (result.status == 0) {
 										res.status(200).json(result);
