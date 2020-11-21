@@ -11,8 +11,8 @@ const Infra = require("../models/Infra");
 const User = require("../models/User");
 const Merchant = require("../models/merchant/Merchant");
 const MerchantBranch = require("../models/merchant/MerchantBranch");
-const MerchantStaff = require("../models/merchant/MerchantStaff");
-const MerchantCashier = require("../models/merchant/MerchantCashier");
+const MerchantStaff = require("../models/merchant/Staff");
+const MerchantPosition = require("../models/merchant/Position");
 const Bank = require("../models/Bank");
 const Profile = require("../models/Profile");
 const Branch = require("../models/Branch");
@@ -201,7 +201,7 @@ router.post("/merchantBranch/login", (req, res) => {
 	);
 });
 
-router.post("/merchantCashier/login", (req, res) => {
+router.post("/merchantStaff/login", (req, res) => {
 	const { username, password } = req.body;
 	MerchantStaff.findOne(
 		{ username, password, status: { $ne: 2 } },
@@ -227,15 +227,13 @@ router.post("/merchantCashier/login", (req, res) => {
 								if (result.status == 0) {
 									res.status(200).json(result);
 								} else {
-									MerchantCashier.findOneAndUpdate(
-										{ staff_id: staff._id, status: 1 },
-										{ username: username },
-										{ new: true },
-										(err, cashier) => {
+									MerchantPosition.findOne(
+										{ staff_id: staff._id, status: 1, type: staff.role },
+										(err, position) => {
 											var result = errorMessage(
 												err,
-												cashier,
-												"Cashier not found or blocked"
+												position,
+												"No active position is assigned to the staff"
 											);
 											if (result.status == 0) {
 												res.status(200).json(result);
@@ -248,7 +246,7 @@ router.post("/merchantCashier/login", (req, res) => {
 												res.status(200).json({
 													status: 1,
 													token: token,
-													cashier: cashier,
+													position: position,
 													staff: staff,
 													branch: branch,
 													merchant: merchant,

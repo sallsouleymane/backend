@@ -12,7 +12,7 @@ const Infra = require("../models/Infra");
 const MerchantRule = require("../models/merchant/MerchantRule");
 const IBMerchantRule = require("../models/merchant/InterBankRule");
 const Merchant = require("../models/merchant/Merchant");
-const MerchantCashier = require("../models/merchant/MerchantCashier");
+const MerchantPosition = require("../models/merchant/Position");
 const Cashier = require("../models/Cashier");
 const User = require("../models/User");
 const PartnerCashier = require("../models/partner/Cashier");
@@ -1369,12 +1369,13 @@ router.post("/bank/merchantRule/interBank/createRule", function (req, res) {
 	);
 });
 
-router.post("/merchantCashier/checkMerchantFee", jwtTokenAuth, (req, res) => {
+router.post("/merchantStaff/checkMerchantFee", jwtTokenAuth, (req, res) => {
 	var { amount } = req.body;
 	const jwtusername = req.sign_creds.username;
-	MerchantCashier.findOne(
+	MerchantPosition.findOne(
 		{
 			username: jwtusername,
+			type: "cashier",
 			status: 1,
 		},
 		function (err, cashier) {

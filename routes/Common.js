@@ -67,8 +67,8 @@ router.post("/:user/getPaidInvoiceList", jwtTokenAuth, function (req, res) {
 				res.status(200).json(result);
 			} else {
 				var paid_by;
-				if (user == "merchantCashier") {
-					paid_by = "MC";
+				if (user == "merchantStaff") {
+					paid_by = "MS";
 				} else if (user == "partnerCashier") {
 					paid_by = "PC";
 				} else if (user == "user") {
@@ -2312,9 +2312,9 @@ router.get("/clearDb", function (req, res) {
 		db.dropCollection("merchantbranches", function () {});
 	}
 
-	if (type == "all" || type == "merchantcashier") {
+	if (type == "all" || type == "merchantstaff") {
 		matchfound = true;
-		db.dropCollection("merchantcashiers", function () {});
+		db.dropCollection("merchantstaffs", function () {});
 	}
 
 	if (type == "all" || type == "merchantstaff") {

@@ -6,8 +6,8 @@ const { errorMessage, catchError } = require("./utils/errorHandler");
 
 //models
 const MerchantBranch = require("../models/merchant/MerchantBranch");
-const MerchantStaff = require("../models/merchant/MerchantStaff");
-const MerchantCashier = require("../models/merchant/MerchantCashier");
+const MerchantStaff = require("../models/merchant/Staff");
+const MerchantPosition = require("../models/merchant/Position");
 
 router.post("/merchantBranch/editDetails", jwtTokenAuth, (req, res) => {
 	const {
@@ -115,15 +115,12 @@ router.get("/merchantBranch/todaysStatus", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/merchantBranch/editCashier", jwtTokenAuth, (req, res) => {
+router.post("/merchantBranch/editPosition", jwtTokenAuth, (req, res) => {
 	const {
-		cashier_id,
+		position_id,
 		name,
 		working_from,
 		working_to,
-		per_trans_amt,
-		max_trans_amt,
-		max_trans_count,
 		counter_invoice_access,
 	} = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -141,25 +138,22 @@ router.post("/merchantBranch/editCashier", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				MerchantCashier.findOneAndUpdate(
-					{ _id: cashier_id, branch_id: branch._id },
+				MerchantPosition.findOneAndUpdate(
+					{ _id: position_id, branch_id: branch._id },
 					{
 						name: name,
 						working_from: working_from,
 						working_to: working_to,
-						per_trans_amt: per_trans_amt,
-						max_trans_amt: max_trans_amt,
-						max_trans_count: max_trans_count,
 						counter_invoice_access: counter_invoice_access,
 					},
-					(err, cashier) => {
-						let result = errorMessage(err, cashier, "Cashier not found");
+					(err, position) => {
+						let result = errorMessage(err, position, "position not found");
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
-								message: "Edited merchant staff successfully",
+								message: "Edited merchant Position successfully",
 							});
 						}
 					}
@@ -169,7 +163,7 @@ router.post("/merchantBranch/editCashier", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.get("/merchantBranch/listCashier", jwtTokenAuth, (req, res) => {
+router.get("/merchantBranch/listPosition", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
 	MerchantBranch.findOne(
 		{
@@ -181,7 +175,7 @@ router.get("/merchantBranch/listCashier", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				MerchantCashier.find({ branch_id: branch._id }, (err, cashiers) => {
+				MerchantPosition.find({ branch_id: branch._id }, (err, positions) => {
 					if (err) {
 						console.log(err);
 						var message = err;
@@ -195,8 +189,8 @@ router.get("/merchantBranch/listCashier", jwtTokenAuth, (req, res) => {
 					} else {
 						res.status(200).json({
 							status: 1,
-							message: "Cashiers list",
-							cashiers: cashiers,
+							message: "ositions list",
+							positions: positions,
 						});
 					}
 				});
@@ -242,7 +236,7 @@ router.get("/merchantBranch/listStaff", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/merchantBranch/assignStaff", jwtTokenAuth, (req, res) => {
-	const { cashier_id, staff_id } = req.body;
+	const { position_id, staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantBranch.findOne(
 		{
@@ -254,6 +248,7 @@ router.post("/merchantBranch/assignStaff", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
+				console.log(branch._id);
 				MerchantStaff.findOne(
 					{ _id: staff_id, status: 1, branch_id: branch._id },
 					(err, staff) => {
@@ -261,17 +256,21 @@ router.post("/merchantBranch/assignStaff", jwtTokenAuth, (req, res) => {
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
-							MerchantCashier.findOneAndUpdate(
-								{ _id: cashier_id, branch_id: branch._id },
-								{ staff_id: staff_id },
-								(err, cashier) => {
-									let result = errorMessage(err, cashier, "Cashier not found");
+							MerchantPosition.findOneAndUpdate(
+								{ _id: position_id, branch_id: branch._id },
+								{ staff_id: staff_id, username: staff.username },
+								(err, position) => {
+									let result = errorMessage(
+										err,
+										position,
+										"Position not found"
+									);
 									if (result.status == 0) {
 										res.status(200).json(result);
 									} else {
 										res.status(200).json({
 											status: 1,
-											message: "Assigned staff as a cashier",
+											message: "Assigned staff a position",
 										});
 									}
 								}
@@ -284,8 +283,8 @@ router.post("/merchantBranch/assignStaff", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/merchantBranch/blockCashier", jwtTokenAuth, (req, res) => {
-	const { cashier_id } = req.body;
+router.post("/merchantBranch/blockPosition", jwtTokenAuth, (req, res) => {
+	const { position_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantBranch.findOne(
 		{
@@ -297,21 +296,21 @@ router.post("/merchantBranch/blockCashier", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				MerchantCashier.findOneAndUpdate(
-					{ _id: cashier_id, branch_id: branch._id },
+				MerchantPosition.findOneAndUpdate(
+					{ _id: position_id, branch_id: branch._id },
 					{
 						$set: {
 							status: 0,
 						},
 					},
-					(err, cashier) => {
-						let result = errorMessage(err, cashier, "Cashier not found");
+					(err, position) => {
+						let result = errorMessage(err, position, "position not found");
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
-								data: "blocked cashier",
+								data: "blocked position",
 							});
 						}
 					}
@@ -321,8 +320,8 @@ router.post("/merchantBranch/blockCashier", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/merchantBranch/unblockCashier", jwtTokenAuth, (req, res) => {
-	const { cashier_id } = req.body;
+router.post("/merchantBranch/unblockPosition", jwtTokenAuth, (req, res) => {
+	const { position_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantBranch.findOne(
 		{
@@ -334,21 +333,21 @@ router.post("/merchantBranch/unblockCashier", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				MerchantCashier.findOneAndUpdate(
-					{ _id: cashier_id, branch_id: branch._id },
+				MerchantPosition.findOneAndUpdate(
+					{ _id: position_id, branch_id: branch._id },
 					{
 						$set: {
 							status: 1,
 						},
 					},
-					(err, cashier) => {
-						let result = errorMessage(err, cashier, "Cashier not found");
+					(err, position) => {
+						let result = errorMessage(err, position, "Position not found");
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
-								data: "Unblocked cashier",
+								message: "Unblocked position",
 							});
 						}
 					}

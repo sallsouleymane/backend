@@ -16,8 +16,8 @@ const blockchain = require("../services/Blockchain");
 const Bank = require("../models/Bank");
 const Merchant = require("../models/merchant/Merchant");
 const MerchantBranch = require("../models/merchant/MerchantBranch");
-const MerchantStaff = require("../models/merchant/MerchantStaff");
-const MerchantCashier = require("../models/merchant/MerchantCashier");
+const MerchantStaff = require("../models/merchant/Staff");
+const MerchantPosition = require("../models/merchant/Position");
 const Zone = require("../models/merchant/Zone");
 const Subzone = require("../models/merchant/Subzone");
 const InvoiceGroup = require("../models/merchant/InvoiceGroup");
@@ -1401,9 +1401,9 @@ router.post("/merchant/editSubzone", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
-	let data = new MerchantCashier();
-	const { name, branch_id, working_from, working_to } = req.body;
+router.post("/merchant/addPosition", jwtTokenAuth, (req, res) => {
+	let data = new MerchantPosition();
+	const { name, branch_id, working_from, working_to, type } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -1429,7 +1429,8 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 						data.working_to = working_to;
 						data.merchant_id = merchant._id;
 						data.branch_id = branch_id;
-						data.save((err, cashier) => {
+						data.type = type;
+						data.save((err, position) => {
 							if (err) {
 								console.log(err);
 								var message = err;
@@ -1443,37 +1444,44 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 							} else {
 								MerchantBranch.updateOne(
 									{ _id: branch_id },
-									{ $inc: { total_cashiers: 1 } },
+									{ $inc: { total_positions: 1 } },
 									function (err, branch) {
 										let result = errorMessage(err, branch, "Branch not found");
 										if (result.status == 0) {
 											res.status(200).json(result);
 										} else {
-											let ig = new InvoiceGroup();
-											ig.code = "group-" + name;
-											ig.name = "default";
-											ig.description =
-												"Default invoice group for merchant cashier";
-											ig.cashier_id = cashier._id;
-											ig.save((err, group) => {
-												if (err) {
-													console.log(err);
-													var message = err;
-													if (err.message) {
-														message = err.message;
+											if (type == "staff") {
+												let ig = new InvoiceGroup();
+												ig.code = "group-" + name;
+												ig.name = "default";
+												ig.description =
+													"Default invoice group for merchant Staff";
+												ig.position_id = position._id;
+												ig.save((err, group) => {
+													if (err) {
+														console.log(err);
+														var message = err;
+														if (err.message) {
+															message = err.message;
+														}
+														res.status(200).json({
+															status: 0,
+															message: message,
+														});
+													} else {
+														return res.status(200).json({
+															status: 1,
+															data: position,
+															group: group,
+														});
 													}
-													res.status(200).json({
-														status: 0,
-														message: message,
-													});
-												} else {
-													return res.status(200).json({
-														status: 1,
-														data: cashier,
-														group: group,
-													});
-												}
-											});
+												});
+											} else {
+												return res.status(200).json({
+													status: 1,
+													data: position,
+												});
+											}
 										}
 									}
 								);
@@ -1486,8 +1494,8 @@ router.post("/merchant/addCashier", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/merchant/editCashier", jwtTokenAuth, (req, res) => {
-	const { cashier_id, name, working_from, working_to } = req.body;
+router.post("/merchant/editPosition", jwtTokenAuth, (req, res) => {
+	const { position_id, name, working_from, working_to } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -1499,21 +1507,21 @@ router.post("/merchant/editCashier", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				MerchantCashier.findOneAndUpdate(
-					{ _id: cashier_id, merchant_id: merchant._id },
+				MerchantPosition.findOneAndUpdate(
+					{ _id: position_id, merchant_id: merchant._id },
 					{
 						name: name,
 						working_from: working_from,
 						working_to: working_to,
 					},
-					(err, cashier) => {
-						let result = errorMessage(err, cashier, "Cashier not found");
+					(err, position) => {
+						let result = errorMessage(err, position, "Position not found");
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,
-								message: "edited merchant cashier successfully",
+								message: "Edited merchant position successfully",
 							});
 						}
 					}
@@ -1523,7 +1531,7 @@ router.post("/merchant/editCashier", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/merchant/listCashier", jwtTokenAuth, (req, res) => {
+router.post("/merchant/listPosition", jwtTokenAuth, (req, res) => {
 	const { branch_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
@@ -1536,9 +1544,9 @@ router.post("/merchant/listCashier", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				MerchantCashier.find(
+				MerchantPosition.find(
 					{ merchant_id: merchant._id, branch_id: branch_id },
-					(err, cashiers) => {
+					(err, positions) => {
 						if (err) {
 							console.log(err);
 							var message = err;
@@ -1552,7 +1560,7 @@ router.post("/merchant/listCashier", jwtTokenAuth, (req, res) => {
 						} else {
 							res.status(200).json({
 								status: 1,
-								cashiers: cashiers,
+								positions: positions,
 							});
 						}
 					}

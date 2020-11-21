@@ -18,15 +18,19 @@ const MerchantBranchSchema = new mongoose.Schema({
 	created_at: { type: Date, default: Date.now },
 	modified_at: { type: Date, default: null },
 	initial_setup: { type: Boolean, default: false },
-	total_cashiers: { type: Number, required: false, default: 0 },
+	total_positions: { type: Number, required: false, default: 0 },
 	status: { type: Number, required: true, default: 0 },
 	working_from: { type: String, required: false, default: 0 },
 	working_to: { type: String, required: false, default: 0 },
 	bills_paid: { type: Number, required: false, default: 0 },
 	bills_raised: { type: Number, required: false, default: 0 },
-	amount_collected: { type: Number, required: true, default: 0 }, 
-	amount_collected_desc: { type: String, required: false, default: "Today's total amount paid"},
-	last_paid_at: { type: Date, required: false, default: null},
-	amount_due: { type: Number, required: true, default: 0 }
+	amount_collected: { type: Number, required: true, default: 0 },
+	amount_collected_desc: {
+		type: String,
+		required: false,
+		default: "Today's total amount paid",
+	},
+	last_paid_at: { type: Date, required: false, default: null },
+	amount_due: { type: Number, required: true, default: 0 },
 });
 module.exports = mongoose.model("MerchantBranch", MerchantBranchSchema);
