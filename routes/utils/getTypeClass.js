@@ -10,7 +10,7 @@ const User = require("../../models/User");
 const Merchant = require("../../models/merchant/Merchant");
 const MerchantBranch = require("../../models/merchant/MerchantBranch");
 const MerchantPosition = require("../../models/merchant/Position");
-const MerchantUser = require("../../models/merchant/Staff");
+const MerchantStaff = require("../../models/merchant/Staff");
 const Partner = require("../../models/partner/Partner");
 const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
@@ -48,8 +48,8 @@ module.exports = (key) => {
 			return MerchantBranch;
 		case "merchantPosition":
 			return MerchantPosition;
-		case "merchantUser":
-			return MerchantUser;
+		case "merchantStaff":
+			return MerchantStaff;
 		case "partner":
 		case "PA":
 			return Partner;
