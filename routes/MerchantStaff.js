@@ -15,8 +15,6 @@ const User = require("../models/User");
 const Tax = require("../models/merchant/Tax");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
 const Customer = require("../models/merchant/Customer");
-const MerchantStaff = require("../models/merchant/Staff");
-const Staff = require("../models/merchant/Staff");
 
 router.post("/merchantStaff/getPositionDetails", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
@@ -108,85 +106,87 @@ router.post("/merchantStaff/billNumberSetting", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/merchantStaff/getCustomerForMobile", jwtTokenAuth, function (
-	req,
-	res
-) {
-	const { mobile } = req.body;
-	const jwtusername = req.sign_creds.username;
-	MerchantPosition.findOne(
-		{
-			username: jwtusername,
-			type: "staff",
-			status: 1,
-		},
-		function (err, position) {
-			let result = errorMessage(
-				err,
-				position,
-				"Merchant Position is not valid"
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Customer.findOne(
-					{ merchant_id: position.merchant_id, mobile: mobile },
-					(err, customer) => {
-						let result = errorMessage(err, customer, "Customer not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
-						} else {
-							res.status(200).json({
-								status: 1,
-								customer: customer,
-							});
-						}
-					}
+router.post(
+	"/merchantStaff/getCustomerForMobile",
+	jwtTokenAuth,
+	function (req, res) {
+		const { mobile } = req.body;
+		const jwtusername = req.sign_creds.username;
+		MerchantPosition.findOne(
+			{
+				username: jwtusername,
+				type: "staff",
+				status: 1,
+			},
+			function (err, position) {
+				let result = errorMessage(
+					err,
+					position,
+					"Merchant Position is not valid"
 				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					Customer.findOne(
+						{ merchant_id: position.merchant_id, mobile: mobile },
+						(err, customer) => {
+							let result = errorMessage(err, customer, "Customer not found");
+							if (result.status == 0) {
+								res.status(200).json(result);
+							} else {
+								res.status(200).json({
+									status: 1,
+									customer: customer,
+								});
+							}
+						}
+					);
+				}
 			}
-		}
-	);
-});
+		);
+	}
+);
 
-router.post("/merchantStaff/getCustomerForCode", jwtTokenAuth, function (
-	req,
-	res
-) {
-	const { customer_code } = req.body;
-	const jwtusername = req.sign_creds.username;
-	MerchantPosition.findOne(
-		{
-			username: jwtusername,
-			type: "staff",
-			status: 1,
-		},
-		function (err, position) {
-			let result = errorMessage(
-				err,
-				position,
-				"Merchant Position is not valid"
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Customer.findOne(
-					{ merchant_id: position.merchant_id, customer_code: customer_code },
-					(err, customer) => {
-						let result = errorMessage(err, customer, "Customer not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
-						} else {
-							res.status(200).json({
-								status: 1,
-								customer: customer,
-							});
-						}
-					}
+router.post(
+	"/merchantStaff/getCustomerForCode",
+	jwtTokenAuth,
+	function (req, res) {
+		const { customer_code } = req.body;
+		const jwtusername = req.sign_creds.username;
+		MerchantPosition.findOne(
+			{
+				username: jwtusername,
+				type: "staff",
+				status: 1,
+			},
+			function (err, position) {
+				let result = errorMessage(
+					err,
+					position,
+					"Merchant Position is not valid"
 				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					Customer.findOne(
+						{ merchant_id: position.merchant_id, customer_code: customer_code },
+						(err, customer) => {
+							let result = errorMessage(err, customer, "Customer not found");
+							if (result.status == 0) {
+								res.status(200).json(result);
+							} else {
+								res.status(200).json({
+									status: 1,
+									customer: customer,
+								});
+							}
+						}
+					);
+				}
 			}
-		}
-	);
-});
+		);
+	}
+);
 
 router.post("/merchantStaff/createCustomer", jwtTokenAuth, (req, res) => {
 	const {
@@ -279,38 +279,39 @@ router.post("/merchantStaff/createCustomer", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/merchantStaff/getUserFromMobile", jwtTokenAuth, function (
-	req,
-	res
-) {
-	const { mobile } = req.body;
-	const jwtusername = req.sign_creds.username;
-	MerchantPosition.findOne(
-		{
-			username: jwtusername,
-			type: "staff",
-			status: 1,
-		},
-		function (err, position) {
-			let result = errorMessage(err, position, "Merchant is not valid");
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				User.findOne({ mobile }, "-password", function (err, user) {
-					let result = errorMessage(err, user, "User not found");
-					if (result.status == 0) {
-						res.status(200).json(result);
-					} else {
-						res.status(200).json({
-							status: 1,
-							data: user,
-						});
-					}
-				});
+router.post(
+	"/merchantStaff/getUserFromMobile",
+	jwtTokenAuth,
+	function (req, res) {
+		const { mobile } = req.body;
+		const jwtusername = req.sign_creds.username;
+		MerchantPosition.findOne(
+			{
+				username: jwtusername,
+				type: "staff",
+				status: 1,
+			},
+			function (err, position) {
+				let result = errorMessage(err, position, "Merchant is not valid");
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					User.findOne({ mobile }, "-password", function (err, user) {
+						let result = errorMessage(err, user, "User not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							res.status(200).json({
+								status: 1,
+								data: user,
+							});
+						}
+					});
+				}
 			}
-		}
-	);
-});
+		);
+	}
+);
 
 router.post("/merchantStaff/listOfferings", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -428,94 +429,96 @@ router.post("/merchantStaff/deleteInvoice", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/merchantStaff/increaseCounter", jwtTokenAuth, function (
-	req,
-	res
-) {
-	const jwtusername = req.sign_creds.username;
-	MerchantPosition.findOneAndUpdate(
-		{
-			username: jwtusername,
-			type: "staff",
-			status: 1,
-		},
-		{ $inc: { counter: 1 } },
-		function (err, position) {
-			let result = errorMessage(
-				err,
-				position,
-				"Merchant position is not valid"
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				res.status(200).json({
-					status: 1,
-					message: "Counter Increased",
-				});
-			}
-		}
-	);
-});
-
-router.get("/merchantStaff/cashierDashStatus", jwtTokenAuth, function (
-	req,
-	res
-) {
-	const jwtusername = req.sign_creds.username;
-	MerchantPosition.findOne(
-		{
-			username: jwtusername,
-			type: "cashier",
-			status: 1,
-		},
-		async function (err, position) {
-			let result = errorMessage(err, position, "Position is not valid");
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				try {
-					let status = await Invoice.aggregate([
-						{
-							$match: {
-								payer_id: position._id,
-								paid_by: "MC",
-								paid: 1,
-							},
-						},
-						{
-							$group: {
-								_id: null,
-								amount_collected: { $sum: "$amount" },
-								penalty_collected: { $sum: "$penalty" },
-								bills_paid: { $sum: 1 },
-							},
-						},
-					]);
-					if (status.length > 0) {
-						res.status(200).json({
-							status: 1,
-							message: "Today's Status",
-							bills_paid: status[0].bills_paid,
-							amount_collected: status[0].amount_collected,
-							penalty_collected: status[0].penalty_collected,
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							message: "Today's Status",
-							bills_paid: 0,
-							amount_collected: 0,
-							penalty_collected: 0,
-						});
-					}
-				} catch (err) {
-					return catchError(err);
+router.post(
+	"/merchantStaff/increaseCounter",
+	jwtTokenAuth,
+	function (req, res) {
+		const jwtusername = req.sign_creds.username;
+		MerchantPosition.findOneAndUpdate(
+			{
+				username: jwtusername,
+				type: "staff",
+				status: 1,
+			},
+			{ $inc: { counter: 1 } },
+			function (err, position) {
+				let result = errorMessage(
+					err,
+					position,
+					"Merchant position is not valid"
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					res.status(200).json({
+						status: 1,
+						message: "Counter Increased",
+					});
 				}
 			}
-		}
-	);
-});
+		);
+	}
+);
+
+router.get(
+	"/merchantStaff/cashierDashStatus",
+	jwtTokenAuth,
+	function (req, res) {
+		const jwtusername = req.sign_creds.username;
+		MerchantPosition.findOne(
+			{
+				username: jwtusername,
+				type: "cashier",
+				status: 1,
+			},
+			async function (err, position) {
+				let result = errorMessage(err, position, "Position is not valid");
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					try {
+						let status = await Invoice.aggregate([
+							{
+								$match: {
+									payer_id: position._id,
+									paid_by: "MC",
+									paid: 1,
+								},
+							},
+							{
+								$group: {
+									_id: null,
+									amount_collected: { $sum: "$amount" },
+									penalty_collected: { $sum: "$penalty" },
+									bills_paid: { $sum: 1 },
+								},
+							},
+						]);
+						if (status.length > 0) {
+							res.status(200).json({
+								status: 1,
+								message: "Today's Status",
+								bills_paid: status[0].bills_paid,
+								amount_collected: status[0].amount_collected,
+								penalty_collected: status[0].penalty_collected,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Today's Status",
+								bills_paid: 0,
+								amount_collected: 0,
+								penalty_collected: 0,
+							});
+						}
+					} catch (err) {
+						return catchError(err);
+					}
+				}
+			}
+		);
+	}
+);
 
 router.get("/merchantStaff/staffDashStatus", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -671,7 +674,6 @@ router.post("/merchantStaff/getSettings", jwtTokenAuth, function (req, res) {
 	MerchantPosition.findOne(
 		{
 			username: jwtusername,
-			type: "staff",
 			status: 1,
 		},
 		function (err, position) {
@@ -710,15 +712,16 @@ router.post("/merchantStaff/getSettings", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/merchantStaff/getPositionSettings", jwtTokenAuth, function (
-	req,
-	res
-) {
-	res.status(200).json({
-		status: 0,
-		setting: "This API is removed",
-	});
-});
+router.post(
+	"/merchantStaff/getPositionSettings",
+	jwtTokenAuth,
+	function (req, res) {
+		res.status(200).json({
+			status: 0,
+			setting: "This API is removed",
+		});
+	}
+);
 
 router.post("/merchantStaff/createInvoice", jwtTokenAuth, (req, res) => {
 	var {
