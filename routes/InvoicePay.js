@@ -1180,7 +1180,7 @@ router.post("/merchantStaff/payInvoice", jwtTokenAuth, (req, res) => {
 												}
 
 												var mb = await MerchantBranch.updateOne(
-													{ _id: mc.branch_id },
+													{ _id: ms.branch_id },
 													{
 														$set: { last_paid_at: last_paid_at },
 														$inc: {
@@ -1964,7 +1964,7 @@ router.post("/cashier/payInvoice", (req, res) => {
 														}
 
 														var mb = await MerchantBranch.updateOne(
-															{ _id: mc.branch_id },
+															{ _id: ms.branch_id },
 															{
 																last_paid_at: last_paid_at,
 																$inc: {
