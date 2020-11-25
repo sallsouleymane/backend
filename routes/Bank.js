@@ -198,7 +198,7 @@ router.post("/getRevenueFeeFromBankFeeId/:bankFeeId", async (req, res) => {
 			infra_status: fee.status,
 		});
 	} catch (err) {
-		res.status(200).send({ status: 0, message: err.message });
+		return catchError(err);
 	}
 });
 
@@ -230,7 +230,7 @@ router.post("/bank/getRevenueFeeForInterBank", async (req, res) => {
 			infra_status: fee.status,
 		});
 	} catch (err) {
-		res.status(200).send({ status: 0, message: err.message });
+		return catchError(err);
 	}
 });
 
@@ -280,7 +280,7 @@ router.post("/bank/updateRevenueSharingRules", async (req, res) => {
 
 		res.send({ status: 1 });
 	} catch (err) {
-		res.send({ status: 0, message: err.message });
+		return catchError(err);
 	}
 });
 
@@ -317,7 +317,7 @@ router.post("/save-revenue-sharing-rules/:id", async (req, res) => {
 
 		res.send({ status: 1, message: "Revenue share updated successfully" });
 	} catch (err) {
-		res.send({ status: 0, message: err.message });
+		return catchError(err);
 	}
 });
 
@@ -574,12 +574,7 @@ router.post("/getBankDashStats", function (req, res) {
 			}
 		);
 	} catch (err) {
-		console.log(err);
-		var message = err;
-		if (err.message) {
-			message = err.message;
-		}
-		res.status(200).json({ status: 0, message: message });
+		return catchError(err);
 	}
 });
 

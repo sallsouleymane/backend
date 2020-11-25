@@ -20,54 +20,55 @@ const PartnerUser = require("../../models/partner/User");
 const FailedTX = require("../../models/FailedTXLedger");
 const getWalletIds = require("../utils/getWalletIds");
 
-router.post("/partner/getBranchWalletBalnce", jwtTokenAuth, function (
-	req,
-	res
-) {
-	const { branch_id, wallet_type } = req.body;
-	const jwtusername = req.sign_creds.username;
-	Partner.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, partner) {
-			let errMsg = errorMessage(
-				err,
-				partner,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (errMsg.status == 0) {
-				res.status(200).json(result);
-			} else {
-				PartnerBranch.findById(branch_id, (err, branch) => {
-					let errMsg = errorMessage(
-						err,
-						branch,
-						"Token changed or user not valid. Try to login again or contact system administrator."
-					);
-					if (errMsg.status == 0) {
-						res.status(200).json(result);
-					} else {
-						let wallet_id = branch.wallet_ids[wallet_type];
+router.post(
+	"/partner/getBranchWalletBalnce",
+	jwtTokenAuth,
+	function (req, res) {
+		const { branch_id, wallet_type } = req.body;
+		const jwtusername = req.sign_creds.username;
+		Partner.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, partner) {
+				let errMsg = errorMessage(
+					err,
+					partner,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (errMsg.status == 0) {
+					res.status(200).json(result);
+				} else {
+					PartnerBranch.findById(branch_id, (err, branch) => {
+						let errMsg = errorMessage(
+							err,
+							branch,
+							"Token changed or user not valid. Try to login again or contact system administrator."
+						);
+						if (errMsg.status == 0) {
+							res.status(200).json(result);
+						} else {
+							let wallet_id = branch.wallet_ids[wallet_type];
 
-						blockchain
-							.getBalance(wallet_id)
-							.then(function (result) {
-								res.status(200).json({
-									status: 1,
-									balance: result,
+							blockchain
+								.getBalance(wallet_id)
+								.then(function (result) {
+									res.status(200).json({
+										status: 1,
+										balance: result,
+									});
+								})
+								.catch((err) => {
+									return catchError(err);
 								});
-							})
-							.catch((err) => {
-								return catchError(err);
-							});
-					}
-				});
+						}
+					});
+				}
 			}
-		}
-	);
-});
+		);
+	}
+);
 
 router.post("/partner/updateBranchStatus", jwtTokenAuth, function (req, res) {
 	const { status, branch_id } = req.body;
@@ -502,27 +503,27 @@ router.post("/partner/listCashiers", jwtTokenAuth, function (req, res) {
 				res.status(200).json(result);
 			} else {
 				const partner_id = partner._id;
-				PartnerCashier.find({ partner_id: partner_id }, function (
-					err,
-					cashiers
-				) {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				PartnerCashier.find(
+					{ partner_id: partner_id },
+					function (err, cashiers) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								cashiers: cashiers,
+							});
 						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							cashiers: cashiers,
-						});
 					}
-				});
+				);
 			}
 		}
 	);
@@ -625,7 +626,7 @@ router.post("/partner/addCashier", jwtTokenAuth, (req, res) => {
 						_id: branch_id,
 					},
 					function (err, branch) {
-						let result = errorMessage(err, branch, message);
+						let result = errorMessage(err, branch, "Partner Branch not found");
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
@@ -721,27 +722,27 @@ router.post("/partner/listBranches", jwtTokenAuth, function (req, res) {
 				res.status(200).json(result);
 			} else {
 				const partner_id = partner._id;
-				PartnerBranch.find({ partner_id: partner_id }, function (
-					err,
-					branches
-				) {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				PartnerBranch.find(
+					{ partner_id: partner_id },
+					function (err, branches) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								branches: branches,
+							});
 						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							branches: branches,
-						});
 					}
-				});
+				);
 			}
 		}
 	);
