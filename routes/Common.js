@@ -51,13 +51,28 @@ router.get("/testGet", function (req, res) {
 router.post("/:user/getPaidInvoiceList", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	const User = getTypeClass(user);
+	var User = getTypeClass(user);
+	var paid_by;
+	if (user == "merchantStaff") {
+		User = getTypeClass("merchantPosition");
+		paid_by = "MC";
+	} else if (user == "partnerCashier") {
+		paid_by = "PC";
+	} else if (user == "user") {
+		paid_by = "US";
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
 	User.findOne(
 		{
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, data) {
+		async function (err, data) {
 			var result = errorMessage(
 				err,
 				data,
@@ -66,20 +81,6 @@ router.post("/:user/getPaidInvoiceList", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				var paid_by;
-				if (user == "merchantStaff") {
-					paid_by = "MC";
-				} else if (user == "partnerCashier") {
-					paid_by = "PC";
-				} else if (user == "user") {
-					paid_by = "US";
-				} else {
-					res.status(200).json({
-						status: 0,
-						message: "The user does not have API support",
-					});
-					return;
-				}
 				Invoice.find(
 					{ paid_by: paid_by, payer_id: data._id },
 					(err, invoices) => {
@@ -1449,27 +1450,28 @@ router.put("/updateCashier", function (req, res) {
 								message: "User is already assigned to this or another cashier",
 							});
 						} else {
-							pageClass.findByIdAndUpdate(page_id, updateData, function (
-								err,
-								data
-							) {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
+							pageClass.findByIdAndUpdate(
+								page_id,
+								updateData,
+								function (err, data) {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									} else {
+										res.status(200).json({
+											status: 1,
+											row: data,
+										});
 									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else {
-									res.status(200).json({
-										status: 1,
-										row: data,
-									});
 								}
-							});
+							);
 						}
 					}
 				);
@@ -2402,20 +2404,21 @@ router.post("/save-country", async (req, res) => {
 				}
 			});
 		} else {
-			CountryModel.update({}, { $push: { country_list: country } }, function (
-				err,
-				model
-			) {
-				let result = errorMessage(err, model, "Not found");
-				if (result.status == 0) {
-					res.status(200).json(result);
-				} else {
-					res.status(200).json({
-						status: 1,
-						message: "Country Added",
-					});
+			CountryModel.update(
+				{},
+				{ $push: { country_list: country } },
+				function (err, model) {
+					let result = errorMessage(err, model, "Not found");
+					if (result.status == 0) {
+						res.status(200).json(result);
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Country Added",
+						});
+					}
 				}
-			});
+			);
 		}
 	} catch (err) {
 		res.status(200).json({ status: 0, message: err.message });
