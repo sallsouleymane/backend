@@ -480,7 +480,7 @@ router.get(
 						let status = await Invoice.aggregate([
 							{
 								$match: {
-									payer_id: position._id,
+									payer_id: position._id.toString(),
 									paid_by: "MC",
 									paid: 1,
 								},
@@ -494,6 +494,7 @@ router.get(
 								},
 							},
 						]);
+						console.log("status:", status);
 						if (status.length > 0) {
 							res.status(200).json({
 								status: 1,
