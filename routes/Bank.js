@@ -220,6 +220,15 @@ router.post("/bank/getRevenueFeeForInterBank", async (req, res) => {
 			ib_type = "Wallet to Wallet";
 		} else if (type == "IBNWW") {
 			ib_type = "Non Wallet to Wallet";
+		} else if (type == "IBNWW") {
+			ib_type = "Non Wallet to Wallet";
+		} else if (type == "IBNWO") {
+			ib_type = "Non Wallet to Operational";
+		} else {
+			res.status(200).json({
+				status: 0,
+				message: "Interbank rule type not supported.",
+			});
 		}
 		const fee = await Fee.findOne({ trans_type: ib_type, bank_id: bank._id });
 		if (fee == null) throw new Error("No Fee Rule found");
