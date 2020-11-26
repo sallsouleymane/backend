@@ -260,6 +260,13 @@ router.post("/bank/updateRevenueSharingRules", async (req, res) => {
 			ib_type = "Wallet to Wallet";
 		} else if (type == "IBNWW") {
 			ib_type = "Non Wallet to Wallet";
+		} else if (type == "IBNWO") {
+			ib_type = "Non Wallet to Operational";
+		} else {
+			res.status(200).json({
+				status: 0,
+				message: "Interbank rule type not supported.",
+			});
 		}
 		result = await Fee.findOneAndUpdate(
 			{
