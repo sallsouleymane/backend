@@ -57,7 +57,7 @@ module.exports = async function (
 			});
 		}
 
-		const trans = {
+		trans = {
 			from: bank.wallet_ids.operational,
 			to: bankB.wallet_ids.operational,
 			amount: amount,
@@ -72,7 +72,7 @@ module.exports = async function (
 			master_code: master_code,
 			child_code: master_code + "1",
 		};
-		var result = await blockchain.initiateTransfer(trans);
+		result = await blockchain.initiateTransfer(trans);
 
 		if (result.status == 0) {
 			res.status(200).json({
@@ -81,7 +81,7 @@ module.exports = async function (
 			});
 		}
 
-		const trans = {
+		trans = {
 			from: bankB.wallet_ids.operational,
 			to: toBranch.wallet_ids.operational,
 			amount: amount,
@@ -96,7 +96,7 @@ module.exports = async function (
 			master_code: master_code,
 			child_code: master_code + "1",
 		};
-		var result = await blockchain.initiateTransfer(trans);
+		result = await blockchain.initiateTransfer(trans);
 
 		if (result.status == 0) {
 			res.status(200).json({
