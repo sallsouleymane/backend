@@ -9,6 +9,7 @@ const doRequest = require("./utils/doRequest");
 const path = require("path");
 const jwtTokenAuth = require("./JWTTokenAuth");
 const getTypeClass = require("./utils/getTypeClass");
+const { errorMessage, catchError } = require("./utils/errorHandler");
 
 router.get("/uploads/:id/:filePath", (req, res) => {
 	const id = req.params.id;
@@ -42,22 +43,13 @@ router.post("/fileUpload", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				let form = new IncomingForm();
 				if (!fs.existsSync(config.uploadPath)) {
@@ -65,56 +57,60 @@ router.post("/fileUpload", jwtTokenAuth, function (req, res) {
 				}
 				const dir = path.resolve(config.uploadPath + user._id);
 				form.parse(req, function (err, fields, files) {
-					let fn = files.file.name.split(".").pop();
-					fn = fn.toLowerCase();
-
-					if (fn !== "jpeg" && fn !== "png" && fn !== "jpg") {
-						res.status(200).json({
-							status: 0,
-							message: "Only JPG / PNG files are accepted",
-						});
+					if (err) {
+						return catchError(err);
 					} else {
-						if (!fs.existsSync(dir)) {
-							fs.mkdirSync(dir);
-						}
+						let fn = files.file.name.split(".").pop();
+						fn = fn.toLowerCase();
 
-						let oldpath = files.file.path;
-						let newpath = dir + "/" + files.file.name;
-						let savepath = user._id + "/" + files.file.name;
-
-						fs.readFile(oldpath, function (err, data) {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else {
-								fs.writeFile(newpath, data, function (err) {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else {
-										res.status(200).json({
-											name: savepath,
-										});
-									}
-								});
-
-								fs.unlink(oldpath, function (err) {});
+						if (fn !== "jpeg" && fn !== "png" && fn !== "jpg") {
+							res.status(200).json({
+								status: 0,
+								message: "Only JPG / PNG files are accepted",
+							});
+						} else {
+							if (!fs.existsSync(dir)) {
+								fs.mkdirSync(dir);
 							}
-						});
+
+							let oldpath = files.file.path;
+							let newpath = dir + "/" + files.file.name;
+							let savepath = user._id + "/" + files.file.name;
+
+							fs.readFile(oldpath, function (err, data) {
+								if (err) {
+									console.log(err);
+									var message = err;
+									if (err.message) {
+										message = err.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message,
+									});
+								} else {
+									fs.writeFile(newpath, data, function (err) {
+										if (err) {
+											console.log(err);
+											var message = err;
+											if (err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+											});
+										} else {
+											res.status(200).json({
+												name: savepath,
+											});
+										}
+									});
+
+									fs.unlink(oldpath, function (err) {});
+								}
+							});
+						}
 					}
 				});
 			}
@@ -132,22 +128,13 @@ router.post("/:user/imageUpload", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				let form = new IncomingForm();
 				if (!fs.existsSync(config.uploadPath)) {

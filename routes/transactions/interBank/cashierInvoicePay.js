@@ -18,6 +18,8 @@ module.exports = async function (
 		// receiver's wallet names
 		const branchOpWallet = branch.wallet_ids.operational;
 		const merchantOpWallet = merchant.wallet_ids.operational;
+		const bankOpWallet = bank.wallet_ids.operational;
+		const merBankOpWallet = merchantBank.wallet_ids.operational;
 
 		// check branch operational wallet balance
 		var balance = await blockchain.getBalance(branchOpWallet);
@@ -32,20 +34,69 @@ module.exports = async function (
 
 		let trans1 = {
 			from: branchOpWallet,
-			to: merchantOpWallet,
+			to: bankOpWallet,
 			amount: amount,
 			note: "Bill amount",
 			email1: branch.email,
-			email2: merchant.email,
+			email2: bank.email,
 			mobile1: branch.mobile,
-			mobile2: merchant.mobile,
+			mobile2: bank.mobile,
 			from_name: branch.name,
+			to_name: bank.name,
+			master_code: master_code,
+			child_code: master_code + "1",
+		};
+
+		let result = await blockchain.initiateTransfer(trans1);
+		if (result.status == 0) {
+			return {
+				status: 0,
+				message: "Transaction failed!",
+				blockchain_message: result.message,
+			};
+		}
+
+		trans1 = {
+			from: bankOpWallet,
+			to: merBankOpWallet,
+			amount: amount,
+			note: "Bill amount",
+			email1: bank.email,
+			email2: merchantBank.email,
+			mobile1: bank.mobile,
+			mobile2: merchantBank.mobile,
+			from_name: bank.name,
+			to_name: merchantBank.name,
+			master_code: master_code,
+			child_code: master_code + "1",
+		};
+
+		result = await blockchain.initiateTransfer(trans1);
+
+		if (result.status == 0) {
+			return {
+				status: 0,
+				message: "Transaction failed!",
+				blockchain_message: result.message,
+			};
+		}
+
+		trans1 = {
+			from: merBankOpWallet,
+			to: merchantOpWallet,
+			amount: amount,
+			note: "Bill amount",
+			email1: merchantBank.email,
+			email2: merchant.email,
+			mobile1: merchantBank.mobile,
+			mobile2: merchant.mobile,
+			from_name: merchantBank.name,
 			to_name: merchant.name,
 			master_code: master_code,
 			child_code: master_code + "1",
 		};
 
-		var result = await blockchain.initiateTransfer(trans1);
+		result = await blockchain.initiateTransfer(trans1);
 
 		// return response
 		if (result.status == 0) {
@@ -240,17 +291,35 @@ async function distributeRevenue(
 	if (bankComm > 0) {
 		let trans = {
 			from: merchantOpWallet,
-			to: bankOpWallet,
+			to: merBankOpWallet,
 			amount: bankComm,
 			note: "Bank commission on paid bill",
 			email1: merchant.email,
-			email2: bank.email,
+			email2: merchantBank.email,
 			mobile1: merchant.mobile,
-			mobile2: bank.mobile,
+			mobile2: merchantBank.mobile,
 			from_name: merchant.name,
+			to_name: merchantBank.name,
+			master_code: transfer.master_code,
+			child_code:
+				getTransactionCode(merchant.mobile, merchantBank.mobile) + "5",
+		};
+
+		await blockchain.initiateTransfer(trans);
+
+		trans = {
+			from: merBankOpWallet,
+			to: bankOpWallet,
+			amount: bankComm,
+			note: "Bank commission on paid bill",
+			email1: merchantBank.email,
+			email2: bank.email,
+			mobile1: merchantBank.mobile,
+			mobile2: bank.mobile,
+			from_name: merchantBank.name,
 			to_name: bank.name,
 			master_code: transfer.master_code,
-			child_code: getTransactionCode(merchant.mobile, bank.mobile) + "5",
+			child_code: getTransactionCode(merchantBank.mobile, bank.mobile) + "5",
 		};
 
 		await blockchain.initiateTransfer(trans);

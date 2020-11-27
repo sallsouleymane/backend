@@ -5,18 +5,12 @@ const config = require("../../config.json");
 const jwtTokenAuth = require("../JWTTokenAuth");
 
 //utils
-const sendSMS = require("../utils/sendSMS");
-const sendMail = require("../utils/sendMail");
-const makeid = require("../utils/idGenerator");
-const makeotp = require("../utils/makeotp");
+const { errorMessage, catchError } = require("../utils/errorHandler");
 const blockchain = require("../../services/Blockchain");
 
 //models
-const Bank = require("../../models/Bank");
-const Partner = require("../../models/partner/Partner");
 const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
-const PartnerUser = require("../../models/partner/User");
 const FailedTX = require("../../models/FailedTXLedger");
 
 router.post("/partnerBranch/SetupUpdate", jwtTokenAuth, function (req, res) {
@@ -87,22 +81,13 @@ router.post("/partnerBranch/getHistoryTotal", jwtTokenAuth, function (
 			status: 1,
 		},
 		function (err, branch) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (branch == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				branch,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				const wallet = branch.wallet_ids[from];
 				blockchain
@@ -146,22 +131,13 @@ router.post("/partnerBranch/getHistory", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, branch) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (branch == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				branch,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				const wallet = branch.wallet_ids[from];
 				blockchain
@@ -188,11 +164,7 @@ router.post("/partnerBranch/getHistory", jwtTokenAuth, function (req, res) {
 						});
 					})
 					.catch((err) => {
-						console.log(err);
-						res.status(200).json({
-							status: 0,
-							message: err.message,
-						});
+						return catchError(err);
 					});
 			}
 		}
@@ -217,22 +189,13 @@ router.post("/partnerBranch/editCashier", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, branch) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (branch == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				branch,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				PartnerCashier.findByIdAndUpdate(
 					cashier_id,
@@ -281,22 +244,13 @@ router.post("/partnerBranch/updateCashierUser", jwtTokenAuth, function (
 			status: 1,
 		},
 		function (err, branch) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (branch == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				branch,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				PartnerCashier.countDocuments({ partner_user_id: user_id }, function (
 					err,
@@ -350,21 +304,13 @@ router.post("/partnerBranch/getDetailsByName", jwtTokenAuth, function (
 			name: name,
 		},
 		function (err, branch) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (branch == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Branch not found or login session expired",
-				});
+			let result = errorMessage(
+				err,
+				branch,
+				"Branch not found or login session expired"
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				res.status(200).json({
 					status: 1,
@@ -383,22 +329,13 @@ router.post("/partnerBranch/getDashStats", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, branch) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (branch == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				branch,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				PartnerCashier.countDocuments(
 					{

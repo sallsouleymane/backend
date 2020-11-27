@@ -7,6 +7,7 @@ const jwtTokenAuth = require("../JWTTokenAuth");
 const makeid = require("../utils/idGenerator");
 const sendSMS = require("../utils/sendSMS");
 const sendMail = require("../utils/sendMail");
+const { errorMessage, catchError } = require("../utils/errorHandler");
 
 //services
 const { createWallet } = require("../../services/Blockchain.js");
@@ -15,30 +16,140 @@ const Bank = require("../../models/Bank");
 const Merchant = require("../../models/merchant/Merchant");
 const getWalletIds = require("../utils/getWalletIds");
 
+router.post("/bank/changeMerchantAcces", function (req, res) {
+	const { token, merchant_id, is_private } = req.body;
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			let errMsg = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errMsg.status == 0) {
+				res.status(200).json(errMsg);
+			} else {
+				Merchant.findOneAndUpdate(
+					{ _id: merchant_id },
+					{ is_private: is_private },
+					function (err, merchant) {
+						let errMsg = errorMessage(
+							err,
+							merchant,
+							"Token changed or user not valid. Try to login again or contact system administrator."
+						);
+						if (errMsg.status == 0) {
+							res.status(200).json(errMsg);
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Changed Access successfully",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/bank/blockMerchant", function (req, res) {
+	var { token, merchant_id } = req.body;
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Merchant.findOneAndUpdate(
+					{ _id: merchant_id },
+					{
+						$set: {
+							status: 0,
+						},
+					},
+					(err, merchant) => {
+						let result = errorMessage(err, merchant, "Merchant not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "blocked Merchant",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/bank/unblockMerchant", function (req, res) {
+	var { token, merchant_id } = req.body;
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Merchant.findOneAndUpdate(
+					{ _id: merchant_id },
+					{
+						$set: {
+							status: 1,
+						},
+					},
+					(err, merchant) => {
+						let result = errorMessage(err, merchant, "Merchant not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							res.status(200).json({
+								status: 1,
+								data: "Unblocked Merchant",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/bank/listMerchants", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
 			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Merchant.find({ bank_id: bank._id }, "-password", (err, merchants) => {
 					if (err) {
@@ -81,22 +192,13 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				if (!code) {
 					res.status(200).json({
@@ -129,7 +231,7 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 								data.creator = 0;
 								data.wallet_ids.operational = wallet_ids.operational;
 
-								data.save((err, merchant) => {
+								data.save((err) => {
 									if (err) {
 										console.log(err);
 										res.status(200).json({
@@ -216,22 +318,13 @@ router.post("/bank/editMerchant", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Merchant.findOneAndUpdate(
 					{ _id: merchant_id, creator: 0, bank_id: bank._id },
@@ -243,21 +336,9 @@ router.post("/bank/editMerchant", jwtTokenAuth, function (req, res) {
 						email: email,
 					},
 					(err, merchant) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (merchant == null) {
-							res.status(200).json({
-								status: 0,
-								message: "Merchant not found.",
-							});
+						let result = errorMessage(err, merchant, "Merchant not found.");
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							res.status(200).json({
 								status: 1,

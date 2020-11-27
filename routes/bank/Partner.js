@@ -16,6 +16,7 @@ const {
 	getStatement,
 	getBalance,
 } = require("../../services/Blockchain.js");
+const { errorMessage, catchError } = require("../utils/errorHandler");
 
 const Bank = require("../../models/Bank");
 const OTP = require("../../models/OTP");
@@ -37,22 +38,13 @@ router.post("/bank/listPartners", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Partner.find({ bank_id: bank._id }, function (err, partner) {
 					if (err) {
@@ -77,6 +69,7 @@ router.post("/bank/listPartners", jwtTokenAuth, function (req, res) {
 	);
 });
 
+<<<<<<< HEAD
 router.post("/bank/getPartner", jwtTokenAuth, function (req, res) {
 	const { partner_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -102,12 +95,30 @@ router.post("/bank/getPartner", jwtTokenAuth, function (req, res) {
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
+=======
+router.post("/bank/getPartner", function (req, res) {
+	const { token, partner_id } = req.body;
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+>>>>>>> development
 			} else {
 				Partner.findOne(
 					{
 						_id: partner_id,
 					},
 					function (err, partner) {
+<<<<<<< HEAD
 						if (err) {
 							console.log(err);
 							var message = err;
@@ -123,6 +134,11 @@ router.post("/bank/getPartner", jwtTokenAuth, function (req, res) {
 								status: 0,
 								message: "Partner not found",
 							});
+=======
+						let result = errorMessage(err, partner, "Partner not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
+>>>>>>> development
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -136,7 +152,11 @@ router.post("/bank/getPartner", jwtTokenAuth, function (req, res) {
 	);
 });
 
+<<<<<<< HEAD
 router.post("/bank/editPartner", jwtTokenAuth, function (req, res) {
+=======
+router.post("/bank/editPartner", (req, res) => {
+>>>>>>> development
 	const {
 		partner_id,
 		name,
@@ -148,12 +168,17 @@ router.post("/bank/editPartner", jwtTokenAuth, function (req, res) {
 		ccode,
 		mobile,
 		email,
+<<<<<<< HEAD
+=======
+		token,
+>>>>>>> development
 		logo,
 		contract,
 		otp_id,
 		otp,
 	} = req.body;
 
+<<<<<<< HEAD
 	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
@@ -177,6 +202,21 @@ router.post("/bank/editPartner", jwtTokenAuth, function (req, res) {
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
+=======
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+>>>>>>> development
 			} else {
 				OTP.findOne(
 					{
@@ -184,6 +224,7 @@ router.post("/bank/editPartner", jwtTokenAuth, function (req, res) {
 						otp: otp,
 					},
 					function (err, otpd) {
+<<<<<<< HEAD
 						if (err) {
 							console.log(err);
 							var message = err;
@@ -199,6 +240,11 @@ router.post("/bank/editPartner", jwtTokenAuth, function (req, res) {
 								status: 0,
 								message: err,
 							});
+=======
+						let result = errorMessage(err, otpd, err);
+						if (result.status == 0) {
+							res.status(200).json(result);
+>>>>>>> development
 						} else {
 							if (otpd.otp === otp) {
 								if (
@@ -271,7 +317,11 @@ router.post("/bank/editPartner", jwtTokenAuth, function (req, res) {
 	);
 });
 
+<<<<<<< HEAD
 router.post("/bank/addPartner", jwtTokenAuth, function (req, res) {
+=======
+router.post("/bank/addPartner", (req, res) => {
+>>>>>>> development
 	let data = new Partner();
 	const {
 		name,
@@ -283,11 +333,16 @@ router.post("/bank/addPartner", jwtTokenAuth, function (req, res) {
 		ccode,
 		mobile,
 		email,
+<<<<<<< HEAD
+=======
+		token,
+>>>>>>> development
 		logo,
 		contract,
 		otp_id,
 		otp,
 	} = req.body;
+<<<<<<< HEAD
 	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
@@ -311,6 +366,21 @@ router.post("/bank/addPartner", jwtTokenAuth, function (req, res) {
 					message:
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
+=======
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+>>>>>>> development
 			} else {
 				OTP.findOne(
 					{

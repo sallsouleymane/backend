@@ -12,11 +12,11 @@ const loginRouter = require("./routes/Login");
 const commonRouter = require("./routes/Common");
 const merchantRouter = require("./routes/Merchant");
 const merchantRuleRouter = require("./routes/MerchantRule");
-const merchantCashierRouter = require("./routes/MerchantCashier");
+const merchantStaffRouter = require("./routes/MerchantStaff");
 const merchantBranchRouter = require("./routes/MerchantBranch");
-const bankPartnerRouter = require("./routes/bank/Partner")
-const bankMerchantRouter = require("./routes/bank/Merchant")
-const InterBankRuleRouter = require("./routes/InterBankRule")
+const bankPartnerRouter = require("./routes/bank/Partner");
+const bankMerchantRouter = require("./routes/bank/Merchant");
+const InterBankRuleRouter = require("./routes/InterBankRule");
 const invoicePayRouter = require("./routes/InvoicePay");
 const partnerRouter = require("./routes/partner/Partner");
 const partnerBranchRouter = require("./routes/partner/Branch");
@@ -38,13 +38,13 @@ const router = express.Router();
 app.use(logger("dev"));
 app.use(
 	bodyParser.json({
-		limit: "50mb"
+		limit: "50mb",
 	})
 );
 app.use(
 	bodyParser.urlencoded({
 		limit: "50mb",
-		extended: true
+		extended: true,
 	})
 );
 
@@ -60,7 +60,7 @@ app.use("/api", loginRouter);
 app.use("/api", commonRouter);
 app.use("/api", merchantRouter);
 app.use("/api", merchantRuleRouter);
-app.use("/api", merchantCashierRouter);
+app.use("/api", merchantStaffRouter);
 app.use("/api", merchantBranchRouter);
 app.use("/api", invoicePayRouter);
 app.use("/api", bankPartnerRouter);

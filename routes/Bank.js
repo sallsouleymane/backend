@@ -6,10 +6,10 @@ const config = require("../config.json");
 const makeid = require("./utils/idGenerator");
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
-const getTypeClass = require("./utils/getTypeClass");
 const makeotp = require("./utils/makeotp");
 const getWalletIds = require("./utils/getWalletIds");
 const jwtTokenAuth = require("./JWTTokenAuth");
+const { errorMessage, catchError } = require("./utils/errorHandler");
 
 //services
 const {
@@ -40,22 +40,13 @@ router.post("/bank/getMyWalletIds", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				res.status(200).json({ status: 1, wallet_ids: bank.wallet_ids });
 			}
@@ -73,22 +64,13 @@ router.post("/bank/generateOTP", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				data.user_id = bank._id;
 				data.otp = makeotp(6);
@@ -165,22 +147,22 @@ router.post("/bank/generateOTP", jwtTokenAuth, function (req, res) {
 									}
 								});
 							} else {
-								if (name == partner.name) {
+								if (name == partner[0].name) {
 									res.status(200).json({
 										status: 0,
 										message: "Name already taken",
 									});
-								} else if (email == partner.email) {
+								} else if (email == partner[0].email) {
 									res.status(200).json({
 										status: 0,
 										message: "Email already taken",
 									});
-								} else if (mobile == partner.mobile) {
+								} else if (mobile == partner[0].mobile) {
 									res.status(200).json({
 										status: 0,
 										message: "Mobile already taken",
 									});
-								} else if (code == partner.code) {
+								} else if (code == partner[0].code) {
 									res.status(200).json({
 										status: 0,
 										message: "Code already taken",
@@ -221,140 +203,159 @@ router.post(
 				infra_status: fee.status,
 			});
 		} catch (err) {
-			res.status(200).send({ status: 0, message: err.message });
+			return catchError(err);
 		}
 	}
 );
 
-router.post("/bank/getRevenueFeeForInterBank", jwtTokenAuth, async function (
-	req,
-	res
-) {
-	try {
-		const { type } = req.body;
-		const jwtusername = req.sign_creds.username;
-		var bank = await Bank.findOne({ username: jwtusername, status: 1 });
-		if (bank == null) {
-			throw new Error(
-				"Token changed or user not valid. Try to login again or contact system administrator."
+router.post(
+	"/bank/getRevenueFeeForInterBank",
+	jwtTokenAuth,
+	async function (req, res) {
+		try {
+			const { type } = req.body;
+			const jwtusername = req.sign_creds.username;
+			var bank = await Bank.findOne({ username: jwtusername, status: 1 });
+			if (bank == null) {
+				throw new Error(
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+			}
+			var ib_type;
+			if (type == "IBNWNW") {
+				ib_type = "Non Wallet to Non Wallet";
+			} else if (type == "IBWNW") {
+				ib_type = "Wallet to Non Wallet";
+			} else if (type == "IBWW") {
+				ib_type = "Wallet to Wallet";
+			} else if (type == "IBNWW") {
+				ib_type = "Non Wallet to Wallet";
+			} else if (type == "IBNWW") {
+				ib_type = "Non Wallet to Wallet";
+			} else if (type == "IBNWO") {
+				ib_type = "Non Wallet to Operational";
+			} else {
+				res.status(200).json({
+					status: 0,
+					message: "Interbank rule type not supported.",
+				});
+			}
+			const fee = await Fee.findOne({ trans_type: ib_type, bank_id: bank._id });
+			if (fee == null) throw new Error("No Fee Rule found");
+
+			res.send({
+				status: 1,
+				fee: fee.revenue_sharing_rule,
+				infra_status: fee.status,
+			});
+		} catch (err) {
+			return catchError(err);
+		}
+	}
+);
+
+router.post(
+	"/bank/updateRevenueSharingRules",
+	jwtTokenAuth,
+	async function (req, res) {
+		try {
+			const { type, revenue_sharing_rule } = req.body;
+			const jwtusername = req.sign_creds.username;
+			var bank = await Bank.findOne({ username: jwtusername, status: 1 });
+			if (bank == null) {
+				throw new Error("Token is invalid");
+			}
+			var ib_type;
+			if (type == "IBNWNW") {
+				ib_type = "Non Wallet to Non Wallet";
+			} else if (type == "IBWNW") {
+				ib_type = "Wallet to Non Wallet";
+			} else if (type == "IBWW") {
+				ib_type = "Wallet to Wallet";
+			} else if (type == "IBNWW") {
+				ib_type = "Non Wallet to Wallet";
+			} else if (type == "IBNWO") {
+				ib_type = "Non Wallet to Operational";
+			} else {
+				res.status(200).json({
+					status: 0,
+					message: "Interbank rule type not supported.",
+				});
+			}
+			result = await Fee.findOneAndUpdate(
+				{
+					trans_type: ib_type,
+					bank_id: bank._id,
+				},
+				{
+					$set: {
+						"revenue_sharing_rule.branch_share.claim":
+							revenue_sharing_rule.branch_share.claim,
+						"revenue_sharing_rule.branch_share.send":
+							revenue_sharing_rule.branch_share.send,
+						"revenue_sharing_rule.specific_branch_share":
+							revenue_sharing_rule.specific_branch_share,
+						"revenue_sharing_rule.partner_share.claim":
+							revenue_sharing_rule.partner_share.claim,
+						"revenue_sharing_rule.partner_share.send":
+							revenue_sharing_rule.partner_share.send,
+						"revenue_sharing_rule.specific_partner_share":
+							revenue_sharing_rule.specific_partner_share,
+					},
+				}
 			);
-		}
-		var ib_type;
-		if (type == "IBNWNW") {
-			ib_type = "Non Wallet to Non Wallet";
-		} else if (type == "IBWNW") {
-			ib_type = "Wallet to Non Wallet";
-		} else if (type == "IBWW") {
-			ib_type = "Wallet to Wallet";
-		} else if (type == "IBNWW") {
-			ib_type = "Non Wallet to Wallet";
-		}
-		const fee = await Fee.findOne({ trans_type: ib_type, bank_id: bank._id });
-		if (fee == null) throw new Error("No Fee Rule found");
-
-		res.send({
-			status: 1,
-			fee: fee.revenue_sharing_rule,
-			infra_status: fee.status,
-		});
-	} catch (err) {
-		res.status(200).send({ status: 0, message: err.message });
-	}
-});
-
-router.post("/bank/updateRevenueSharingRules", jwtTokenAuth, async function (
-	req,
-	res
-) {
-	try {
-		const { type, revenue_sharing_rule } = req.body;
-		const jwtusername = req.sign_creds.username;
-		var bank = await Bank.findOne({ username: jwtusername, status: 1 });
-		if (bank == null) {
-			throw new Error("Token is invalid");
-		}
-		var ib_type;
-		if (type == "IBNWNW") {
-			ib_type = "Non Wallet to Non Wallet";
-		} else if (type == "IBWNW") {
-			ib_type = "Wallet to Non Wallet";
-		} else if (type == "IBWW") {
-			ib_type = "Wallet to Wallet";
-		} else if (type == "IBNWW") {
-			ib_type = "Non Wallet to Wallet";
-		}
-		result = await Fee.findOneAndUpdate(
-			{
-				trans_type: ib_type,
-				bank_id: bank._id,
-			},
-			{
-				$set: {
-					"revenue_sharing_rule.branch_share.claim":
-						revenue_sharing_rule.branch_share.claim,
-					"revenue_sharing_rule.branch_share.send":
-						revenue_sharing_rule.branch_share.send,
-					"revenue_sharing_rule.specific_branch_share":
-						revenue_sharing_rule.specific_branch_share,
-					"revenue_sharing_rule.partner_share.claim":
-						revenue_sharing_rule.partner_share.claim,
-					"revenue_sharing_rule.partner_share.send":
-						revenue_sharing_rule.partner_share.send,
-					"revenue_sharing_rule.specific_partner_share":
-						revenue_sharing_rule.specific_partner_share,
-				},
+			if (result == null) {
+				throw new Error("Not Found");
 			}
-		);
-		if (result == null) {
-			throw new Error("Not Found");
-		}
 
-		res.send({ status: 1 });
-	} catch (err) {
-		res.send({ status: 0, message: err.message });
+			res.send({ status: 1 });
+		} catch (err) {
+			return catchError(err);
+		}
 	}
-});
+);
 
-router.post("/save-revenue-sharing-rules/:id", jwtTokenAuth, async function (
-	req,
-	res
-) {
-	try {
-		const { revenue_sharing_rule } = req.body;
-		const { id } = req.params;
-		const jwtusername = req.sign_creds.username;
-		var result = await Bank.findOne({ username: jwtusername, status: 1 });
-		if (result == null) {
-			throw new Error("Token is invalid");
-		}
-		result = await Fee.updateOne(
-			{ _id: id },
-			{
-				$set: {
-					"revenue_sharing_rule.branch_share.claim":
-						revenue_sharing_rule.branch_share.claim,
-					"revenue_sharing_rule.branch_share.send":
-						revenue_sharing_rule.branch_share.send,
-					"revenue_sharing_rule.specific_branch_share":
-						revenue_sharing_rule.specific_branch_share,
-					"revenue_sharing_rule.partner_share.claim":
-						revenue_sharing_rule.partner_share.claim,
-					"revenue_sharing_rule.partner_share.send":
-						revenue_sharing_rule.partner_share.send,
-					"revenue_sharing_rule.specific_partner_share":
-						revenue_sharing_rule.specific_partner_share,
-				},
+router.post(
+	"/save-revenue-sharing-rules/:id",
+	jwtTokenAuth,
+	async function (req, res) {
+		try {
+			const { revenue_sharing_rule } = req.body;
+			const { id } = req.params;
+			const jwtusername = req.sign_creds.username;
+			var result = await Bank.findOne({ username: jwtusername, status: 1 });
+			if (result == null) {
+				throw new Error("Token is invalid");
 			}
-		);
-		if (result == null) {
-			throw new Error("Not Found");
-		}
+			result = await Fee.updateOne(
+				{ _id: id },
+				{
+					$set: {
+						"revenue_sharing_rule.branch_share.claim":
+							revenue_sharing_rule.branch_share.claim,
+						"revenue_sharing_rule.branch_share.send":
+							revenue_sharing_rule.branch_share.send,
+						"revenue_sharing_rule.specific_branch_share":
+							revenue_sharing_rule.specific_branch_share,
+						"revenue_sharing_rule.partner_share.claim":
+							revenue_sharing_rule.partner_share.claim,
+						"revenue_sharing_rule.partner_share.send":
+							revenue_sharing_rule.partner_share.send,
+						"revenue_sharing_rule.specific_partner_share":
+							revenue_sharing_rule.specific_partner_share,
+					},
+				}
+			);
+			if (result == null) {
+				throw new Error("Not Found");
+			}
 
-		res.send({ status: 1, message: "Revenue share updated successfully" });
-	} catch (err) {
-		res.send({ status: 0, message: err.message });
+			res.send({ status: 1, message: "Revenue share updated successfully" });
+		} catch (err) {
+			return catchError(err);
+		}
 	}
-});
+);
 
 router.post("/bank/sendShareForApproval", jwtTokenAuth, function (req, res) {
 	const { trans_type, percentage, fixed } = req.body;
@@ -365,21 +366,9 @@ router.post("/bank/sendShareForApproval", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message: "Token is invalid",
-				});
+			let result = errorMessage(err, bank, "Token is invalid");
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Fee.findOneAndUpdate(
 					{
@@ -394,22 +383,13 @@ router.post("/bank/sendShareForApproval", jwtTokenAuth, function (req, res) {
 						},
 					},
 					function (err, fee) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (fee == null) {
-							res.status(200).json({
-								status: 0,
-								message:
-									"Bank's fee rule not found of transaction type " + trans_type,
-							});
+						let result = errorMessage(
+							err,
+							fee,
+							"Bank's fee rule not found of transaction type " + trans_type
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
 						} else {
 							let content =
 								"<p>Revenue sharing rule of infra is changed and sent for approval to infra.</p><p>&nbsp;</p><p>Fee Name: " +
@@ -440,22 +420,13 @@ router.post("/bankSetupUpdate", jwtTokenAuth, function (req, res) {
 			username: jwtusername,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Bank.findByIdAndUpdate(
 					bank._id,
@@ -616,22 +587,13 @@ router.post("/getBankDashStats", jwtTokenAuth, function (req, res) {
 				status: 1,
 			},
 			async function (err, user) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (user == null) {
-					res.status(200).json({
-						status: 0,
-						message:
-							"Token changed or user not valid. Try to login again or contact system administrator.",
-					});
+				let result = errorMessage(
+					err,
+					user,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
 				} else {
 					const user_id = user._id;
 					var branchCount = await Branch.countDocuments({
@@ -650,12 +612,7 @@ router.post("/getBankDashStats", jwtTokenAuth, function (req, res) {
 			}
 		);
 	} catch (err) {
-		console.log(err);
-		var message = err;
-		if (err.message) {
-			message = err.message;
-		}
-		res.status(200).json({ status: 0, message: message });
+		return catchError(err);
 	}
 });
 
@@ -667,31 +624,26 @@ router.get("/getBankOperationalBalance", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, ba) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (ba == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				ba,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				const wallet_id = ba.wallet_ids.operational;
 
-				getBalance(wallet_id).then(function (result) {
-					res.status(200).json({
-						status: 1,
-						balance: result,
+				getBalance(wallet_id)
+					.then(function (result) {
+						res.status(200).json({
+							status: 1,
+							balance: result,
+						});
+					})
+					.catch((err) => {
+						return catchError(err);
 					});
-				});
 			}
 		}
 	);
@@ -705,22 +657,13 @@ router.post("/getBranches", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				const bank_id = bank._id;
 				Branch.find({ bank_id: bank_id }, function (err, branch) {
@@ -754,22 +697,13 @@ router.post("/getBankUsers", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				const user_id = user._id;
 				BankUser.find(
@@ -826,22 +760,13 @@ router.post("/addBranch", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				const wallet_ids = getWalletIds("branch", bcode, bank.bcode);
 				createWallet([wallet_ids.operational, wallet_ids.master])
@@ -981,22 +906,13 @@ router.post("/editBranch", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Branch.findByIdAndUpdate(
 					branch_id,
@@ -1050,22 +966,13 @@ router.post("/branchStatus", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Branch.findByIdAndUpdate(
 					branch_id,
@@ -1115,22 +1022,13 @@ router.post("/addBankUser", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				data.name = name;
 				data.email = email;
@@ -1203,22 +1101,13 @@ router.post("/editBankUser", jwtTokenAuth, function (req, res) {
 			username: jwtusername,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				BankUser.findOneAndUpdate(
 					{
@@ -1268,22 +1157,13 @@ router.post("/getBankHistory", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, b) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (b == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				b,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				const wallet = b.wallet_ids[from];
 				getStatement(wallet)
@@ -1309,11 +1189,7 @@ router.post("/getBankHistory", jwtTokenAuth, function (req, res) {
 						});
 					})
 					.catch((err) => {
-						console.log(err);
-						res.status(200).json({
-							status: 0,
-							message: err.message,
-						});
+						return catchError(err);
 					});
 			}
 		}
@@ -1342,22 +1218,13 @@ router.post("/addCashier", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				data.name = name;
 				data.bcode = bcode;
@@ -1391,21 +1258,9 @@ router.post("/addCashier", jwtTokenAuth, function (req, res) {
 									_id: branch_id,
 								},
 								function (err, branch) {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-									} else if (branch == null) {
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
+									let result = errorMessage(err, branch, message);
+									if (result.status == 0) {
+										res.status(200).json(result);
 									} else {
 										let data = new CashierLedger();
 										data.amount = branch.cash_in_hand;
@@ -1542,22 +1397,13 @@ router.post("/createBankRules", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				const bank_id = bank._id;
 
@@ -1642,22 +1488,13 @@ router.post("/editBankBankRule", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (bank == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				Fee.findByIdAndUpdate(
 					rule_id,
@@ -1706,22 +1543,13 @@ router.post("/generateBankOTP", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (user == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
 			} else {
 				data.user_id = user._id;
 				data.otp = makeotp(6);
