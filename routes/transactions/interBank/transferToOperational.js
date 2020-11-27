@@ -136,11 +136,11 @@ async function distributeRevenue(transfer, infra, bank, bankB, branch, rule1) {
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 
-	if (fee > 0) {
+	if (transfer.fee > 0) {
 		let trans = {
 			from: branch.wallet_ids.operational,
 			to: bank.wallet_ids.operational,
-			amount: fee,
+			amount: transfer.fee,
 			note:
 				"Cashier Send Fee for Inter Bank Non Wallet to Non Wallet Transaction",
 			email1: branch.email,
