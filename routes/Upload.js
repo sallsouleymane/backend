@@ -29,17 +29,17 @@ router.get("/uploads/:id/:filePath", (req, res) => {
 	}
 });
 
-router.post("/fileUpload", function (req, res) {
-	const token = req.query.token;
+router.post("/fileUpload", jwtTokenAuth, function (req, res) {
 	const from = req.query.from;
 
 	let table = Infra;
 	if (from && from === "bank") {
 		table = Bank;
 	}
+	const jwtusername = req.sign_creds.username;
 	table.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
@@ -196,8 +196,6 @@ router.post("/:user/imageUpload", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/ipfsUpload", function (req, res) {
-	//   const token = req.query.token
-
 	var form = new IncomingForm();
 
 	form.parse(req, function (_err, _fields, files) {

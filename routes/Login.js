@@ -1,10 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const jwt = require("jsonwebtoken");
-const secret = "jwt_secret_key_for_ewallet_of_32bit_string";
 
 //utils
-const makeid = require("./utils/idGenerator");
+const jwtsign = require("./utils/jwtsign");
 const { errorMessage, catchError } = require("./utils/errorHandler");
 
 const Infra = require("../models/Infra");
@@ -23,19 +21,6 @@ const PartnerBranch = require("../models/partner/Branch");
 const PartnerCashier = require("../models/partner/Cashier");
 const PartnerUser = require("../models/partner/User");
 
-function jwtsign(sign_creds) {
-	var token = jwt.sign(
-		{
-			sign_creds: sign_creds,
-		},
-		secret
-		// {
-		// 	expiresIn: "365d"
-		// }
-	);
-	return token;
-}
-
 router.post("/partnerCashier/login", function (req, res) {
 	const { username, password } = req.body;
 	PartnerUser.findOne(
@@ -53,7 +38,7 @@ router.post("/partnerCashier/login", function (req, res) {
 					message: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
-				let sign_creds = { username: username, password: password };
+				let sign_creds = { username: username, type: "partnerCashier" };
 				const token = jwtsign(sign_creds);
 				PartnerCashier.findOneAndUpdate(
 					{
@@ -115,7 +100,7 @@ router.post("/partnerBranch/login", function (req, res) {
 							return catchError(err);
 						} else {
 							let logo = partner.logo;
-							let sign_creds = { username: username, password: password };
+							let sign_creds = { username: username, type: "partnerBranch" };
 							const token = jwtsign(sign_creds);
 
 							res.status(200).json({
@@ -156,7 +141,7 @@ router.post("/partner/login", function (req, res) {
 					message: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
-				let sign_creds = { username: username, password: password };
+				let sign_creds = { username: username, type: "partner" };
 				const token = jwtsign(sign_creds);
 
 				res.status(200).json({
@@ -189,7 +174,7 @@ router.post("/merchantBranch/login", (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				let sign_creds = { username: username, password: password };
+				let sign_creds = { username: username, type: "merchantBranch" };
 				const token = jwtsign(sign_creds);
 				res.status(200).json({
 					status: 1,
@@ -240,7 +225,7 @@ router.post("/merchantStaff/login", (req, res) => {
 											} else {
 												let sign_creds = {
 													username: username,
-													password: password,
+													type: "merchantCashier",
 												};
 												const token = jwtsign(sign_creds);
 												res.status(200).json({
@@ -266,27 +251,28 @@ router.post("/merchantStaff/login", (req, res) => {
 
 router.post("/merchant/login", (req, res) => {
 	const { username, password } = req.body;
-	Merchant.findOne({ username, password }, "-password", function (
-		err,
-		merchant
-	) {
-		var result = errorMessage(
-			err,
-			merchant,
-			"User account not found. Please signup"
-		);
-		if (result.status == 0) {
-			res.status(200).json(result);
-		} else {
-			let sign_creds = { username: username, password: password };
-			const token = jwtsign(sign_creds);
-			res.status(200).json({
-				status: 1,
-				details: merchant,
-				token: token,
-			});
+	Merchant.findOne(
+		{ username, password },
+		"-password",
+		function (err, merchant) {
+			var result = errorMessage(
+				err,
+				merchant,
+				"User account not found. Please signup"
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				let sign_creds = { username: username, type: "merchant" };
+				const token = jwtsign(sign_creds);
+				res.status(200).json({
+					status: 1,
+					details: merchant,
+					token: token,
+				});
+			}
 		}
-	});
+	);
 });
 
 router.post("/login", function (req, res) {
@@ -301,53 +287,43 @@ router.post("/login", function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				let token = makeid(10);
-				Infra.findByIdAndUpdate(
-					user._id,
-					{
-						token: token,
-					},
-					(err) => {
-						if (err) {
-							return catchError(err);
-						} else {
-							if (user.profile_id && user.profile_id !== "") {
-								Profile.findOne(
-									{
-										_id: user.profile_id,
-									},
-									function (err, profile) {
-										res.status(200).json({
-											token: token,
-											permissions: profile.permissions,
-											name: user.name,
-											isAdmin: user.isAdmin,
-											initial_setup: user.initial_setup,
-										});
-									}
-								);
-							} else {
-								if (user.isAdmin) {
-									res.status(200).json({
-										token: token,
-										permissions: "all",
-										name: user.name,
-										isAdmin: user.isAdmin,
-										initial_setup: user.initial_setup,
-									});
-								} else {
-									res.status(200).json({
-										token: token,
-										permissions: "",
-										name: user.name,
-										isAdmin: user.isAdmin,
-										initial_setup: user.initial_setup,
-									});
-								}
-							}
+				let sign_creds = { username: username, type: "infra" };
+				const token = jwtsign(sign_creds);
+
+				if (user.profile_id && user.profile_id !== "") {
+					Profile.findOne(
+						{
+							_id: user.profile_id,
+						},
+						function (err, profile) {
+							res.status(200).json({
+								token: token,
+								permissions: profile.permissions,
+								name: user.name,
+								isAdmin: user.isAdmin,
+								initial_setup: user.initial_setup,
+							});
 						}
+					);
+				} else {
+					if (user.isAdmin) {
+						res.status(200).json({
+							token: token,
+							permissions: "all",
+							name: user.name,
+							isAdmin: user.isAdmin,
+							initial_setup: user.initial_setup,
+						});
+					} else {
+						res.status(200).json({
+							token: token,
+							permissions: "",
+							name: user.name,
+							isAdmin: user.isAdmin,
+							initial_setup: user.initial_setup,
+						});
 					}
-				);
+				}
 			}
 		}
 	);
@@ -370,30 +346,20 @@ router.post("/bankLogin", function (req, res) {
 					message: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
-				let token = makeid(10);
-				Bank.findByIdAndUpdate(
-					bank._id,
-					{
-						token: token,
-					},
-					(err) => {
-						if (err) {
-							return catchError(err);
-						} else {
-							res.status(200).json({
-								token: token,
-								name: bank.name,
-								initial_setup: bank.initial_setup,
-								username: bank.username,
-								mobile: bank.mobile,
-								status: bank.status,
-								contract: bank.contract,
-								logo: bank.logo,
-								id: bank._id,
-							});
-						}
-					}
-				);
+				let sign_creds = { username: username, type: "bank" };
+				const token = jwtsign(sign_creds);
+
+				res.status(200).json({
+					token: token,
+					name: bank.name,
+					initial_setup: bank.initial_setup,
+					username: bank.username,
+					mobile: bank.mobile,
+					status: bank.status,
+					contract: bank.contract,
+					logo: bank.logo,
+					id: bank._id,
+				});
 			}
 		}
 	);
@@ -426,32 +392,22 @@ router.post("/branchLogin", function (req, res) {
 							res.status(200).json(result);
 						} else {
 							let logo = ba.logo;
-							let token = makeid(10);
-							Branch.findByIdAndUpdate(
-								bank._id,
-								{
-									token: token,
-								},
-								(err) => {
-									if (err) {
-										return catchError(err);
-									} else {
-										res.status(200).json({
-											token: token,
-											name: bank.name,
-											initial_setup: bank.initial_setup,
-											username: bank.username,
-											status: bank.status,
-											email: bank.email,
-											mobile: bank.mobile,
-											logo: logo,
-											bank_id: ba._id,
-											id: bank._id,
-											credit_limit: bank.credit_limit,
-										});
-									}
-								}
-							);
+							let sign_creds = { username: username, type: "branch" };
+							const token = jwtsign(sign_creds);
+
+							res.status(200).json({
+								token: token,
+								name: bank.name,
+								initial_setup: bank.initial_setup,
+								username: bank.username,
+								status: bank.status,
+								email: bank.email,
+								mobile: bank.mobile,
+								logo: logo,
+								bank_id: ba._id,
+								id: bank._id,
+								credit_limit: bank.credit_limit,
+							});
 						}
 					}
 				);
@@ -477,36 +433,21 @@ router.post("/cashierLogin", function (req, res) {
 					message: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
-				let token = makeid(10);
-				Cashier.findOneAndUpdate(
-					{
-						bank_user_id: bank._id,
-					},
-					{ $set: { token, token } },
-					function (err, cashier) {
-						var result = errorMessage(
-							err,
-							cashier,
-							"This user is not assigned as a cashier."
-						);
-						if (result.status == 0) {
-							res.status(200).json(result);
-						} else {
-							res.status(200).json({
-								token: token,
-								name: cashier.name,
-								username: bank.username,
-								status: cashier.status,
-								email: bank.email,
-								mobile: bank.mobile,
-								cashier_id: cashier._id,
-								bank_id: cashier.bank_id,
-								branch_id: cashier.branch_id,
-								id: bank._id,
-							});
-						}
-					}
-				);
+				let sign_creds = { username: username, type: "cashier" };
+				const token = jwtsign(sign_creds);
+
+				res.status(200).json({
+					token: token,
+					name: cashier.name,
+					username: bank.username,
+					status: cashier.status,
+					email: bank.email,
+					mobile: bank.mobile,
+					cashier_id: cashier._id,
+					bank_id: cashier.bank_id,
+					branch_id: cashier.branch_id,
+					id: bank._id,
+				});
 			}
 		}
 	);
@@ -523,7 +464,7 @@ router.post("/user/login", (req, res) => {
 		if (result.status == 0) {
 			res.status(200).json(result);
 		} else {
-			let sign_creds = { username: username, password: password };
+			let sign_creds = { username: username, type: "user" };
 			const token = jwtsign(sign_creds);
 			res.status(200).json({
 				status: 1,

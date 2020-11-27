@@ -2,12 +2,14 @@ const express = require("express");
 const router = express.Router();
 
 const BankUser = require("../models/BankUser");
+const jwtTokenAuth = require("./JWTTokenAuth");
 
-router.post("/cashierSetupUpdate", function (req, res) {
-	const { username, password, token } = req.body;
+router.post("/cashierSetupUpdate", jwtTokenAuth, function (req, res) {
+	const { password } = req.body;
+	const jwtusername = req.sign_creds.username;
 	BankUser.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {

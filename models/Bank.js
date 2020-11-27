@@ -19,7 +19,6 @@ const BankSchema = new mongoose.Schema({
 	modified_at: { type: Date, default: null },
 	initial_setup: { type: Boolean, default: false },
 	status: { type: Number, required: true, default: 0 },
-	token: { type: String, required: false, default: null },
 	total_trans: { type: Number, required: false, default: 0 },
 	working_from: { type: String, required: false, default: 0 },
 	working_to: { type: String, required: false, default: 0 },
@@ -32,6 +31,6 @@ const BankSchema = new mongoose.Schema({
 		escrow: { type: String, required: false },
 		infra_operational: { type: String, required: false },
 		infra_master: { type: String, required: false },
-	}
+	},
 });
 module.exports = mongoose.model("Bank", BankSchema);
