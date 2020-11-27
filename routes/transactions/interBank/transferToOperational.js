@@ -138,8 +138,8 @@ async function distributeRevenue(transfer, infra, bank, bankB, branch, rule1) {
 
 	if (transfer.fee > 0) {
 		let trans = {
-			from: branch.wallet_ids.operational,
-			to: bank.wallet_ids.operational,
+			from: branchOpWallet,
+			to: bankOpWallet,
 			amount: transfer.fee,
 			note:
 				"Cashier Send Fee for Inter Bank Non Wallet to Non Wallet Transaction",
@@ -150,8 +150,8 @@ async function distributeRevenue(transfer, infra, bank, bankB, branch, rule1) {
 			from_name: branch.name,
 			to_name: bank.name,
 			user_id: "",
-			master_code: master_code,
-			child_code: master_code + "1",
+			master_code: transfer.master_code,
+			child_code: transfer.master_code + "1",
 		};
 
 		await blockchain.initiateTransfer(trans);

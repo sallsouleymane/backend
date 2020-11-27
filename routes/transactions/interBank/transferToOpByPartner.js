@@ -150,8 +150,8 @@ async function distributeRevenue(transfer, infra, bank, bankB, branch, rule1) {
 			from_name: branch.name,
 			to_name: bank.name,
 			user_id: "",
-			master_code: master_code,
-			child_code: master_code + "1",
+			master_code: transfer.master_code,
+			child_code: transfer.master_code + "1",
 		};
 
 		await blockchain.initiateTransfer(trans);
