@@ -34,7 +34,7 @@ module.exports = async function (
 
 		let master_code = getTransactionCode(branch.mobile, bank.mobile);
 
-		const trans = {
+		let trans = {
 			from: branch.wallet_ids.operational,
 			to: bank.wallet_ids.operational,
 			amount: amount,
