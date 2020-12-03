@@ -32,6 +32,41 @@ const Partner = require("../models/partner/Partner");
 const Document = require("../models/Document");
 const Infra = require("../models/Infra");
 
+router.post("/bank/getMerchantById", function (req, res) {
+	const { token, merchant_id } = req.body;
+	Bank.findOne(
+		{
+			token,
+			status: 1,
+		},
+		function (err, bank) {
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Merchant.findOne(
+					{ _id: merchant_id, bank_id: bank._id },
+					(err, merchant) => {
+						let result = errorMessage(err, merchant, "Merchant not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							res.status(200).json({
+								status: 1,
+								merchant: merchant,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/bank/getMyWalletIds", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
