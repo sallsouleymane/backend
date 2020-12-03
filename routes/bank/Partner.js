@@ -1,11 +1,21 @@
 const express = require("express");
 const router = express.Router();
 const config = require("../../config.json");
+const jwtTokenAuth = require("../JWTTokenAuth");
 
 //utils
 const makeid = require("../utils/idGenerator");
 const sendSMS = require("../utils/sendSMS");
 const sendMail = require("../utils/sendMail");
+const getTypeClass = require("../utils/getTypeClass");
+const makeotp = require("../utils/makeotp");
+
+//services
+const {
+	createWallet,
+	getStatement,
+	getBalance,
+} = require("../../services/Blockchain.js");
 const { errorMessage, catchError } = require("../utils/errorHandler");
 
 const Bank = require("../../models/Bank");
@@ -20,11 +30,11 @@ const FailedTX = require("../../models/FailedTXLedger");
 const Partner = require("../../models/partner/Partner");
 const Document = require("../../models/Document");
 
-router.post("/bank/listPartners", function (req, res) {
-	const { token } = req.body;
+router.post("/bank/listPartners", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -59,11 +69,12 @@ router.post("/bank/listPartners", function (req, res) {
 	);
 });
 
-router.post("/bank/getPartner", function (req, res) {
-	const { token, partner_id } = req.body;
+router.post("/bank/getPartner", jwtTokenAuth, function (req, res) {
+	const { partner_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -96,7 +107,7 @@ router.post("/bank/getPartner", function (req, res) {
 	);
 });
 
-router.post("/bank/editPartner", (req, res) => {
+router.post("/bank/editPartner", jwtTokenAuth, function (req, res) {
 	const {
 		partner_id,
 		name,
@@ -108,16 +119,16 @@ router.post("/bank/editPartner", (req, res) => {
 		ccode,
 		mobile,
 		email,
-		token,
 		logo,
 		contract,
 		otp_id,
 		otp,
 	} = req.body;
 
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -210,7 +221,7 @@ router.post("/bank/editPartner", (req, res) => {
 	);
 });
 
-router.post("/bank/addPartner", (req, res) => {
+router.post("/bank/addPartner", jwtTokenAuth, function (req, res) {
 	let data = new Partner();
 	const {
 		name,
@@ -222,15 +233,15 @@ router.post("/bank/addPartner", (req, res) => {
 		ccode,
 		mobile,
 		email,
-		token,
 		logo,
 		contract,
 		otp_id,
 		otp,
 	} = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {

@@ -590,11 +590,12 @@ router.post(
 	}
 );
 
-router.post("/cashier/interBank/payInvoice", (req, res) => {
-	const { token, invoices, merchant_id } = req.body;
+router.post("/cashier/interBank/payInvoice", jwtTokenAuth, (req, res) => {
+	const { invoices, merchant_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {
@@ -1661,11 +1662,12 @@ router.post("/partnerCashier/getUserInvoices", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/cashier/getInvoicesForCustomerCode", (req, res) => {
-	const { token, customer_code, merchant_id } = req.body;
+router.post("/cashier/getInvoicesForCustomerCode", jwtTokenAuth, (req, res) => {
+	const { customer_code, merchant_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {
@@ -1708,11 +1710,12 @@ router.post("/cashier/getInvoicesForCustomerCode", (req, res) => {
 	);
 });
 
-router.post("/cashier/getInvoiceDetails", (req, res) => {
-	const { token, number, merchant_id } = req.body;
+router.post("/cashier/getInvoiceDetails", jwtTokenAuth, (req, res) => {
+	const { number, merchant_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {
@@ -1755,11 +1758,12 @@ router.post("/cashier/getInvoiceDetails", (req, res) => {
 	);
 });
 
-router.post("/cashier/getUserInvoices", (req, res) => {
-	const { token, mobile, merchant_id } = req.body;
+router.post("/cashier/getUserInvoices", jwtTokenAuth, (req, res) => {
+	const { mobile, merchant_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {
@@ -1793,11 +1797,12 @@ router.post("/cashier/getUserInvoices", (req, res) => {
 	);
 });
 
-router.post("/cashier/payInvoice", (req, res) => {
-	const { token, invoices, merchant_id } = req.body;
+router.post("/cashier/payInvoice", jwtTokenAuth, (req, res) => {
+	const { invoices, merchant_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, cashier) {
