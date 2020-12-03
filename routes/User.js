@@ -40,26 +40,26 @@ router.post("/user/getMerchantPenaltyRule", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				MerchantSettings.findOne({ merchant_id: merchant_id }, function (
-					err,
-					setting
-				) {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				MerchantSettings.findOne(
+					{ merchant_id: merchant_id },
+					function (err, setting) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								rule: setting.penalty_rule,
+							});
 						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else {
-						res.status(200).json({
-							rule: setting.penalty_rule,
-						});
 					}
-				});
+				);
 			}
 		}
 	);
@@ -146,11 +146,6 @@ router.get("/user/listMerchants", jwtTokenAuth, function (req, res) {
 				Merchant.find(
 					{
 						status: 1,
-						$or: [
-							{ is_private: { $exists: false } },
-							{ is_private: false },
-							{ $and: [{ is_private: true }, { bank_id: user.bank_id }] },
-						],
 					},
 					"-password",
 					(err, merchants) => {
@@ -238,21 +233,22 @@ router.post("/user/getUser", jwtTokenAuth, function (req, res) {
 		if (result.status == 0) {
 			res.status(200).json(result);
 		} else {
-			User.findOne({ mobile }, "-password -docs_hash -contact_list", function (
-				err,
-				user
-			) {
-				let result = errorMessage(err, user, "User not found");
-				if (result.status == 0) {
-					res.status(200).json(result);
-				} else {
-					res.status(200).json({
-						status: 1,
-						message: "Details of a user for a given mobie no.",
-						user: user,
-					});
+			User.findOne(
+				{ mobile },
+				"-password -docs_hash -contact_list",
+				function (err, user) {
+					let result = errorMessage(err, user, "User not found");
+					if (result.status == 0) {
+						res.status(200).json(result);
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Details of a user for a given mobie no.",
+							user: user,
+						});
+					}
 				}
-			});
+			);
 		}
 	});
 });
@@ -664,28 +660,28 @@ router.get("/user/getBanks", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Bank.find({ initial_setup: { $eq: true } }, function (
-					err,
-					approvedBanks
-				) {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Bank.find(
+					{ initial_setup: { $eq: true } },
+					function (err, approvedBanks) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Get all approved bank list success",
+								banks: approvedBanks,
+							});
 						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							message: "Get all approved bank list success",
-							banks: approvedBanks,
-						});
 					}
-				});
+				);
 			}
 		}
 	);

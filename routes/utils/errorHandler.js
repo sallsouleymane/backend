@@ -11,7 +11,7 @@ module.exports.errorMessage = function (
 		cond = user == null;
 	}
 	if (err) {
-		catchError(err);
+		return module.exports.catchError(err);
 	} else if (cond) {
 		return {
 			status: 0,
