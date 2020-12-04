@@ -845,7 +845,7 @@ router.post("/getInfraHistory", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.get("/infra/getWalletBalance", jwtTokenAuth, function (req, res) {
+router.get("/infra/getMyWalletBalance", jwtTokenAuth, function (req, res) {
 	const { from, bank } = req.query;
 	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
