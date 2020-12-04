@@ -881,7 +881,7 @@ router.get("/infra/getMyWalletBalance", jwtTokenAuth, function (req, res) {
 							res.status(200).json(result);
 						} else {
 							const wallet_type = "infra_" + from;
-							const wallet_id = b.wallet_ids[wallet_type];
+							const wallet_id = ba.wallet_ids[wallet_type];
 
 							getBalance(wallet_id)
 								.then(function (result) {
