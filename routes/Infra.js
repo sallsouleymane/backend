@@ -448,7 +448,7 @@ router.post("/getBanks", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/setupUpdate", jwtTokenAuth, function (req, res) {
+router.post("/setupUpdate", function (req, res) {
 	let data = new Infra();
 	const { username, password, email, mobile, ccode } = req.body;
 
