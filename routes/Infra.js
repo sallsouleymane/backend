@@ -510,6 +510,7 @@ router.get("/checkInfra", function (req, res) {
 			res.status(200).json(result);
 		} else {
 			res.status(200).json({
+				status: 1,
 				infras: c,
 			});
 		}
