@@ -364,6 +364,7 @@ router.post(
 	jwtTokenAuth,
 	function (req, res) {
 		const { merchant_id } = req.body;
+		const jwtusername = req.sign_creds.username;
 		Cashier.findOne(
 			{
 				username: jwtusername,
@@ -446,6 +447,7 @@ router.post("/cashier/createUser", jwtTokenAuth, function (req, res) {
 		docs_hash: docs_hash,
 		status: 2,
 	};
+	const jwtusername = req.sign_creds.username;
 
 	Cashier.findOne({ username: jwtusername }, function (err, cashier) {
 		let result = errorMessage(
@@ -542,6 +544,7 @@ router.post("/cashier/editUser", jwtTokenAuth, function (req, res) {
 			delete userDetails[detail];
 		}
 	}
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne({ username: jwtusername }, function (err, cashier) {
 		let result = errorMessage(
 			err,
@@ -573,6 +576,7 @@ router.post("/cashier/editUser", jwtTokenAuth, function (req, res) {
 router.post("/cashier/activateUser", jwtTokenAuth, function (req, res) {
 	try {
 		const { mobile } = req.body;
+		const jwtusername = req.sign_creds.username;
 		Cashier.findOne(
 			{
 				username: jwtusername,
