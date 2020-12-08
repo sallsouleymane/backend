@@ -137,9 +137,10 @@ router.post("/bank/unblockMerchant", function (req, res) {
 });
 
 router.post("/bank/listMerchants", jwtTokenAuth, function (req, res) {
+	var { token } = req.body;
 	Bank.findOne(
 		{
-			username: jwtusername,
+			token,
 			status: 1,
 		},
 		function (err, bank) {
