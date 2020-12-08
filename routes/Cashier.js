@@ -329,6 +329,7 @@ router.post("/cashier/listMerchants", jwtTokenAuth, function (req, res) {
 
 router.post("/cashier/getUser", jwtTokenAuth, function (req, res) {
 	const { mobile } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
 			username: jwtusername,
