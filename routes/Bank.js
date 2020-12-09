@@ -32,7 +32,11 @@ const Partner = require("../models/partner/Partner");
 const Document = require("../models/Document");
 const Infra = require("../models/Infra");
 
+<<<<<<< HEAD
 router.post("/bank/getMerchantById",jwtTokenAuth, function (req, res) {
+=======
+router.post("/bank/getMerchantById", jwtTokenAuth, function (req, res) {
+>>>>>>> e8ae0cef567bb59e2b3c78be5bebec4bbd7c1a52
 	const jwtusername = req.sign_creds.username;
 	const { merchant_id } = req.body;
 	Bank.findOne(

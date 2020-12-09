@@ -16,11 +16,12 @@ const Bank = require("../../models/Bank");
 const Merchant = require("../../models/merchant/Merchant");
 const getWalletIds = require("../utils/getWalletIds");
 
-router.post("/bank/changeMerchantAcces", function (req, res) {
-	const { token, merchant_id, is_private } = req.body;
+router.post("/bank/changeMerchantAcces", jwtTokenAuth, function (req, res) {
+	const { merchant_id, is_private } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -56,11 +57,12 @@ router.post("/bank/changeMerchantAcces", function (req, res) {
 	);
 });
 
-router.post("/bank/blockMerchant", function (req, res) {
-	var { token, merchant_id } = req.body;
+router.post("/bank/blockMerchant", jwtTokenAuth, function (req, res) {
+	var { merchant_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -96,11 +98,12 @@ router.post("/bank/blockMerchant", function (req, res) {
 	);
 });
 
-router.post("/bank/unblockMerchant", function (req, res) {
-	var { token, merchant_id } = req.body;
+router.post("/bank/unblockMerchant", jwtTokenAuth, function (req, res) {
+	var { merchant_id } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
@@ -137,6 +140,7 @@ router.post("/bank/unblockMerchant", function (req, res) {
 });
 
 router.post("/bank/listMerchants", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
 			username: jwtusername,
