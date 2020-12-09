@@ -62,9 +62,7 @@ router.post(
 							res.status(200).json(result);
 						} else {
 							let wallet_id = branch.wallet_ids[wallet_type];
-
-							blockchain
-								.getBalance(wallet_id)
+								getBalance(wallet_id)
 								.then(function (result) {
 									res.status(200).json({
 										status: 1,
