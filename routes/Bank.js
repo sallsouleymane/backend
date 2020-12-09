@@ -32,11 +32,12 @@ const Partner = require("../models/partner/Partner");
 const Document = require("../models/Document");
 const Infra = require("../models/Infra");
 
-router.post("/bank/getMerchantById", function (req, res) {
-	const { token, merchant_id } = req.body;
+router.post("/bank/getMerchantById",jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { merchant_id } = req.body;
 	Bank.findOne(
 		{
-			token,
+			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
