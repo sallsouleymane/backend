@@ -255,48 +255,11 @@ router.post("/addOpeningBalance", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/getBranch", jwtTokenAuth, function (req, res) {
-	const { branch_id } = req.body;
-	const jwtusername = req.sign_creds.username;
-	Branch.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, user) {
-			let result = errorMessage(
-				err,
-				user,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Branch.findOne(
-					{
-						_id: branch_id,
-					},
-					function (err, branch) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								branches: branch,
-							});
-						}
-					}
-				);
-			}
-		}
-	);
+	res.status(200).json({
+		status: 0,
+		message: "This API is removed",
+		Replace: "/getOne api",
+	});
 });
 
 router.post("/getBranchInfo", jwtTokenAuth, function (req, res) {

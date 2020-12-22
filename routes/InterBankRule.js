@@ -45,7 +45,7 @@ router.post(
 		const { wallet_id, amount, is_inclusive } = req.body;
 		const jwtusername = req.sign_creds.username;
 		var code = wallet_id.substr(0, 2);
-		if (code != "BR" && code != "PB") {
+		if (code != "PB") {
 			res.status(200).json({
 				status: 0,
 				message: "You can only send to branch and partner branch",
@@ -84,6 +84,7 @@ router.post(
 											const Collection = getTypeClass(code);
 											Collection.findOne(
 												{
+													_id: { $ne: branch._id },
 													"wallet_ids.operational": wallet_id,
 												},
 												(err, toBranch) => {
@@ -326,7 +327,7 @@ router.post(
 	function (req, res) {
 		const { wallet_id, amount, is_inclusive } = req.body;
 		var code = wallet_id.substr(0, 2);
-		if (code != "BR" && code != "PB") {
+		if (code != "PB") {
 			res.status(200).json({
 				status: 0,
 				message: "You can only send to branch and partner branch",
@@ -366,6 +367,7 @@ router.post(
 											const Collection = getTypeClass(code);
 											Collection.findOne(
 												{
+													_id: { $ne: branch._id },
 													"wallet_ids.operational": wallet_id,
 												},
 												(err, toBranch) => {

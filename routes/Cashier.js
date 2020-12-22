@@ -36,7 +36,7 @@ router.post("/cashier/sendToOperational", jwtTokenAuth, function (req, res) {
 	const { wallet_id, amount, is_inclusive } = req.body;
 
 	var code = wallet_id.substr(0, 2);
-	if (code != "BR" && code != "PB") {
+	if (code != "PB") {
 		res.status(200).json({
 			status: 0,
 			message: "You can only send to branch and partner branch",
@@ -66,6 +66,7 @@ router.post("/cashier/sendToOperational", jwtTokenAuth, function (req, res) {
 						const Collection = getTypeClass(code);
 						Collection.findOne(
 							{
+								_id: { $ne: branch._id },
 								bank_id: branch.bank_id,
 								"wallet_ids.operational": wallet_id,
 							},
@@ -328,6 +329,7 @@ router.post("/cashier/listMerchants", jwtTokenAuth, function (req, res) {
 
 router.post("/cashier/getUser", jwtTokenAuth, function (req, res) {
 	const { mobile } = req.body;
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
 			username: jwtusername,
@@ -362,6 +364,7 @@ router.post(
 	jwtTokenAuth,
 	function (req, res) {
 		const { merchant_id } = req.body;
+		const jwtusername = req.sign_creds.username;
 		Cashier.findOne(
 			{
 				username: jwtusername,
@@ -444,6 +447,7 @@ router.post("/cashier/createUser", jwtTokenAuth, function (req, res) {
 		docs_hash: docs_hash,
 		status: 2,
 	};
+	const jwtusername = req.sign_creds.username;
 
 	Cashier.findOne({ username: jwtusername }, function (err, cashier) {
 		let result = errorMessage(
@@ -540,6 +544,7 @@ router.post("/cashier/editUser", jwtTokenAuth, function (req, res) {
 			delete userDetails[detail];
 		}
 	}
+	const jwtusername = req.sign_creds.username;
 	Cashier.findOne({ username: jwtusername }, function (err, cashier) {
 		let result = errorMessage(
 			err,
@@ -571,6 +576,7 @@ router.post("/cashier/editUser", jwtTokenAuth, function (req, res) {
 router.post("/cashier/activateUser", jwtTokenAuth, function (req, res) {
 	try {
 		const { mobile } = req.body;
+		const jwtusername = req.sign_creds.username;
 		Cashier.findOne(
 			{
 				username: jwtusername,

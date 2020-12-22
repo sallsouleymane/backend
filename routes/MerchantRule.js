@@ -1253,58 +1253,6 @@ router.post(
 	}
 );
 
-router.post(
-	"/bank/merchantRule/interBank/updateOtherBankShare",
-	function (req, res) {
-		var { rule_id, other_bank_share } = req.body;
-		const jwtusername = req.sign_creds.username;
-		Bank.findOne(
-			{
-				username: jwtusername,
-				status: 1,
-			},
-			function (err, bank) {
-				let result = errorMessage(
-					err,
-					bank,
-					"Token changed or user not valid. Try to login again or contact system administrator."
-				);
-				if (result.status == 0) {
-					res.status(200).json(result);
-				} else {
-					IBMerchantRule.findOneAndUpdate(
-						{
-							_id: rule_id,
-						},
-						{
-							other_bank_share: other_bank_share,
-						},
-						{ new: true },
-						(err, rule) => {
-							let result = errorMessage(
-								err,
-								rule,
-								"This rule is not allowed to edit."
-							);
-							if (result.status == 0) {
-								res.status(200).json(result);
-							} else {
-								res.status(200).json({
-									status: 1,
-									message:
-										"Merchant Rule " +
-										rule.name +
-										" successfully updated with branch and partner share",
-									rule: rule,
-								});
-							}
-						}
-					);
-				}
-			}
-		);
-	}
-);
 
 router.post(
 	"/bank/merchantRule/interBank/editRule",
@@ -1397,6 +1345,7 @@ router.post(
 
 router.post(
 	"/bank/merchantRule/interBank/updateOtherBankShare",
+	jwtTokenAuth,
 	function (req, res) {
 		var { rule_id, other_bank_share } = req.body;
 		const jwtusername = req.sign_creds.username;

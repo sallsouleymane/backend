@@ -2,6 +2,7 @@
 const mongoose = require("mongoose");
 const CashierSchema = new mongoose.Schema({
 	name: { type: String, required: true, unique: true },
+	username: { type: String, required: false },
 	bcode: { type: String, required: true, unique: true },
 	mobile: { type: String, required: false },
 	working_from: { type: String, required: false, default: 0 },
