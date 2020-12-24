@@ -1,9 +1,9 @@
 //services
-const blockchain = require("../../services/Blockchain.js");
+const blockchain = require("../../../services/Blockchain.js");
 const {
 	getTransactionCode,
 	calculateShare,
-} = require("../utils/calculateShare");
+} = require("../../utils/calculateShare");
 
 module.exports = async function (
 	amount,
@@ -116,7 +116,7 @@ async function distributeRevenue(
 			from: bankOpWallet,
 			to: infraOpWallet,
 			amount: infraShare.percentage_amount,
-			note: "Percentage share on paid bill",
+			note: "Percentage Fee on paid bill",
 			email1: bank.email,
 			email2: infra.email,
 			mobile1: bank.mobile,
@@ -126,6 +126,7 @@ async function distributeRevenue(
 			master_code: master_code,
 			child_code: getTransactionCode(bank.mobile, infra.mobile) + "3.1",
 		};
+
 		await blockchain.initiateTransfer(trans31);
 	}
 
@@ -134,7 +135,7 @@ async function distributeRevenue(
 			from: bankOpWallet,
 			to: infraOpWallet,
 			amount: infraShare.fixed_amount,
-			note: "Fixed share on paid bill",
+			note: "Fixed Fee on paid bill",
 			email1: bank.email,
 			email2: infra.email,
 			mobile1: bank.mobile,
@@ -144,12 +145,14 @@ async function distributeRevenue(
 			master_code: master_code,
 			child_code: getTransactionCode(bank.mobile, infra.mobile) + "3.2",
 		};
+
 		await blockchain.initiateTransfer(trans32);
 	}
 
+	//fourth transaction
 	if (bankFee > 0) {
-		//fourth transaction
-		partnerShare = calculateShare("branch", amount, fee, {}, branch.bcode);
+		partnerShare = calculateShare("partner", amount, fee, {}, branch.code);
+		console.log("Partner Share: ", partnerShare);
 		let trans4 = {
 			from: bankOpWallet,
 			to: branchOpWallet,
@@ -167,7 +170,6 @@ async function distributeRevenue(
 
 		await blockchain.initiateTransfer(trans4);
 	}
-
 	//fifth transaction
 	bankComm = calculateShare("bank", amount, comm);
 	if (bankComm > 0) {
@@ -209,12 +211,13 @@ async function distributeRevenue(
 
 		await blockchain.initiateTransfer(trans61);
 	}
+
 	if (infraShare.fixed_amount > 0) {
 		let trans62 = {
 			from: bankOpWallet,
 			to: infraOpWallet,
 			amount: infraShare.fixed_amount,
-			note: "Fixed Commission share on paid bill",
+			note: "Fixed Commission on paid bill",
 			email1: bank.email,
 			email2: infra.email,
 			mobile1: bank.mobile,
@@ -228,9 +231,9 @@ async function distributeRevenue(
 		await blockchain.initiateTransfer(trans62);
 	}
 
+	//seventh transaction
 	if (bankComm > 0) {
-		//seventh transaction
-		partnerShare = calculateShare("branch", amount, comm, {}, branch.bcode);
+		partnerShare = calculateShare("partner", amount, comm, {}, branch.code);
 		let trans7 = {
 			from: bankOpWallet,
 			to: branchOpWallet,

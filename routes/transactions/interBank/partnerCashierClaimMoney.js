@@ -15,8 +15,8 @@ module.exports = async function (
 ) {
 	try {
 		const senderBankEsWallet = sendingBank.wallet_ids.escrow;
-		const branchOpWallet = branch.wallet_ids.operational;
 		const bankOpWallet = bank.wallet_ids.operational;
+		const branchOpWallet = branch.wallet_ids.operational;
 
 		var amount = Number(transfer.amount);
 		var fee = calculateShare("bank", transfer.amount, rule1);
@@ -79,14 +79,14 @@ module.exports = async function (
 				blockchain_message: result.message,
 			};
 		}
-
 		var claimerBranchShare = 0;
 		if (fee > 0) {
 			claimerBranchShare = calculateShare(
 				"claimBranch",
 				transfer.amount,
 				rule1,
-				rule2
+				rule2,
+				branch.code
 			);
 		}
 		transfer.fee = fee;
@@ -139,7 +139,7 @@ async function distributeRevenue(transfer, sendingBank, bank, branch, rule1) {
 			from: senderBankOpWallet,
 			to: bankOpWallet,
 			amount: claimerBankShare.fixed_amount,
-			note: "Claiming Bank's fixed Share for Inter Bank transaction",
+			note: "Claiming Bank's Share for Inter Bank transaction",
 			email1: sendingBank.email,
 			email2: bank.email,
 			mobile1: sendingBank.mobile,

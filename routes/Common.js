@@ -554,7 +554,7 @@ router.get("/getWalletBalance", jwtTokenAuth, function (req, res) {
 	res.status(200).json({
 		status: 0,
 		message: "This API is removed",
-		replcae: "/:user/getWalletBalance - {page, wallet_id}",
+		replace: "/:user/getWalletBalance - {page, wallet_id}",
 	});
 });
 

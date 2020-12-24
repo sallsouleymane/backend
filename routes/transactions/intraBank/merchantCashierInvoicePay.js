@@ -1,14 +1,11 @@
 //services
-const blockchain = require("../../services/Blockchain.js");
-const { getTransactionCode, calculateShare } = require("../utils/calculateShare");
+const blockchain = require("../../../services/Blockchain.js");
+const {
+	getTransactionCode,
+	calculateShare,
+} = require("../../utils/calculateShare");
 
-module.exports = async function (
-	amount,
-	infra,
-	bank,
-	merchant,
-	comm
-) {
+module.exports = async function (amount, infra, bank, merchant, comm) {
 	try {
 		amount = Number(amount);
 
@@ -34,7 +31,7 @@ module.exports = async function (
 				from_name: merchant.name,
 				to_name: bank.name,
 				master_code: master_code,
-				child_code: master_code
+				child_code: master_code,
 			};
 
 			await blockchain.initiateTransfer(trans1);
@@ -86,6 +83,6 @@ module.exports = async function (
 		};
 		return result;
 	} catch (err) {
-		throw (err);
+		throw err;
 	}
 };
