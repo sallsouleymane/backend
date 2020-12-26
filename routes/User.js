@@ -23,8 +23,8 @@ const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
 const blockchain = require("../services/Blockchain");
 
-const walletToWallet = require("../transactions/intraBank/walletToWallet");
-const walletToCashier = require("../transactions/intraBank/walletToCashier");
+const walletToWallet = require("./transactions/intraBank/walletToWallet");
+const walletToCashier = require("./transactions/intraBank/walletToCashier");
 
 router.post("/user/getMerchantPenaltyRule", jwtTokenAuth, function (req, res) {
 	const { merchant_id } = req.body;
