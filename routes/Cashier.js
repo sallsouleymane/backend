@@ -11,6 +11,7 @@ const getTypeClass = require("./utils/getTypeClass");
 const getWalletIds = require("./utils/getWalletIds");
 const jwtTokenAuth = require("./JWTTokenAuth");
 const { errorMessage, catchError } = require("./utils/errorHandler");
+// const { getTransactionCode } = require("./utils/calculateShare");
 
 //services
 const blockchain = require("../services/Blockchain.js");
@@ -31,6 +32,9 @@ const CashierTransfer = require("../models/CashierTransfer");
 const Merchant = require("../models/merchant/Merchant");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
 const cashierToOperational = require("./transactions/intraBank/cashierToOperational");
+
+// transactions
+// const state = require("./transactions/state");
 const cashierToCashier = require("./transactions/intraBank/cashierToCashier");
 const cashierToWallet = require("./transactions/intraBank/cashierToWallet");
 const cashierClaimMoney = require("./transactions/intraBank/cashierClaimMoney");
@@ -1289,6 +1293,8 @@ router.post("/cashierVerifyOTPClaim", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/cashierSendMoney", jwtTokenAuth, function (req, res) {
+	// const master_code = getTransactionCode();
+	// state.intiate(master_code);
 	var today = new Date();
 	today = today.toISOString();
 	var s = today.split("T");
@@ -1417,6 +1423,7 @@ router.post("/cashierSendMoney", jwtTokenAuth, function (req, res) {
 													data.cashier_id = cashier._id;
 													data.transaction_code = transactionCode;
 													data.rule_type = "Non Wallet to Non Wallet";
+													// data.master_code = master_code;
 
 													var mns = branch.mobile.slice(-2);
 													var mnr = bank.mobile.slice(-2);
@@ -1472,6 +1479,7 @@ router.post("/cashierSendMoney", jwtTokenAuth, function (req, res) {
 																	const transfer = {
 																		amount: receiverIdentificationAmount,
 																		isInclusive: isInclusive,
+																		// master_code: master_code,
 																	};
 																	cashierToCashier(
 																		transfer,
@@ -1590,6 +1598,10 @@ router.post("/cashierSendMoney", jwtTokenAuth, function (req, res) {
 																								}
 																							}
 																						);
+																						// state.waitForCompletion(
+																						// 	master_code,
+																						// 	result.transaction
+																						// );
 																						res.status(200).json({
 																							status: 1,
 																							message: "success",
@@ -2318,7 +2330,7 @@ router.post("/cashierClaimMoney", jwtTokenAuth, function (req, res) {
 																			} else {
 																				const transfer = {
 																					amount: otpd.amount,
-																					isInclusive: isInclusive,
+																					isInclusive: otpd.is_inclusive,
 																				};
 																				cashierClaimMoney(
 																					transfer,
