@@ -1251,7 +1251,8 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
 																									} else {
 																										const transfer = {
 																											amount: otpd.amount,
-																											isInclusive: isInclusive,
+																											isInclusive:
+																												otpd.is_inclusive,
 																										};
 																										partnerCashierToWallet(
 																											transfer,
