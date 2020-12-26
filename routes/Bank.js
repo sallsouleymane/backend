@@ -33,7 +33,7 @@ const Document = require("../models/Document");
 const Infra = require("../models/Infra");
 
 router.post(
-	"/bank/getBranchWalletBalnce",
+	"/bank/getBranchWalletBalance",
 	jwtTokenAuth,
 	function (req, res) {
 		const { branch_id, wallet_type } = req.body;

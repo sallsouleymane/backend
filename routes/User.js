@@ -23,6 +23,9 @@ const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
 const blockchain = require("../services/Blockchain");
 
+const walletToWallet = require("../transactions/intraBank/walletToWallet");
+const walletToCashier = require("../transactions/intraBank/walletToCashier");
+
 router.post("/user/getMerchantPenaltyRule", jwtTokenAuth, function (req, res) {
 	const { merchant_id } = req.body;
 	const username = req.sign_creds.username;
@@ -785,10 +788,9 @@ router.get("/user/getContactList", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
-	var now = new Date().getTime();
 	const username = req.sign_creds.username;
 
-	const { receiverMobile, note, sending_amount, isInclusive } = req.body;
+	const { receiverMobile, sending_amount, isInclusive } = req.body;
 
 	User.findOneAndUpdate(
 		{
@@ -809,243 +811,110 @@ router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				try {
-					const senderWallet = sender.wallet_id;
-					var bal = await blockchain.getBalance(senderWallet);
-					if (Number(bal) < sending_amount) {
-						res.status(200).json({
-							status: 0,
-							message: "Not enough balance. Recharge Your wallet.",
-						});
-					} else {
-						User.findOne(
-							{
-								mobile: receiverMobile,
-							},
-							(err, receiver) => {
-								let result = errorMessage(
-									err,
-									receiver,
-									"Receiver's wallet do not exist"
-								);
-								if (result.status == 0) {
-									res.status(200).json(result);
-								} else {
-									Bank.findOne(
-										{
-											_id: sender.bank_id,
-										},
-										function (err, bank) {
-											let result = errorMessage(err, bank, "Bank Not Found");
-											if (result.status == 0) {
-												res.status(200).json(result);
-											} else {
-												Infra.findOne(
-													{
-														_id: bank.user_id,
-													},
-													function (err, infra) {
+				User.findOne(
+					{
+						mobile: receiverMobile,
+					},
+					(err, receiver) => {
+						let result = errorMessage(
+							err,
+							receiver,
+							"Receiver's wallet do not exist"
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Bank.findOne(
+								{
+									_id: sender.bank_id,
+								},
+								function (err, bank) {
+									let result = errorMessage(err, bank, "Bank Not Found");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										Infra.findOne(
+											{
+												_id: bank.user_id,
+											},
+											function (err, infra) {
+												let result = errorMessage(
+													err,
+													infra,
+													"Infra Not Found"
+												);
+												if (result.status == 0) {
+													res.status(200).json(result);
+												} else {
+													const find = {
+														bank_id: bank._id,
+														trans_type: "Wallet to Wallet",
+														status: 1,
+														active: "Active",
+													};
+													Fee.findOne(find, function (err, fe) {
 														let result = errorMessage(
 															err,
-															infra,
-															"Infra Not Found"
+															fe,
+															"Revenue Rule Not Found"
 														);
 														if (result.status == 0) {
 															res.status(200).json(result);
 														} else {
-															const find = {
-																bank_id: bank._id,
-																trans_type: "Wallet to Wallet",
-																status: 1,
-																active: "Active",
+															transfer = {
+																amount: sending_amount,
+																isInclusive: isInclusive,
 															};
-															Fee.findOne(find, function (err, fe) {
-																let result = errorMessage(
-																	err,
-																	fe,
-																	"Revenue Rule Not Found"
-																);
-																if (result.status == 0) {
-																	res.status(200).json(result);
-																} else {
-																	var fee = 0;
-																	oamount = Number(sending_amount);
-																	fe.ranges.map((range) => {
-																		if (
-																			oamount >= range.trans_from &&
-																			oamount <= range.trans_to
-																		) {
-																			var temp =
-																				(oamount * range.percentage) / 100;
-																			fee = temp + range.fixed;
 
-																			if (isInclusive) {
-																				oamount = oamount - fee;
-																			}
-
-																			var mns = sender.mobile.slice(-2);
-																			var mnr = receiver.mobile.slice(-2);
-																			var master_code = (child_code =
-																				mns + mnr + now);
-
-																			//send transaction sms after actual transaction
-
-																			const receiverWallet = receiver.wallet_id;
-																			const bankOpWallet =
-																				bank.wallet_ids.operational;
-																			const infraOpWallet =
-																				bank.wallet_ids.infra_operational;
-																			const {
-																				infra_share,
-																			} = fe.revenue_sharing_rule;
-
-																			var transArr = [];
-
-																			let trans1 = {};
-																			trans1.from = senderWallet;
-																			trans1.to = receiverWallet;
-																			trans1.amount = oamount;
-																			trans1.note =
-																				"Transfer from " +
-																				sender.name +
-																				" to " +
-																				receiver.name;
-																			trans1.email1 = sender.email;
-																			trans1.email2 = receiver.email;
-																			trans1.mobile1 = sender.mobile;
-																			trans1.mobile2 = receiver.mobile;
-																			trans1.from_name = sender.name;
-																			trans1.to_name = receiver.name;
-																			trans1.user_id = "";
-																			trans1.master_code = master_code;
-																			trans1.child_code = child_code + "1";
-																			transArr.push(trans1);
-
-																			if (fee > 0) {
-																				let trans2 = {};
-																				trans2.from = senderWallet;
-																				trans2.to = bankOpWallet;
-																				trans2.amount = fee;
-																				trans2.note = "Bank Fee";
-																				trans2.email1 = sender.email;
-																				trans2.email2 = bank.email;
-																				trans2.mobile1 = sender.mobile;
-																				trans2.mobile2 = bank.mobile;
-																				trans2.from_name = sender.name;
-																				trans2.to_name = bank.name;
-																				trans2.user_id = "";
-																				trans2.master_code = master_code;
-																				now = new Date().getTime();
-																				child_code = mns + "" + mnr + "" + now;
-																				trans2.child_code = child_code + "2";
-																				transArr.push(trans2);
-																			}
-
-																			var infraShare = 0;
-																			var infraShare =
-																				(fee * Number(infra_share.percentage)) /
-																				100;
-
-																			let trans31 = {};
-																			if (infraShare > 0) {
-																				trans31.from = bankOpWallet;
-																				trans31.to = infraOpWallet;
-																				trans31.amount = infraShare;
-																				trans31.note = "Infra Percentage Fee";
-																				trans31.email1 = bank.email;
-																				trans31.email2 = infra.email;
-																				trans31.mobile1 = bank.mobile;
-																				trans31.mobile2 = infra.mobile;
-																				trans31.from_name = bank.name;
-																				trans31.to_name = infra.name;
-																				trans31.user_id = "";
-																				trans31.master_code = master_code;
-																				mns = bank.mobile.slice(-2);
-																				mnr = infra.mobile.slice(-2);
-																				now = new Date().getTime();
-																				child_code =
-																					mns + "" + mnr + "" + now + "3.1";
-																				trans31.child_code = child_code;
-																				transArr.push(trans31);
-																			}
-
-																			let trans32 = {};
-																			if (infra_share.fixed > 0) {
-																				trans32.from = bankOpWallet;
-																				trans32.to = infraOpWallet;
-																				trans32.amount = infra_share.fixed;
-																				trans32.note = "Infra Percentage Fee";
-																				trans32.email1 = bank.email;
-																				trans32.email2 = infra.email;
-																				trans32.mobile1 = bank.mobile;
-																				trans32.mobile2 = infra.mobile;
-																				trans32.from_name = bank.name;
-																				trans32.to_name = infra.name;
-																				trans32.user_id = "";
-																				trans32.master_code = master_code;
-																				mns = bank.mobile.slice(-2);
-																				mnr = infra.mobile.slice(-2);
-																				now = new Date().getTime();
-																				child_code =
-																					mns + "" + mnr + "" + now + "3.2";
-																				trans32.child_code = child_code;
-																				transArr.push(trans32);
-																			}
-
-																			blockchain
-																				.transferThis(...transArr)
-																				.then(function (result) {
-																					console.log("Result: " + result);
-																					if (result.length <= 0) {
-																						res.status(200).json({
-																							status: 1,
-																							message:
-																								sending_amount +
-																								" XOF is transferred to " +
-																								receiver.name,
-																							balance: bal - (oamount + fee),
-																						});
-																					} else {
-																						res.status(200).json({
-																							status: 0,
-																							message: result.toString(),
-																						});
-																					}
-																				})
-																				.catch((err) => {
-																					console.log(err);
-																					res.status(200).json({
-																						status: 0,
-																						message: err.message,
-																					});
-																				});
-																		}
+															walletToWallet(
+																transfer,
+																infra,
+																bank,
+																sender,
+																receiver
+															)
+																.then(function (result) {
+																	console.log("Result: " + result);
+																	if (result.length == 1) {
+																		res.status(200).json({
+																			status: 1,
+																			message:
+																				sending_amount +
+																				" XOF is transferred to " +
+																				receiver.name,
+																			balance:
+																				result.balance -
+																				(result.amount + result.fee),
+																		});
+																	} else {
+																		res.status(200).json(result);
+																	}
+																})
+																.catch((err) => {
+																	console.log(err);
+																	res.status(200).json({
+																		status: 0,
+																		message: err.message,
 																	});
-																}
-																//infra
-															});
+																});
 														}
-													}
-												);
+														//infra
+													});
+												}
 											}
-										}
-									);
+										);
+									}
 								}
-							}
-						); //branch
+							);
+						}
 					}
-				} catch (err) {
-					console.log(err);
-					res.status(200).json({ status: 0, message: err.message });
-				}
+				); //branch
 			}
 		}
 	);
 });
 
 router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
-	var now = new Date().getTime();
-
 	const username = req.sign_creds.username;
 
 	const {
@@ -1090,317 +959,185 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 
 					await NWUser.create(receiver, function (err) {});
 
-					const senderWallet = sender.wallet_id;
-					var bal = await blockchain.getBalance(senderWallet);
-					if (Number(bal) < sending_amount) {
-						res.status(200).json({
-							status: 0,
-							message: "Not enough balance. Recharge Your wallet.",
-						});
-					} else {
-						Bank.findOne(
-							{
-								_id: sender.bank_id,
-							},
-							function (err, bank) {
-								let result = errorMessage(err, bank, "Bank Not Found");
-								if (result.status == 0) {
-									res.status(200).json(result);
-								} else {
-									Infra.findOne(
-										{
-											_id: bank.user_id,
-										},
-										function (err, infra) {
-											let result = errorMessage(err, infra, "Infra Not Found");
-											if (result.status == 0) {
-												res.status(200).json(result);
-											} else {
-												const find = {
-													bank_id: bank._id,
-													trans_type: "Wallet to Non Wallet",
-													status: 1,
-													active: "Active",
-												};
-												Fee.findOne(find, function (err, fe) {
-													let result = errorMessage(
-														err,
-														fe,
-														"Revenue Rule Not Found"
-													);
-													if (result.status == 0) {
-														res.status(200).json(result);
-													} else {
-														var fee = 0;
+					Bank.findOne(
+						{
+							_id: sender.bank_id,
+						},
+						function (err, bank) {
+							let result = errorMessage(err, bank, "Bank Not Found");
+							if (result.status == 0) {
+								res.status(200).json(result);
+							} else {
+								Infra.findOne(
+									{
+										_id: bank.user_id,
+									},
+									function (err, infra) {
+										let result = errorMessage(err, infra, "Infra Not Found");
+										if (result.status == 0) {
+											res.status(200).json(result);
+										} else {
+											const find = {
+												bank_id: bank._id,
+												trans_type: "Wallet to Non Wallet",
+												status: 1,
+												active: "Active",
+											};
+											Fee.findOne(find, function (err, rule) {
+												let result = errorMessage(
+													err,
+													rule,
+													"Revenue Rule Not Found"
+												);
+												if (result.status == 0) {
+													res.status(200).json(result);
+												} else {
+													let data = new CashierSend();
+													temp = {
+														mobile: sender.mobile,
+														note: note,
+														givenname: sender.name,
+														familyname: sender.last_name,
+														address1: sender.address,
+														state: sender.state,
+														country: sender.country,
+														email: sender.email,
+													};
+													data.sender_info = JSON.stringify(temp);
+													temp = {
+														mobile: receiverMobile,
+														// ccode: receiverccode,
+														givenname: receiverGivenName,
+														familyname: receiverFamilyName,
+														country: receiverCountry,
+														email: receiverEmail,
+													};
+													data.receiver_info = JSON.stringify(temp);
+													temp = {
+														country: receiverCountry,
+														type: receiverIdentificationType,
+														number: receiverIdentificationNumber,
+														valid: receiverIdentificationValidTill,
+													};
+													data.receiver_id = JSON.stringify(temp);
+													data.amount = sending_amount;
+													data.is_inclusive = isInclusive;
+													const transactionCode = makeid(8);
+													data.transaction_code = transactionCode;
+													data.rule_type = "Wallet to Non Wallet";
 
-														oamount = Number(sending_amount);
-														fe.ranges.map((range) => {
-															if (
-																oamount >= range.trans_from &&
-																oamount <= range.trans_to
-															) {
-																var temp = (oamount * range.percentage) / 100;
-																fee = temp + range.fixed;
-
-																if (isInclusive) {
-																	oamount = oamount - fee;
-																}
-
-																let data = new CashierSend();
-																temp = {
-																	mobile: sender.mobile,
-																	note: note,
-																	givenname: sender.name,
-																	familyname: sender.last_name,
-																	address1: sender.address,
-																	state: sender.state,
-																	country: sender.country,
-																	email: sender.email,
-																};
-																data.sender_info = JSON.stringify(temp);
-																temp = {
-																	mobile: receiverMobile,
-																	// ccode: receiverccode,
-																	givenname: receiverGivenName,
-																	familyname: receiverFamilyName,
-																	country: receiverCountry,
-																	email: receiverEmail,
-																};
-																data.receiver_info = JSON.stringify(temp);
-																temp = {
-																	country: receiverCountry,
-																	type: receiverIdentificationType,
-																	number: receiverIdentificationNumber,
-																	valid: receiverIdentificationValidTill,
-																};
-																data.receiver_id = JSON.stringify(temp);
-																data.amount = sending_amount;
-																data.is_inclusive = isInclusive;
-																const transactionCode = makeid(8);
-																data.transaction_code = transactionCode;
-																data.rule_type = "Wallet to Non Wallet";
-																data.fee = fee;
-																var mns = sender.mobile.slice(-2);
-																var mnr = receiver.mobile.slice(-2);
-																var master_code = (child_code =
-																	mns + mnr + now);
-																data.master_code = master_code;
-
-																data.without_id = withoutID ? 1 : 0;
-																if (requireOTP) {
-																	data.require_otp = 1;
-																	data.otp = makeotp(6);
-																	content =
-																		data.otp +
-																		" - Send this OTP to the Receiver";
-																	if (sender.mobile && sender.mobile != null) {
-																		sendSMS(content, sender.mobile);
-																	}
-																	if (sender.email && sender.email != null) {
-																		sendMail(
-																			content,
-																			"Transaction OTP",
-																			receiver.email
-																		);
-																	}
-																}
-
-																//send transaction sms after actual transaction
-
-																data.save((err, d) => {
-																	if (err) {
-																		console.log(err);
-																		var message = err;
-																		if (err.message) {
-																			message = err.message;
+													data.without_id = withoutID ? 1 : 0;
+													if (requireOTP) {
+														data.require_otp = 1;
+														data.otp = makeotp(6);
+														content =
+															data.otp + " - Send this OTP to the Receiver";
+														if (sender.mobile && sender.mobile != null) {
+															sendSMS(content, sender.mobile);
+														}
+														if (sender.email && sender.email != null) {
+															sendMail(
+																content,
+																"Transaction OTP",
+																receiver.email
+															);
+														}
+													}
+													data.save((err, d) => {
+														if (err) {
+															console.log(err);
+															var message = err;
+															if (err.message) {
+																message = err.message;
+															}
+															res.status(200).json({
+																status: 0,
+																message: message,
+															});
+														} else {
+															walletToCashier(
+																transfer,
+																infra,
+																bank,
+																sender,
+																rule
+															)
+																.then(function (result) {
+																	console.log("Result: " + result);
+																	if (result.length == 1) {
+																		let content =
+																			"Your Transaction Code is " +
+																			transactionCode;
+																		if (
+																			receiverMobile &&
+																			receiverMobile != null
+																		) {
+																			sendSMS(content, receiverMobile);
 																		}
-																		res.status(200).json({
-																			status: 0,
-																			message: message,
-																		});
-																	} else {
-																		const bankEsWallet = bank.wallet_ids.escrow;
-																		const bankOpWallet =
-																			bank.wallet_ids.operational;
-																		const infraOpWallet =
-																			bank.wallet_ids.infra_operational;
-
-																		const {
-																			infra_share,
-																		} = fe.revenue_sharing_rule;
-
-																		var transArr = [];
-																		let trans1 = {};
-																		trans1.from = senderWallet;
-																		trans1.to = bankEsWallet;
-																		trans1.amount = oamount;
-																		trans1.note =
-																			"Transferred Money to " +
-																			receiverFamilyName;
-																		trans1.email1 = sender.email;
-																		trans1.email2 = receiver.email;
-																		trans1.mobile1 = sender.mobile;
-																		trans1.mobile2 = receiver.mobile;
-																		trans1.from_name = sender.name;
-																		trans1.to_name = receiver.name;
-																		trans1.user_id = "";
-																		trans1.master_code = master_code;
-																		trans1.child_code = child_code + "1";
-
-																		transArr.push(trans1);
-
-																		let trans2 = {};
-																		if (fee > 0) {
-																			trans2.from = senderWallet;
-																			trans2.to = bankOpWallet;
-																			trans2.amount = fee;
-																			trans2.note = "Deducted Bank Fee";
-																			trans2.email1 = sender.email;
-																			trans2.email2 = bank.email;
-																			trans2.mobile1 = sender.mobile;
-																			trans2.mobile2 = bank.mobile;
-																			trans2.from_name = sender.name;
-																			trans2.to_name = bank.name;
-																			trans2.user_id = "";
-																			trans2.master_code = master_code;
-																			now = new Date().getTime();
-																			child_code = mns + "" + mnr + "" + now;
-																			trans2.child_code = child_code + "2";
-																			transArr.push(trans2);
+																		if (
+																			receiverEmail &&
+																			receiverEmail != null
+																		) {
+																			sendMail(
+																				content,
+																				"Transaction Code",
+																				receiverEmail
+																			);
 																		}
 
-																		var infraShare = 0;
-																		infraShare =
-																			(fee * Number(infra_share.percentage)) /
-																			100;
-
-																		let trans31 = {};
-																		if (infraShare > 0) {
-																			trans31.from = bankOpWallet;
-																			trans31.to = infraOpWallet;
-																			trans31.amount = infraShare;
-																			trans31.note = "Deducted Infra Fee";
-																			trans31.email1 = bank.email;
-																			trans31.email2 = infra.email;
-																			trans31.mobile1 = bank.mobile;
-																			trans31.mobile2 = infra.mobile;
-																			trans31.from_name = bank.name;
-																			trans31.to_name = infra.name;
-																			trans31.user_id = "";
-																			trans31.master_code = master_code;
-																			mns = bank.mobile.slice(-2);
-																			mnr = infra.mobile.slice(-2);
-																			now = new Date().getTime();
-																			child_code =
-																				mns + "" + mnr + "" + now + "3.1";
-																			trans31.child_code = child_code;
-																			transArr.push(trans31);
-																		}
-
-																		let trans32 = {};
-																		if (infra_share.fixed > 0) {
-																			trans32.from = bankOpWallet;
-																			trans32.to = infraOpWallet;
-																			trans32.amount = infra_share.fixed;
-																			trans32.note = "Deducted Infra Fee";
-																			trans32.email1 = bank.email;
-																			trans32.email2 = infra.email;
-																			trans32.mobile1 = bank.mobile;
-																			trans32.mobile2 = infra.mobile;
-																			trans32.from_name = bank.name;
-																			trans32.to_name = infra.name;
-																			trans32.user_id = "";
-																			trans32.master_code = master_code;
-																			mns = bank.mobile.slice(-2);
-																			mnr = infra.mobile.slice(-2);
-																			now = new Date().getTime();
-																			child_code =
-																				mns + "" + mnr + "" + now + "3.2";
-																			trans32.child_code = child_code;
-																			transArr.push(trans32);
-																		}
-
-																		blockchain
-																			.transferThis(...transArr)
-																			.then(function (result) {
-																				console.log("Result: " + result);
-																				if (result.length <= 0) {
-																					let content =
-																						"Your Transaction Code is " +
-																						transactionCode;
-																					if (
-																						receiverMobile &&
-																						receiverMobile != null
-																					) {
-																						sendSMS(content, receiverMobile);
+																		CashierSend.findByIdAndUpdate(
+																			d._id,
+																			{
+																				status: 1,
+																				fee: result.fee,
+																				master_code: result.master_code,
+																			},
+																			(err) => {
+																				if (err) {
+																					console.log(err);
+																					var message = err;
+																					if (err.message) {
+																						message = err.message;
 																					}
-																					if (
-																						receiverEmail &&
-																						receiverEmail != null
-																					) {
-																						sendMail(
-																							content,
-																							"Transaction Code",
-																							receiverEmail
-																						);
-																					}
-
-																					CashierSend.findByIdAndUpdate(
-																						d._id,
-																						{
-																							status: 1,
-																						},
-																						(err) => {
-																							if (err) {
-																								console.log(err);
-																								var message = err;
-																								if (err.message) {
-																									message = err.message;
-																								}
-																								res.status(200).json({
-																									status: 0,
-																									message: message,
-																								});
-																							} else {
-																								res.status(200).json({
-																									status: 1,
-																									message:
-																										sending_amount +
-																										" XOF is transferred to branch",
-																									balance:
-																										bal - (oamount + fee),
-																								});
-																							}
-																						}
-																					);
-																				} else {
 																					res.status(200).json({
 																						status: 0,
-																						message: result.toString(),
+																						message: message,
+																					});
+																				} else {
+																					res.status(200).json({
+																						status: 1,
+																						message:
+																							sending_amount +
+																							" XOF is transferred to branch",
+																						balance:
+																							result.balance -
+																							(result.amount + result.fee),
 																					});
 																				}
-																			})
-																			.catch((err) => {
-																				console.log(err);
-																				res.status(200).json({
-																					status: 0,
-																					message: err.message,
-																				});
-																			});
+																			}
+																		);
+																	} else {
+																		res.status(200).json(result);
 																	}
+																})
+																.catch((err) => {
+																	console.log(err);
+																	res.status(200).json({
+																		status: 0,
+																		message: err.message,
+																	});
 																});
-															}
-														});
-													}
-													//infra
-												});
-											}
+														}
+													});
+												}
+												//infra
+											});
 										}
-									);
-								}
+									}
+								);
 							}
-						); //branch
-					}
+						}
+					); //branch
 				} catch (err) {
 					console.log(err);
 					res.status(200).json({ status: 0, message: err.message });
