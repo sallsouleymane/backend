@@ -1172,6 +1172,9 @@ router.post("/merchantStaff/payInvoice", jwtTokenAuth, (req, res) => {
 													{ _id: { $in: [i.creator_id, cashier._id] } },
 													{
 														$set: { last_paid_at: last_paid_at },
+														$inc: {
+															cash_in_hand: total_amount,
+														},
 													},
 													{ multi: true }
 												);
