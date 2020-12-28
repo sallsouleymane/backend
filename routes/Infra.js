@@ -448,7 +448,7 @@ router.post("/getBanks", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/setupUpdate", jwtTokenAuth, function (req, res) {
+router.post("/setupUpdate", function (req, res) {
 	let data = new Infra();
 	const { username, password, email, mobile, ccode } = req.body;
 
@@ -510,6 +510,7 @@ router.get("/checkInfra", function (req, res) {
 			res.status(200).json(result);
 		} else {
 			res.status(200).json({
+				status: 1,
 				infras: c,
 			});
 		}
@@ -845,7 +846,7 @@ router.post("/getInfraHistory", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.get("/infra/getWalletBalance", jwtTokenAuth, function (req, res) {
+router.get("/infra/getMyWalletBalance", jwtTokenAuth, function (req, res) {
 	const { from, bank } = req.query;
 	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
@@ -881,7 +882,7 @@ router.get("/infra/getWalletBalance", jwtTokenAuth, function (req, res) {
 							res.status(200).json(result);
 						} else {
 							const wallet_type = "infra_" + from;
-							const wallet_id = b.wallet_ids[wallet_type];
+							const wallet_id = ba.wallet_ids[wallet_type];
 
 							getBalance(wallet_id)
 								.then(function (result) {

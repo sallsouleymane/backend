@@ -11,16 +11,16 @@ const JWTTokenAuth = require("./JWTTokenAuth");
 const { errorMessage, catchError } = require("./utils/errorHandler");
 
 //transactions
-const interBankSendMoneyToNonWallet = require("./transactions/interBank/sendMoneyToNonWallet");
-const interBankSendMoneyToNWByUser = require("./transactions/interBank/sendMoneyToNWByUser");
-const interBankSendMoneyToNWByPartner = require("./transactions/interBank/sendMoneyToNWByPartner");
-const interBankClaimMoney = require("./transactions/interBank/claimMoney");
-const interBankClaimByPartner = require("./transactions/interBank/claimMoneyByPartner");
-const interBankSendMoneyToWallet = require("./transactions/interBank/sendMoneyToWallet");
-const interBankSendMoneyToWByUser = require("./transactions/interBank/sendMoneyToWalletByUser");
-const interBankSendMoneyToWByPartner = require("./transactions/interBank/sendMoneyToWByPartner");
-const interBankTransferToOperational = require("./transactions/interBank/transferToOperational");
-const interBankTransferToOpByPartner = require("./transactions/interBank/transferToOpByPartner");
+const interCashierToCashier = require("./transactions/interBank/cashierToCashier");
+const interWalletToCashier = require("./transactions/interBank/walletToCashier");
+const interPartnerCashierToCashier = require("./transactions/interBank/partnerCashierToCashier");
+const interCashierClaimMoney = require("./transactions/interBank/cashierClaimMoney");
+const interPartnerCashierClaimMoney = require("./transactions/interBank/partnerCashierClaimMoney");
+const interCashierToWallet = require("./transactions/interBank/cashierToWallet");
+const interWalletToWallet = require("./transactions/interBank/walletToWallet");
+const interPartnerCashierToWallet = require("./transactions/interBank/partnerCashierToWallet");
+const interCashierToOperational = require("./transactions/interBank/cashierToOperational");
+const interPartnerCashierToOperational = require("./transactions/interBank/partnerCashierToOperational");
 
 //models
 const Bank = require("../models/Bank");
@@ -45,7 +45,7 @@ router.post(
 		const { wallet_id, amount, is_inclusive } = req.body;
 		const jwtusername = req.sign_creds.username;
 		var code = wallet_id.substr(0, 2);
-		if (code != "BR" && code != "PB") {
+		if (code != "PB") {
 			res.status(200).json({
 				status: 0,
 				message: "You can only send to branch and partner branch",
@@ -84,6 +84,7 @@ router.post(
 											const Collection = getTypeClass(code);
 											Collection.findOne(
 												{
+													_id: { $ne: branch._id },
 													"wallet_ids.operational": wallet_id,
 												},
 												(err, toBranch) => {
@@ -143,7 +144,7 @@ router.post(
 																							amount: amount,
 																							isInclusive: is_inclusive,
 																						};
-																						interBankTransferToOpByPartner(
+																						interPartnerCashierToOperational(
 																							transfer,
 																							infra,
 																							bank,
@@ -326,7 +327,7 @@ router.post(
 	function (req, res) {
 		const { wallet_id, amount, is_inclusive } = req.body;
 		var code = wallet_id.substr(0, 2);
-		if (code != "BR" && code != "PB") {
+		if (code != "PB") {
 			res.status(200).json({
 				status: 0,
 				message: "You can only send to branch and partner branch",
@@ -366,6 +367,7 @@ router.post(
 											const Collection = getTypeClass(code);
 											Collection.findOne(
 												{
+													_id: { $ne: branch._id },
 													"wallet_ids.operational": wallet_id,
 												},
 												(err, toBranch) => {
@@ -425,7 +427,7 @@ router.post(
 																							amount: amount,
 																							isInclusive: is_inclusive,
 																						};
-																						interBankTransferToOperational(
+																						interCashierToOperational(
 																							transfer,
 																							infra,
 																							bank,
@@ -737,7 +739,7 @@ router.post(
 				isInclusive: isInclusive,
 				note: note,
 			};
-			const result1 = await interBankSendMoneyToWByUser(
+			const result1 = await interWalletToWallet(
 				transfer,
 				infra,
 				bank,
@@ -1021,7 +1023,7 @@ router.post(
 																															partnerCode:
 																																partner.code,
 																														};
-																														interBankSendMoneyToWByPartner(
+																														interPartnerCashierToWallet(
 																															transfer,
 																															infra,
 																															bank,
@@ -1466,7 +1468,7 @@ router.post(
 																												isInclusive: isInclusive,
 																												cashierId: cashier._id,
 																											};
-																											interBankSendMoneyToWallet(
+																											interCashierToWallet(
 																												transfer,
 																												infra,
 																												bank,
@@ -1810,7 +1812,7 @@ router.post(
 							isInclusive: isInclusive,
 							receiverFamilyName: receiverFamilyName,
 						};
-						var result = await interBankSendMoneyToNWByUser(
+						var result = await interWalletToCashier(
 							transfer,
 							infra,
 							bank,
@@ -2102,7 +2104,7 @@ router.post(
 																																	partnerCode:
 																																		partner.code,
 																																};
-																																interBankClaimByPartner(
+																																interPartnerCashierClaimMoney(
 																																	transfer,
 																																	sendingBank,
 																																	bank,
@@ -2619,7 +2621,7 @@ router.post(
 																										partnerCode: partner.code,
 																										cashierId: cashier._id,
 																									};
-																									interBankSendMoneyToNWByPartner(
+																									interPartnerCashierToCashier(
 																										transfer,
 																										infra,
 																										bank,
@@ -3072,7 +3074,7 @@ router.post("/cashier/interBank/claimMoney", JWTTokenAuth, function (req, res) {
 																												isInclusive:
 																													cs.is_inclusive,
 																											};
-																											interBankClaimMoney(
+																											interCashierClaimMoney(
 																												transfer,
 																												sendingBank,
 																												bank,
@@ -3534,7 +3536,7 @@ router.post(
 																						isInclusive: isInclusive,
 																						cashierId: cashier._id,
 																					};
-																					interBankSendMoneyToNonWallet(
+																					interCashierToCashier(
 																						transfer,
 																						infra,
 																						bank,

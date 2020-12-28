@@ -1,9 +1,9 @@
 //services
-const blockchain = require("../../services/Blockchain.js");
+const blockchain = require("../../../services/Blockchain.js");
 const {
 	getTransactionCode,
 	calculateShare,
-} = require("../utils/calculateShare");
+} = require("../../utils/calculateShare");
 
 module.exports = async function (
 	transfer,

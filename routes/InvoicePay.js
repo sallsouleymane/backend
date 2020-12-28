@@ -10,12 +10,12 @@ const sendMail = require("./utils/sendMail");
 const { errorMessage, catchError } = require("./utils/errorHandler");
 const { calculateShare } = require("./utils/calculateShare");
 
-const cashierInvoicePay = require("./transactions/cashierInvoicePay");
-const userInvoicePay = require("./transactions/userInvoicePay");
-const partnerCashierInvoicePay = require("./transactions/partnerCashierInvoicePay");
-const merchantCashierInvoicePay = require("./transactions/merchantCashierInvoicePay");
+const cashierInvoicePay = require("./transactions/intraBank/cashierInvoicePay");
+const walletInvoicePay = require("./transactions/intraBank/walletInvoicePay");
+const partnerCashierInvoicePay = require("./transactions/intraBank/partnerCashierInvoicePay");
+const merchantCashierInvoicePay = require("./transactions/intraBank/merchantCashierInvoicePay");
 const iBCashierInvoicePay = require("./transactions/interBank/cashierInvoicePay");
-const iBuserInvoicePay = require("./transactions/interBank/userInvoicePay");
+const iBwalletInvoicePay = require("./transactions/interBank/walletInvoicePay");
 const iBpartnerCashierInvoicePay = require("./transactions/interBank/partnerCashierInvoicePay");
 
 const Bank = require("../models/Bank");
@@ -150,7 +150,7 @@ router.post("/user/interBank/payInvoice", jwtTokenAuth, (req, res) => {
 												comm,
 												comm,
 											};
-											var result = await iBuserInvoicePay(
+											var result = await iBwalletInvoicePay(
 												total_amount,
 												infra,
 												bank,
@@ -2338,7 +2338,7 @@ router.post("/user/payInvoice", jwtTokenAuth, (req, res) => {
 													},
 													{ amount_collected: 0 }
 												);
-												var result = await userInvoicePay(
+												var result = await walletInvoicePay(
 													total_amount,
 													infra,
 													bank,

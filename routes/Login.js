@@ -433,21 +433,38 @@ router.post("/cashierLogin", function (req, res) {
 					message: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
-				let sign_creds = { username: username, type: "cashier" };
-				const token = jwtsign(sign_creds);
+				Cashier.findOneAndUpdate(
+					{
+						bank_user_id: bank._id,
+					},
+					{ $set: { username: bank.username } },
+					function (err, cashier) {
+						var result = errorMessage(
+							err,
+							cashier,
+							"This user is not assigned as a cashier."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							let sign_creds = { username: username, type: "cashier" };
+							const token = jwtsign(sign_creds);
 
-				res.status(200).json({
-					token: token,
-					name: cashier.name,
-					username: bank.username,
-					status: cashier.status,
-					email: bank.email,
-					mobile: bank.mobile,
-					cashier_id: cashier._id,
-					bank_id: cashier.bank_id,
-					branch_id: cashier.branch_id,
-					id: bank._id,
-				});
+							res.status(200).json({
+								token: token,
+								name: cashier.name,
+								username: bank.username,
+								status: cashier.status,
+								email: bank.email,
+								mobile: bank.mobile,
+								cashier_id: cashier._id,
+								bank_id: cashier.bank_id,
+								branch_id: cashier.branch_id,
+								id: bank._id,
+							});
+						}
+					}
+				);
 			}
 		}
 	);
