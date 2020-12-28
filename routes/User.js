@@ -1055,6 +1055,10 @@ router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
 																message: message,
 															});
 														} else {
+															const transfer = {
+																amount: sending_amount,
+																is_inclusive: isInclusive,
+															};
 															walletToCashier(
 																transfer,
 																infra,
