@@ -400,7 +400,7 @@ router.post("/merchantStaff/cashierCancelTransfer", jwtTokenAuth, function (req,
 							res.status(200).json(result);
 						} else {
 							CashierTransfer.findByIdAndUpdate(
-								item._id,
+								{_id: transfer_id},
 								{
 									status: -1,
 								},
