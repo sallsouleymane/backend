@@ -424,19 +424,10 @@ router.post("/merchantStaff/cashierCancelTransfer", jwtTokenAuth, function (req,
 												);
 												if (result.status == 0) {
 													res.status(200).json(result);
-												} else {
-													let cashInHand =
-														Number(u.cash_in_hand) + Number(item.amount);
-													CashierTransfer.findByIdAndUpdate(
-														item._id,
-														{
-															status: -1,
-														},
-														(e, data) => {	
-															res.status(200).json({
-																status: 1,
-														});				
-													);
+												} else {	
+													res.status(200).json({
+													status: 1,
+												});				
 												}
 											}
 										);
