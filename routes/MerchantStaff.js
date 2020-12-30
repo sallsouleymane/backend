@@ -399,7 +399,7 @@ router.post("/merchantStaff/cashierCancelTransfer", jwtTokenAuth, function (req,
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
-							CashierTransfer.findOneAndDelete()(
+							CashierTransfer.findOneAndDelete(
 								{
 									_id: transfer_id,
 								},
