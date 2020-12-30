@@ -414,7 +414,7 @@ router.post("/merchantStaff/cashierCancelTransfer", jwtTokenAuth, function (req,
 									} else {
 										res.status(200).json({
 											status: 1,
-											position: position,
+											message: "Success",
 										});
 									}
 								}
