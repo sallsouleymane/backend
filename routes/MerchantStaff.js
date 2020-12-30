@@ -399,9 +399,10 @@ router.post("/merchantStaff/cashierCancelTransfer", jwtTokenAuth, function (req,
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
-							CashierTransfer.findOneAndDelete(
+							CashierTransfer.findByIdAndUpdate(
+								item._id,
 								{
-									_id: transfer_id,
+									status: -1,
 								},
 								function (err, item) {
 									let result = errorMessage(
