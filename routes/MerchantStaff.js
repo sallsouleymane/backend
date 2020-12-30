@@ -399,7 +399,7 @@ router.post("/merchantStaff/cashierCancelTransfer", jwtTokenAuth, function (req,
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
-							CashierTransfer.findOne(
+							CashierTransfer.findOneAndDelete()(
 								{
 									_id: transfer_id,
 								},
@@ -412,25 +412,10 @@ router.post("/merchantStaff/cashierCancelTransfer", jwtTokenAuth, function (req,
 									if (result.status == 0) {
 										res.status(200).json(result);
 									} else {
-										MerchantPosition.findOne(
-											{
-												_id: item.sender_id,
-											},
-											function (err, u) {
-												let result = errorMessage(
-													err,
-													u,
-													"Token changed or user not valid. Try to login again or contact system administrator."
-												);
-												if (result.status == 0) {
-													res.status(200).json(result);
-												} else {	
-													res.status(200).json({
-													status: 1,
-												});				
-												}
-											}
-										);
+										res.status(200).json({
+											status: 1,
+											position: position,
+										});
 									}
 								}
 							);
