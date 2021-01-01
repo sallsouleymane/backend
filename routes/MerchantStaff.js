@@ -279,7 +279,7 @@ router.post(
 									} else {
 										MerchantPosition.findByIdAndUpdate(
 											f._id,
-											{ cash_in_hand: cashInHand, cash_transferred: amount },
+											{ cash_transferred: amount },
 											function (e, d) {
 												if (e)
 													res.status(200).json({
@@ -358,10 +358,27 @@ router.post(
 												if (result.status == 0) {
 													res.status(200).json(result);
 												} else {
-													res.status(200).json({
-														status: 1,
-														message: "Success",
-													});
+													MerchantPosition.findByIdAndUpdate(
+														item.sender_id,
+														{
+															$inc: { cash_in_hand: -Number(item.amount) },
+														},
+														(err, data) => {
+															let result = errorMessage(
+																err,
+																data,
+																"Cashier transfer record not found"
+															);
+															if (result.status == 0) {
+																res.status(200).json(result);
+															} else {
+																res.status(200).json({
+																	status: 1,
+																	message: "Success",
+																});
+															}
+														}
+													);
 												}
 											}
 										);
