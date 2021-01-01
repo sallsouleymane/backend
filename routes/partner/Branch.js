@@ -11,7 +11,6 @@ const blockchain = require("../../services/Blockchain");
 //models
 const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
-const FailedTX = require("../../models/FailedTXLedger");
 
 router.post("/partnerBranch/SetupUpdate", jwtTokenAuth, function (req, res) {
 	const { password } = req.body;
@@ -144,24 +143,9 @@ router.post("/partnerBranch/getHistory", jwtTokenAuth, function (req, res) {
 				blockchain
 					.getStatement(wallet)
 					.then(function (history) {
-						FailedTX.find({ "transaction.from": wallet }, (err, failed) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else {
-								res.status(200).json({
-									status: 1,
-									history: history,
-									failed: failed,
-								});
-							}
+						res.status(200).json({
+							status: 1,
+							history: history,
 						});
 					})
 					.catch((err) => {

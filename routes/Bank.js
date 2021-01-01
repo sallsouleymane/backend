@@ -27,9 +27,7 @@ const Cashier = require("../models/Cashier");
 const Fee = require("../models/Fee");
 const CashierLedger = require("../models/CashierLedger");
 const Merchant = require("../models/merchant/Merchant");
-const FailedTX = require("../models/FailedTXLedger");
 const Partner = require("../models/partner/Partner");
-const Document = require("../models/Document");
 const Infra = require("../models/Infra");
 
 router.post("/bank/getBranchWalletBalance", jwtTokenAuth, function (req, res) {
@@ -1248,24 +1246,9 @@ router.post("/getBankHistory", jwtTokenAuth, function (req, res) {
 				const wallet = b.wallet_ids[from];
 				getStatement(wallet)
 					.then(function (history) {
-						FailedTX.find({ "transaction.from": wallet }, (err, failed) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else {
-								res.status(200).json({
-									status: 1,
-									history: history,
-									failed: failed,
-								});
-							}
+						res.status(200).json({
+							status: 1,
+							history: history,
 						});
 					})
 					.catch((err) => {

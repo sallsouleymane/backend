@@ -21,7 +21,6 @@ const MerchantPosition = require("../models/merchant/Position");
 const Zone = require("../models/merchant/Zone");
 const Subzone = require("../models/merchant/Subzone");
 const InvoiceGroup = require("../models/merchant/InvoiceGroup");
-const FailedTX = require("../models/FailedTXLedger");
 const Offering = require("../models/merchant/Offering");
 const Tax = require("../models/merchant/Tax");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
@@ -1063,7 +1062,7 @@ router.get("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 					{
 						_id: merchant.bank_id,
 					},
-					function (err, bank) {
+					function (err) {
 						if (err) {
 							console.log(err);
 							var message = err;
@@ -1079,28 +1078,10 @@ router.get("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 							blockchain
 								.getStatement(wallet)
 								.then(function (history) {
-									FailedTX.find(
-										{ "transaction.from": wallet },
-										(err, failed) => {
-											if (err) {
-												console.log(err);
-												var message = err;
-												if (err.message) {
-													message = err.message;
-												}
-												res.status(200).json({
-													status: 0,
-													message: message,
-												});
-											} else {
-												res.status(200).json({
-													status: 1,
-													history: history,
-													failed: failed,
-												});
-											}
-										}
-									);
+									res.status(200).json({
+										status: 1,
+										history: history,
+									});
 								})
 								.catch((err) => {
 									res.status(200).json(catchError(err));

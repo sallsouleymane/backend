@@ -37,7 +37,7 @@ const BranchSend = require("../models/BranchSend");
 const BranchClaim = require("../models/BranchClaim");
 const CurrencyModel = require("../models/Currency");
 const CountryModel = require("../models/Country");
-const FailedTX = require("../models/FailedTXLedger");
+const TxState = require("../models/TxState");
 const Partner = require("../models/partner/Partner");
 const PartnerBranch = require("../models/partner/Branch");
 const Invoice = require("../models/merchant/Invoice");
@@ -461,7 +461,7 @@ router.post("/:user/getOne", jwtTokenAuth, (req, res) => {
 router.post("/:user/reinitiateTransfer", jwtTokenAuth, (req, res) => {
 	const user = req.params.user;
 	const Type = getTypeClass(user);
-	const { failed_tx_id } = req.body;
+	const { master_code, child_code } = req.body;
 	const username = req.sign_creds.username;
 	Type.findOne(
 		{
@@ -473,17 +473,10 @@ router.post("/:user/reinitiateTransfer", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				FailedTX.findOne({ _id: failed_tx_id }, async (err, trans) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
+				TxState.findOne({ _id: master_code }, async (err, trans) => {
+					let errMsg = errorMessage(err, trans, "transaction not found");
+					if (errMsg.status == 0) {
+						res.status(200).json(result);
 					} else {
 						try {
 							let result = await initiateTransfer(
