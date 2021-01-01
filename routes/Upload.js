@@ -58,7 +58,7 @@ router.post("/fileUpload", jwtTokenAuth, function (req, res) {
 				const dir = path.resolve(config.uploadPath + user._id);
 				form.parse(req, function (err, fields, files) {
 					if (err) {
-						return catchError(err);
+						res.status(200).json(catchError(err));
 					} else {
 						let fn = files.file.name.split(".").pop();
 						fn = fn.toLowerCase();

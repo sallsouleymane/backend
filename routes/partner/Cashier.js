@@ -2321,7 +2321,7 @@ router.post("/partnerCashier/getHistory", jwtTokenAuth, function (req, res) {
 					blockchain
 						.getStatement(wallet)
 						.then(function (history) {
-							FailedTX.find({ wallet_id: wallet }, (err, failed) => {
+							FailedTX.find({ "transaction.from": wallet }, (err, failed) => {
 								if (err) {
 									console.log(err);
 									var message = err;
@@ -2342,7 +2342,7 @@ router.post("/partnerCashier/getHistory", jwtTokenAuth, function (req, res) {
 							});
 						})
 						.catch((err) => {
-							return catchError(err);
+							res.status(200).json(catchError(err));
 						});
 				});
 			}

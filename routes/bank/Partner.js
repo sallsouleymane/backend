@@ -20,13 +20,6 @@ const { errorMessage, catchError } = require("../utils/errorHandler");
 
 const Bank = require("../../models/Bank");
 const OTP = require("../../models/OTP");
-const Branch = require("../../models/Branch");
-const BankUser = require("../../models/BankUser");
-const Cashier = require("../../models/Cashier");
-const Fee = require("../../models/Fee");
-const CashierLedger = require("../../models/CashierLedger");
-const Merchant = require("../../models/merchant/Merchant");
-const FailedTX = require("../../models/FailedTXLedger");
 const Partner = require("../../models/partner/Partner");
 const Document = require("../../models/Document");
 

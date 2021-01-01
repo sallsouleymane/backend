@@ -1,9 +1,6 @@
 // User.js
 const mongoose = require("mongoose");
 const FailedTXSchema = new mongoose.Schema({
-	master_code: { type: String, require: false },
-	user_id: { type: String, required: false },
-	wallet_id: { type: String, required: true },
 	transaction: {
 		from: { type: String, required: true },
 		to: { type: String, required: true },
@@ -13,6 +10,7 @@ const FailedTXSchema = new mongoose.Schema({
 		email2: { type: String, required: true },
 		mobile1: { type: String, required: true },
 		mobile2: { type: String, required: true },
+		user_id: { type: String, required: false },
 		master_code: { type: String, required: true },
 		child_code: { type: String, required: true },
 	},

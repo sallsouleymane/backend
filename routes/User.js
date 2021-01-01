@@ -302,7 +302,7 @@ router.get("/user/getBalance", jwtTokenAuth, (req, res) => {
 						});
 					})
 					.catch((err) => {
-						return catchError(err);
+						res.status(200).json(catchError(err));
 					});
 			}
 		}
@@ -715,7 +715,7 @@ router.get("/user/getTransactionHistory", jwtTokenAuth, function (req, res) {
 						history: result,
 					});
 				} catch (err) {
-					return catchError(err);
+					res.status(200).json(catchError(err));
 				}
 			}
 		}

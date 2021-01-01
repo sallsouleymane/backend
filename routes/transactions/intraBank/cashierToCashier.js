@@ -1,15 +1,13 @@
 //services
+// const state = require("./transactions/state");
 const blockchain = require("../../../services/Blockchain.js");
-const {
-	getTransactionCode,
-	calculateShare,
-} = require("../../utils/calculateShare");
+const { calculateShare } = require("../../utils/calculateShare");
+const txstate = require("../states");
 
 module.exports = async function (transfer, infra, bank, branch, rule1) {
 	try {
 		const branchOpWallet = branch.wallet_ids.operational;
 		const bankEsWallet = bank.wallet_ids.escrow;
-		const bankOpWallet = bank.wallet_ids.operational;
 
 		// calculate amount to transfer
 		var amount = Number(transfer.amount);
@@ -28,13 +26,14 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 			};
 		}
 
-		let master_code = getTransactionCode(branch.mobile, bank.mobile);
+		master_code = transfer.master_code;
+		let childId = 1;
 
 		let trans1 = {
 			from: branchOpWallet,
 			to: bankEsWallet,
 			amount: amount,
-			note: "Cashier Send Money to Non Wallet of Inter Bank",
+			note: "Cashier Send Money to Non Wallet",
 			email1: branch.email,
 			email2: bank.email,
 			mobile1: branch.mobile,
@@ -43,7 +42,8 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 			to_name: bank.name,
 			user_id: "",
 			master_code: master_code,
-			child_code: master_code,
+			child_code: master_code + "-s" + childId++,
+			master: true,
 		};
 
 		var result = await blockchain.initiateTransfer(trans1);
@@ -60,24 +60,6 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 		transfer.fee = fee;
 		var sendingBranchShare = 0;
 		if (fee > 0) {
-			let trans2 = {
-				from: branchOpWallet,
-				to: bankOpWallet,
-				amount: fee,
-				note:
-					"Cashier Send Fee for Inter Bank Non Wallet to Non Wallet Transaction",
-				email1: branch.email,
-				email2: bank.email,
-				mobile1: branch.mobile,
-				mobile2: bank.mobile,
-				from_name: branch.name,
-				to_name: bank.name,
-				user_id: "",
-				master_code: master_code,
-				child_code: master_code + "1",
-			};
-
-			await blockchain.initiateTransfer(trans2);
 			sendingBranchShare = calculateShare(
 				"sendBranch",
 				transfer.amount,
@@ -88,7 +70,8 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 			transfer.sendingBranchShare = sendingBranchShare;
 		}
 
-		transfer.master_code = master_code;
+		// transfer.master_code = master_code;
+		transfer.childId = childId;
 		distributeRevenue(transfer, infra, bank, branch, rule1);
 		return {
 			status: 1,
@@ -97,7 +80,6 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 			amount: amount,
 			fee: fee,
 			sendFee: sendingBranchShare,
-			master_code: master_code,
 		};
 	} catch (err) {
 		throw err;
@@ -109,7 +91,33 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 
+	var childId = transfer.childId;
 	var infraShare = calculateShare("infra", transfer.amount, rule1);
+	let txStatus = 1;
+
+	let fee = transfer.fee;
+	if (fee > 0) {
+		let trans2 = {
+			from: branchOpWallet,
+			to: bankOpWallet,
+			amount: fee,
+			note: "Cashier Send Fee for Non Wallet to Non Wallet Transaction",
+			email1: branch.email,
+			email2: bank.email,
+			mobile1: branch.mobile,
+			mobile2: bank.mobile,
+			from_name: branch.name,
+			to_name: bank.name,
+			user_id: "",
+			master_code: transfer.master_code,
+			child_code: transfer.master_code + "-s" + childId++,
+		};
+
+		let result = await blockchain.initiateTransfer(trans2);
+		if (result.status == 0) {
+			txStatus = 0;
+		}
+	}
 
 	if (infraShare.percentage_amount > 0) {
 		let trans21 = {
@@ -126,9 +134,12 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			to_name: infra.name,
 			user_id: "",
 			master_code: transfer.master_code,
-			child_code: transfer.master_code + "2.1",
+			child_code: transfer.master_code + "-s" + childId++,
 		};
-		await blockchain.initiateTransfer(trans21);
+		let result = await blockchain.initiateTransfer(trans21);
+		if (result.status == 0) {
+			txStatus = 0;
+		}
 	}
 
 	if (infraShare.fixed_amount > 0) {
@@ -146,9 +157,12 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			to_name: infra.name,
 			user_id: "",
 			master_code: transfer.master_code,
-			child_code: transfer.master_code + "2.2",
+			child_code: transfer.master_code + "-s" + childId++,
 		};
-		await blockchain.initiateTransfer(trans22);
+		let result = await blockchain.initiateTransfer(trans22);
+		if (result.status == 0) {
+			txStatus = 0;
+		}
 	}
 
 	if (transfer.fee > 0) {
@@ -166,9 +180,16 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			to_name: branch.name,
 			user_id: "",
 			master_code: transfer.master_code,
-			child_code: transfer.master_code + "3",
+			child_code: transfer.master_code + "-s" + childId++,
 		};
 
-		await blockchain.initiateTransfer(trans4);
+		let result = await blockchain.initiateTransfer(trans4);
+		if (result.status == 0) {
+			txStatus = 0;
+		}
+	}
+
+	if (txStatus == 0) {
+		txstate.failed(transfer.master_code);
 	}
 }

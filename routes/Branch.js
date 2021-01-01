@@ -2,11 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 //services
-const {
-	getStatement,
-	transferThis,
-	initiateTransfer,
-} = require("../services/Blockchain.js");
+const { getStatement, initiateTransfer } = require("../services/Blockchain.js");
 const jwtTokenAuth = require("./JWTTokenAuth");
 const { errorMessage, catchError } = require("./utils/errorHandler");
 
@@ -624,7 +620,7 @@ router.post("/branchClaimMoney", jwtTokenAuth, function (req, res) {
 																		trans1.user_id = "";
 																		trans1.master_code = master_code;
 																		trans1.child_code = child_code;
-																		transferThis(trans1)
+																		initiateTransfer(trans1)
 																			.then(function (result) {
 																				if (result.length <= 0) {
 																					BranchClaim.findByIdAndUpdate(
@@ -872,7 +868,7 @@ router.post("/getBranchHistory", jwtTokenAuth, function (req, res) {
 						});
 					})
 					.catch((err) => {
-						return catchError(err);
+						res.status(200).json(catchError(err));
 					});
 			}
 		}

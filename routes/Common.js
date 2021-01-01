@@ -86,7 +86,7 @@ router.post("/:user/getPaidInvoiceList", jwtTokenAuth, function (req, res) {
 					{ paid_by: paid_by, payer_id: data._id },
 					(err, invoices) => {
 						if (err) {
-							return catchError(err);
+							res.status(200).json(catchError(err));
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -461,7 +461,7 @@ router.post("/:user/getOne", jwtTokenAuth, (req, res) => {
 router.post("/:user/reinitiateTransfer", jwtTokenAuth, (req, res) => {
 	const user = req.params.user;
 	const Type = getTypeClass(user);
-	const { trans_id } = req.body;
+	const { failed_tx_id } = req.body;
 	const username = req.sign_creds.username;
 	Type.findOne(
 		{
@@ -473,7 +473,7 @@ router.post("/:user/reinitiateTransfer", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				FailedTX.findOne({ _id: trans_id }, async (err, trans) => {
+				FailedTX.findOne({ _id: failed_tx_id }, async (err, trans) => {
 					if (err) {
 						console.log(err);
 						var message = err;
@@ -486,7 +486,10 @@ router.post("/:user/reinitiateTransfer", jwtTokenAuth, (req, res) => {
 						});
 					} else {
 						try {
-							let result = await initiateTransfer(trans.transaction, trans_id);
+							let result = await initiateTransfer(
+								trans.transaction,
+								failed_tx_id
+							);
 							if (result.status == 0) {
 								res.status(200).json({
 									status: 0,
@@ -834,7 +837,7 @@ router.get("/showBalance", (req, res) => {
 			});
 		})
 		.catch((err) => {
-			return catchError(err);
+			res.status(200).json(catchError(err));
 		});
 });
 
