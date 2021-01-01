@@ -1263,7 +1263,7 @@ router.post("/partnerCashier/claimMoney", jwtTokenAuth, function (req, res) {
 																										)
 																											.then(function (result) {
 																												if (
-																													result.length == 1
+																													result.status == 1
 																												) {
 																													const amount =
 																														result.amount;
