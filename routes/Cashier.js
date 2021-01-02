@@ -2396,25 +2396,25 @@ router.post("/cashierClaimMoney", jwtTokenAuth, function (req, res) {
 																															});
 																													} else {
 																														Cashier.findByIdAndUpdate(
-																															f._id,
+																															cashier._id,
 																															{
 																																cash_paid:
 																																	Number(
-																																		f.cash_paid
+																																		cashier.cash_paid
 																																	) +
 																																	Number(
 																																		result.amount
 																																	),
 																																cash_in_hand:
 																																	Number(
-																																		f.cash_in_hand
+																																		cashier.cash_in_hand
 																																	) -
 																																	Number(
 																																		result.amount
 																																	),
 																																fee_generated:
 																																	Number(
-																																		f.fee_generated
+																																		cashier.fee_generated
 																																	) +
 																																	Number(
 																																		result.claimFee
@@ -2422,7 +2422,7 @@ router.post("/cashierClaimMoney", jwtTokenAuth, function (req, res) {
 
 																																total_trans:
 																																	Number(
-																																		f.total_trans
+																																		cashier.total_trans
 																																	) + 1,
 																															},
 																															function (e, v) {}
@@ -2430,7 +2430,7 @@ router.post("/cashierClaimMoney", jwtTokenAuth, function (req, res) {
 																														CashierLedger.findOne(
 																															{
 																																cashier_id:
-																																	f._id,
+																																	cashier._id,
 																																trans_type:
 																																	"DR",
 																																created_at: {
@@ -2457,7 +2457,7 @@ router.post("/cashierClaimMoney", jwtTokenAuth, function (req, res) {
 																																	data.trans_type =
 																																		"DR";
 																																	data.cashier_id =
-																																		f._id;
+																																		cashier._id;
 																																	data.save(
 																																		function (
 																																			err,
