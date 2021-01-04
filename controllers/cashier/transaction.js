@@ -3,6 +3,7 @@ const makeid = require("../../routes/utils/idGenerator");
 const sendSMS = require("../../routes/utils/sendSMS");
 const sendMail = require("../../routes/utils/sendMail");
 const makeotp = require("../../routes/utils/makeotp");
+const getTypeClass = require("../../routes/utils/getTypeClass");
 const { errorMessage, catchError } = require("../../routes/utils/errorHandler");
 
 const Infra = require("../../models/Infra");
@@ -23,12 +24,11 @@ const MerchantSettings = require("../../models/merchant/MerchantSettings");
 
 // transactions
 const txstate = require("../transactions/states");
-const cashierToOperational = require("../transactions/intraBank/cashierToOperational");
+// const cashierToOperational = require("../transactions/intraBank/cashierToOperational");
 const cashierToCashier = require("../transactions/intraBank/cashierToCashier");
-const cashierToWallet = require("../transactions/intraBank/cashierToWallet");
+// const cashierToWallet = require("../transactions/intraBank/cashierToWallet");
 const cashierClaimMoney = require("../transactions/intraBank/cashierClaimMoney");
-const getTypeClass = require("../../routes/utils/getTypeClass");
-const partnerCashierClaimMoney = require("../../routes/transactions/intraBank/partnerCashierClaimMoney");
+// const partnerCashierClaimMoney = require("../../routes/transactions/intraBank/partnerCashierClaimMoney");
 
 function addCashierSendRecord(reqData, otherData, next) {
 	const {
