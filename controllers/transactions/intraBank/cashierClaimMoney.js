@@ -49,9 +49,9 @@ module.exports = async function (transfer, bank, branch, sendBranch, rule1) {
 			};
 		}
 
-		var claimerBranchShare = 0;
+		var claimFee = 0;
 		if (fee > 0) {
-			claimerBranchShare = calculateShare(
+			claimFee = calculateShare(
 				transfer.claimerType,
 				transfer.amount,
 				rule1,
@@ -60,12 +60,21 @@ module.exports = async function (transfer, bank, branch, sendBranch, rule1) {
 			);
 		}
 		transfer.fee = fee;
-		transfer.claimerBranchShare = claimerBranchShare;
+		transfer.claimFee = claimFee;
 		transfer.master_code = master_code;
 		transfer.childId = childId;
 		let res = await distributeRevenue(transfer, bank, branch, sendBranch);
 
-		return res;
+		if (res.status == 0) {
+			return res;
+		} else {
+			return {
+				status: 1,
+				message: "Transaction success!",
+				amount: amount,
+				claimFee: claimFee,
+			};
+		}
 	} catch (err) {
 		throw err;
 	}
@@ -239,7 +248,7 @@ async function transferToMasterWallets(
 				message: "Not all master wallet transfer is success",
 			};
 		} else {
-			return { status: 1, message: "Transaction success!!" };
+			return { status: 1 };
 		}
 	} catch (err) {
 		throw err;
