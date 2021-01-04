@@ -34,7 +34,7 @@ module.exports = async function (transfer, bank, branch, sendBranch, rule1) {
 			to_name: branch.name,
 			user_id: "",
 			master_code: master_code,
-			child_code: master_code + "-c" + childId++,
+			child_code: master_code + "-c1",
 			master: true,
 		};
 
@@ -92,7 +92,7 @@ async function distributeRevenue(transfer, bank, branch, sendBranch) {
 			let trans3 = {
 				from: bankOpWallet,
 				to: branchOpWallet,
-				amount: transfer.claimerBranchShare,
+				amount: transfer.claimFee,
 				note: "Claim Revenue",
 				email1: bank.email,
 				email2: branch.email,
@@ -102,7 +102,7 @@ async function distributeRevenue(transfer, bank, branch, sendBranch) {
 				to_name: branch.name,
 				user_id: "",
 				master_code: master_code,
-				child_code: master_code + "-c" + transfer.childId++,
+				child_code: master_code + "-c2",
 			};
 			let result = await blockchain.initiateTransfer(trans3);
 			if (result.status == 0) {
@@ -157,13 +157,13 @@ async function transferToMasterWallets(
 		const sendBranchOpWallet = sendBranch.wallet_ids.operational;
 		const sendBranchMasterWallet = sendBranch.wallet_ids.master;
 
-		let infraPart = getPart(txInfo, infraOpWallet, 0);
-		let branchPart = getPart(txInfo, branchOpWallet, 0);
-		let sendBranchPart = getPart(txInfo, sendBranchOpWallet, 0);
-		let othersPart = infraPart + branchPart + sendBranchPart;
-		let bankPart = getPart(txInfo, bankOpWallet, othersPart);
-
 		let master_code = transfer.master_code;
+
+		let infraPart = getPart(txInfo, master_code, ["s3", "s4"], []);
+		let sendBranchPart = getPart(txInfo, master_code, ["s5"], []);
+		let claimBranchPart = getPart(txInfo, master_code, ["c2"], []);
+		let bankPart = getPart(txInfo, master_code, ["s2"], ["s3", "s5", "c2"]);
+
 		var childId = 1;
 		let txStatus = 1;
 
@@ -180,7 +180,7 @@ async function transferToMasterWallets(
 			to_name: bank.name,
 			user_id: "",
 			master_code: master_code,
-			child_code: master_code + "-m" + childId++,
+			child_code: master_code + "-m1",
 		};
 		let result = await blockchain.initiateTransfer(trans);
 		if (result.status == 0) {
@@ -198,7 +198,7 @@ async function transferToMasterWallets(
 			to_name: infra.name,
 			user_id: "",
 			master_code: master_code,
-			child_code: master_code + "-m" + childId++,
+			child_code: master_code + "-m2",
 		};
 		result = await blockchain.initiateTransfer(trans);
 		if (result.status == 0) {
@@ -216,7 +216,7 @@ async function transferToMasterWallets(
 			to_name: sendBranch.name,
 			user_id: "",
 			master_code: master_code,
-			child_code: master_code + "-m" + childId++,
+			child_code: master_code + "-m3",
 		};
 		result = await blockchain.initiateTransfer(trans);
 		if (result.status == 0) {
@@ -226,7 +226,7 @@ async function transferToMasterWallets(
 		trans = {
 			from: branchOpWallet,
 			to: branchMasterWallet,
-			amount: branchPart,
+			amount: claimBranchPart,
 			note: "Claiming Branch share",
 			email1: branch.email,
 			mobile1: branch.mobile,
@@ -234,7 +234,7 @@ async function transferToMasterWallets(
 			to_name: branch.name,
 			user_id: "",
 			master_code: master_code,
-			child_code: master_code + "-m" + childId++,
+			child_code: master_code + "-m4",
 		};
 		result = await blockchain.initiateTransfer(trans);
 		if (result.status == 0) {
@@ -268,13 +268,26 @@ function allTxSuccess(txInfo) {
 	}
 }
 
-function getPart(txInfo, wallet, otherPart) {
+function getPart(txInfo, masterId, childIds, otherIds) {
 	let myPart = 0;
+	let othersPart = 0;
 	for (childtx of txInfo.childTx) {
-		if (childtx.transaction.to == wallet && !childtx.transaction.master) {
-			myPart += childtx.transaction.amount;
+		for (childId of childIds) {
+			if (childtx.transaction.child_code == masterId + "-" + childId) {
+				myPart += childtx.transaction.amount;
+			}
 		}
 	}
 
-	return myPart - otherPart;
+	if (otherIds.length > 0) {
+		for (childtx of txInfo.childTx) {
+			for (otherId of otherIds) {
+				if (childtx.transaction.child_code == masterId + "-" + otherId) {
+					othersPart += childtx.transaction.amount;
+				}
+			}
+		}
+	}
+
+	return myPart - othersPart;
 }

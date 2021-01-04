@@ -43,7 +43,7 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 			to_name: bank.name,
 			user_id: "",
 			master_code: master_code,
-			child_code: master_code + "-s" + childId++,
+			child_code: master_code + "-s1",
 			master: true,
 		};
 
@@ -112,7 +112,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			to_name: bank.name,
 			user_id: "",
 			master_code: transfer.master_code,
-			child_code: transfer.master_code + "-s" + childId++,
+			child_code: transfer.master_code + "-s2",
 		};
 
 		let result = await blockchain.initiateTransfer(trans2);
@@ -127,7 +127,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			to: infraOpWallet,
 			amount: infraShare.percentage_amount,
 			note:
-				"Bank Send Infra Percentage amount for Inter Bank Non Wallet to Non Wallet transaction",
+				"Bank Send Infra Percentage amount for Non Wallet to Non Wallet transaction",
 			email1: bank.email,
 			email2: infra.email,
 			mobile1: bank.mobile,
@@ -136,7 +136,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			to_name: infra.name,
 			user_id: "",
 			master_code: transfer.master_code,
-			child_code: transfer.master_code + "-s" + childId++,
+			child_code: transfer.master_code + "-s3",
 		};
 		let result = await blockchain.initiateTransfer(trans21);
 		if (result.status == 0) {
@@ -159,7 +159,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			to_name: infra.name,
 			user_id: "",
 			master_code: transfer.master_code,
-			child_code: transfer.master_code + "-s" + childId++,
+			child_code: transfer.master_code + "-s4",
 		};
 		let result = await blockchain.initiateTransfer(trans22);
 		if (result.status == 0) {
@@ -182,7 +182,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			to_name: branch.name,
 			user_id: "",
 			master_code: transfer.master_code,
-			child_code: transfer.master_code + "-s" + childId++,
+			child_code: transfer.master_code + "-s5",
 		};
 
 		let result = await blockchain.initiateTransfer(trans4);
