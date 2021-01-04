@@ -1,9 +1,9 @@
 //utils
-const makeid = require("../utils/idGenerator");
-const sendSMS = require("../utils/sendSMS");
-const sendMail = require("../utils/sendMail");
-const makeotp = require("../utils/makeotp");
-const { errorMessage, catchError } = require("../utils/errorHandler");
+const makeid = require("../../routes/utils/idGenerator");
+const sendSMS = require("../../routes/utils/sendSMS");
+const sendMail = require("../../routes/utils/sendMail");
+const makeotp = require("../../routes/utils/makeotp");
+const { errorMessage, catchError } = require("../../routes/utils/errorHandler");
 
 const Infra = require("../../models/Infra");
 const Fee = require("../../models/Fee");
