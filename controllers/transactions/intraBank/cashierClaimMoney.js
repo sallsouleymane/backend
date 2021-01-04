@@ -4,7 +4,7 @@ const Infra = require("../../../models/Infra");
 
 //services
 const blockchain = require("../../../services/Blockchain.js");
-const { calculateShare } = require("../../utils/calculateShare");
+const { calculateShare } = require("../../../routes/utils/calculateShare");
 const txstate = require("../states");
 
 module.exports = async function (transfer, bank, branch, sendBranch, rule1) {
