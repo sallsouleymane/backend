@@ -190,7 +190,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 		}
 	}
 
-	if (!alltxsuccess) {
+	if (!allTxSuccess) {
 		txstate.failed(transfer.master_code);
 	}
 }
