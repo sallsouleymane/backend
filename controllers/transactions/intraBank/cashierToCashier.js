@@ -28,7 +28,6 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 		}
 
 		master_code = transfer.master_code;
-		let childId = 1;
 
 		let trans1 = {
 			from: branchOpWallet,
@@ -44,7 +43,7 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 			user_id: "",
 			master_code: master_code,
 			child_code: master_code + "-s1",
-			master: true,
+			created_at: Date.now(),
 		};
 
 		var result = await blockchain.initiateTransfer(trans1);
@@ -71,13 +70,10 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 			transfer.sendFee = sendFee;
 		}
 
-		// transfer.master_code = master_code;
-		transfer.childId = childId;
 		distributeRevenue(transfer, infra, bank, branch, rule1);
 		return {
 			status: 1,
 			message: "Transaction success!",
-			blockchain_message: result.message,
 			amount: amount,
 			fee: fee,
 			sendFee: sendFee,
@@ -93,9 +89,8 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 
-	var childId = transfer.childId;
 	var infraShare = calculateShare("infra", transfer.amount, rule1);
-	let txStatus = 1;
+	let allTxSuccess = true;
 
 	let fee = transfer.fee;
 	if (fee > 0) {
@@ -113,11 +108,12 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			user_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "-s2",
+			created_at: Date.now(),
 		};
 
-		let result = await blockchain.initiateTransfer(trans2);
-		if (result.status == 0) {
-			txStatus = 0;
+		let res = await blockchain.initiateTransfer(trans2);
+		if (res.status == 0) {
+			allTxSuccess = false;
 		}
 	}
 
@@ -137,10 +133,11 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			user_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "-s3",
+			created_at: Date.now(),
 		};
-		let result = await blockchain.initiateTransfer(trans21);
-		if (result.status == 0) {
-			txStatus = 0;
+		let res = await blockchain.initiateTransfer(trans21);
+		if (res.status == 0) {
+			allTxSuccess = false;
 		}
 	}
 
@@ -160,10 +157,11 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			user_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "-s4",
+			created_at: Date.now(),
 		};
-		let result = await blockchain.initiateTransfer(trans22);
-		if (result.status == 0) {
-			txStatus = 0;
+		let res = await blockchain.initiateTransfer(trans22);
+		if (res.status == 0) {
+			allTxSuccess = false;
 		}
 	}
 
@@ -183,15 +181,16 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			user_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "-s5",
+			created_at: Date.now(),
 		};
 
-		let result = await blockchain.initiateTransfer(trans4);
-		if (result.status == 0) {
-			txStatus = 0;
+		let res = await blockchain.initiateTransfer(trans4);
+		if (res.status == 0) {
+			allTxSuccess = false;
 		}
 	}
 
-	if (txStatus == 0) {
+	if (!alltxsuccess) {
 		txstate.failed(transfer.master_code);
 	}
 }

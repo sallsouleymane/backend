@@ -36,7 +36,8 @@ const MerchantSettings = require("../../models/merchant/MerchantSettings");
 const User = require("../../models/User");
 
 //controllers
-const cashTransCntrl = require("../../controllers/cashier/transaction");
+const cashSendTransCntrl = require("../../controllers/cashier/sendTransaction");
+const cashClaimTransCntrl = require("../../controllers/cashier/claimTransaction");
 
 router.post(
 	"/partnerCashier/sendToOperational",
@@ -742,13 +743,13 @@ router.post(
 router.post(
 	"/partnerCashier/sendMoney",
 	jwtTokenAuth,
-	cashTransCntrl.partnerSendMoney
+	cashSendTransCntrl.partnerSendMoney
 );
 
 router.post(
 	"/partnerCashier/claimMoney",
 	jwtTokenAuth,
-	cashTransCntrl.partnerClaimMoney
+	cashClaimTransCntrl.partnerClaimMoney
 );
 
 router.post("/partnerCashier/listMerchants", jwtTokenAuth, function (req, res) {

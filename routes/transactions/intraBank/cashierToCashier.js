@@ -16,9 +16,10 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 			amount = amount - fee;
 		}
 
+		// Check balance
 		var balance = await blockchain.getBalance(branchOpWallet);
 
-		//Check balance first
+		// Check balance first
 		if (Number(balance) + Number(branch.credit_limit) < amount + fee) {
 			return {
 				status: 0,

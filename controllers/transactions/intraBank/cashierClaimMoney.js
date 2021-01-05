@@ -6,6 +6,7 @@ const Infra = require("../../../models/Infra");
 const blockchain = require("../../../services/Blockchain.js");
 const { calculateShare } = require("../../../routes/utils/calculateShare");
 const txstate = require("../states");
+const txutils = require("../utils");
 
 module.exports = async function (transfer, bank, branch, sendBranch, rule1) {
 	try {
@@ -35,7 +36,7 @@ module.exports = async function (transfer, bank, branch, sendBranch, rule1) {
 			user_id: "",
 			master_code: master_code,
 			child_code: master_code + "-c1",
-			master: true,
+			created_at: Date.now(),
 		};
 
 		let result = await blockchain.initiateTransfer(trans);
@@ -103,19 +104,13 @@ async function distributeRevenue(transfer, bank, branch, sendBranch) {
 				user_id: "",
 				master_code: master_code,
 				child_code: master_code + "-c2",
+				created_at: Date.now(),
 			};
-			let result = await blockchain.initiateTransfer(trans3);
-			if (result.status == 0) {
-				txstate.failed(transfer.master_code);
-				return {
-					status: 0,
-					message: "Fee transfer failed",
-				};
-			}
+			await blockchain.initiateTransfer(trans3);
 		}
 		txstate.nearCompletion(master_code);
 		let txInfo = await TxState.findById(master_code);
-		let alltxsuccess = allTxSuccess(txInfo);
+		let alltxsuccess = txutils.allTxSuccess(txInfo);
 		if (alltxsuccess) {
 			let res = await transferToMasterWallets(
 				transfer,
@@ -130,6 +125,7 @@ async function distributeRevenue(transfer, bank, branch, sendBranch) {
 			}
 			return res;
 		} else {
+			txstate.failed(transfer.master_code);
 			return {
 				status: 0,
 				message: "Not all transactions are success, please check",
@@ -159,12 +155,15 @@ async function transferToMasterWallets(
 
 		let master_code = transfer.master_code;
 
-		let infraPart = getPart(txInfo, master_code, ["s3", "s4"], []);
-		let sendBranchPart = getPart(txInfo, master_code, ["s5"], []);
-		let claimBranchPart = getPart(txInfo, master_code, ["c2"], []);
-		let bankPart = getPart(txInfo, master_code, ["s2"], ["s3", "s5", "c2"]);
-
-		var childId = 1;
+		let infraPart = txutils.getPart(txInfo, master_code, ["s3", "s4"], []);
+		let sendBranchPart = txutils.getPart(txInfo, master_code, ["s5"], []);
+		let claimBranchPart = txutils.getPart(txInfo, master_code, ["c2"], []);
+		let bankPart = txutils.getPart(
+			txInfo,
+			master_code,
+			["s2"],
+			["s3", "s5", "c2"]
+		);
 		let txStatus = 1;
 
 		let infra = await Infra.findOne({ _id: bank.user_id });
@@ -181,6 +180,7 @@ async function transferToMasterWallets(
 			user_id: "",
 			master_code: master_code,
 			child_code: master_code + "-m1",
+			created_at: Date.now(),
 		};
 		let result = await blockchain.initiateTransfer(trans);
 		if (result.status == 0) {
@@ -199,6 +199,7 @@ async function transferToMasterWallets(
 			user_id: "",
 			master_code: master_code,
 			child_code: master_code + "-m2",
+			created_at: Date.now(),
 		};
 		result = await blockchain.initiateTransfer(trans);
 		if (result.status == 0) {
@@ -217,6 +218,7 @@ async function transferToMasterWallets(
 			user_id: "",
 			master_code: master_code,
 			child_code: master_code + "-m3",
+			created_at: Date.now(),
 		};
 		result = await blockchain.initiateTransfer(trans);
 		if (result.status == 0) {
@@ -235,6 +237,7 @@ async function transferToMasterWallets(
 			user_id: "",
 			master_code: master_code,
 			child_code: master_code + "-m4",
+			created_at: Date.now(),
 		};
 		result = await blockchain.initiateTransfer(trans);
 		if (result.status == 0) {
@@ -253,41 +256,4 @@ async function transferToMasterWallets(
 	} catch (err) {
 		throw err;
 	}
-}
-
-function allTxSuccess(txInfo) {
-	try {
-		for (childtx of txInfo.childTx) {
-			if (childtx.state == 0) {
-				return false;
-			}
-		}
-		return true;
-	} catch (err) {
-		throw err;
-	}
-}
-
-function getPart(txInfo, masterId, childIds, otherIds) {
-	let myPart = 0;
-	let othersPart = 0;
-	for (childtx of txInfo.childTx) {
-		for (childId of childIds) {
-			if (childtx.transaction.child_code == masterId + "-" + childId) {
-				myPart += childtx.transaction.amount;
-			}
-		}
-	}
-
-	if (otherIds.length > 0) {
-		for (childtx of txInfo.childTx) {
-			for (otherId of otherIds) {
-				if (childtx.transaction.child_code == masterId + "-" + otherId) {
-					othersPart += childtx.transaction.amount;
-				}
-			}
-		}
-	}
-
-	return myPart - othersPart;
 }
