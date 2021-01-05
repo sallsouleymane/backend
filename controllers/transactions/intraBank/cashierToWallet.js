@@ -195,7 +195,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			allTxSuccess = false;
 		}
 	}
-	if (alltxsuccess) {
+	if (allTxSuccess) {
 		txstate.nearCompletion(master_code);
 		let res = await transferToMasterWallets(transfer, infra, bank, branch);
 

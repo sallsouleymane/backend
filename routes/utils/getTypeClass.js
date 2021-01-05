@@ -54,11 +54,14 @@ module.exports = (key) => {
 		case "PA":
 			return Partner;
 		case "partnerBranch":
+		case "partnerbranch":
 		case "PB":
 			return PartnerBranch;
 		case "partnerCashier":
+		case "partnercashier":
 			return PartnerCashier;
 		case "partnerUser":
+		case "partneruser":
 			return PartnerUser;
 		case "interbankrule":
 			return InterBankRule;

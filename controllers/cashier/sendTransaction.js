@@ -700,6 +700,8 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 																							amount: receiverIdentificationAmount,
 																							isInclusive: isInclusive,
 																							master_code: master_code,
+																							senderType: "sendBranch",
+																							senderCode: branch.bcode,
 																						};
 																						cashierToWallet(
 																							transfer,
