@@ -409,114 +409,146 @@ module.exports.partnerClaimMoney = function (req, res) {
 														if (result.status == 0) {
 															res.status(200).json(result);
 														} else {
-															Bank.findOne(
+															PartnerBranch.findOne(
 																{
-																	_id: cashier.bank_id,
+																	_id: sendRecord.send_branch_id,
 																},
-																function (err, bank) {
-																	let result = errorMessage(
+																function (err, sendBranch) {
+																	let errRes = errorMessage(
 																		err,
-																		bank,
-																		"Bank Not Found"
+																		sendBranch,
+																		"Sending Branch Not Found"
 																	);
-																	if (result.status == 0) {
-																		res.status(200).json(result);
+																	if (errRes.status == 0) {
+																		res.status(200).json(errRes);
 																	} else {
-																		const find = {
-																			bank_id: cashier.bank_id,
-																			trans_type: sendRecord.rule_type,
-																			status: 1,
-																			active: "Active",
-																		};
-																		Fee.findOne(find, function (err, rule) {
-																			let result = errorMessage(
-																				err,
-																				rule,
-																				"Revenue Rule Not Found"
-																			);
-																			if (result.status == 0) {
-																				res.status(200).json(result);
-																			} else {
-																				var otherInfo = {
-																					cashierId: cashier._id,
-																					sendRecord: sendRecord,
-																				};
-																				addClaimRecord(
-																					req.body,
-																					otherInfo,
-																					(err, claimObj) => {
-																						if (err) {
-																							res
-																								.status(200)
-																								.json(catchError(err));
-																						} else {
-																							const transfer = {
-																								amount: sendRecord.amount,
-																								isInclusive:
-																									sendRecord.is_inclusive,
-																								claimerType: "claimPartner",
-																								claimerCode: partner.code,
-																							};
-																							cashierClaimMoney(
-																								transfer,
-																								bank,
-																								branch,
-																								receiver,
-																								rule
-																							)
-																								.then(function (result) {
-																									if (result.status == 1) {
-																										otherInfo.claimId =
-																											claimObj._id;
-																										otherInfo.amount =
-																											result.amount;
-																										otherInfo.claimFee =
-																											result.claimFee;
+																		Bank.findOne(
+																			{
+																				_id: cashier.bank_id,
+																			},
+																			function (err, bank) {
+																				let result = errorMessage(
+																					err,
+																					bank,
+																					"Bank Not Found"
+																				);
+																				if (result.status == 0) {
+																					res.status(200).json(result);
+																				} else {
+																					const find = {
+																						bank_id: cashier.bank_id,
+																						trans_type: sendRecord.rule_type,
+																						status: 1,
+																						active: "Active",
+																					};
+																					Fee.findOne(
+																						find,
+																						function (err, rule) {
+																							let result = errorMessage(
+																								err,
+																								rule,
+																								"Revenue Rule Not Found"
+																							);
+																							if (result.status == 0) {
+																								res.status(200).json(result);
+																							} else {
+																								var otherInfo = {
+																									cashierId: cashier._id,
+																									sendRecord: sendRecord,
+																								};
+																								addClaimRecord(
+																									req.body,
+																									otherInfo,
+																									(err, claimObj) => {
+																										if (err) {
+																											res
+																												.status(200)
+																												.json(catchError(err));
+																										} else {
+																											const transfer = {
+																												amount:
+																													sendRecord.amount,
+																												isInclusive:
+																													sendRecord.is_inclusive,
+																												claimerType:
+																													"claimPartner",
+																												claimerCode:
+																													partner.code,
+																											};
+																											cashierClaimMoney(
+																												transfer,
+																												bank,
+																												branch,
+																												sendBranch,
+																												rule
+																											)
+																												.then(function (
+																													result
+																												) {
+																													if (
+																														result.status == 1
+																													) {
+																														otherInfo.claimId =
+																															claimObj._id;
+																														otherInfo.amount =
+																															result.amount;
+																														otherInfo.claimFee =
+																															result.claimFee;
 
-																										updateClaimRecord(
-																											"partnercashier",
-																											otherInfo,
-																											(err) => {
-																												if (err) {
+																														updateClaimRecord(
+																															"partnercashier",
+																															otherInfo,
+																															(err) => {
+																																if (err) {
+																																	res
+																																		.status(200)
+																																		.json(
+																																			catchError(
+																																				err
+																																			)
+																																		);
+																																} else {
+																																	res
+																																		.status(200)
+																																		.json({
+																																			status: 1,
+																																			message:
+																																				"Cashier claimed money",
+																																		});
+																																}
+																															}
+																														);
+																													} else {
+																														console.log(
+																															result.toString()
+																														);
+																														res
+																															.status(200)
+																															.json(result);
+																													}
+																												})
+																												.catch((err) => {
 																													res
 																														.status(200)
 																														.json(
 																															catchError(err)
 																														);
-																												} else {
-																													res.status(200).json({
-																														status: 1,
-																														message:
-																															"Cashier claimed money",
-																													});
-																												}
-																											}
-																										);
-																									} else {
-																										console.log(
-																											result.toString()
-																										);
-																										res
-																											.status(200)
-																											.json(result);
+																												});
+																										}
 																									}
-																								})
-																								.catch((err) => {
-																									res
-																										.status(200)
-																										.json(catchError(err));
-																								});
+																								);
+																							}
 																						}
-																					}
-																				);
+																					); //save
+																				}
 																			}
-																		}); //save
+																		);
 																	}
 																}
-															);
+															); //branch
 														}
 													}
-												); //branch
+												);
 											}
 										}
 									);
