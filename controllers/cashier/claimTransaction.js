@@ -193,7 +193,10 @@ module.exports.cashierClaimMoney = function (req, res) {
 												if (errRes.status == 0) {
 													res.status(200).json(errRes);
 												} else {
-													Branch.findOne(
+													const BranchType = getTypeClass(
+														sendRecord.send_branch_type
+													);
+													BranchType.findOne(
 														{
 															_id: sendRecord.send_branch_id,
 														},
@@ -409,7 +412,10 @@ module.exports.partnerClaimMoney = function (req, res) {
 														if (result.status == 0) {
 															res.status(200).json(result);
 														} else {
-															PartnerBranch.findOne(
+															const BranchType = getTypeClass(
+																sendRecord.send_branch_type
+															);
+															BranchType.findOne(
 																{
 																	_id: sendRecord.send_branch_id,
 																},
@@ -470,8 +476,10 @@ module.exports.partnerClaimMoney = function (req, res) {
 																													sendRecord.amount,
 																												isInclusive:
 																													sendRecord.is_inclusive,
+																												master_code:
+																													sendRecord.master_code,
 																												claimerType:
-																													"claimPartner",
+																													"claimBranch",
 																												claimerCode:
 																													partner.code,
 																											};

@@ -61,6 +61,7 @@ function addCashierSendRecord(reqData, otherData, next) {
 
 	const {
 		cashierId,
+		branchType,
 		branchId,
 		transactionCode,
 		ruleType,
@@ -107,6 +108,7 @@ function addCashierSendRecord(reqData, otherData, next) {
 	data.amount = receiverIdentificationAmount;
 	data.is_inclusive = isInclusive;
 	data.cashier_id = cashierId;
+	data.send_branch_type = branchType;
 	data.send_branch_id = branchId;
 	data.transaction_code = transactionCode;
 	data.rule_type = ruleType;
@@ -286,6 +288,7 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 																	ruleType: "Non Wallet to Non Wallet",
 																	masterCode: master_code,
 																	branchId: branch._id,
+																	branchType: "branch",
 																};
 																addCashierSendRecord(
 																	req.body,
@@ -472,6 +475,7 @@ module.exports.partnerSendMoney = async function (req, res) {
 																			ruleType: "Non Wallet to Non Wallet",
 																			masterCode: master_code,
 																			branchId: branch._id,
+																			branchType: "partnerbranch",
 																		};
 																		addCashierSendRecord(
 																			req.body,
@@ -686,6 +690,7 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 																				ruleType: "Non Wallet to Wallet",
 																				masterCode: master_code,
 																				branchId: branch._id,
+																				branchType: "branch",
 																			};
 																			addCashierSendRecord(
 																				req.body,
@@ -895,6 +900,7 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 																					ruleType: "Non Wallet to Wallet",
 																					masterCode: master_code,
 																					branchId: branch._id,
+																					branchType: "partnerbranch",
 																				};
 																				addCashierSendRecord(
 																					req.body,
