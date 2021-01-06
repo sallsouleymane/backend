@@ -19,7 +19,7 @@ const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
 
 // transactions
-// const txstate = require("../transactions/states");
+const txstate = require("../transactions/states");
 // const cashierToOperational = require("../transactions/intraBank/cashierToOperational");
 // const cashierToCashier = require("../transactions/intraBank/cashierToCashier");
 // const cashierToWallet = require("../transactions/intraBank/cashierToWallet");
