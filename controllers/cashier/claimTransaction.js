@@ -479,7 +479,7 @@ module.exports.partnerClaimMoney = function (req, res) {
 																												master_code:
 																													sendRecord.master_code,
 																												claimerType:
-																													"claimBranch",
+																													"claimPartner",
 																												claimerCode:
 																													partner.code,
 																											};
