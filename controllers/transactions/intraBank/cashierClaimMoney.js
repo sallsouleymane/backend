@@ -8,7 +8,7 @@ const { calculateShare } = require("../../../routes/utils/calculateShare");
 const txstate = require("../states");
 const txutils = require("../utils");
 
-module.exports = async function (transfer, bank, branch, sendBranch, rule1) {
+module.exports = async function (transfer, bank, branch, rule1) {
 	try {
 		const bankEsWallet = bank.wallet_ids.escrow;
 		const branchOpWallet = branch.wallet_ids.operational;
@@ -64,7 +64,7 @@ module.exports = async function (transfer, bank, branch, sendBranch, rule1) {
 		transfer.claimFee = claimFee;
 		transfer.master_code = master_code;
 		transfer.childId = childId;
-		let res = await distributeRevenue(transfer, bank, branch, sendBranch);
+		let res = await distributeRevenue(transfer, bank, branch);
 
 		if (res.status == 0) {
 			return res;
@@ -81,7 +81,7 @@ module.exports = async function (transfer, bank, branch, sendBranch, rule1) {
 	}
 };
 
-async function distributeRevenue(transfer, bank, branch, sendBranch) {
+async function distributeRevenue(transfer, bank, branch) {
 	try {
 		const branchOpWallet = branch.wallet_ids.operational;
 		const bankOpWallet = bank.wallet_ids.operational;
@@ -112,13 +112,7 @@ async function distributeRevenue(transfer, bank, branch, sendBranch) {
 		let txInfo = await TxState.findById(master_code);
 		let alltxsuccess = txutils.allTxSuccess(txInfo);
 		if (alltxsuccess) {
-			let res = await transferToMasterWallets(
-				transfer,
-				bank,
-				branch,
-				sendBranch,
-				txInfo
-			);
+			let res = await transferToMasterWallets(transfer, bank, branch, txInfo);
 
 			if (res.status == 1) {
 				txstate.completed(master_code);
@@ -136,27 +130,27 @@ async function distributeRevenue(transfer, bank, branch, sendBranch) {
 	}
 }
 
-async function transferToMasterWallets(
-	transfer,
-	bank,
-	branch,
-	sendBranch,
-	txInfo
-) {
+async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 	try {
+		let infra = await Infra.findOne({ _id: bank.user_id });
+		let sendBranchPart = 0;
+		let sendBranch = {};
+		if (transfer.sendBranchType && transfer.sendBranchType != "") {
+			const BranchType = getTypeClass(transfer.sendBranchType);
+			sendBranch = await BranchType.findOne({ _id: transfer.sendBranchId });
+			sendBranchPart = txutils.getPart(txInfo, master_code, ["s5"], []);
+		}
+
 		const bankOpWallet = bank.wallet_ids.operational;
 		const bankMasterWallet = bank.wallet_ids.master;
 		const infraOpWallet = bank.wallet_ids.infra_operational;
 		const infraMasterWallet = bank.wallet_ids.infra_master;
 		const branchOpWallet = branch.wallet_ids.operational;
 		const branchMasterWallet = branch.wallet_ids.master;
-		const sendBranchOpWallet = sendBranch.wallet_ids.operational;
-		const sendBranchMasterWallet = sendBranch.wallet_ids.master;
 
 		let master_code = transfer.master_code;
 
 		let infraPart = txutils.getPart(txInfo, master_code, ["s3", "s4"], []);
-		let sendBranchPart = txutils.getPart(txInfo, master_code, ["s5"], []);
 		let claimBranchPart = txutils.getPart(txInfo, master_code, ["c2"], []);
 		let bankPart = txutils.getPart(
 			txInfo,
@@ -165,8 +159,6 @@ async function transferToMasterWallets(
 			["s3", "s5", "c2"]
 		);
 		let txStatus = 1;
-
-		let infra = await Infra.findOne({ _id: bank.user_id });
 
 		let trans = {
 			from: bankOpWallet,
@@ -206,23 +198,27 @@ async function transferToMasterWallets(
 			txStatus = 0;
 		}
 
-		trans = {
-			from: sendBranchOpWallet,
-			to: sendBranchMasterWallet,
-			amount: sendBranchPart,
-			note: "Sending Branch share",
-			email1: sendBranch.email,
-			mobile1: sendBranch.mobile,
-			from_name: sendBranch.name,
-			to_name: sendBranch.name,
-			user_id: "",
-			master_code: master_code,
-			child_code: master_code + "-m3",
-			created_at: Date.now(),
-		};
-		result = await blockchain.initiateTransfer(trans);
-		if (result.status == 0) {
-			txStatus = 0;
+		if (sendBranchPart > 0) {
+			const sendBranchOpWallet = sendBranch.wallet_ids.operational;
+			const sendBranchMasterWallet = sendBranch.wallet_ids.master;
+			trans = {
+				from: sendBranchOpWallet,
+				to: sendBranchMasterWallet,
+				amount: sendBranchPart,
+				note: "Sending Branch share",
+				email1: sendBranch.email,
+				mobile1: sendBranch.mobile,
+				from_name: sendBranch.name,
+				to_name: sendBranch.name,
+				user_id: "",
+				master_code: master_code,
+				child_code: master_code + "-m3",
+				created_at: Date.now(),
+			};
+			result = await blockchain.initiateTransfer(trans);
+			if (result.status == 0) {
+				txStatus = 0;
+			}
 		}
 
 		trans = {

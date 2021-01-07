@@ -14,6 +14,7 @@ const CashierSendSchema = new mongoose.Schema({
 	fee: { type: String, required: false },
 	transaction_details: { type: String, required: false, default: null },
 	cashier_id: { type: String, required: false },
+	user_id: { type: String, required: false },
 	send_branch_id: { type: String, required: false },
 	send_branch_type: { type: String, required: false },
 	trans_type: { type: String, required: true, default: "DR" },

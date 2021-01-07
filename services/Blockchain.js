@@ -193,6 +193,8 @@ async function sendSuccessMail(transaction) {
 				transaction.amount +
 				" to the wallet " +
 				transaction.to +
+				". Reason: " +
+				transaction.note +
 				"</p>",
 			"Payment Sent",
 			transaction.email1
@@ -204,6 +206,8 @@ async function sendSuccessMail(transaction) {
 				transaction.amount +
 				" from the wallet " +
 				transaction.from +
+				". Reason: " +
+				transaction.note +
 				"</p>",
 			"Payment Received",
 			transaction.email2
@@ -214,7 +218,9 @@ async function sendSuccessMail(transaction) {
 			"You have sent " +
 				transaction.amount +
 				" to the wallet " +
-				transaction.to,
+				transaction.to +
+				". Reason: " +
+				transaction.note,
 			transaction.mobile1
 		);
 	}
@@ -223,7 +229,9 @@ async function sendSuccessMail(transaction) {
 			"You have received " +
 				transaction.amount +
 				" from the wallet " +
-				transaction.from,
+				transaction.from +
+				". Reason: " +
+				transaction.note,
 			transaction.mobile2
 		);
 	}
@@ -236,6 +244,8 @@ async function sendFailureMail(transaction) {
 				transaction.amount +
 				" to the wallet " +
 				transaction.to +
+				". Reason: " +
+				transaction.note +
 				"</p>",
 			"Payment failed",
 			transaction.email1
@@ -247,8 +257,8 @@ async function sendFailureMail(transaction) {
 				transaction.amount +
 				" to the wallet " +
 				transaction.to +
-				" . Master Id: " +
-				transaction.master_code,
+				+". Reason: " +
+				transaction.note,
 			transaction.mobile1
 		);
 	}

@@ -8,6 +8,7 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 	try {
 		const branchOpWallet = branch.wallet_ids.operational;
 		const bankEsWallet = bank.wallet_ids.escrow;
+		const bankOpWallet = bank.wallet_ids.operational;
 
 		// calculate amount to transfer
 		var amount = Number(transfer.amount);
@@ -46,10 +47,10 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 			created_at: Date.now(),
 		};
 
-		var result = await blockchain.initiateTransfer(trans1);
+		var res = await blockchain.initiateTransfer(trans1);
 
 		// return response
-		if (result.status == 0) {
+		if (res.status == 0) {
 			return {
 				status: 0,
 				message: "Transaction failed!",
@@ -60,6 +61,32 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 		transfer.fee = fee;
 		var sendFee = 0;
 		if (fee > 0) {
+			let trans2 = {
+				from: branchOpWallet,
+				to: bankOpWallet,
+				amount: fee,
+				note: "Cashier Send Fee for Non Wallet to Non Wallet Transaction",
+				email1: branch.email,
+				email2: bank.email,
+				mobile1: branch.mobile,
+				mobile2: bank.mobile,
+				from_name: branch.name,
+				to_name: bank.name,
+				user_id: "",
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + "-s2",
+				created_at: Date.now(),
+			};
+
+			res = await blockchain.initiateTransfer(trans2);
+			if (res.status == 0) {
+				return {
+					status: 0,
+					message: "Transaction failed!",
+					blockchain_message: res.message,
+				};
+			}
+
 			sendFee = calculateShare(
 				transfer.senderType,
 				transfer.amount,
@@ -77,7 +104,6 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 			amount: amount,
 			fee: fee,
 			sendFee: sendFee,
-			master_code: master_code,
 		};
 	} catch (err) {
 		throw err;
@@ -91,31 +117,6 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 
 	var infraShare = calculateShare("infra", transfer.amount, rule1);
 	let allTxSuccess = true;
-
-	let fee = transfer.fee;
-	if (fee > 0) {
-		let trans2 = {
-			from: branchOpWallet,
-			to: bankOpWallet,
-			amount: fee,
-			note: "Cashier Send Fee for Non Wallet to Non Wallet Transaction",
-			email1: branch.email,
-			email2: bank.email,
-			mobile1: branch.mobile,
-			mobile2: bank.mobile,
-			from_name: branch.name,
-			to_name: bank.name,
-			user_id: "",
-			master_code: transfer.master_code,
-			child_code: transfer.master_code + "-s2",
-			created_at: Date.now(),
-		};
-
-		let res = await blockchain.initiateTransfer(trans2);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
-	}
 
 	if (infraShare.percentage_amount > 0) {
 		let trans21 = {
