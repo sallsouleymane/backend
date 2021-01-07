@@ -41,7 +41,7 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 			user_id: "",
 			master_code: master_code,
 			child_code: master_code + "-s1",
-			created_at: Date.now(),
+			created_at: new Date(),
 		};
 		var result = await blockchain.initiateTransfer(trans1);
 
@@ -69,7 +69,7 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 				user_id: "",
 				master_code: master_code,
 				child_code: master_code + "-s2",
-				created_at: Date.now(),
+				created_at: new Date(),
 			};
 			res = await blockchain.initiateTransfer(trans2);
 			if (res.status == 0) {
@@ -119,7 +119,7 @@ async function distributeRevenue(transfer, infra, bank, rule1) {
 			user_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "-s3",
-			created_at: Date.now(),
+			created_at: new Date(),
 		};
 		await blockchain.initiateTransfer(trans21);
 	}
@@ -140,7 +140,7 @@ async function distributeRevenue(transfer, infra, bank, rule1) {
 			user_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "-s4",
-			created_at: Date.now(),
+			created_at: new Date(),
 		};
 		await blockchain.initiateTransfer(trans22);
 	}

@@ -36,7 +36,7 @@ module.exports = async function (transfer, bank, branch, rule1) {
 			user_id: "",
 			master_code: master_code,
 			child_code: master_code + "-c1",
-			created_at: Date.now(),
+			created_at: new Date(),
 		};
 
 		let result = await blockchain.initiateTransfer(trans);
@@ -104,7 +104,7 @@ async function distributeRevenue(transfer, bank, branch) {
 				user_id: "",
 				master_code: master_code,
 				child_code: master_code + "-c2",
-				created_at: Date.now(),
+				created_at: new Date(),
 			};
 			await blockchain.initiateTransfer(trans3);
 		}
@@ -172,7 +172,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 			user_id: "",
 			master_code: master_code,
 			child_code: master_code + "-m1",
-			created_at: Date.now(),
+			created_at: new Date(),
 		};
 		let result = await blockchain.initiateTransfer(trans);
 		if (result.status == 0) {
@@ -191,7 +191,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 			user_id: "",
 			master_code: master_code,
 			child_code: master_code + "-m2",
-			created_at: Date.now(),
+			created_at: new Date(),
 		};
 		result = await blockchain.initiateTransfer(trans);
 		if (result.status == 0) {
@@ -213,7 +213,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 				user_id: "",
 				master_code: master_code,
 				child_code: master_code + "-m3",
-				created_at: Date.now(),
+				created_at: new Date(),
 			};
 			result = await blockchain.initiateTransfer(trans);
 			if (result.status == 0) {
@@ -233,7 +233,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 			user_id: "",
 			master_code: master_code,
 			child_code: master_code + "-m4",
-			created_at: Date.now(),
+			created_at: new Date(),
 		};
 		result = await blockchain.initiateTransfer(trans);
 		if (result.status == 0) {

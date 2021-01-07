@@ -5,6 +5,7 @@ const sendMail = require("../../routes/utils/sendMail");
 const makeotp = require("../../routes/utils/makeotp");
 const getTypeClass = require("../../routes/utils/getTypeClass");
 const { errorMessage, catchError } = require("../../routes/utils/errorHandler");
+
 const addCashierSendRecord = require("../utils/addSendRecord");
 const updateCashierRecords = require("../utils/updateSendRecord");
 
