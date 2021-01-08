@@ -11,7 +11,6 @@ const blockchain = require("../../services/Blockchain");
 //models
 const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
-const FailedTX = require("../../models/FailedTXLedger");
 
 router.post("/partnerBranch/SetupUpdate", jwtTokenAuth, function (req, res) {
 	const { password } = req.body;
@@ -69,58 +68,59 @@ router.post("/partnerBranch/SetupUpdate", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/partnerBranch/getHistoryTotal", jwtTokenAuth, function (
-	req,
-	res
-) {
-	const { from } = req.body;
-	const jwtusername = req.sign_creds.username;
-	PartnerBranch.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, branch) {
-			let result = errorMessage(
-				err,
-				branch,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				const wallet = branch.wallet_ids[from];
-				blockchain
-					.getTransactionCount(wallet)
-					.then(function (count) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+router.post(
+	"/partnerBranch/getHistoryTotal",
+	jwtTokenAuth,
+	function (req, res) {
+		const { from } = req.body;
+		const jwtusername = req.sign_creds.username;
+		PartnerBranch.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, branch) {
+				let result = errorMessage(
+					err,
+					branch,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					const wallet = branch.wallet_ids[from];
+					blockchain
+						.getTransactionCount(wallet)
+						.then(function (count) {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else {
+								res.status(200).json({
+									status: 1,
+									count: count,
+								});
 							}
+						})
+						.catch((err) => {
+							console.log(err);
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: err.message,
 							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								count: count,
-							});
-						}
-					})
-					.catch((err) => {
-						console.log(err);
-						res.status(200).json({
-							status: 0,
-							message: err.message,
 						});
-					});
+				}
 			}
-		}
-	);
-});
+		);
+	}
+);
 
 router.post("/partnerBranch/getHistory", jwtTokenAuth, function (req, res) {
 	const { from } = req.body;
@@ -143,28 +143,13 @@ router.post("/partnerBranch/getHistory", jwtTokenAuth, function (req, res) {
 				blockchain
 					.getStatement(wallet)
 					.then(function (history) {
-						FailedTX.find({ wallet_id: wallet }, (err, failed) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else {
-								res.status(200).json({
-									status: 1,
-									history: history,
-									failed: failed,
-								});
-							}
+						res.status(200).json({
+							status: 1,
+							history: history,
 						});
 					})
 					.catch((err) => {
-						return catchError(err);
+						res.status(200).json(catchError(err));
 					});
 			}
 		}
@@ -232,94 +217,97 @@ router.post("/partnerBranch/editCashier", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/partnerBranch/updateCashierUser", jwtTokenAuth, function (
-	req,
-	res
-) {
-	const { cashier_id, user_id } = req.body;
-	const jwtusername = req.sign_creds.username;
-	PartnerBranch.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, branch) {
-			let result = errorMessage(
-				err,
-				branch,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				PartnerCashier.countDocuments({ partner_user_id: user_id }, function (
+router.post(
+	"/partnerBranch/updateCashierUser",
+	jwtTokenAuth,
+	function (req, res) {
+		const { cashier_id, user_id } = req.body;
+		const jwtusername = req.sign_creds.username;
+		PartnerBranch.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, branch) {
+				let result = errorMessage(
 					err,
-					count
-				) {
-					if (count > 0) {
-						res.status(200).json({
-							status: 0,
-							message: "User is already assigned to this or another cashier",
-						});
-					} else {
-						PartnerCashier.findByIdAndUpdate(
-							cashier_id,
-							{ partner_user_id: user_id },
-							function (err, cashier) {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
+					branch,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					PartnerCashier.countDocuments(
+						{ partner_user_id: user_id },
+						function (err, count) {
+							if (count > 0) {
+								res.status(200).json({
+									status: 0,
+									message:
+										"User is already assigned to this or another cashier",
+								});
+							} else {
+								PartnerCashier.findByIdAndUpdate(
+									cashier_id,
+									{ partner_user_id: user_id },
+									function (err, cashier) {
+										if (err) {
+											console.log(err);
+											var message = err;
+											if (err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+											});
+										} else {
+											res.status(200).json({
+												status: 1,
+												row: cashier,
+											});
+										}
 									}
-									res.status(200).json({
-										status: 0,
-										message: message,
-									});
-								} else {
-									res.status(200).json({
-										status: 1,
-										row: cashier,
-									});
-								}
+								);
 							}
-						);
-					}
-				});
+						}
+					);
+				}
 			}
-		}
-	);
-});
+		);
+	}
+);
 
-router.post("/partnerBranch/getDetailsByName", jwtTokenAuth, function (
-	req,
-	res
-) {
-	const { name } = req.body;
-	const jwtusername = req.sign_creds.username;
-	PartnerBranch.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-			name: name,
-		},
-		function (err, branch) {
-			let result = errorMessage(
-				err,
-				branch,
-				"Branch not found or login session expired"
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				res.status(200).json({
-					status: 1,
-					branch: branch,
-				});
+router.post(
+	"/partnerBranch/getDetailsByName",
+	jwtTokenAuth,
+	function (req, res) {
+		const { name } = req.body;
+		const jwtusername = req.sign_creds.username;
+		PartnerBranch.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+				name: name,
+			},
+			function (err, branch) {
+				let result = errorMessage(
+					err,
+					branch,
+					"Branch not found or login session expired"
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					res.status(200).json({
+						status: 1,
+						branch: branch,
+					});
+				}
 			}
-		}
-	);
-});
+		);
+	}
+);
 
 router.post("/partnerBranch/getDashStats", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;

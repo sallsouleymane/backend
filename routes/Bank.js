@@ -27,58 +27,52 @@ const Cashier = require("../models/Cashier");
 const Fee = require("../models/Fee");
 const CashierLedger = require("../models/CashierLedger");
 const Merchant = require("../models/merchant/Merchant");
-const FailedTX = require("../models/FailedTXLedger");
 const Partner = require("../models/partner/Partner");
-const Document = require("../models/Document");
 const Infra = require("../models/Infra");
 
-router.post(
-	"/bank/getBranchWalletBalance",
-	jwtTokenAuth,
-	function (req, res) {
-		const { branch_id, wallet_type } = req.body;
-		const jwtusername = req.sign_creds.username;
-		Bank.findOne(
-			{
-				username: jwtusername,
-				status: 1,
-			},
-			function (err, partner) {
-				let errMsg = errorMessage(
-					err,
-					partner,
-					"Token changed or user not valid. Try to login again or contact system administrator."
-				);
-				if (errMsg.status == 0) {
-					res.status(200).json(result);
-				} else {
-					Branch.findById(branch_id, (err, branch) => {
-						let errMsg = errorMessage(
-							err,
-							branch,
-							"Token changed or user not valid. Try to login again or contact system administrator."
-						);
-						if (errMsg.status == 0) {
-							res.status(200).json(result);
-						} else {
-							let wallet_id = branch.wallet_ids[wallet_type];
-								getBalance(wallet_id)
-								.then(function (result) {
-									res.status(200).json({
-										status: 1,
-										balance: result,
-									});
-								})
-								.catch((err) => {
-									return catchError(err);
+router.post("/bank/getBranchWalletBalance", jwtTokenAuth, function (req, res) {
+	const { branch_id, wallet_type } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, partner) {
+			let errMsg = errorMessage(
+				err,
+				partner,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errMsg.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Branch.findById(branch_id, (err, branch) => {
+					let errMsg = errorMessage(
+						err,
+						branch,
+						"Token changed or user not valid. Try to login again or contact system administrator."
+					);
+					if (errMsg.status == 0) {
+						res.status(200).json(result);
+					} else {
+						let wallet_id = branch.wallet_ids[wallet_type];
+						getBalance(wallet_id)
+							.then(function (result) {
+								res.status(200).json({
+									status: 1,
+									balance: result,
 								});
-						}
-					});
-				}
+							})
+							.catch((err) => {
+								res.status(200).json(catchError(err));
+							});
+					}
+				});
 			}
-		);
-	}
-);
+		}
+	);
+});
 
 router.post("/bank/getMerchantById", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -287,7 +281,7 @@ router.post(
 				infra_status: fee.status,
 			});
 		} catch (err) {
-			return catchError(err);
+			res.status(200).json(catchError(err));
 		}
 	}
 );
@@ -333,7 +327,7 @@ router.post(
 				infra_status: fee.status,
 			});
 		} catch (err) {
-			return catchError(err);
+			res.status(200).json(catchError(err));
 		}
 	}
 );
@@ -394,7 +388,7 @@ router.post(
 
 			res.send({ status: 1 });
 		} catch (err) {
-			return catchError(err);
+			res.status(200).json(catchError(err));
 		}
 	}
 );
@@ -436,7 +430,7 @@ router.post(
 
 			res.send({ status: 1, message: "Revenue share updated successfully" });
 		} catch (err) {
-			return catchError(err);
+			res.status(200).json(catchError(err));
 		}
 	}
 );
@@ -696,7 +690,7 @@ router.post("/getBankDashStats", jwtTokenAuth, function (req, res) {
 			}
 		);
 	} catch (err) {
-		return catchError(err);
+		res.status(200).json(catchError(err));
 	}
 });
 
@@ -726,7 +720,7 @@ router.get("/getBankOperationalBalance", jwtTokenAuth, function (req, res) {
 						});
 					})
 					.catch((err) => {
-						return catchError(err);
+						res.status(200).json(catchError(err));
 					});
 			}
 		}
@@ -1252,28 +1246,13 @@ router.post("/getBankHistory", jwtTokenAuth, function (req, res) {
 				const wallet = b.wallet_ids[from];
 				getStatement(wallet)
 					.then(function (history) {
-						FailedTX.find({ wallet_id: wallet }, (err, failed) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else {
-								res.status(200).json({
-									status: 1,
-									history: history,
-									failed: failed,
-								});
-							}
+						res.status(200).json({
+							status: 1,
+							history: history,
 						});
 					})
 					.catch((err) => {
-						return catchError(err);
+						res.status(200).json(catchError(err));
 					});
 			}
 		}

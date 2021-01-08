@@ -15,7 +15,8 @@ module.exports.initiate = async function () {
 
 module.exports.waitingForCompletion = async function (master_code) {
 	try {
-		let tx = { state: "WAIT" };
+		console.log("Transaction waiting for completion");
+		let tx = { state: "WAITING" };
 		await TxState.update({ _id: master_code }, tx);
 	} catch (err) {
 		throw err;
@@ -24,6 +25,7 @@ module.exports.waitingForCompletion = async function (master_code) {
 
 module.exports.nearCompletion = async function (master_code) {
 	try {
+		console.log("Transaction near to completion");
 		let tx = { state: "NEAR" };
 		await TxState.updateOne({ _id: master_code }, tx);
 	} catch (err) {
@@ -33,7 +35,8 @@ module.exports.nearCompletion = async function (master_code) {
 
 module.exports.failed = async function (master_code) {
 	try {
-		let tx = { state: "FAIL" };
+		console.log("Transaction failed");
+		let tx = { state: "FAILED" };
 		await TxState.updateOne({ _id: master_code }, tx);
 	} catch (err) {
 		throw err;
@@ -42,7 +45,18 @@ module.exports.failed = async function (master_code) {
 
 module.exports.completed = async function completed(master_code) {
 	try {
+		console.log("Transaction Completed");
 		let tx = { state: "DONE" };
+		await TxState.updateOne({ _id: master_code }, tx);
+	} catch (err) {
+		throw err;
+	}
+};
+
+module.exports.reported = async function reported(master_code) {
+	try {
+		console.log("Transaction Reported");
+		let tx = { state: "REPORTED" };
 		await TxState.updateOne({ _id: master_code }, tx);
 	} catch (err) {
 		throw err;

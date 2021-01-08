@@ -97,7 +97,7 @@ router.post("/partnerBranch/login", function (req, res) {
 					},
 					function (err, partner) {
 						if (err) {
-							return catchError(err);
+							res.status(200).json(catchError(err));
 						} else {
 							let logo = partner.logo;
 							let sign_creds = { username: username, type: "partnerBranch" };

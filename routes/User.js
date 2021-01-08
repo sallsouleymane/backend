@@ -26,6 +26,9 @@ const blockchain = require("../services/Blockchain");
 const walletToWallet = require("./transactions/intraBank/walletToWallet");
 const walletToCashier = require("./transactions/intraBank/walletToCashier");
 
+//controllers
+const userSendTransCntrl = require("../controllers/user/sendTransaction");
+
 router.post("/user/getMerchantPenaltyRule", jwtTokenAuth, function (req, res) {
 	const { merchant_id } = req.body;
 	const username = req.sign_creds.username;
@@ -302,7 +305,7 @@ router.get("/user/getBalance", jwtTokenAuth, (req, res) => {
 						});
 					})
 					.catch((err) => {
-						return catchError(err);
+						res.status(200).json(catchError(err));
 					});
 			}
 		}
@@ -715,7 +718,7 @@ router.get("/user/getTransactionHistory", jwtTokenAuth, function (req, res) {
 						history: result,
 					});
 				} catch (err) {
-					return catchError(err);
+					res.status(200).json(catchError(err));
 				}
 			}
 		}
@@ -787,368 +790,16 @@ router.get("/user/getContactList", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/user/sendMoneyToWallet", jwtTokenAuth, function (req, res) {
-	const username = req.sign_creds.username;
+router.post(
+	"/user/sendMoneyToWallet",
+	jwtTokenAuth,
+	userSendTransCntrl.sendMoneyToWallet
+);
 
-	const { receiverMobile, sending_amount, isInclusive } = req.body;
-
-	User.findOneAndUpdate(
-		{
-			username,
-			status: 1,
-		},
-		{
-			$addToSet: {
-				contact_list: receiverMobile,
-			},
-		},
-		async function (err, sender) {
-			let result = errorMessage(
-				err,
-				sender,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				User.findOne(
-					{
-						mobile: receiverMobile,
-					},
-					(err, receiver) => {
-						let result = errorMessage(
-							err,
-							receiver,
-							"Receiver's wallet do not exist"
-						);
-						if (result.status == 0) {
-							res.status(200).json(result);
-						} else {
-							Bank.findOne(
-								{
-									_id: sender.bank_id,
-								},
-								function (err, bank) {
-									let result = errorMessage(err, bank, "Bank Not Found");
-									if (result.status == 0) {
-										res.status(200).json(result);
-									} else {
-										Infra.findOne(
-											{
-												_id: bank.user_id,
-											},
-											function (err, infra) {
-												let result = errorMessage(
-													err,
-													infra,
-													"Infra Not Found"
-												);
-												if (result.status == 0) {
-													res.status(200).json(result);
-												} else {
-													const find = {
-														bank_id: bank._id,
-														trans_type: "Wallet to Wallet",
-														status: 1,
-														active: "Active",
-													};
-													Fee.findOne(find, function (err, fe) {
-														let result = errorMessage(
-															err,
-															fe,
-															"Revenue Rule Not Found"
-														);
-														if (result.status == 0) {
-															res.status(200).json(result);
-														} else {
-															transfer = {
-																amount: sending_amount,
-																isInclusive: isInclusive,
-															};
-
-															walletToWallet(
-																transfer,
-																infra,
-																bank,
-																sender,
-																receiver
-															)
-																.then(function (result) {
-																	console.log("Result: " + result);
-																	if (result.length == 1) {
-																		res.status(200).json({
-																			status: 1,
-																			message:
-																				sending_amount +
-																				" XOF is transferred to " +
-																				receiver.name,
-																			balance:
-																				result.balance -
-																				(result.amount + result.fee),
-																		});
-																	} else {
-																		res.status(200).json(result);
-																	}
-																})
-																.catch((err) => {
-																	console.log(err);
-																	res.status(200).json({
-																		status: 0,
-																		message: err.message,
-																	});
-																});
-														}
-														//infra
-													});
-												}
-											}
-										);
-									}
-								}
-							);
-						}
-					}
-				); //branch
-			}
-		}
-	);
-});
-
-router.post("/user/sendMoneyToNonWallet", jwtTokenAuth, function (req, res) {
-	const username = req.sign_creds.username;
-
-	const {
-		note,
-		withoutID,
-		requireOTP,
-		receiverMobile,
-		receiverGivenName,
-		receiverFamilyName,
-		receiverCountry,
-		receiverEmail,
-		receiverIdentificationType,
-		receiverIdentificationNumber,
-		receiverIdentificationValidTill,
-		sending_amount,
-		isInclusive,
-	} = req.body;
-
-	User.findOneAndUpdate(
-		{
-			username,
-			status: 1,
-		},
-		{
-			$addToSet: {
-				contact_list: receiverMobile,
-			},
-		},
-		async function (err, sender) {
-			let result = errorMessage(err, sender, "Sender not found");
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				try {
-					receiver = {
-						name: receiverGivenName,
-						last_name: receiverFamilyName,
-						mobile: receiverMobile,
-						email: receiverEmail,
-						country: receiverCountry,
-					};
-
-					await NWUser.create(receiver, function (err) {});
-
-					Bank.findOne(
-						{
-							_id: sender.bank_id,
-						},
-						function (err, bank) {
-							let result = errorMessage(err, bank, "Bank Not Found");
-							if (result.status == 0) {
-								res.status(200).json(result);
-							} else {
-								Infra.findOne(
-									{
-										_id: bank.user_id,
-									},
-									function (err, infra) {
-										let result = errorMessage(err, infra, "Infra Not Found");
-										if (result.status == 0) {
-											res.status(200).json(result);
-										} else {
-											const find = {
-												bank_id: bank._id,
-												trans_type: "Wallet to Non Wallet",
-												status: 1,
-												active: "Active",
-											};
-											Fee.findOne(find, function (err, rule) {
-												let result = errorMessage(
-													err,
-													rule,
-													"Revenue Rule Not Found"
-												);
-												if (result.status == 0) {
-													res.status(200).json(result);
-												} else {
-													let data = new CashierSend();
-													temp = {
-														mobile: sender.mobile,
-														note: note,
-														givenname: sender.name,
-														familyname: sender.last_name,
-														address1: sender.address,
-														state: sender.state,
-														country: sender.country,
-														email: sender.email,
-													};
-													data.sender_info = JSON.stringify(temp);
-													temp = {
-														mobile: receiverMobile,
-														// ccode: receiverccode,
-														givenname: receiverGivenName,
-														familyname: receiverFamilyName,
-														country: receiverCountry,
-														email: receiverEmail,
-													};
-													data.receiver_info = JSON.stringify(temp);
-													temp = {
-														country: receiverCountry,
-														type: receiverIdentificationType,
-														number: receiverIdentificationNumber,
-														valid: receiverIdentificationValidTill,
-													};
-													data.receiver_id = JSON.stringify(temp);
-													data.amount = sending_amount;
-													data.is_inclusive = isInclusive;
-													const transactionCode = makeid(8);
-													data.transaction_code = transactionCode;
-													data.rule_type = "Wallet to Non Wallet";
-
-													data.without_id = withoutID ? 1 : 0;
-													if (requireOTP) {
-														data.require_otp = 1;
-														data.otp = makeotp(6);
-														content =
-															data.otp + " - Send this OTP to the Receiver";
-														if (sender.mobile && sender.mobile != null) {
-															sendSMS(content, sender.mobile);
-														}
-														if (sender.email && sender.email != null) {
-															sendMail(
-																content,
-																"Transaction OTP",
-																receiver.email
-															);
-														}
-													}
-													data.save((err, d) => {
-														if (err) {
-															console.log(err);
-															var message = err;
-															if (err.message) {
-																message = err.message;
-															}
-															res.status(200).json({
-																status: 0,
-																message: message,
-															});
-														} else {
-															const transfer = {
-																amount: sending_amount,
-																is_inclusive: isInclusive,
-															};
-															walletToCashier(
-																transfer,
-																infra,
-																bank,
-																sender,
-																rule
-															)
-																.then(function (result) {
-																	console.log("Result: " + result);
-																	if (result.length == 1) {
-																		let content =
-																			"Your Transaction Code is " +
-																			transactionCode;
-																		if (
-																			receiverMobile &&
-																			receiverMobile != null
-																		) {
-																			sendSMS(content, receiverMobile);
-																		}
-																		if (
-																			receiverEmail &&
-																			receiverEmail != null
-																		) {
-																			sendMail(
-																				content,
-																				"Transaction Code",
-																				receiverEmail
-																			);
-																		}
-
-																		CashierSend.findByIdAndUpdate(
-																			d._id,
-																			{
-																				status: 1,
-																				fee: result.fee,
-																				master_code: result.master_code,
-																			},
-																			(err) => {
-																				if (err) {
-																					console.log(err);
-																					var message = err;
-																					if (err.message) {
-																						message = err.message;
-																					}
-																					res.status(200).json({
-																						status: 0,
-																						message: message,
-																					});
-																				} else {
-																					res.status(200).json({
-																						status: 1,
-																						message:
-																							sending_amount +
-																							" XOF is transferred to branch",
-																						balance:
-																							result.balance -
-																							(result.amount + result.fee),
-																					});
-																				}
-																			}
-																		);
-																	} else {
-																		res.status(200).json(result);
-																	}
-																})
-																.catch((err) => {
-																	console.log(err);
-																	res.status(200).json({
-																		status: 0,
-																		message: err.message,
-																	});
-																});
-														}
-													});
-												}
-												//infra
-											});
-										}
-									}
-								);
-							}
-						}
-					); //branch
-				} catch (err) {
-					console.log(err);
-					res.status(200).json({ status: 0, message: err.message });
-				}
-			}
-		}
-	);
-});
+router.post(
+	"/user/sendMoneyToNonWallet",
+	jwtTokenAuth,
+	userSendTransCntrl.sendMoneyToNonWallet
+);
 
 module.exports = router;

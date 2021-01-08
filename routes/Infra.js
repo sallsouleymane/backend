@@ -529,7 +529,6 @@ router.post("/addBank", jwtTokenAuth, function (req, res) {
 		ccode,
 		mobile,
 		email,
-
 		logo,
 		contract,
 		otp_id,
@@ -836,7 +835,7 @@ router.post("/getInfraHistory", jwtTokenAuth, function (req, res) {
 									});
 								})
 								.catch((err) => {
-									return catchError(err);
+									res.status(200).json(catchError(err));
 								});
 						}
 					}
@@ -892,7 +891,7 @@ router.get("/infra/getMyWalletBalance", jwtTokenAuth, function (req, res) {
 									});
 								})
 								.catch((err) => {
-									return catchError(err);
+									res.status(200).json(catchError(err));
 								});
 						}
 					}

@@ -21,7 +21,6 @@ const MerchantPosition = require("../models/merchant/Position");
 const Zone = require("../models/merchant/Zone");
 const Subzone = require("../models/merchant/Subzone");
 const InvoiceGroup = require("../models/merchant/InvoiceGroup");
-const FailedTX = require("../models/FailedTXLedger");
 const Offering = require("../models/merchant/Offering");
 const Tax = require("../models/merchant/Tax");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
@@ -65,68 +64,68 @@ router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
 router.post("/merchant/uploadCustomers", jwtTokenAuth, (req, res) => {
 	const { customers } = req.body;
 	const jwtusername = req.sign_creds.username;
-	Merchant.findOne({ username: jwtusername, status: 1 }, async function (
-		err,
-		merchant
-	) {
-		let result = errorMessage(
-			err,
-			merchant,
-			"You are either not authorised or not logged in."
-		);
-		if (result.status == 0) {
-			res.status(200).json(result);
-		} else {
-			let failed = [];
-			for (customer of customers) {
-				try {
-					var customerFound = await Customer.findOne({
-						merchant_id: merchant._id,
-						customer_code: customer.customer_code,
-					});
-					if (customerFound) {
-						throw new Error(
-							"Customer with the same customer code already exist"
-						);
-					} else {
-						var customerDetails = {
-							customer_code: customer.customer_code,
+	Merchant.findOne(
+		{ username: jwtusername, status: 1 },
+		async function (err, merchant) {
+			let result = errorMessage(
+				err,
+				merchant,
+				"You are either not authorised or not logged in."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				let failed = [];
+				for (customer of customers) {
+					try {
+						var customerFound = await Customer.findOne({
 							merchant_id: merchant._id,
-							name: customer.name,
-							last_name: customer.last_name,
-							mobile: customer.mobile,
-							email: customer.email,
-							address: customer.address,
-							city: customer.city,
-							state: customer.state,
-							country: customer.country,
-							id_type: customer.id_type,
-							id_name: customer.id_name,
-							valid_till: customer.valid_till,
-							id_number: customer.id_number,
-							dob: customer.dob,
-							gender: customer.gender,
-							docs_hash: customer.docs_hash,
-						};
-						await Customer.create(customerDetails);
+							customer_code: customer.customer_code,
+						});
+						if (customerFound) {
+							throw new Error(
+								"Customer with the same customer code already exist"
+							);
+						} else {
+							var customerDetails = {
+								customer_code: customer.customer_code,
+								merchant_id: merchant._id,
+								name: customer.name,
+								last_name: customer.last_name,
+								mobile: customer.mobile,
+								email: customer.email,
+								address: customer.address,
+								city: customer.city,
+								state: customer.state,
+								country: customer.country,
+								id_type: customer.id_type,
+								id_name: customer.id_name,
+								valid_till: customer.valid_till,
+								id_number: customer.id_number,
+								dob: customer.dob,
+								gender: customer.gender,
+								docs_hash: customer.docs_hash,
+							};
+							await Customer.create(customerDetails);
+						}
+					} catch (err) {
+						console.log(err);
+						var message = err;
+						if (err && err.message) {
+							message = err.message;
+						}
+						customer.failure_reason = message;
+						failed.push(customer);
 					}
-				} catch (err) {
-					console.log(err);
-					var message = err;
-					if (err && err.message) {
-						message = err.message;
-					}
-					customer.failure_reason = message;
-					failed.push(customer);
 				}
+				res.status(200).json({
+					status: 1,
+					message: "Customers uploaded",
+					failed: failed,
+				});
 			}
-			res.status(200).json({
-				status: 1,
-				message: "Customers uploaded",
-				failed: failed,
-			});
 		}
-	});
+	);
 });
 
 router.post("/merchant/zoneSetting", jwtTokenAuth, (req, res) => {
@@ -1063,7 +1062,7 @@ router.get("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 					{
 						_id: merchant.bank_id,
 					},
-					function (err, bank) {
+					function (err) {
 						if (err) {
 							console.log(err);
 							var message = err;
@@ -1079,28 +1078,13 @@ router.get("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 							blockchain
 								.getStatement(wallet)
 								.then(function (history) {
-									FailedTX.find({ wallet_id: wallet }, (err, failed) => {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
-											}
-											res.status(200).json({
-												status: 0,
-												message: message,
-											});
-										} else {
-											res.status(200).json({
-												status: 1,
-												history: history,
-												failed: failed,
-											});
-										}
+									res.status(200).json({
+										status: 1,
+										history: history,
 									});
 								})
 								.catch((err) => {
-									return catchError(err);
+									res.status(200).json(catchError(err));
 								});
 						}
 					}
@@ -1317,52 +1301,53 @@ router.post("/merchant/createSubzone", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/merchant/listSubzonesByZoneId", jwtTokenAuth, function (
-	req,
-	res
-) {
-	const { zone_id } = req.body;
-	const username = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username,
-			status: 1,
-		},
-		function (err, merchant) {
-			let result = errorMessage(
-				err,
-				merchant,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Subzone.find(
-					{ merchant_id: merchant._id, zone_id: zone_id },
-					"-password",
-					function (err, subzone) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								subzones: subzone,
-							});
-						}
-					}
+router.post(
+	"/merchant/listSubzonesByZoneId",
+	jwtTokenAuth,
+	function (req, res) {
+		const { zone_id } = req.body;
+		const username = req.sign_creds.username;
+		Merchant.findOne(
+			{
+				username,
+				status: 1,
+			},
+			function (err, merchant) {
+				let result = errorMessage(
+					err,
+					merchant,
+					"Token changed or user not valid. Try to login again or contact system administrator."
 				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					Subzone.find(
+						{ merchant_id: merchant._id, zone_id: zone_id },
+						"-password",
+						function (err, subzone) {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else {
+								res.status(200).json({
+									status: 1,
+									subzones: subzone,
+								});
+							}
+						}
+					);
+				}
 			}
-		}
-	);
-});
+		);
+	}
+);
 
 router.post("/merchant/editSubzone", jwtTokenAuth, (req, res) => {
 	const { subzone_id, code, name, type, description } = req.body;
@@ -2162,52 +2147,53 @@ router.get("/merchant/listBranches", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/merchant/listBranchesBySubzoneId", jwtTokenAuth, function (
-	req,
-	res
-) {
-	const { subzone_id } = req.body;
-	const username = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username,
-			status: 1,
-		},
-		function (err, merchant) {
-			let result = errorMessage(
-				err,
-				merchant,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				MerchantBranch.find(
-					{ merchant_id: merchant._id, subzone_id: subzone_id },
-					"-password",
-					function (err, branch) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								branches: branch,
-							});
-						}
-					}
+router.post(
+	"/merchant/listBranchesBySubzoneId",
+	jwtTokenAuth,
+	function (req, res) {
+		const { subzone_id } = req.body;
+		const username = req.sign_creds.username;
+		Merchant.findOne(
+			{
+				username,
+				status: 1,
+			},
+			function (err, merchant) {
+				let result = errorMessage(
+					err,
+					merchant,
+					"Token changed or user not valid. Try to login again or contact system administrator."
 				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					MerchantBranch.find(
+						{ merchant_id: merchant._id, subzone_id: subzone_id },
+						"-password",
+						function (err, branch) {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else {
+								res.status(200).json({
+									status: 1,
+									branches: branch,
+								});
+							}
+						}
+					);
+				}
 			}
-		}
-	);
-});
+		);
+	}
+);
 
 router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 	const username = req.sign_creds.username;
@@ -2240,7 +2226,7 @@ router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 								});
 							})
 							.catch((err) => {
-								return catchError(err);
+								res.status(200).json(catchError(err));
 							});
 					}
 				});
