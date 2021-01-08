@@ -1702,7 +1702,7 @@ router.post(
 			receiverIdentificationType,
 			receiverIdentificationNumber,
 			receiverIdentificationValidTill,
-			sending_amount,
+			receiverIdentificationAmount,
 			isInclusive,
 		} = req.body;
 
@@ -1781,7 +1781,7 @@ router.post(
 							valid: receiverIdentificationValidTill,
 						};
 						data.receiver_id = JSON.stringify(temp);
-						data.amount = sending_amount;
+						data.amount = receiverIdentificationAmount;
 						data.is_inclusive = isInclusive;
 						const transactionCode = makeid(8);
 						data.transaction_code = transactionCode;
@@ -1808,7 +1808,7 @@ router.post(
 						var cs = await data.save();
 
 						var transfer = {
-							amount: sending_amount,
+							amount: receiverIdentificationAmount,
 							isInclusive: isInclusive,
 							receiverFamilyName: receiverFamilyName,
 						};
@@ -1841,7 +1841,9 @@ router.post(
 							NWUser.create(receiver);
 							res.status(200).json({
 								status: 1,
-								message: sending_amount + " XOF is transferred to branch",
+								message:
+									receiverIdentificationAmount +
+									" XOF is transferred to branch",
 								balance: result.balance - (result.amount + result.fee),
 							});
 						} else {

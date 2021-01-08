@@ -298,6 +298,7 @@ async function saveTxState(transaction, res) {
 			);
 		}
 	} catch (err) {
-		throw err;
+		console.log(err);
+		// throw err;
 	}
 }

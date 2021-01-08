@@ -121,8 +121,6 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 														transactionCode: transactionCode,
 														ruleType: "Wallet to Non Wallet",
 														masterCode: master_code,
-														branchId: "",
-														branchType: "",
 													};
 													addCashierSendRecord(
 														req.body,

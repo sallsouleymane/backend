@@ -21,7 +21,7 @@ const PartnerCashier = require("../../models/partner/Cashier");
 
 // transactions
 const txstate = require("../transactions/states");
-// const cashierToOperational = require("../transactions/intraBank/cashierToOperational");
+const cashierToOperational = require("../transactions/intraBank/cashierToOperational");
 const cashierToCashier = require("../transactions/intraBank/cashierToCashier");
 const cashierToWallet = require("../transactions/intraBank/cashierToWallet");
 
@@ -510,8 +510,6 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 																				transactionCode: "",
 																				ruleType: "Non Wallet to Wallet",
 																				masterCode: master_code,
-																				branchId: branch._id,
-																				branchType: "branch",
 																			};
 																			addCashierSendRecord(
 																				req.body,
@@ -608,11 +606,15 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 };
 
 module.exports.partnerSendMoneyToWallet = async function (req, res) {
+	// Initiate transaction state
+	const master_code = await txstate.initiate();
+
 	const {
 		receiverMobile,
 		receiverIdentificationAmount,
 		isInclusive,
 	} = req.body;
+
 	const jwtusername = req.sign_creds.username;
 	PartnerCashier.findOne(
 		{
@@ -720,8 +722,6 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 																					transactionCode: "",
 																					ruleType: "Non Wallet to Wallet",
 																					masterCode: master_code,
-																					branchId: branch._id,
-																					branchType: "partnerbranch",
 																				};
 																				addCashierSendRecord(
 																					req.body,
@@ -811,6 +811,369 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 								}
 							}
 						);
+					}
+				});
+			}
+		}
+	);
+};
+
+module.exports.cashierSendToOperational = async function (req, res) {
+	// Initiate transaction state
+	const master_code = await txstate.initiate();
+
+	const { walletId, receiverIdentificationAmount, isInclusive } = req.body;
+
+	// var code = walletId.substr(0, 2);
+	// if (code != "PB") {
+	// 	res.status(200).json({
+	// 		status: 0,
+	// 		message: "You can only send to partner branch",
+	// 	});
+	// 	return;
+	// }
+	const jwtusername = req.sign_creds.username;
+	Cashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			let result = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Branch.findOne({ _id: cashier.branch_id }, (err, branch) => {
+					let result = errorMessage(err, branch, "Branch not found");
+					if (result.status == 0) {
+						res.status(200).json(result);
+					} else {
+						//const Collection = getTypeClass(code);
+						PartnerBranch.findOne(
+							{
+								_id: { $ne: branch._id },
+								bank_id: branch.bank_id,
+								"wallet_ids.operational": walletId,
+							},
+							(err, toBranch) => {
+								let errMsg = errorMessage(err, toBranch, "Invalid wallet ID");
+								if (errMsg.status == 0) {
+									res.status(200).json(errMsg);
+								} else {
+									const find = {
+										bank_id: branch.bank_id,
+										trans_type: "Non Wallet to Operational",
+										status: 1,
+										active: "Active",
+									};
+									Fee.findOne(find, (err, rule) => {
+										let errMsg = errorMessage(err, rule, "Rule not found");
+										if (errMsg.status == 0) {
+											res.status(200).json(errMsg);
+										} else {
+											Bank.findOne({ _id: branch.bank_id }, (err, bank) => {
+												let errMsg = errorMessage(err, bank, "Bank not found");
+												if (errMsg.status == 0) {
+													res.status(200).json(errMsg);
+												} else {
+													Infra.findOne({ _id: bank.user_id }, (err, infra) => {
+														let errMsg = errorMessage(
+															err,
+															infra,
+															"Infra not found"
+														);
+														if (errMsg.status == 0) {
+															res.status(200).json(errMsg);
+														} else {
+															req.body.withoutID = false;
+															req.body.receiverccode = toBranch.ccode;
+															req.body.receiverGivenName = toBranch.name;
+															req.body.receiverFamilyName = "";
+															req.body.receiverCountry = toBranch.country;
+															req.body.receiverMobile = toBranch.mobile;
+															req.body.receiverEmail = toBranch.email;
+															req.body.receiverIdentificationCountry = "";
+															req.body.receiverIdentificationType = "";
+															req.body.receiverIdentificationNumber = "";
+															req.body.receiverIdentificationValidTill = "";
+
+															var otherInfo = {
+																cashierId: cashier._id,
+																transactionCode: "",
+																ruleType: "Non Wallet to Operational",
+																masterCode: master_code,
+															};
+															addCashierSendRecord(
+																req.body,
+																otherInfo,
+																(err, cs) => {
+																	if (err) {
+																		res.status(200).json(catchError(err));
+																	} else {
+																		const transfer = {
+																			amount: receiverIdentificationAmount,
+																			isInclusive: isInclusive,
+																			master_code: master_code,
+																			senderType: "sendBranch",
+																			senderCode: branch.bcode,
+																		};
+																		cashierToOperational(
+																			transfer,
+																			infra,
+																			bank,
+																			branch,
+																			toBranch,
+																			rule
+																		)
+																			.then((result) => {
+																				if (result.status == 1) {
+																					otherInfo.csId = cs._id;
+																					otherInfo.amount = result.amount;
+																					otherInfo.fee = result.fee;
+																					otherInfo.sendFee = result.sendFee;
+
+																					updateCashierRecords(
+																						"cashier",
+																						otherInfo,
+																						(err) => {
+																							if (err) {
+																								res
+																									.status(200)
+																									.json(catchError(err));
+																							} else {
+																								txstate.reported(master_code);
+																								res.status(200).json({
+																									status: 1,
+																									message:
+																										result.amount +
+																										"XOF amount is Transferred",
+																								});
+																							}
+																						}
+																					);
+																				} else {
+																					res.status(200).json(result);
+																				}
+																			})
+																			.catch((err) => {
+																				console.log(err);
+																				res.status(200).json({
+																					status: 0,
+																					message: err.message,
+																				});
+																			});
+																	}
+																}
+															);
+														}
+													});
+												}
+											});
+										}
+									});
+								}
+							}
+						);
+					}
+				});
+			}
+		}
+	);
+};
+
+module.exports.partnerSendToOperational = async function (req, res) {
+	const { wallet_id, receiverIdentificationAmount, isInclusive } = req.body;
+	const jwtusername = req.sign_creds.username;
+	// var code = wallet_id.substr(0, 2);
+	// if (code != "PB") {
+	// 	res.status(200).json({
+	// 		status: 0,
+	// 		message: "You can only send to  partner branch",
+	// 	});
+	// 	return;
+	// }
+	PartnerCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			let result = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
+					let result = errorMessage(err, partner, "Partner Not Found");
+					if (result.status == 0) {
+						res.status(200).json(result);
+					} else {
+						PartnerBranch.findOne({ _id: cashier.branch_id }, (err, branch) => {
+							let result = errorMessage(err, branch, "Branch not found");
+							if (result.status == 0) {
+								res.status(200).json(result);
+							} else {
+								PartnerBranch.findOne(
+									{
+										_id: { $ne: branch._id },
+										bank_id: cashier.bank_id,
+										"wallet_ids.operational": wallet_id,
+									},
+									(err, toBranch) => {
+										let result = errorMessage(
+											err,
+											toBranch,
+											"Invalid wallet ID"
+										);
+										if (result.status == 0) {
+											res.status(200).json(result);
+										} else {
+											const find = {
+												bank_id: cashier.bank_id,
+												trans_type: "Non Wallet to Operational",
+												status: 1,
+												active: "Active",
+											};
+											Fee.findOne(find, (err, rule) => {
+												let result = errorMessage(err, rule, "Rule not found");
+												if (result.status == 0) {
+													res.status(200).json(result);
+												} else {
+													Bank.findOne(
+														{ _id: cashier.bank_id },
+														(err, bank) => {
+															let result = errorMessage(
+																err,
+																bank,
+																"Bank not found"
+															);
+															if (result.status == 0) {
+																res.status(200).json(result);
+															} else {
+																Infra.findOne(
+																	{ _id: bank.user_id },
+																	(err, infra) => {
+																		let result = errorMessage(
+																			err,
+																			infra,
+																			"Infra not found"
+																		);
+																		if (result.status == 0) {
+																			res.status(200).json(result);
+																		} else {
+																			req.body.withoutID = false;
+																			req.body.receiverccode = toBranch.ccode;
+																			req.body.receiverGivenName =
+																				toBranch.name;
+																			req.body.receiverFamilyName = "";
+																			req.body.receiverCountry =
+																				toBranch.country;
+																			req.body.receiverMobile = toBranch.mobile;
+																			req.body.receiverEmail = toBranch.email;
+																			req.body.receiverIdentificationCountry =
+																				"";
+																			req.body.receiverIdentificationType = "";
+																			req.body.receiverIdentificationNumber =
+																				"";
+																			req.body.receiverIdentificationValidTill =
+																				"";
+
+																			var otherInfo = {
+																				cashierId: cashier._id,
+																				transactionCode: "",
+																				ruleType: "Non Wallet to Operational",
+																				masterCode: master_code,
+																			};
+																			addCashierSendRecord(
+																				req.body,
+																				otherInfo,
+																				(err, cs) => {
+																					if (err) {
+																						res
+																							.status(200)
+																							.json(catchError(err));
+																					} else {
+																						const transfer = {
+																							amount: receiverIdentificationAmount,
+																							isInclusive: isInclusive,
+																							master_code: master_code,
+																							senderType: "sendPartner",
+																							senderCode: partner.code,
+																						};
+																						cashierToOperational(
+																							transfer,
+																							infra,
+																							bank,
+																							branch,
+																							toBranch,
+																							rule
+																						)
+																							.then((result) => {
+																								if (result.status == 1) {
+																									otherInfo.csId = cs._id;
+																									otherInfo.amount =
+																										result.amount;
+																									otherInfo.fee = result.fee;
+																									otherInfo.sendFee =
+																										result.sendFee;
+
+																									updateCashierRecords(
+																										"partnercashier",
+																										otherInfo,
+																										(err) => {
+																											if (err) {
+																												res
+																													.status(200)
+																													.json(
+																														catchError(err)
+																													);
+																											} else {
+																												txstate.reported(
+																													master_code
+																												);
+																												res.status(200).json({
+																													status: 1,
+																													message:
+																														result.amount +
+																														"XOF amount is Transferred",
+																												});
+																											}
+																										}
+																									);
+																								} else {
+																									res.status(200).json(result);
+																								}
+																							})
+																							.catch((err) => {
+																								console.log(err);
+																								res.status(200).json({
+																									status: 0,
+																									message: err.message,
+																								});
+																							});
+																					}
+																				}
+																			);
+																		}
+																	}
+																);
+															}
+														}
+													);
+												}
+											});
+										}
+									}
+								);
+							}
+						});
 					}
 				});
 			}

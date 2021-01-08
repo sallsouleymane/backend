@@ -4,7 +4,12 @@ const Infra = require("../../../models/Infra");
 
 //services
 const blockchain = require("../../../services/Blockchain.js");
+
+//utils
 const { calculateShare } = require("../../../routes/utils/calculateShare");
+const getTypeClass = require("../../../routes/utils/getTypeClass");
+
+//transaction
 const txstate = require("../states");
 const txutils = require("../utils");
 
