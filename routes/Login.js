@@ -447,21 +447,44 @@ router.post("/cashierLogin", function (req, res) {
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
-							let sign_creds = { username: username, type: "cashier" };
-							const token = jwtsign(sign_creds);
-
-							res.status(200).json({
-								token: token,
-								name: cashier.name,
-								username: bank.username,
-								status: cashier.status,
-								email: bank.email,
-								mobile: bank.mobile,
-								cashier_id: cashier._id,
-								bank_id: cashier.bank_id,
-								branch_id: cashier.branch_id,
-								id: bank._id,
-							});
+							Branch.findById(cashier.branch_id, function (err, branch) {
+								var result = errorMessage(
+									err,
+									branch,
+									"This user is not assigned as a cashier."
+								);
+								if (result.status == 0) {
+									res.status(200).json(result);
+								} else {
+									Bank.findById(cashier.bank_id, function (err, bank) {
+										var result = errorMessage(
+											err,
+											bank,
+											"This user is not assigned as a cashier."
+										);
+										if (result.status == 0) {
+											res.status(200).json(result);
+										} else {
+											let sign_creds = { username: username, type: "cashier" };
+											const token = jwtsign(sign_creds);
+											res.status(200).json({
+												token: token,
+												name: cashier.name,
+												username: bank.username,
+												status: cashier.status,
+												email: bank.email,
+												mobile: bank.mobile,
+												cashier_id: cashier._id,
+												bank_id: cashier.bank_id,
+												branch_id: cashier.branch_id,
+												bank_name: bank.name,
+												branch_name: branch.name,
+												id: bank._id,
+											});
+										}	
+									});
+								}
+							}); 
 						}
 					}
 				);
