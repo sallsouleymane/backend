@@ -137,6 +137,7 @@ async function distributeRevenue(transfer, bank, branch) {
 
 async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 	try {
+		let master_code = transfer.master_code;
 		let infra = await Infra.findOne({ _id: bank.user_id });
 		let sendBranchPart = 0;
 		let sendBranch = {};
@@ -152,8 +153,6 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 		const infraMasterWallet = bank.wallet_ids.infra_master;
 		const branchOpWallet = branch.wallet_ids.operational;
 		const branchMasterWallet = branch.wallet_ids.master;
-
-		let master_code = transfer.master_code;
 
 		let infraPart = txutils.getPart(txInfo, master_code, ["s3", "s4"], []);
 		let claimBranchPart = txutils.getPart(txInfo, master_code, ["c2"], []);
