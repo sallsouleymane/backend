@@ -54,18 +54,44 @@ router.post("/partnerCashier/login", function (req, res) {
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
-							res.status(200).json({
-								token: token,
-								name: cashier.name,
-								username: user.username,
-								status: cashier.status,
-								email: user.email,
-								mobile: user.mobile,
-								cashier_id: cashier._id,
-								bank_id: cashier.bank_id,
-								branch_id: cashier.branch_id,
-								id: user._id,
-							});
+							PartnerBranch.findById(cashier.branch_id, function (err, branch) {
+								var result = errorMessage(
+									err,
+									branch,
+									"Branch Not found."
+								);
+								if (result.status == 0) {
+									res.status(200).json(result);
+								} else {
+									Partner.findById(cashier.partner_id, function (err, partner) {
+										var result = errorMessage(
+											err,
+											partner,
+											"Partner not found."
+										);
+										if (result.status == 0) {
+											res.status(200).json(result);
+										} else {
+											let sign_creds = { username: username, type: "cashier" };
+											const token = jwtsign(sign_creds);
+											res.status(200).json({
+												token: token,
+												name: cashier.name,
+												username: user.username,
+												status: cashier.status,
+												email: user.email,
+												mobile: user.mobile,
+												cashier_id: cashier._id,
+												bank_id: cashier.bank_id,
+												branch_id: cashier.branch_id,
+												partner_name:partner.name,
+												branch_name:branch.name,
+												id: user._id,
+											});
+										}	
+									});
+								}
+							}); 
 						}
 					}
 				);
@@ -73,6 +99,7 @@ router.post("/partnerCashier/login", function (req, res) {
 		}
 	);
 });
+
 
 router.post("/partnerBranch/login", function (req, res) {
 	const { username, password } = req.body;
@@ -451,7 +478,7 @@ router.post("/cashierLogin", function (req, res) {
 								var result = errorMessage(
 									err,
 									branch,
-									"This user is not assigned as a cashier."
+									"Branch not found."
 								);
 								if (result.status == 0) {
 									res.status(200).json(result);
@@ -460,7 +487,7 @@ router.post("/cashierLogin", function (req, res) {
 										var result = errorMessage(
 											err,
 											bank,
-											"This user is not assigned as a cashier."
+											"Bank not found."
 										);
 										if (result.status == 0) {
 											res.status(200).json(result);
