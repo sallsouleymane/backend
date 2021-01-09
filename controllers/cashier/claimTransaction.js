@@ -20,11 +20,7 @@ const PartnerCashier = require("../../models/partner/Cashier");
 
 // transactions
 const txstate = require("../transactions/states");
-// const cashierToOperational = require("../transactions/intraBank/cashierToOperational");
-// const cashierToCashier = require("../transactions/intraBank/cashierToCashier");
-// const cashierToWallet = require("../transactions/intraBank/cashierToWallet");
 const cashierClaimMoney = require("../transactions/intraBank/cashierClaimMoney");
-// const partnerCashierClaimMoney = require("../../routes/transactions/intraBank/partnerCashierClaimMoney");
 
 function addClaimRecord(reqData, otherData, next) {
 	const {
@@ -443,7 +439,6 @@ module.exports.partnerClaimMoney = function (req, res) {
 																								transfer,
 																								bank,
 																								branch,
-																								sendBranch,
 																								rule
 																							)
 																								.then(function (result) {
