@@ -23,6 +23,88 @@ const OTP = require("../../models/OTP");
 const Partner = require("../../models/partner/Partner");
 const Document = require("../../models/Document");
 
+router.post("/bank/blockPartner", jwtTokenAuth, function (req, res) {
+	var { partner_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, bank) {
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Partner.findOneAndUpdate(
+					{ _id: partner_id },
+					{
+						$set: {
+							status: 0,
+						},
+					},
+					(err, partner) => {
+						let result = errorMessage(err, partner, "Partner not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "blocked Partner",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/bank/unblockPartner", jwtTokenAuth, function (req, res) {
+	var { partner_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, bank) {
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Partner.findOneAndUpdate(
+					{ _id: partner_id },
+					{
+						$set: {
+							status: 1,
+						},
+					},
+					(err, merchant) => {
+						let result = errorMessage(err, merchant, "Partner not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							res.status(200).json({
+								status: 1,
+								data: "Unblocked Partner",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/bank/listPartners", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
