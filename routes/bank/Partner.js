@@ -64,7 +64,7 @@ router.post("/bank/blockPartner", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/bank/unblockMerchant", jwtTokenAuth, function (req, res) {
+router.post("/bank/unblockPartner", jwtTokenAuth, function (req, res) {
 	var { partner_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
