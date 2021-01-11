@@ -91,19 +91,15 @@ module.exports = async function (
 		}
 
 		let bankComm = calculateShare("bank", amount, comm);
-		let partnerFeeShare = calculateShare(
-			"branch",
-			amount,
-			fee,
-			{},
-			branch.bcode
-		);
+		let payerType = transfer.payerType;
+		let payerCode = transfer.payerCode;
+		let partnerFeeShare = calculateShare(payerType, amount, fee, {}, payerCode);
 		let partnerCommShare = calculateShare(
-			"branch",
+			payerType,
 			amount,
 			comm,
 			{},
-			branch.bcode
+			payerCode
 		);
 
 		transfer.amount = amount;
