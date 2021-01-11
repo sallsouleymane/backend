@@ -823,15 +823,6 @@ module.exports.cashierSendToOperational = async function (req, res) {
 	const master_code = await txstate.initiate();
 
 	const { walletId, receiverIdentificationAmount, isInclusive } = req.body;
-
-	// var code = walletId.substr(0, 2);
-	// if (code != "PB") {
-	// 	res.status(200).json({
-	// 		status: 0,
-	// 		message: "You can only send to partner branch",
-	// 	});
-	// 	return;
-	// }
 	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
 		{
@@ -852,10 +843,8 @@ module.exports.cashierSendToOperational = async function (req, res) {
 					if (result.status == 0) {
 						res.status(200).json(result);
 					} else {
-						//const Collection = getTypeClass(code);
 						PartnerBranch.findOne(
 							{
-								_id: { $ne: branch._id },
 								bank_id: branch.bank_id,
 								"wallet_ids.operational": walletId,
 							},

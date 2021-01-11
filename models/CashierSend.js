@@ -1,10 +1,38 @@
 // User.js
 const mongoose = require("mongoose");
 const CashierSendSchema = new mongoose.Schema({
-	sender_info: { type: String, required: true },
-	sender_id: { type: String, required: false },
-	receiver_info: { type: String, required: true },
-	receiver_id: { type: String, required: false },
+	sender_info: {
+		ccode: { type: String, required: false },
+		mobile: { type: String, required: false },
+		givenname: { type: String, required: false },
+		familyname: { type: String, required: false },
+		address1: { type: String, required: false },
+		state: { type: String, required: false },
+		zip: { type: String, required: false },
+		country: { type: String, required: false },
+		email: { type: String, required: false },
+		note: { type: String, required: false },
+	},
+	sender_id: {
+		country: { type: String, required: false },
+		type: { type: String, required: false },
+		number: { type: String, required: false },
+		valid: { type: String, required: false },
+	},
+	receiver_info: {
+		mobile: { type: String, required: false },
+		ccode: { type: String, required: false },
+		givenname: { type: String, required: false },
+		familyname: { type: String, required: false },
+		country: { type: String, required: false },
+		email: { type: String, required: false },
+	},
+	receiver_id: {
+		country: { type: String, required: false },
+		type: { type: String, required: false },
+		number: { type: String, required: false },
+		valid: { type: String, required: false },
+	},
 	without_id: { type: String, required: true, default: 0 },
 	require_otp: { type: String, required: true, default: 0 },
 	transaction_code: { type: String, required: false, default: null },

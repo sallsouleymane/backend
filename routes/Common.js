@@ -41,12 +41,27 @@ const TxState = require("../models/TxState");
 const Partner = require("../models/partner/Partner");
 const PartnerBranch = require("../models/partner/Branch");
 const Invoice = require("../models/merchant/Invoice");
+const ClaimCode = require("../models/ClaimCode");
 
 router.get("/testGet", function (req, res) {
 	res.status(200).json({
 		status: 0,
 		message: "Internal error please try again",
 	});
+});
+
+router.get("/getClaimCode", function (req, res) {
+	let sender_mobile = req.query.sender_mobile;
+	let receiver_mobile = req.query.receiver_mobile;
+	ClaimCode.findOne(
+		{
+			sender_mobile: sender_mobile,
+			receiver_mobile: receiver_mobile,
+		},
+		function (err, cc) {
+			res.send(cc);
+		}
+	);
 });
 
 router.post("/:user/getPaidInvoiceList", jwtTokenAuth, function (req, res) {

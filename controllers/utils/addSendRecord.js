@@ -5,6 +5,7 @@ const makeotp = require("../../routes/utils/makeotp");
 
 //models
 const CashierSend = require("../../models/CashierSend");
+const ClaimCode = require("../../models/ClaimCode");
 
 module.exports = function (reqData, otherData, next) {
 	const {
@@ -61,14 +62,14 @@ module.exports = function (reqData, otherData, next) {
 		email: email,
 		note: note,
 	};
-	data.sender_info = JSON.stringify(temp);
+	data.sender_info = temp;
 	temp = {
 		country: senderIdentificationCountry,
 		type: senderIdentificationType,
 		number: senderIdentificationNumber,
 		valid: senderIdentificationValidTill,
 	};
-	data.sender_id = JSON.stringify(temp);
+	data.sender_id = temp;
 	temp = {
 		mobile: receiverMobile,
 		ccode: receiverccode,
@@ -77,14 +78,14 @@ module.exports = function (reqData, otherData, next) {
 		country: receiverCountry,
 		email: receiverEmail,
 	};
-	data.receiver_info = JSON.stringify(temp);
+	data.receiver_info = temp;
 	temp = {
 		country: receiverIdentificationCountry,
 		type: receiverIdentificationType,
 		number: receiverIdentificationNumber,
 		valid: receiverIdentificationValidTill,
 	};
-	data.receiver_id = JSON.stringify(temp);
+	data.receiver_id = temp;
 	data.amount = receiverIdentificationAmount;
 	data.is_inclusive = isInclusive;
 	data.cashier_id = cashierId;
@@ -111,6 +112,32 @@ module.exports = function (reqData, otherData, next) {
 	}
 
 	data.save((err, d) => {
+		saveTransactionCode(mobile, receiverMobile, transactionCode);
 		return next(err, d);
 	});
 };
+
+function saveTransactionCode(mobile, receiverMobile, transactionCode) {
+	ClaimCode.findOneAndUpdate(
+		{
+			sender_mobile: mobile,
+			receiver_mobile: receiverMobile,
+		},
+		{
+			code: transactionCode,
+		},
+		function (err, cc) {
+			if (cc == null) {
+				let data = new ClaimCode();
+				data.sender_mobile = mobile;
+				data.receiver_mobile = receiverMobile;
+				data.code = transactionCode;
+				data.save((err) => {
+					if (err) {
+						console.log(err);
+					}
+				});
+			}
+		}
+	);
+}
