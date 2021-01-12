@@ -1,8 +1,7 @@
 //utils
-const sendSMS = require("../../routes/utils/sendSMS");
-const sendMail = require("../../routes/utils/sendMail");
 const { errorMessage, catchError } = require("../../routes/utils/errorHandler");
-const { calculateShare } = require("../../routes/utils/calculateShare");
+const invoicesTotalAmount = require("../utils/invoicesTotalAmount");
+const updateInvoiceRecord = require("../utils/updateInvoiceRecord");
 
 //controllers
 const cashierInvoicePay = require("../transactions/intraBank/cashierInvoicePay");
@@ -15,17 +14,11 @@ const Bank = require("../../models/Bank");
 const Branch = require("../../models/Branch");
 const Infra = require("../../models/Infra");
 const MerchantRule = require("../../models/merchant/MerchantRule");
-const IBMerchantRule = require("../../models/merchant/InterBankRule");
-const MerchantBranch = require("../../models/merchant/MerchantBranch");
-const MerchantPosition = require("../../models/merchant/Position");
 const Merchant = require("../../models/merchant/Merchant");
 const Cashier = require("../../models/Cashier");
-const Invoice = require("../../models/merchant/Invoice");
-const InvoiceGroup = require("../../models/merchant/InvoiceGroup");
 const Partner = require("../../models/partner/Partner");
 const PartnerCashier = require("../../models/partner/Cashier");
 const PartnerBranch = require("../../models/partner/Branch");
-const InterBankRule = require("../../models/InterBankRule");
 
 module.exports.cashierInvoicePay = async (req, res) => {
 	// Initiate transaction state
@@ -158,7 +151,7 @@ module.exports.cashierInvoicePay = async (req, res) => {
 													payer_id: cashier._id,
 												};
 
-												let status = await updatePaymentRecords(
+												let status = await updateInvoiceRecord(
 													req.body,
 													otherInfo,
 													master_code
@@ -286,7 +279,7 @@ module.exports.partnerInvoicePay = async (req, res) => {
 												{ amount_collected: 0 }
 											);
 
-											let total_amount = await calculateTotalAmount(
+											let total_amount = await invoicesTotalAmount(
 												invoices,
 												merchant_id
 											);
@@ -331,10 +324,9 @@ module.exports.partnerInvoicePay = async (req, res) => {
 													payer_id: cashier._id,
 												};
 
-												let status = await updatePaymentRecords(
+												let status = await updateInvoiceRecord(
 													req.body,
-													otherInfo,
-													master_code
+													otherInfo
 												);
 												if (status != null) {
 													throw new Error(status);
@@ -365,119 +357,3 @@ module.exports.partnerInvoicePay = async (req, res) => {
 		}
 	);
 };
-
-async function calculateTotalAmount(invoices, merchant_id) {
-	try {
-		var total_amount = 0;
-		for (invoice of invoices) {
-			var { id, penalty } = invoice;
-			var inv = await Invoice.findOne({
-				_id: id,
-				merchant_id: merchant_id,
-				paid: 0,
-				is_validated: 1,
-			});
-			if (inv == null) {
-				throw new Error(
-					"Invoice id " +
-						id +
-						" is already paid or not validated or it belongs to different merchant"
-				);
-			}
-			total_amount += inv.amount + penalty;
-		}
-		if (total_amount < 0) {
-			throw new Error("Amount is a negative value");
-		}
-		return total_amount;
-	} catch (err) {
-		throw err;
-	}
-}
-
-async function updatePaymentRecords(reqData, otherData) {
-	const { invoices, merchant_id } = reqData;
-	const { total_amount, master_code, paid_by, payer_id } = otherData;
-	var last_paid_at = new Date();
-	var m = await Merchant.updateOne(
-		{ _id: merchant_id },
-		{
-			last_paid_at: last_paid_at,
-			$inc: {
-				amount_collected: total_amount,
-				amount_due: -total_amount,
-				bills_paid: invoices.length,
-			},
-		}
-	);
-	if (m == null) {
-		throw new Error("Merchant status can not be updated");
-	}
-
-	// var ms = await MerchantPosition.updateOne(
-	// 	{ _id: i.creator_id },
-	// 	{
-	// 		last_paid_at: last_paid_at,
-	// 	}
-	// );
-	// if (ms == null) {
-	// 	status_update_feedback =
-	// 		"Merchant Staff status can not be updated";
-	// }
-
-	// var mb = await MerchantBranch.updateOne(
-	// 	{ _id: ms.branch_id },
-	// 	{
-	// 		last_paid_at: last_paid_at,
-	// 		$inc: {
-	// 			amount_collected: total_amount,
-	// 			amount_due: -total_amount,
-	// 			bills_paid: invoices.length,
-	// 		},
-	// 	}
-	// );
-	// if (mb == null) {
-	// 	status_update_feedback =
-	// 		"Merchant branch status can not be updated";
-	// }
-
-	for (invoice of invoices) {
-		let { id, penalty } = invoice;
-		let i = await Invoice.findOneAndUpdate(
-			{ _id: id },
-			{
-				paid: 1,
-				paid_by: paid_by,
-				payer_id: payer_id,
-				penalty: penalty,
-				transaction_code: master_code,
-			}
-		);
-		if (i == null) {
-			throw new Error("Invoice paid status can not be updated");
-		}
-
-		var ig = await InvoiceGroup.updateOne(
-			{ _id: i.group_id },
-			{
-				last_paid_at: last_paid_at,
-				$inc: {
-					bills_paid: 1,
-				},
-			}
-		);
-		if (ig == null) {
-			throw new Error("Invoice group status can not be updated");
-		}
-
-		content =
-			"E-Wallet:  Amount " +
-			i.amount +
-			" is paid for invoice nummber " +
-			i.number +
-			" for purpose " +
-			i.description;
-		sendSMS(content, i.mobile);
-	}
-	return null;
-}
