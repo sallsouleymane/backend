@@ -11,21 +11,10 @@ const txstate = require("../transactions/states");
 
 //models
 const Bank = require("../../models/Bank");
-const Branch = require("../../models/Branch");
 const Infra = require("../../models/Infra");
 const MerchantRule = require("../../models/merchant/MerchantRule");
-const IBMerchantRule = require("../../models/merchant/InterBankRule");
-const MerchantBranch = require("../../models/merchant/MerchantBranch");
-const MerchantPosition = require("../../models/merchant/Position");
 const Merchant = require("../../models/merchant/Merchant");
-const Cashier = require("../../models/Cashier");
 const User = require("../../models/User");
-const Invoice = require("../../models/merchant/Invoice");
-const InvoiceGroup = require("../../models/merchant/InvoiceGroup");
-const Partner = require("../../models/partner/Partner");
-const PartnerCashier = require("../../models/partner/Cashier");
-const PartnerBranch = require("../../models/partner/Branch");
-const InterBankRule = require("../../models/InterBankRule");
 
 module.exports = async (req, res) => {
 	// Initiate transaction state
@@ -125,8 +114,7 @@ module.exports = async (req, res) => {
 
 												let status = await updateInvoiceRecord(
 													req.body,
-													otherInfo,
-													master_code
+													otherInfo
 												);
 												if (status != null) {
 													throw new Error(status);
@@ -138,12 +126,7 @@ module.exports = async (req, res) => {
 												res.status(200).json(result);
 											}
 										} catch (err) {
-											console.log(err);
-											var message = err;
-											if (err && err.message) {
-												message = err.message;
-											}
-											res.status(200).json({ status: 0, message: message });
+											res.status(200).json(catchError(err));
 										}
 									}
 								}
