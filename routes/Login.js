@@ -526,7 +526,7 @@ router.post("/user/login", (req, res) => {
 		var result = errorMessage(
 			err,
 			user,
-			"User account not found. Please signup"
+			"Username or pass word entered is incorrect"
 		);
 		if (result.status == 0) {
 			res.status(200).json(result);

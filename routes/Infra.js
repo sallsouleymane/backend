@@ -28,6 +28,11 @@ const Profile = require("../models/Profile");
 const Document = require("../models/Document");
 const Merchant = require("../models/merchant/Merchant");
 const Country = require("../models/Country");
+const User = require("../models/User");
+const Cashier = require("../models/Cashier");
+const Branch = require("../models/Branch");
+const MerchantBranch = require("../models/merchant/MerchantBranch");
+const Partner = require("../models/partner/Partner");
 
 const mainFee = config.mainFee;
 
@@ -368,11 +373,21 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 				try {
 					var totalBanks = await Bank.countDocuments({});
 					var totalmerchants = await Merchant.countDocuments({});
+					var totalusers = await User.countDocuments({});
+					var totalbranches = await Branch.countDocuments({});
+					var totalmerchantbranches = await MerchantBranch.countDocuments({});
+					var totalcashiers = await Cashier.countDocuments({});
+					var totalpartners = await Partner.countDocuments({});
 
 					res.status(200).json({
 						status: 1,
 						totalBanks: totalBanks,
 						totalMerchants: totalmerchants,
+						totalusers: totalusers,
+						totalcashiers: totalcashiers,
+						totalmerchantbranches: totalmerchantbranches,
+						totalpartners: totalpartners,
+						totalbranches: totalbranches,
 					});
 				} catch (err) {
 					console.log(err);
