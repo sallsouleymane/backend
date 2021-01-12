@@ -1979,7 +1979,11 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 									{ _id: subzone_id },
 									{ $inc: { branch_count: 1 } },
 									function (err, subzone) {
-										let result = errorMessage(err, subzone, "Subone not found");
+										let result = errorMessage(
+											err,
+											subzone,
+											"Subzone not found"
+										);
 										if (result.status == 0) {
 											res.status(200).json(result);
 										} else {
