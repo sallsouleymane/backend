@@ -375,7 +375,7 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 					var totalmerchants = await Merchant.countDocuments({});
 					var totalusers = await User.countDocuments({});
 					var totalbranches = await Branch.countDocuments({});
-					var totalmerchantbranchs = await MerchantBranch.countDocuments({});
+					var totalmerchantbranches = await MerchantBranch.countDocuments({});
 					var totalcashiers = await Cashier.countDocuments({});
 					var totalpartners = await Partner.countDocuments({});
 
@@ -385,7 +385,7 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 						totalMerchants: totalmerchants,
 						totalusers: totalusers,
 						totalcashiers: totalcashiers,
-						totalmerchantbranchs: totalmerchantbranchs,
+						totalmerchantbranches: totalmerchantbranches,
 						totalpartners: totalpartners,
 						totalbranches: totalbranches,
 					});
