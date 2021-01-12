@@ -61,6 +61,30 @@ router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
 	);
 });
 
+router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				res.status(200).json({
+					status: 1,
+					bills_paid: merchant.bills_paid,
+					bills_raised: merchant.bills_raised,
+					amount_collected: merchant.amount_collected,
+					amount_due: merchant.amount_due,
+				});
+			}
+		}
+	);
+});
+
 router.post("/merchant/uploadCustomers", jwtTokenAuth, (req, res) => {
 	const { customers } = req.body;
 	const jwtusername = req.sign_creds.username;
