@@ -140,8 +140,9 @@ module.exports.cashierInvoicePay = async (req, res) => {
 													}
 												);
 												if (c == null) {
-													status_update_feedback =
-														"Bank cashier's status can not be updated";
+													throw new Error(
+														"Bank cashier's status can not be updated"
+													);
 												}
 
 												let otherInfo = {
@@ -153,8 +154,7 @@ module.exports.cashierInvoicePay = async (req, res) => {
 
 												let status = await updateInvoiceRecord(
 													req.body,
-													otherInfo,
-													master_code
+													otherInfo
 												);
 												if (status != null) {
 													throw new Error(status);
@@ -166,14 +166,7 @@ module.exports.cashierInvoicePay = async (req, res) => {
 												res.status(200).json(result);
 											}
 										} catch (err) {
-											console.log(err);
-											var message = err.toString();
-											if (err.message) {
-												message = err.message;
-											}
-											res
-												.status(200)
-												.json({ status: 0, message: message, err: err });
+											res.status(200).json(catchError(err));
 										}
 									}
 								}
