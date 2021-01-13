@@ -312,7 +312,7 @@ router.post("/infra/createMerchant", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/infra/editMerchant", jwtTokenAuth, function (req, res) {
-	var { merchant_id, name, logo, description, document_hash, email } = req.body;
+	var { merchant_id, name, logo, description, document_hash, email, mobile } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{
@@ -335,6 +335,7 @@ router.post("/infra/editMerchant", jwtTokenAuth, function (req, res) {
 						logo: logo,
 						description: description,
 						document_hash: document_hash,
+						mobile: mobile,
 						email: email,
 					},
 					(err, merchant) => {

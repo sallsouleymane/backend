@@ -314,7 +314,7 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/bank/editMerchant", jwtTokenAuth, function (req, res) {
-	var { merchant_id, name, logo, description, document_hash, email } = req.body;
+	var { merchant_id, name, logo, description, document_hash, email, mobile } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
@@ -338,6 +338,7 @@ router.post("/bank/editMerchant", jwtTokenAuth, function (req, res) {
 						description: description,
 						document_hash: document_hash,
 						email: email,
+						mobile: mobile,
 					},
 					(err, merchant) => {
 						let result = errorMessage(err, merchant, "Merchant not found.");
