@@ -341,6 +341,12 @@ router.post("/partnerBranch/getDashStats", jwtTokenAuth, function (req, res) {
 										total: {
 											$sum: "$cash_in_hand",
 										},
+										totalFee: {
+											$sum: "$fee_generated",
+										},
+										totalCommission: {
+											$sum: "$cash_transferred",
+										},
 									},
 								},
 							],
@@ -352,12 +358,16 @@ router.post("/partnerBranch/getDashStats", jwtTokenAuth, function (req, res) {
 									aggregate.length > 0
 								) {
 									cin = aggregate[0].total;
+									fg = post5[0].totalFee;
+									cg = post5[0].totalCommission;
 								}
 
 								res.status(200).json({
 									status: 1,
 									totalCashier: count,
 									cashInHand: cin,
+									feeGenerated : fg,
+									commissionGenerated: cg,
 								});
 							}
 						);
