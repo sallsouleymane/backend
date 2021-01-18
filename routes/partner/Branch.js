@@ -345,7 +345,7 @@ router.post("/partnerBranch/getDashStats", jwtTokenAuth, function (req, res) {
 											$sum: "$fee_generated",
 										},
 										totalCommission: {
-											$sum: "$cash_transferred",
+											$sum: "$commission_generated",
 										},
 										openingBalance: {
 											$sum: "$opening_balance",
