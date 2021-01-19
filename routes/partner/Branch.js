@@ -11,7 +11,7 @@ const blockchain = require("../../services/Blockchain");
 //models
 const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
-const CashierTransfer = require("../models/CashierTransfer");
+const CashierTransfer = require("../../models/CashierTransfer");
 
 router.post("/partnerBranch/SetupUpdate", jwtTokenAuth, function (req, res) {
 	const { password } = req.body;
