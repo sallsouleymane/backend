@@ -1275,6 +1275,7 @@ router.post("/cashierTransferMoney", jwtTokenAuth, function (req, res) {
 							let data = new CashierTransfer();
 							data.amount = amount;
 							data.sender_id = f._id;
+							data.branch_id = f.branch_id;
 							data.receiver_id = receiver_id;
 							data.sender_name = f.name;
 							data.receiver_name = receiver_name;
