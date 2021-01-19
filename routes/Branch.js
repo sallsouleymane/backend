@@ -12,6 +12,7 @@ const OTP = require("../models/OTP");
 const Branch = require("../models/Branch");
 const BankUser = require("../models/BankUser");
 const Cashier = require("../models/Cashier");
+const CashierTransfer = require("../models/CashierTransfer");
 const CashierPending = require("../models/CashierPending");
 const CashierLedger = require("../models/CashierLedger");
 const BranchSend = require("../models/BranchSend");
@@ -96,7 +97,7 @@ router.post("/getBranchDashStats", jwtTokenAuth, function (req, res) {
 													},
 												},
 											],
-											(e, post5) => {
+											async (e, post5) => {
 												let cin = 0;
 												if (
 													post5 != undefined &&
@@ -108,6 +109,9 @@ router.post("/getBranchDashStats", jwtTokenAuth, function (req, res) {
 													cg = post5[0].totalCommission;
 													ob = post5[0].openingBalance;
 												}
+												var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, branch_id: user._id});
+												var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, branch_id: user._id});
+												var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, branch_id: user._id});
 
 												res.status(200).json({
 													status: 1,
@@ -118,6 +122,9 @@ router.post("/getBranchDashStats", jwtTokenAuth, function (req, res) {
 													feeGenerated : fg,
 													commissionGenerated: cg,
 													openingBalance: ob,
+													cancelled: totalcancelledTransfers,
+													pending: totalPendingTransfers,
+													accepted: totalAcceptedTransfers,
 												});
 											}
 										);

@@ -11,6 +11,7 @@ const blockchain = require("../../services/Blockchain");
 //models
 const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
+const CashierTransfer = require("../models/CashierTransfer");
 
 router.post("/partnerBranch/SetupUpdate", jwtTokenAuth, function (req, res) {
 	const { password } = req.body;
@@ -353,7 +354,7 @@ router.post("/partnerBranch/getDashStats", jwtTokenAuth, function (req, res) {
 									},
 								},
 							],
-							(err, aggregate) => {
+							async (err, aggregate) => {
 								let cin = 0;
 								if (
 									aggregate != undefined &&
@@ -365,7 +366,9 @@ router.post("/partnerBranch/getDashStats", jwtTokenAuth, function (req, res) {
 									cg = aggregate[0].totalCommission;
 									ob = aggregate[0].openingBalance;
 								}
-
+								var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, branch_id: branch._id});
+								var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, branch_id: branch._id});
+								var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, branch_id: branch._id});
 								res.status(200).json({
 									status: 1,
 									totalCashier: count,
@@ -373,6 +376,9 @@ router.post("/partnerBranch/getDashStats", jwtTokenAuth, function (req, res) {
 									feeGenerated : fg,
 									commissionGenerated: cg,
 									openingBalance: ob,
+									cancelled: totalcancelledTransfers,
+									pending: totalPendingTransfers,
+									accepted: totalAcceptedTransfers,
 								});
 							}
 						);
