@@ -507,7 +507,7 @@ router.post("/cashierLogin", function (req, res) {
 												bank_name: bank.name,
 												branch_name: branch.name,
 												id: bank._id,
-												max_trans_amt.cashier.max_trans_amt,
+												max_trans_amt: cashier.max_trans_amt,
 											});
 										}	
 									});
