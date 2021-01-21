@@ -466,10 +466,9 @@ router.post("/updateCashierTransferStatus", jwtTokenAuth, function (req, res) {
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
-							let pending = Number(da.pending_trans) - 1;
 							Cashier.findByIdAndUpdate(
 								cashier_id,
-								{ pending_trans: pending },
+								{ $inc: {pending_trans: -1}},
 								function (err, d) {
 									let result = errorMessage(err, d, err.toString());
 									if (result.status == 0) {
