@@ -1122,6 +1122,8 @@ router.post(
 
 router.post("/cashierSendMoneyPending", jwtTokenAuth, function (req, res) {
 	const {
+		type,
+		interbank,
 		givenname,
 		familyname,
 		note,
@@ -1203,6 +1205,9 @@ router.post("/cashierSendMoneyPending", jwtTokenAuth, function (req, res) {
 				data.amount = receiverIdentificationAmount;
 				data.transaction_details = JSON.stringify(temp);
 				data.cashier_id = f._id;
+				data.trans_type = type;
+				data.interbank = interbank;
+
 
 				let pending = Number(f.pending_trans) + 1;
 

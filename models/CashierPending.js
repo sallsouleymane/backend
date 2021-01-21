@@ -8,6 +8,7 @@ const CashierPendingSchema = new mongoose.Schema({
   cashier_id: { type: String, required: true},
   trans_type: { type: String, required: true, default: 'DR' },
   status: { type: Number, required: true, default: 0 },
+  interbank : { type: Boolean, required: false, default: false },
   created_at: { type: Date, required:true, default: Date.now }
 });
 module.exports = mongoose.model('CashierPending', CashierPendingSchema);
