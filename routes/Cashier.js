@@ -72,24 +72,33 @@ router.post(
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
-							Bank.findOne({ _id: branch.bank_id }, async (err, bank) => {
+							Bank.findOne({ _id: branch.bank_id }, (err, bank) => {
 								let result = errorMessage(err, bank, "Bank not found.");
 								if (result.status == 0) {
 									res.status(200).json(result);
 								} else {
-									try {
-										let result = await blockchain.getStatement(
-											branch.wallet_ids.operational,
-											cashier._id
-										);
-										res.status(200).json({
-											status: 1,
-											message: "get cashier transaction history success",
-											history: result,
-										});
-									} catch (err) {
-										res.status(200).json(catchError(err));
-									}
+									CashierPending.find({cashier_id: cashier._id},async (err, pending) => {
+										let result = errorMessage(err, pending, "History not found.");
+										if (result.status == 0) {
+											res.status(200).json(result);
+										} else {
+											try {
+												let result = await blockchain.getStatement(
+													branch.wallet_ids.operational,
+													cashier._id
+												);
+												res.status(200).json({
+													status: 1,
+													message: "get cashier transaction history success",
+													history: result,
+													pending: pending,
+												});
+											} catch (err) {
+												res.status(200).json(catchError(err));
+											}
+										}
+									});
+									
 								}
 							});
 						}
