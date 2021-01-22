@@ -59,46 +59,52 @@ router.post(
 				status: 1,
 			},
 			function (err, cashier) {
-				let result = errorMessage(
+				let errMsg = errorMessage(
 					err,
 					cashier,
 					"Token changed or user not valid. Try to login again or contact system administrator."
 				);
-				if (result.status == 0) {
-					res.status(200).json(result);
+				if (errMsg.status == 0) {
+					res.status(200).json(errMsg);
 				} else {
 					Branch.findOne({ _id: cashier.branch_id }, (err, branch) => {
-						let result = errorMessage(err, branch, "Branch not found.");
-						if (result.status == 0) {
-							res.status(200).json(result);
+						let errMsg = errorMessage(err, branch, "Branch not found.");
+						if (errMsg.status == 0) {
+							res.status(200).json(errMsg);
 						} else {
 							Bank.findOne({ _id: branch.bank_id }, (err, bank) => {
-								let result = errorMessage(err, bank, "Bank not found.");
-								if (result.status == 0) {
-									res.status(200).json(result);
+								let errMsg = errorMessage(err, bank, "Bank not found.");
+								if (errMsg.status == 0) {
+									res.status(200).json(errMsg);
 								} else {
-									CashierPending.find({cashier_id: cashier._id},async (err, pending) => {
-										let result = errorMessage(err, pending, "History not found.");
-										if (result.status == 0) {
-											res.status(200).json(result);
-										} else {
-											try {
-												let result = await blockchain.getStatement(
-													branch.wallet_ids.operational,
-													cashier._id
-												);
-												res.status(200).json({
-													status: 1,
-													message: "get cashier transaction history success",
-													history: result,
-													pending: pending,
-												});
-											} catch (err) {
-												res.status(200).json(catchError(err));
+									CashierPending.find(
+										{ cashier_id: cashier._id },
+										async (err, pending) => {
+											let errMsg = errorMessage(
+												err,
+												pending,
+												"History not found."
+											);
+											if (errMsg.status == 0) {
+												res.status(200).json(errMsg);
+											} else {
+												try {
+													let result = await blockchain.getStatement(
+														branch.wallet_ids.operational,
+														cashier._id
+													);
+													res.status(200).json({
+														status: 1,
+														message: "get cashier transaction history success",
+														history: result,
+														pending: pending,
+													});
+												} catch (err) {
+													res.status(200).json(catchError(err));
+												}
 											}
 										}
-									});
-									
+									);
 								}
 							});
 						}
@@ -1216,7 +1222,6 @@ router.post("/cashierSendMoneyPending", jwtTokenAuth, function (req, res) {
 				data.cashier_id = f._id;
 				data.trans_type = type;
 				data.interbank = interbank;
-
 
 				let pending = Number(f.pending_trans) + 1;
 
