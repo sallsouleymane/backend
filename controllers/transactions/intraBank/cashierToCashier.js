@@ -51,7 +51,7 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 			created_at: new Date(),
 		};
 
-		let res = await execute(trans, "AMOUNT");
+		let res = await execute(trans, "AMOUNT", bank._id);
 
 		// return response
 		if (res.status == 0) {
@@ -113,7 +113,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			created_at: new Date(),
 		};
 
-		let res = await execute(trans, "FEE");
+		let res = await execute(trans, "FEE", bank._id);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -140,7 +140,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			child_code: transfer.master_code + "-s3",
 			created_at: new Date(),
 		};
-		res = await execute(trans, "INFRAPERCENT");
+		res = await execute(trans, "INFRAPERCENT", bank._id);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -165,7 +165,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			child_code: transfer.master_code + "-s4",
 			created_at: new Date(),
 		};
-		res = await execute(trans, "INFRAFIXED");
+		res = await execute(trans, "INFRAFIXED", bank._id);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -191,7 +191,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			created_at: new Date(),
 		};
 
-		res = await execute(trans, "SENDFEE");
+		res = await execute(trans, "SENDFEE", bank._id);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}

@@ -29,6 +29,89 @@ const CashierLedger = require("../models/CashierLedger");
 const Merchant = require("../models/merchant/Merchant");
 const Partner = require("../models/partner/Partner");
 const Infra = require("../models/Infra");
+const RetryQueue = require("../models/RetryQueue");
+
+router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
+	const { queue_id, transaction_id } = req.body;
+	const username = req.sign_creds.username;
+	Bank.findOne(
+		{
+			username,
+			status: 1,
+		},
+		function (err, bank) {
+			let errMsg = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errMsg.status == 0) {
+				res.status(200).json(errMsg);
+			} else {
+				RetryQueue.findOne(
+					{ queue_id: queue_id, bank_id: bank_id },
+					async (err, queue) => {
+						let errMsg = errorMessage(err, queue, "Queue not found");
+						if (errMsg.status == 0) {
+							res.status(200).json(errMsg);
+						} else {
+							try {
+								let res = await execute("", queue_id, bank_id, transaction_id);
+
+								// return response
+								if (res.status == 0) {
+									return {
+										status: 0,
+										message: "Transaction failed! - " + res.message,
+									};
+								} else {
+									res.status(200).json({
+										status: 0,
+										message: "Transaction Success !! " + res.message,
+									});
+								}
+							} catch (err) {
+								console.log(err);
+								res.status(200).json({ status: 0, message: err.message });
+							}
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/bank/getFailedTransactions", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, bank) {
+			let errMsg = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errMsg.status == 0) {
+				res.status(200).json(result);
+			} else {
+				RetryQueue.find({ bank_id: bank._id }, (err, queues) => {
+					if (err) {
+						res.status(200).json(catchError(err));
+					} else {
+						res.status(200).json({
+							status: 1,
+							queues: queues,
+						});
+					}
+				});
+			}
+		}
+	);
+});
 
 router.post("/bank/getBranchWalletBalance", jwtTokenAuth, function (req, res) {
 	const { branch_id, wallet_type } = req.body;
@@ -38,10 +121,10 @@ router.post("/bank/getBranchWalletBalance", jwtTokenAuth, function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, partner) {
+		function (err, bank) {
 			let errMsg = errorMessage(
 				err,
-				partner,
+				bank,
 				"Token changed or user not valid. Try to login again or contact system administrator."
 			);
 			if (errMsg.status == 0) {

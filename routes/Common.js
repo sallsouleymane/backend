@@ -473,60 +473,6 @@ router.post("/:user/getOne", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/:user/reinitiateTransfer", jwtTokenAuth, (req, res) => {
-	const user = req.params.user;
-	const Type = getTypeClass(user);
-	const { master_code, child_code } = req.body;
-	const username = req.sign_creds.username;
-	Type.findOne(
-		{
-			username,
-			status: 1,
-		},
-		function (err, details) {
-			let result = errorMessage(err, details, "Unauthorised");
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				TxState.findOne({ _id: master_code }, async (err, trans) => {
-					let errMsg = errorMessage(err, trans, "transaction not found");
-					if (errMsg.status == 0) {
-						res.status(200).json(result);
-					} else {
-						try {
-							let result = await initiateTransfer(
-								trans.transaction,
-								failed_tx_id
-							);
-							if (result.status == 0) {
-								res.status(200).json({
-									status: 0,
-									message: "Transaction failed again",
-									blockchain_message: result.message,
-								});
-							} else if (trans == null) {
-								res.status(200).json({
-									status: 0,
-									message: "Transaction not found",
-								});
-							} else {
-								res.status(200).json({
-									status: 0,
-									message: "Transaction Success !!",
-									blockchain_message: result.message,
-								});
-							}
-						} catch (err) {
-							console.log(err);
-							res.status(200).json({ status: 0, message: err.message });
-						}
-					}
-				});
-			}
-		}
-	);
-});
-
 router.post("/:user/changePassword", jwtTokenAuth, (req, res) => {
 	const user = req.params.user;
 	const Type = getTypeClass(user);
