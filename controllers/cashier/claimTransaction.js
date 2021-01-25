@@ -19,7 +19,7 @@ const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
 
 // transactions
-const txstate = require("../transactions/states");
+const txstate = require("../transactions/services/states");
 const cashierClaimMoney = require("../transactions/intraBank/cashierClaimMoney");
 
 function addClaimRecord(reqData, otherData, next) {
@@ -239,6 +239,7 @@ module.exports.cashierClaimMoney = function (req, res) {
 																							sendRecord.send_branch_type,
 																						sendBranchId:
 																							sendRecord.send_branch_id,
+																						cashierId: cashier._id,
 																					};
 
 																					cashierClaimMoney(

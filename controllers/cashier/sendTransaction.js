@@ -2,8 +2,6 @@
 const makeid = require("../../routes/utils/idGenerator");
 const sendSMS = require("../../routes/utils/sendSMS");
 const sendMail = require("../../routes/utils/sendMail");
-const makeotp = require("../../routes/utils/makeotp");
-const getTypeClass = require("../../routes/utils/getTypeClass");
 const { errorMessage, catchError } = require("../../routes/utils/errorHandler");
 
 const addCashierSendRecord = require("../utils/addSendRecord");
@@ -20,7 +18,7 @@ const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
 
 // transactions
-const txstate = require("../transactions/states");
+const txstate = require("../transactions/services/states");
 const cashierToOperational = require("../transactions/intraBank/cashierToOperational");
 const cashierToCashier = require("../transactions/intraBank/cashierToCashier");
 const cashierToWallet = require("../transactions/intraBank/cashierToWallet");
@@ -122,6 +120,7 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 																				senderType: "sendBranch",
 																				senderCode: branch.bcode,
 																				isInterBank: 0,
+																				cashierId: cashier._id,
 																			};
 																			cashierToCashier(
 																				transfer,
@@ -167,9 +166,6 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 																										.status(200)
 																										.json(catchError(err));
 																								} else {
-																									txstate.waitingForCompletion(
-																										master_code
-																									);
 																									res.status(200).json({
 																										status: 1,
 																										message:
@@ -361,9 +357,6 @@ module.exports.partnerSendMoney = async function (req, res) {
 																												.status(200)
 																												.json(catchError(err));
 																										} else {
-																											txstate.waitingForCompletion(
-																												master_code
-																											);
 																											res.status(200).json({
 																												status: 1,
 																												message:

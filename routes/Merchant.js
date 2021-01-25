@@ -374,7 +374,7 @@ router.post("/merchant/addBillPeriod", jwtTokenAuth, (req, res) => {
 								message: message,
 							});
 						} else if (count == 1) {
-							MerchantSettings.update(
+							MerchantSettings.updateOne(
 								{ merchant_id: merchant._id },
 								{ $push: { bill_period: billperiod } },
 								function (err, setting) {
@@ -550,7 +550,7 @@ router.post("/merchant/addBillTerm", jwtTokenAuth, (req, res) => {
 								message: message,
 							});
 						} else if (count == 1) {
-							MerchantSettings.update(
+							MerchantSettings.updateOne(
 								{ merchant_id: merchant._id },
 								{ $push: { bill_term: billterm } },
 								function (err, setting) {

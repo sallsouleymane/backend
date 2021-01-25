@@ -2,17 +2,18 @@
 // const state = require("./transactions/state");
 const blockchain = require("../../../services/Blockchain.js");
 const { calculateShare } = require("../../../routes/utils/calculateShare");
-const txstate = require("../states");
+const txstate = require("../services/states");
+const execute = require("../services/execute.js");
 
 module.exports = async function (transfer, infra, bank, branch, rule1) {
 	try {
 		const branchOpWallet = branch.wallet_ids.operational;
 		const bankEsWallet = bank.wallet_ids.escrow;
-		const bankOpWallet = bank.wallet_ids.operational;
 
 		// calculate amount to transfer
 		var amount = Number(transfer.amount);
 		var fee = calculateShare("bank", transfer.amount, rule1);
+		transfer.fee = fee;
 		if (transfer.isInclusive) {
 			amount = amount - fee;
 		}
@@ -21,7 +22,7 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 		var balance = await blockchain.getBalance(branchOpWallet);
 
 		// Check balance first
-		if (Number(balance) + Number(branch.credit_limit) < amount + fee) {
+		if (Number(balance) < amount + fee) {
 			return {
 				status: 0,
 				message: "Not enough balance in branch operational wallet",
@@ -30,7 +31,9 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 
 		master_code = transfer.master_code;
 
-		let trans1 = {
+		console.log("Cashier id: ", transfer.cashierId);
+		console.log("bank id ", bank._id);
+		let trans = {
 			from: branchOpWallet,
 			to: bankEsWallet,
 			amount: amount,
@@ -41,52 +44,25 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 			mobile2: bank.mobile,
 			from_name: branch.name,
 			to_name: bank.name,
-			user_id: "",
+			sender_id: transfer.cashierId,
+			receiver_id: bank._id,
 			master_code: master_code,
 			child_code: master_code + "-s1",
 			created_at: new Date(),
 		};
 
-		var res = await blockchain.initiateTransfer(trans1);
+		let res = await execute(trans, "AMOUNT");
 
 		// return response
 		if (res.status == 0) {
 			return {
 				status: 0,
-				message: "Transaction failed!",
-				blockchain_message: result.message,
+				message: "Transaction failed! - " + res.message,
 			};
 		}
 
-		transfer.fee = fee;
 		var sendFee = 0;
 		if (fee > 0) {
-			let trans2 = {
-				from: branchOpWallet,
-				to: bankOpWallet,
-				amount: fee,
-				note: "Cashier Send Fee for Non Wallet to Non Wallet Transaction",
-				email1: branch.email,
-				email2: bank.email,
-				mobile1: branch.mobile,
-				mobile2: bank.mobile,
-				from_name: branch.name,
-				to_name: bank.name,
-				user_id: "",
-				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s2",
-				created_at: new Date(),
-			};
-
-			res = await blockchain.initiateTransfer(trans2);
-			if (res.status == 0) {
-				return {
-					status: 0,
-					message: "Transaction failed!",
-					blockchain_message: res.message,
-				};
-			}
-
 			sendFee = calculateShare(
 				transfer.senderType,
 				transfer.amount,
@@ -115,11 +91,38 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 
-	var infraShare = calculateShare("infra", transfer.amount, rule1);
 	let allTxSuccess = true;
+	fee = transfer.fee;
+
+	if (fee > 0) {
+		let trans = {
+			from: branchOpWallet,
+			to: bankOpWallet,
+			amount: fee,
+			note: "Cashier Send Fee for Non Wallet to Non Wallet Transaction",
+			email1: branch.email,
+			email2: bank.email,
+			mobile1: branch.mobile,
+			mobile2: bank.mobile,
+			from_name: branch.name,
+			to_name: bank.name,
+			sender_id: transfer.cashierId,
+			receiver_id: bank._id,
+			master_code: transfer.master_code,
+			child_code: transfer.master_code + "-s2",
+			created_at: new Date(),
+		};
+
+		let res = await execute(trans, "FEE");
+		if (res.status == 0) {
+			allTxSuccess = false;
+		}
+	}
+
+	var infraShare = calculateShare("infra", transfer.amount, rule1);
 
 	if (infraShare.percentage_amount > 0) {
-		let trans21 = {
+		trans = {
 			from: bankOpWallet,
 			to: infraOpWallet,
 			amount: infraShare.percentage_amount,
@@ -131,19 +134,20 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			mobile2: infra.mobile,
 			from_name: bank.name,
 			to_name: infra.name,
-			user_id: "",
+			sender_id: bank._id,
+			receiver_id: infra._id,
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "-s3",
 			created_at: new Date(),
 		};
-		let res = await blockchain.initiateTransfer(trans21);
+		res = await execute(trans, "INFRAPERCENT");
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
 	}
 
 	if (infraShare.fixed_amount > 0) {
-		let trans22 = {
+		trans = {
 			from: bankOpWallet,
 			to: infraOpWallet,
 			amount: infraShare.fixed_amount,
@@ -155,19 +159,20 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			mobile2: infra.mobile,
 			from_name: bank.name,
 			to_name: infra.name,
-			user_id: "",
+			sender_id: bank._id,
+			receiver_id: infra._id,
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "-s4",
 			created_at: new Date(),
 		};
-		let res = await blockchain.initiateTransfer(trans22);
+		res = await execute(trans, "INFRAFIXED");
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
 	}
 
-	if (transfer.fee > 0) {
-		let trans4 = {
+	if (fee > 0) {
+		trans = {
 			from: bankOpWallet,
 			to: branchOpWallet,
 			amount: transfer.sendFee,
@@ -179,13 +184,14 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			mobile2: branch.mobile,
 			from_name: bank.name,
 			to_name: branch.name,
-			user_id: "",
+			sender_id: bank._id,
+			receiver_id: transfer.cashierId,
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "-s5",
 			created_at: new Date(),
 		};
 
-		let res = await blockchain.initiateTransfer(trans4);
+		res = await execute(trans, "SENDFEE");
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -193,5 +199,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 
 	if (!allTxSuccess) {
 		txstate.failed(transfer.master_code);
+	} else {
+		txstate.waitingForCompletion(transfer.master_code);
 	}
 }

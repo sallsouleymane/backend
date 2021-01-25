@@ -92,29 +92,54 @@ module.exports = async function (
 			}
 		}
 
-		res = await distributeRevenue(transfer, infra, bank, merchant, fee, comm);
-		if (res.status == 0) {
-			return res;
-		} else {
-			return {
-				status: 1,
-				message: "Transaction success!",
+		//fourth transaction
+		bankComm = calculateShare("bank", amount, comm);
+		transfer.bankComm = bankComm;
+		if (bankComm > 0) {
+			let trans5 = {
+				from: merchantOpWallet,
+				to: bankOpWallet,
+				amount: bankComm,
+				note: "Bank commission on paid bill",
+				email1: merchant.email,
+				email2: bank.email,
+				mobile1: merchant.mobile,
+				mobile2: bank.mobile,
+				from_name: merchant.name,
+				to_name: bank.name,
+				master_code: master_code,
+				child_code: master_code + "-p5",
+				created_at: new Date(),
 			};
+
+			let res = await blockchain.initiateTransfer(trans5);
+			if (res.status == 0) {
+				return {
+					status: 0,
+					message: "Transaction failed!",
+					blockchain_message: res.message,
+				};
+			}
 		}
+
+		distributeRevenue(transfer, infra, bank, fee, comm);
+
+		return {
+			status: 1,
+			message: "Transaction success!",
+		};
 	} catch (err) {
 		throw err;
 	}
 };
 
-async function distributeRevenue(transfer, infra, bank, merchant, fee, comm) {
-	const merchantOpWallet = merchant.wallet_ids.operational;
+async function distributeRevenue(transfer, infra, bank, fee, comm) {
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 
 	let amount = transfer.amount;
 	let master_code = transfer.master_code;
 	let allTxSuccess = true;
-	bankFee = transfer.bankFee;
 
 	infraShare = calculateShare("infra", amount, fee);
 	transfer.infraFeeShare = infraShare;
@@ -159,32 +184,6 @@ async function distributeRevenue(transfer, infra, bank, merchant, fee, comm) {
 		};
 
 		let res = await blockchain.initiateTransfer(trans32);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
-	}
-
-	//fourth transaction
-	bankComm = calculateShare("bank", amount, comm);
-	transfer.bankComm = bankComm;
-	if (bankComm > 0) {
-		let trans5 = {
-			from: merchantOpWallet,
-			to: bankOpWallet,
-			amount: bankComm,
-			note: "Bank commission on paid bill",
-			email1: merchant.email,
-			email2: bank.email,
-			mobile1: merchant.mobile,
-			mobile2: bank.mobile,
-			from_name: merchant.name,
-			to_name: bank.name,
-			master_code: master_code,
-			child_code: master_code + "-p5",
-			created_at: new Date(),
-		};
-
-		let res = await blockchain.initiateTransfer(trans5);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}

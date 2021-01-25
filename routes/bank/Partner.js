@@ -271,7 +271,7 @@ router.post("/bank/editPartner", jwtTokenAuth, function (req, res) {
 												message: "partner not found",
 											});
 										} else {
-											Document.update(
+											Document.updateOne(
 												{ partner_id: partner_id },
 												{ contract: contract },
 												(err) => {}

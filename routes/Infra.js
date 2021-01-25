@@ -113,7 +113,7 @@ router.post("/infra/deleteCountry", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Country.update(
+				Country.updateOne(
 					{},
 					{ country_list: { $pull: { ccode: ccode } } },
 					function (err, country) {
@@ -312,7 +312,15 @@ router.post("/infra/createMerchant", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/infra/editMerchant", jwtTokenAuth, function (req, res) {
-	var { merchant_id, name, logo, description, document_hash, email, mobile } = req.body;
+	var {
+		merchant_id,
+		name,
+		logo,
+		description,
+		document_hash,
+		email,
+		mobile,
+	} = req.body;
 	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
 		{

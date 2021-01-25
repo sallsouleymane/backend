@@ -1,5 +1,5 @@
-const TxState = require("../../models/TxState");
-const blockchain = require("../../services/Blockchain");
+const TxState = require("../../../models/TxState");
+const blockchain = require("../../../services/Blockchain");
 
 module.exports.initiate = async function () {
 	try {
@@ -17,7 +17,7 @@ module.exports.waitingForCompletion = async function (master_code) {
 	try {
 		console.log("Transaction waiting for completion");
 		let tx = { state: "WAITING" };
-		await TxState.update({ _id: master_code }, tx);
+		await TxState.updateOne({ _id: master_code }, tx);
 	} catch (err) {
 		throw err;
 	}

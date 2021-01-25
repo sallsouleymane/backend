@@ -2258,7 +2258,10 @@ router.post("/save-currency", async (req, res) => {
 		if (currencyData.length == 0) {
 			await CurrencyModel(input).save();
 		} else {
-			await CurrencyModel.update({ _id: currencyData[0]._id }, { $set: input });
+			await CurrencyModel.updateOne(
+				{ _id: currencyData[0]._id },
+				{ $set: input }
+			);
 		}
 		res.status(200).json({ status: 1, message: "saved", input });
 	} catch (err) {
@@ -2295,7 +2298,7 @@ router.post("/save-country", async (req, res) => {
 				}
 			});
 		} else {
-			CountryModel.update(
+			CountryModel.updateOne(
 				{},
 				{ $push: { country_list: country } },
 				function (err, model) {

@@ -1,6 +1,4 @@
 const doRequest = require("../routes/utils/doRequest");
-const sendSMS = require("../routes/utils/sendSMS");
-const sendMail = require("../routes/utils/sendMail");
 const config = require("../config.json");
 const TxState = require("../models/TxState");
 
@@ -40,7 +38,7 @@ module.exports.getStatement = async (arr, user_id = "") => {
 			method: "POST",
 			json: {
 				wallet_id: arr.toString(),
-				user_id: "",
+				user_id: user_id,
 			},
 		};
 
@@ -154,7 +152,7 @@ module.exports.getBalance = async (arr) => {
 	}
 };
 
-module.exports.initiateTransfer = async function (transaction, tx_id = "") {
+module.exports.initiateTransfer = async function (transaction) {
 	try {
 		console.log("Blockchain service: initiateTransfer " + transaction);
 
@@ -167,138 +165,16 @@ module.exports.initiateTransfer = async function (transaction, tx_id = "") {
 				amount: transaction.amount.toString(),
 				from_name: transaction.from_name,
 				to_name: transaction.to_name,
-				user_id: "",
+				sender_id: transaction.sender_id,
+				receiver_id: transaction.receiver_id,
 				remarks: transaction.note.toString(),
 				master_id: transaction.master_code.toString(),
 				child_id: transaction.child_code.toString(),
 			},
 		};
 		let res = await doRequest(options);
-		await saveTxState(transaction, res, tx_id);
-		if (res.status == 1) {
-			sendSuccessMail(transaction);
-		} else {
-			sendFailureMail(transaction);
-		}
 		return res;
 	} catch (err) {
 		throw err;
 	}
 };
-
-async function sendSuccessMail(transaction) {
-	if (transaction.email1 && transaction.email1 != "") {
-		sendMail(
-			"<p>You have sent " +
-				transaction.amount +
-				" to the wallet " +
-				transaction.to +
-				". Reason: " +
-				transaction.note +
-				"</p>",
-			"Payment Sent",
-			transaction.email1
-		);
-	}
-	if (transaction.email2 && transaction.email2 != "") {
-		sendMail(
-			"<p>You have received " +
-				transaction.amount +
-				" from the wallet " +
-				transaction.from +
-				". Reason: " +
-				transaction.note +
-				"</p>",
-			"Payment Received",
-			transaction.email2
-		);
-	}
-	if (transaction.mobile1 && transaction.mobile1 != "") {
-		sendSMS(
-			"You have sent " +
-				transaction.amount +
-				" to the wallet " +
-				transaction.to +
-				". Reason: " +
-				transaction.note,
-			transaction.mobile1
-		);
-	}
-	if (transaction.mobile2 && transaction.mobile2 != "") {
-		sendSMS(
-			"You have received " +
-				transaction.amount +
-				" from the wallet " +
-				transaction.from +
-				". Reason: " +
-				transaction.note,
-			transaction.mobile2
-		);
-	}
-}
-
-async function sendFailureMail(transaction) {
-	if (transaction.email1 && transaction.email1 != "") {
-		sendMail(
-			"<p>Transfer failed for the amount " +
-				transaction.amount +
-				" to the wallet " +
-				transaction.to +
-				". Reason: " +
-				transaction.note +
-				"</p>",
-			"Payment failed",
-			transaction.email1
-		);
-	}
-	if (transaction.mobile1 && transaction.mobile1 != "") {
-		sendSMS(
-			"Transfer failed for the amount " +
-				transaction.amount +
-				" to the wallet " +
-				transaction.to +
-				+". Reason: " +
-				transaction.note,
-			transaction.mobile1
-		);
-	}
-}
-
-async function saveTxState(transaction, res) {
-	try {
-		console.log(res);
-		//update transaction state
-		let txstate = await TxState.findOneAndUpdate(
-			{
-				_id: transaction.master_code,
-				"childTx.transaction.child_code": transaction.child_code,
-			},
-			{
-				$set: {
-					"childTx.$.state": res.status,
-					"childTx.$.message": res.message,
-					"childTx.$.transaction": transaction,
-				},
-			}
-		);
-		if (txstate == null) {
-			await TxState.updateOne(
-				{
-					_id: transaction.master_code,
-				},
-				{
-					$addToSet: {
-						childTx: {
-							state: res.status,
-							transaction: transaction,
-							message: res.message,
-						},
-					},
-				}
-			);
-		}
-	} catch (err) {
-		console.log(err);
-		// throw err;
-	}
-}

@@ -80,8 +80,6 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 				};
 			}
 		}
-
-		transfer.master_code = master_code;
 		distributeRevenue(transfer, infra, bank, rule1);
 		return {
 			status: 1,
@@ -90,7 +88,6 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 			balance: balance,
 			amount: amount,
 			fee: fee,
-			master_code: master_code,
 		};
 	} catch (err) {
 		throw err;
@@ -102,6 +99,7 @@ async function distributeRevenue(transfer, infra, bank, rule1) {
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 
 	var infraShare = calculateShare("infra", transfer.amount, rule1);
+	let allTxSuccess = true;
 
 	if (infraShare.percentage_amount > 0) {
 		let trans21 = {
@@ -122,6 +120,10 @@ async function distributeRevenue(transfer, infra, bank, rule1) {
 			created_at: new Date(),
 		};
 		await blockchain.initiateTransfer(trans21);
+		let res = await blockchain.initiateTransfer(trans21);
+		if (res.status == 0) {
+			allTxSuccess = false;
+		}
 	}
 
 	if (infraShare.fixed_amount > 0) {
@@ -143,5 +145,14 @@ async function distributeRevenue(transfer, infra, bank, rule1) {
 			created_at: new Date(),
 		};
 		await blockchain.initiateTransfer(trans22);
+		let res = await blockchain.initiateTransfer(trans21);
+		if (res.status == 0) {
+			allTxSuccess = false;
+		}
+	}
+	if (!allTxSuccess) {
+		txstate.failed(transfer.master_code);
+	} else {
+		txstate.waitingForCompletion(master_code);
 	}
 }

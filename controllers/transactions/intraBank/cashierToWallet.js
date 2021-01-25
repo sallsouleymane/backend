@@ -104,18 +104,15 @@ module.exports = async function (
 			transfer.sendFee = sendFee;
 		}
 		transfer.master_code = master_code;
-		res = await distributeRevenue(transfer, infra, bank, branch, rule1);
-		if (res.status == 0) {
-			return res;
-		} else {
-			return {
-				status: 1,
-				message: "Transaction success!",
-				amount: amount,
-				fee: fee,
-				sendFee: sendFee,
-			};
-		}
+		distributeRevenue(transfer, infra, bank, branch, rule1);
+
+		return {
+			status: 1,
+			message: "Transaction success!",
+			amount: amount,
+			fee: fee,
+			sendFee: sendFee,
+		};
 	} catch (err) {
 		throw err;
 	}
