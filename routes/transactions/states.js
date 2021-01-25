@@ -16,7 +16,7 @@ module.exports.initiate = async function () {
 module.exports.waitingForCompletion = async function (master_code) {
 	try {
 		let tx = { state: "WAIT" };
-		await TxState.update({ _id: master_code }, tx);
+		await TxState.updateOne({ _id: master_code }, tx);
 	} catch (err) {
 		throw err;
 	}

@@ -3,7 +3,7 @@ const blockchain = require("../../../services/Blockchain.js");
 const { calculateShare } = require("../../../routes/utils/calculateShare");
 
 // transaction services
-const txstate = require("../states");
+const txstate = require("../services/states");
 
 module.exports = async function (
 	transfer,

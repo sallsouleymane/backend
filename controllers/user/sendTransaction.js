@@ -20,7 +20,7 @@ const MerchantSettings = require("../../models/merchant/MerchantSettings");
 const Invoice = require("../../models/merchant/Invoice");
 
 // transactions
-const txstate = require("../transactions/states");
+const txstate = require("../transactions/services/states");
 const walletToWallet = require("../transactions/intraBank/walletToWallet");
 const walletToCashier = require("../transactions/intraBank/walletToCashier");
 

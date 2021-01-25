@@ -7,7 +7,7 @@ const updateInvoiceRecord = require("../utils/updateInvoiceRecord");
 const cashierInvoicePay = require("../transactions/intraBank/cashierInvoicePay");
 
 // transactions
-const txstate = require("../transactions/states");
+const txstate = require("../transactions/services/states");
 
 //models
 const Bank = require("../../models/Bank");

@@ -7,25 +7,14 @@ const updateInvoiceRecord = require("../utils/updateInvoiceRecord");
 const merchantInvoicePay = require("../transactions/intraBank/merchantInvoicePay");
 
 // transactions
-const txstate = require("../transactions/states");
+const txstate = require("../transactions/services/states");
 
 //models
 const Bank = require("../../models/Bank");
-const Branch = require("../../models/Branch");
 const Infra = require("../../models/Infra");
 const MerchantRule = require("../../models/merchant/MerchantRule");
-const IBMerchantRule = require("../../models/merchant/InterBankRule");
-const MerchantBranch = require("../../models/merchant/MerchantBranch");
 const MerchantPosition = require("../../models/merchant/Position");
 const Merchant = require("../../models/merchant/Merchant");
-const Cashier = require("../../models/Cashier");
-const User = require("../../models/User");
-const Invoice = require("../../models/merchant/Invoice");
-const InvoiceGroup = require("../../models/merchant/InvoiceGroup");
-const Partner = require("../../models/partner/Partner");
-const PartnerCashier = require("../../models/partner/Cashier");
-const PartnerBranch = require("../../models/partner/Branch");
-const InterBankRule = require("../../models/InterBankRule");
 
 module.exports = async (req, res) => {
 	// Initiate transaction state
