@@ -10,6 +10,7 @@ const makeotp = require("./utils/makeotp");
 const getWalletIds = require("./utils/getWalletIds");
 const jwtTokenAuth = require("./JWTTokenAuth");
 const { errorMessage, catchError } = require("./utils/errorHandler");
+const execute = require("../controllers/transactions/services/execute");
 
 //services
 const {
@@ -29,7 +30,7 @@ const CashierLedger = require("../models/CashierLedger");
 const Merchant = require("../models/merchant/Merchant");
 const Partner = require("../models/partner/Partner");
 const Infra = require("../models/Infra");
-const RetryQueue = require("../models/RetryQueue");
+const TxState = require("../models/TxState");
 
 router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
 	const { master_code, child_code } = req.body;
@@ -52,13 +53,13 @@ router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
 					{
 						_id: master_code,
 						"childTx.transaction.child_code": child_code,
-						bank_id: bank._id,
+						bankId: bank._id,
 						state: "FAILED",
 					},
 					async (err, tx) => {
 						let errMsg = errorMessage(
 							err,
-							queue,
+							tx,
 							"Transaction is success or not found"
 						);
 						if (errMsg.status == 0) {
@@ -66,17 +67,22 @@ router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
 						} else {
 							try {
 								let txArr = tx.childTx;
-								var transaction = txArr.find(
+								var childTrans = txArr.find(
 									(childTx) => childTx.transaction.child_code == child_code
 								);
-								let res = await execute(transaction, "", bank_id);
+								let result = await execute(
+									childTrans.transaction,
+									"",
+									bank._id
+								);
 
+								console.log(result);
 								// return response
-								if (res.status == 0) {
-									return {
+								if (result.status == 0) {
+									res.status(200).json({
 										status: 0,
 										message: "Transaction failed! - " + res.message,
-									};
+									});
 								} else {
 									res.status(200).json({
 										status: 0,
