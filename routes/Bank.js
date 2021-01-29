@@ -32,7 +32,7 @@ const Infra = require("../models/Infra");
 const RetryQueue = require("../models/RetryQueue");
 
 router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
-	const { queue_id, transaction_id } = req.body;
+	const { master_code, child_code } = req.body;
 	const username = req.sign_creds.username;
 	Bank.findOne(
 		{
@@ -48,15 +48,28 @@ router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
 			if (errMsg.status == 0) {
 				res.status(200).json(errMsg);
 			} else {
-				RetryQueue.findOne(
-					{ queue_id: queue_id, bank_id: bank_id },
-					async (err, queue) => {
-						let errMsg = errorMessage(err, queue, "Queue not found");
+				TxState.findOne(
+					{
+						_id: master_code,
+						"childTx.transaction.child_code": child_code,
+						bank_id: bank._id,
+						state: "FAILED",
+					},
+					async (err, tx) => {
+						let errMsg = errorMessage(
+							err,
+							queue,
+							"Transaction is success or not found"
+						);
 						if (errMsg.status == 0) {
 							res.status(200).json(errMsg);
 						} else {
 							try {
-								let res = await execute("", queue_id, bank_id, transaction_id);
+								let txArr = tx.childTx;
+								var transaction = txArr.find(
+									(childTx) => childTx.transaction.child_code == child_code
+								);
+								let res = await execute(transaction, "", bank_id);
 
 								// return response
 								if (res.status == 0) {
@@ -98,13 +111,13 @@ router.post("/bank/getFailedTransactions", jwtTokenAuth, function (req, res) {
 			if (errMsg.status == 0) {
 				res.status(200).json(result);
 			} else {
-				RetryQueue.find({ bank_id: bank._id }, (err, queues) => {
+				TxState.find({ bank_id: bank._id }, (err, queues) => {
 					if (err) {
 						res.status(200).json(catchError(err));
 					} else {
 						res.status(200).json({
 							status: 1,
-							queues: queues,
+							transactions: queues,
 						});
 					}
 				});

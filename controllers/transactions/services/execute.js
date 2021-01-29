@@ -6,18 +6,18 @@ const sendMail = require("../../../routes/utils/sendMail");
 //Models
 const RetryQueue = require("../../../models/RetryQueue");
 const TxState = require("../../../models/TxState");
+const {
+	getTransactionCode,
+} = require("../../../routes/utils/calculateShare.js");
 
-module.exports = async function (transaction, queue) {
+module.exports = async function (transaction, queue = "", bank_id) {
 	try {
 		var res = await blockchain.initiateTransfer(transaction);
-		await saveTxState(transaction, res);
+		await saveTxState(transaction, res, bank_id);
 		if (res.status == 1) {
 			sendSuccessMail(transaction);
 		} else {
 			sendFailureMail(transaction);
-
-			// Append the failed transactions to the retry queue so that retry service can retry later.
-			appendToQueue(transaction, queue, res);
 		}
 		return res;
 	} catch (err) {
@@ -103,7 +103,7 @@ async function sendFailureMail(transaction) {
 	}
 }
 
-async function saveTxState(transaction, res) {
+async function saveTxState(transaction, res, bank_id) {
 	try {
 		//update transaction state
 		let txstate = await TxState.findOneAndUpdate(
@@ -113,6 +113,7 @@ async function saveTxState(transaction, res) {
 			},
 			{
 				$set: {
+					bankId: bank_id,
 					"childTx.$.state": res.status,
 					"childTx.$.message": res.message,
 					"childTx.$.transaction": transaction,
@@ -141,14 +142,15 @@ async function saveTxState(transaction, res) {
 	}
 }
 
-async function appendToQueue(transaction, queue, response) {
+async function appendToQueue(transaction, queue, bank_id, response) {
 	console.log("Append to queue: ", queue);
-	RetryQueue.findOne({ queue_id: queue }, (err, rq) => {
+	RetryQueue.findOne({ queue_id: queue, bank_id: bank_id }, (err, rq) => {
 		if (err) {
 			throw err;
 		} else if (rq == null) {
 			let data = new RetryQueue();
 			data.queue_id = queue;
+			data.bank_id = bank_id;
 			data.transactions = [
 				{
 					transaction: transaction,
@@ -164,7 +166,7 @@ async function appendToQueue(transaction, queue, response) {
 			});
 		} else {
 			RetryQueue.updateOne(
-				{ queue_id: queue },
+				{ queue_id: queue, bank_id: bank_id },
 				{
 					$addToSet: {
 						transactions: {
