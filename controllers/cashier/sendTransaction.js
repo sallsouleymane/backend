@@ -25,9 +25,6 @@ const cashierToWallet = require("../transactions/intraBank/cashierToWallet");
 
 module.exports.cashierSendMoney = async function (req, res, next) {
 	try {
-		// Initiate transaction state
-		const master_code = await txstate.initiate();
-
 		const {
 			receiverMobile,
 			receiverEmail,
@@ -43,7 +40,7 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 				username: jwtusername,
 				status: 1,
 			},
-			function (err, cashier) {
+			async function (err, cashier) {
 				let errMsg = errorMessage(
 					err,
 					cashier,
@@ -52,6 +49,11 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 				if (errMsg.status == 0) {
 					res.status(200).json(errMsg);
 				} else {
+					// Initiate transaction state
+					const master_code = await txstate.initiate(
+						cashier.bank_id,
+						"Non Wallet To Non Wallet"
+					);
 					Branch.findOne(
 						{
 							_id: cashier.branch_id,
