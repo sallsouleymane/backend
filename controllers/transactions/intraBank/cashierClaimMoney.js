@@ -123,8 +123,6 @@ async function distributeRevenue(transfer, bank, branch) {
 	if (alltxsuccess) {
 		txstate.nearCompletion(master_code);
 		transferToMasterWallets(transfer, bank, branch, txInfo);
-	} else {
-		txstate.failed(transfer.master_code);
 	}
 }
 
@@ -235,11 +233,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 		txStatus = 0;
 	}
 
-	if (txStatus == 0) {
-		txstate.failed(transfer.master_code);
-	} else {
-		txstate.completed(master_code);
-	}
+	txstate.completed(master_code);
 }
 
 function allTxSuccess(txInfo) {
