@@ -462,7 +462,7 @@ router.post("/updateCashierTransferStatus", jwtTokenAuth, function (req, res) {
 					transfer_id,
 					{ status: status },
 					function (err, d) {
-						let result = errorMessage(err, d, err.toString());
+						let result = errorMessage(err, d, "History not found");
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
@@ -470,7 +470,7 @@ router.post("/updateCashierTransferStatus", jwtTokenAuth, function (req, res) {
 								cashier_id,
 								{ $inc: {pending_trans: -1}},
 								function (err, cashier) {
-									let result = errorMessage(err, cashier, err.toString());
+									let result = errorMessage(err, cashier, "Cashier not found");
 									if (result.status == 0) {
 										res.status(200).json(result);
 									} else {
