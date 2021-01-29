@@ -54,7 +54,6 @@ router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
 						_id: master_code,
 						"childTx.transaction.child_code": child_code,
 						bankId: bank._id,
-						state: "FAILED",
 					},
 					async (err, tx) => {
 						let errMsg = errorMessage(
@@ -117,7 +116,7 @@ router.post("/bank/getFailedTransactions", jwtTokenAuth, function (req, res) {
 			if (errMsg.status == 0) {
 				res.status(200).json(result);
 			} else {
-				TxState.find({ bank_id: bank._id }, (err, queues) => {
+				TxState.find({ bankId: bank._id }, (err, queues) => {
 					if (err) {
 						res.status(200).json(catchError(err));
 					} else {
