@@ -197,9 +197,5 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 		}
 	}
 
-	if (!allTxSuccess) {
-		txstate.failed(transfer.master_code);
-	} else {
-		txstate.waitingForCompletion(transfer.master_code);
-	}
+	txstate.waitingForCompletion(transfer.master_code);
 }
