@@ -58,11 +58,11 @@ router.post("/bank/blockPartner", jwtTokenAuth, function (req, res) {
 								{partner_id: partner_id},
 								{
 									$set: {
-										status: -1,
+										status: 0,
 									},
 								},
 								(err, branches) => {
-									let result = errorMessage(err, partner, "Branchs not found");
+									let result = errorMessage(err, branches, "Branchs not found");
 									if (result.status == 0) {
 										res.status(200).json(result);
 									} else {
@@ -70,11 +70,11 @@ router.post("/bank/blockPartner", jwtTokenAuth, function (req, res) {
 											{partner_id: partner_id},
 											{
 												$set: {
-													status: -1,
+													status: 0,
 												},
 											},
 											(err, cashiers) => {
-												let result = errorMessage(err, partner, "Cashiers not found");
+												let result = errorMessage(err, cashiers, "Cashiers not found");
 												if (result.status == 0) {
 													res.status(200).json(result);
 												} else {
