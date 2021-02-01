@@ -136,7 +136,7 @@ router.post("/bank/unblockPartner", jwtTokenAuth, function (req, res) {
 									},
 								},
 								(err, branches) => {
-									let result = errorMessage(err, partner, "Branchs not found");
+									let result = errorMessage(err, branches, "Branchs not found");
 									if (result.status == 0) {
 										res.status(200).json(result);
 									} else {
@@ -148,7 +148,7 @@ router.post("/bank/unblockPartner", jwtTokenAuth, function (req, res) {
 												},
 											},
 											(err, cashiers) => {
-												let result = errorMessage(err, partner, "Cashiers not found");
+												let result = errorMessage(err, cashiers, "Cashiers not found");
 												if (result.status == 0) {
 													res.status(200).json(result);
 												} else {
