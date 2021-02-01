@@ -128,10 +128,42 @@ router.post("/bank/unblockPartner", jwtTokenAuth, function (req, res) {
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
-							res.status(200).json({
-								status: 1,
-								data: "Unblocked Partner",
-							});
+							PartnerBranch.updateMany(
+								{partner_id: partner_id},
+								{
+									$set: {
+										status: 1,
+									},
+								},
+								(err, branches) => {
+									let result = errorMessage(err, partner, "Branchs not found");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										PartnerCashier.updateMany(
+											{partner_id: partner_id},
+											{
+												$set: {
+													status: 1,
+												},
+											},
+											(err, cashiers) => {
+												let result = errorMessage(err, partner, "Cashiers not found");
+												if (result.status == 0) {
+													res.status(200).json(result);
+												} else {
+													res.status(200).json({
+														status: 1,
+														message: "Unblocked Partner",
+													});
+												}
+											}
+
+										);
+
+									}
+								}
+							);
 						}
 					}
 				);
