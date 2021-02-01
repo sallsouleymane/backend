@@ -58,7 +58,7 @@ router.post("/bank/blockPartner", jwtTokenAuth, function (req, res) {
 								{partner_id: partner_id},
 								{
 									$set: {
-										status: 0,
+										status: -1,
 									},
 								},
 								(err, branches) => {
@@ -70,7 +70,7 @@ router.post("/bank/blockPartner", jwtTokenAuth, function (req, res) {
 											{partner_id: partner_id},
 											{
 												$set: {
-													status: 0,
+													status: -1,
 												},
 											},
 											(err, cashiers) => {
