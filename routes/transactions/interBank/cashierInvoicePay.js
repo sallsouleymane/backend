@@ -3,6 +3,7 @@ const {
 	getTransactionCode,
 	calculateShare,
 } = require("../../utils/calculateShare");
+const execute = require("../../../controllers/transactions/services/execute");
 
 module.exports = async function (
 	transfer,
@@ -49,7 +50,7 @@ module.exports = async function (
 			child_code: master_code + "1",
 		};
 
-		let result = await blockchain.initiateTransfer(trans1);
+		let result = await execute(trans1);
 		if (result.status == 0) {
 			return {
 				status: 0,
@@ -75,7 +76,7 @@ module.exports = async function (
 			child_code: master_code + "1",
 		};
 
-		result = await blockchain.initiateTransfer(trans1);
+		result = await execute(trans1);
 
 		if (result.status == 0) {
 			return {
@@ -102,7 +103,7 @@ module.exports = async function (
 			child_code: master_code + "1",
 		};
 
-		result = await blockchain.initiateTransfer(trans1);
+		result = await execute(trans1);
 
 		// return response
 		if (result.status == 0) {
@@ -189,7 +190,7 @@ async function distributeRevenue(
 			child_code: getTransactionCode(branch.mobile, bank.mobile) + "2",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	infraShare = calculateShare("infra", transfer.amount, rule1.fee);
@@ -210,7 +211,7 @@ async function distributeRevenue(
 			master_code: transfer.master_code,
 			child_code: getTransactionCode(bank.mobile, infra.mobile) + "3.1",
 		};
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	if (infraShare.fixed_amount > 0) {
@@ -230,7 +231,7 @@ async function distributeRevenue(
 			master_code: transfer.master_code,
 			child_code: getTransactionCode(bank.mobile, infra.mobile) + "3.2",
 		};
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	//Other bank shares
@@ -255,7 +256,7 @@ async function distributeRevenue(
 			child_code: transfer.master_code + "1.1",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	if (OtherBankFeeShare.fixed_amount > 0) {
@@ -276,7 +277,7 @@ async function distributeRevenue(
 			child_code: transfer.master_code + "1.2",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	//Branch sharing
@@ -298,7 +299,7 @@ async function distributeRevenue(
 			child_code: getTransactionCode(bank.mobile, branch.mobile) + "4",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	bankComm = calculateShare("bank", transfer.amount, rule1.comm);
@@ -321,7 +322,7 @@ async function distributeRevenue(
 				getTransactionCode(merchant.mobile, merchantBank.mobile) + "5",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 
 		trans = {
 			from: merBankOpWallet,
@@ -340,7 +341,7 @@ async function distributeRevenue(
 			child_code: getTransactionCode(merchantBank.mobile, bank.mobile) + "5",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	infraShare = calculateShare("infra", transfer.amount, rule1.comm);
@@ -362,7 +363,7 @@ async function distributeRevenue(
 			child_code: getTransactionCode(bank.mobile, infra.mobile) + "6.1",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	if (infraShare.fixed_amount > 0) {
@@ -383,7 +384,7 @@ async function distributeRevenue(
 			child_code: getTransactionCode(bank.mobile, infra.mobile) + "6.2",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	OtherBankCommShare = calculateShare("claimBank", transfer.amount, rule1.comm);
@@ -406,7 +407,7 @@ async function distributeRevenue(
 			child_code: transfer.master_code + "1.1",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	if (OtherBankCommShare.fixed_amount > 0) {
@@ -427,7 +428,7 @@ async function distributeRevenue(
 			child_code: transfer.master_code + "1.2",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	if (bankComm > 0) {
@@ -448,6 +449,6 @@ async function distributeRevenue(
 			child_code: getTransactionCode(bank.mobile, branch.mobile) + "7",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 }

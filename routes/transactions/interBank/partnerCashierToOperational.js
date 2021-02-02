@@ -4,6 +4,7 @@ const {
 	getTransactionCode,
 	calculateShare,
 } = require("../../utils/calculateShare");
+const execute = require("../../../controllers/transactions/services/execute");
 
 module.exports = async function (
 	transfer,
@@ -50,7 +51,7 @@ module.exports = async function (
 			master_code: master_code,
 			child_code: master_code + "1",
 		};
-		var result = await blockchain.initiateTransfer(trans);
+		var result = await execute(trans);
 		if (result.status == 0) {
 			res.status(200).json({
 				status: 0,
@@ -74,7 +75,7 @@ module.exports = async function (
 			master_code: master_code,
 			child_code: master_code + "1",
 		};
-		result = await blockchain.initiateTransfer(trans);
+		result = await execute(trans);
 
 		if (result.status == 0) {
 			res.status(200).json({
@@ -99,7 +100,7 @@ module.exports = async function (
 			master_code: master_code,
 			child_code: master_code + "1",
 		};
-		result = await blockchain.initiateTransfer(trans);
+		result = await execute(trans);
 
 		if (result.status == 0) {
 			res.status(200).json({
@@ -158,7 +159,7 @@ async function distributeRevenue(transfer, infra, bank, bankB, branch, rule1) {
 			child_code: transfer.master_code + "1",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 	var infraShare = calculateShare("infra", transfer.amount, rule1);
 
@@ -179,7 +180,7 @@ async function distributeRevenue(transfer, infra, bank, bankB, branch, rule1) {
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "3.1",
 		};
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	if (infraShare.fixed_amount > 0) {
@@ -199,7 +200,7 @@ async function distributeRevenue(transfer, infra, bank, bankB, branch, rule1) {
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "3.2",
 		};
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 	claimerBankShare = calculateShare("claimBank", transfer.amount, rule1);
 	if (claimerBankShare.percentage_amount > 0) {
@@ -220,7 +221,7 @@ async function distributeRevenue(transfer, infra, bank, bankB, branch, rule1) {
 			child_code: transfer.master_code + "4.1",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	if (claimerBankShare.fixed_amount > 0) {
@@ -241,7 +242,7 @@ async function distributeRevenue(transfer, infra, bank, bankB, branch, rule1) {
 			child_code: transfer.master_code + "4.2",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	if (transfer.fee > 0) {
@@ -262,6 +263,6 @@ async function distributeRevenue(transfer, infra, bank, bankB, branch, rule1) {
 			child_code: transfer.master_code + "5",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 }

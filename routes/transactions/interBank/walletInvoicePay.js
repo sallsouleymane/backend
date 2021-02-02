@@ -4,6 +4,7 @@ const {
 	getTransactionCode,
 	calculateShare,
 } = require("../../utils/calculateShare");
+const execute = require("../../../controllers/transactions/services/execute");
 
 module.exports = async function (
 	amount,
@@ -49,7 +50,7 @@ module.exports = async function (
 			child_code: master_code + "1",
 		};
 
-		var result = await blockchain.initiateTransfer(trans1);
+		var result = await execute(trans1);
 
 		if (result.status == 0) {
 			return {
@@ -76,7 +77,7 @@ module.exports = async function (
 			child_code: master_code + "1",
 		};
 
-		result = await blockchain.initiateTransfer(trans1);
+		result = await execute(trans1);
 
 		if (result.status == 0) {
 			return {
@@ -103,7 +104,7 @@ module.exports = async function (
 			child_code: master_code + "1",
 		};
 
-		result = await blockchain.initiateTransfer(trans1);
+		result = await execute(trans1);
 
 		// return response
 		if (result.status == 0) {
@@ -172,7 +173,7 @@ async function distributeRevenue(
 			child_code: getTransactionCode(user.mobile, bank.mobile) + "2",
 		};
 
-		await blockchain.initiateTransfer(trans2);
+		await execute(trans2);
 	}
 
 	//third transaction
@@ -195,7 +196,7 @@ async function distributeRevenue(
 			child_code: getTransactionCode(bank.mobile, infra.mobile) + "3.1",
 		};
 
-		await blockchain.initiateTransfer(trans31);
+		await execute(trans31);
 	}
 
 	if (infraShare.fixed_amount > 0) {
@@ -216,7 +217,7 @@ async function distributeRevenue(
 			child_code: getTransactionCode(bank.mobile, infra.mobile) + "3.2",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	OtherBankFeeShare = calculateShare("claimBank", transfer.amount, rule1.fee);
@@ -239,7 +240,7 @@ async function distributeRevenue(
 			child_code: transfer.master_code + "1.1",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	if (OtherBankFeeShare.fixed_amount > 0) {
@@ -260,7 +261,7 @@ async function distributeRevenue(
 			child_code: transfer.master_code + "1.2",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	//fourth transaction
@@ -284,7 +285,7 @@ async function distributeRevenue(
 				getTransactionCode(merchant.mobile, merchantBank.mobile) + "5",
 		};
 
-		await blockchain.initiateTransfer(trans5);
+		await execute(trans5);
 
 		trans = {
 			from: merBankOpWallet,
@@ -303,7 +304,7 @@ async function distributeRevenue(
 			child_code: getTransactionCode(merchantBank.mobile, bank.mobile) + "5",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	//fifth transaction
@@ -326,7 +327,7 @@ async function distributeRevenue(
 			child_code: getTransactionCode(bank.mobile, infra.mobile) + "6.1",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 	if (infraShare.fixed_amount > 0) {
 		let trans = {
@@ -346,7 +347,7 @@ async function distributeRevenue(
 			child_code: getTransactionCode(bank.mobile, infra.mobile) + "6.2",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 	//Other bank shares
 
@@ -370,7 +371,7 @@ async function distributeRevenue(
 			child_code: transfer.master_code + "1.1",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 
 	if (OtherBankCommShare.fixed_amount > 0) {
@@ -391,6 +392,6 @@ async function distributeRevenue(
 			child_code: transfer.master_code + "1.2",
 		};
 
-		await blockchain.initiateTransfer(trans);
+		await execute(trans);
 	}
 }

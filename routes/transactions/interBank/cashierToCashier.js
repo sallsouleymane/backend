@@ -4,6 +4,7 @@ const {
 	getTransactionCode,
 	calculateShare,
 } = require("../../utils/calculateShare");
+const execute = require("../../../controllers/transactions/services/execute");
 
 module.exports = async function (transfer, infra, bank, branch, rule1, rule2) {
 	try {
@@ -47,7 +48,7 @@ module.exports = async function (transfer, infra, bank, branch, rule1, rule2) {
 			child_code: master_code,
 		};
 
-		var result = await blockchain.initiateTransfer(trans1);
+		var result = await execute(trans1);
 
 		// return response
 		if (result.status == 0) {
@@ -79,7 +80,7 @@ module.exports = async function (transfer, infra, bank, branch, rule1, rule2) {
 				child_code: master_code + "1",
 			};
 
-			await blockchain.initiateTransfer(trans2);
+			await execute(trans2);
 			sendingBranchShare = calculateShare(
 				"sendBranch",
 				transfer.amount,
@@ -131,7 +132,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "2.1",
 		};
-		await blockchain.initiateTransfer(trans21);
+		await execute(trans21);
 	}
 
 	if (infraShare.fixed_amount > 0) {
@@ -152,7 +153,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "2.2",
 		};
-		await blockchain.initiateTransfer(trans22);
+		await execute(trans22);
 	}
 
 	if (transfer.fee > 0) {
@@ -174,6 +175,6 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			child_code: transfer.master_code + "3",
 		};
 
-		await blockchain.initiateTransfer(trans4);
+		await execute(trans4);
 	}
 }
