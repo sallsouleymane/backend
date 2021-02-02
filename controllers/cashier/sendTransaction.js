@@ -54,6 +54,7 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 						cashier.bank_id,
 						"Non Wallet To Non Wallet"
 					);
+
 					Branch.findOne(
 						{
 							_id: cashier.branch_id,
@@ -168,6 +169,9 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 																										.status(200)
 																										.json(catchError(err));
 																								} else {
+																									txstate.waitingForCompletion(
+																										transfer.master_code
+																									);
 																									res.status(200).json({
 																										status: 1,
 																										message:
@@ -177,11 +181,15 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 																							}
 																						);
 																					} else {
+																						txstate.failed(
+																							transfer.master_code
+																						);
 																						res.status(200).json(result);
 																					}
 																				})
 																				.catch((err) => {
 																					let errMsg = catchError(err);
+																					txstate.failed(transfer.master_code);
 																					res.status(200).json(errMsg);
 																				});
 																		}

@@ -266,8 +266,8 @@ module.exports.cashierClaimMoney = function (req, res) {
 																												.status(200)
 																												.json(catchError(err));
 																										} else {
-																											txstate.reported(
-																												sendRecord.master_code
+																											txstate.completed(
+																												master_code
 																											);
 																											res.status(200).json({
 																												status: 1,

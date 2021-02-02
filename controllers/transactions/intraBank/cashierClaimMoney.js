@@ -55,7 +55,7 @@ module.exports = async function (transfer, bank, branch, rule1) {
 			created_at: new Date(),
 		};
 
-		let result = await execute(trans, "CLAIMAMOUNT", bank._id);
+		let result = await execute(trans, "CLAIMAMOUNT");
 
 		// return response
 		if (result.status == 0) {
@@ -116,12 +116,12 @@ async function distributeRevenue(transfer, bank, branch) {
 			child_code: master_code + "-c2",
 			created_at: new Date(),
 		};
-		await execute(trans, "CLAIMFEE", bank._id);
+		await execute(trans, "CLAIMFEE");
 	}
 	let txInfo = await TxState.findById(master_code);
 	let alltxsuccess = allTxSuccess(txInfo);
 	if (alltxsuccess) {
-		txstate.nearCompletion(master_code);
+		// txstate.nearCompletion(master_code);
 		transferToMasterWallets(transfer, bank, branch, txInfo);
 	}
 }
@@ -164,7 +164,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 		child_code: master_code + "-m1",
 		created_at: new Date(),
 	};
-	let result = await execute(trans, "BANKMASTER", bank._id);
+	let result = await execute(trans, "BANKMASTER");
 	if (result.status == 0) {
 		txStatus = 0;
 	}
@@ -184,7 +184,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 		child_code: master_code + "-m2",
 		created_at: new Date(),
 	};
-	result = await execute(trans, "INFRAMASTER", bank._id);
+	result = await execute(trans, "INFRAMASTER");
 	if (result.status == 0) {
 		txStatus = 0;
 	}
@@ -207,7 +207,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 			child_code: master_code + "-m3",
 			created_at: new Date(),
 		};
-		result = await execute(trans, "SENDMASTER", bank._id);
+		result = await execute(trans, "SENDMASTER");
 		if (result.status == 0) {
 			txStatus = 0;
 		}
@@ -228,12 +228,10 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 		child_code: master_code + "-m4",
 		created_at: new Date(),
 	};
-	result = await execute(trans, "CLAIMMASTER", bank._id);
+	result = await execute(trans, "CLAIMMASTER");
 	if (result.status == 0) {
 		txStatus = 0;
 	}
-
-	txstate.completed(master_code);
 }
 
 function allTxSuccess(txInfo) {
