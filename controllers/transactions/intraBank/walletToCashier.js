@@ -4,6 +4,7 @@ const {
 	getTransactionCode,
 	calculateShare,
 } = require("../../../routes/utils/calculateShare");
+const execute = require("../services/execute.js");
 
 module.exports = async function (transfer, infra, bank, sender, rule1) {
 	try {
@@ -43,7 +44,7 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 			child_code: master_code + "-s1",
 			created_at: new Date(),
 		};
-		var result = await blockchain.initiateTransfer(trans1);
+		var result = await execute(trans1);
 
 		// return response
 		if (result.status == 0) {
@@ -71,7 +72,7 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 				child_code: master_code + "-s2",
 				created_at: new Date(),
 			};
-			res = await blockchain.initiateTransfer(trans2);
+			res = await execute(trans2);
 			if (res.status == 0) {
 				return {
 					status: 0,
@@ -119,8 +120,8 @@ async function distributeRevenue(transfer, infra, bank, rule1) {
 			child_code: transfer.master_code + "-s3",
 			created_at: new Date(),
 		};
-		await blockchain.initiateTransfer(trans21);
-		let res = await blockchain.initiateTransfer(trans21);
+		await execute(trans21);
+		let res = await execute(trans21);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -144,8 +145,8 @@ async function distributeRevenue(transfer, infra, bank, rule1) {
 			child_code: transfer.master_code + "-s4",
 			created_at: new Date(),
 		};
-		await blockchain.initiateTransfer(trans22);
-		let res = await blockchain.initiateTransfer(trans21);
+		await execute(trans22);
+		let res = await execute(trans21);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}

@@ -7,6 +7,7 @@ const {
 
 // transaction services
 const txstate = require("../services/states");
+const execute = require("../services/execute.js");
 
 module.exports = async function (transfer, infra, bank, merchant, comm) {
 	try {
@@ -43,7 +44,7 @@ module.exports = async function (transfer, infra, bank, merchant, comm) {
 				child_code: master_code + "-p1",
 			};
 
-			let res = await blockchain.initiateTransfer(trans1);
+			let res = await execute(trans1);
 			// return response
 			if (res.status == 0) {
 				return {
@@ -90,7 +91,7 @@ async function distributeRevenue(transfer, infra, bank) {
 			child_code: master_code + "-p2",
 		};
 
-		let res = await blockchain.initiateTransfer(trans21);
+		let res = await execute(trans21);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -111,7 +112,7 @@ async function distributeRevenue(transfer, infra, bank) {
 			child_code: master_code + "-p3",
 		};
 
-		let res = await blockchain.initiateTransfer(trans22);
+		let res = await execute(trans22);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -154,7 +155,7 @@ async function transferToMasterWallets(transfer, infra, bank) {
 		child_code: master_code + "-m1",
 		created_at: new Date(),
 	};
-	let result = await blockchain.initiateTransfer(trans);
+	let result = await execute(trans);
 	if (result.status == 0) {
 		txStatus = 0;
 	}
@@ -173,7 +174,7 @@ async function transferToMasterWallets(transfer, infra, bank) {
 		child_code: master_code + "-m2",
 		created_at: new Date(),
 	};
-	result = await blockchain.initiateTransfer(trans);
+	result = await execute(trans);
 	if (result.status == 0) {
 		txStatus = 0;
 	}

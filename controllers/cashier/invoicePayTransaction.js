@@ -106,7 +106,7 @@ module.exports.cashierInvoicePay = async (req, res) => {
 												},
 												{ amount_collected: 0 }
 											);
-											let total_amount = await calculateTotalAmount(
+											let total_amount = await invoicesTotalAmount(
 												invoices,
 												merchant_id
 											);

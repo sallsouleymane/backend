@@ -77,7 +77,6 @@ module.exports = async function (transfer, bank, branch, rule1) {
 		}
 		transfer.fee = fee;
 		transfer.claimFee = claimFee;
-		transfer.master_code = master_code;
 		distributeRevenue(transfer, bank, branch);
 
 		return {
@@ -147,7 +146,6 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 	let infraPart = getPart(txInfo, master_code, ["s3", "s4"], []);
 	let claimBranchPart = getPart(txInfo, master_code, ["c2"], []);
 	let bankPart = getPart(txInfo, master_code, ["s2"], ["s3", "s5", "c2"]);
-	let txStatus = 1;
 
 	let trans = {
 		from: bankOpWallet,

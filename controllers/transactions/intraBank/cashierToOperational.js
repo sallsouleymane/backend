@@ -4,6 +4,7 @@ const { calculateShare } = require("../../../routes/utils/calculateShare");
 
 // transaction services
 const txstate = require("../services/states");
+const execute = require("../services/execute.js");
 
 module.exports = async function (
 	transfer,
@@ -48,7 +49,7 @@ module.exports = async function (
 			child_code: master_code + "-s1",
 			created_at: new Date(),
 		};
-		let res = await blockchain.initiateTransfer(trans);
+		let res = await execute(trans);
 		if (res.status == 0) {
 			return {
 				status: 0,
@@ -76,7 +77,7 @@ module.exports = async function (
 				created_at: new Date(),
 			};
 
-			res = await blockchain.initiateTransfer(trans);
+			res = await execute(trans);
 			if (res.status == 0) {
 				return {
 					status: 0,
@@ -135,7 +136,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule) {
 			child_code: master_code + "-s3",
 			created_at: new Date(),
 		};
-		let res = await blockchain.initiateTransfer(trans);
+		let res = await execute(trans);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -158,7 +159,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule) {
 			child_code: master_code + "-s4",
 			created_at: new Date(),
 		};
-		let res = await blockchain.initiateTransfer(trans);
+		let res = await execute(trans);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -182,7 +183,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule) {
 			created_at: new Date(),
 		};
 
-		let res = await blockchain.initiateTransfer(trans);
+		let res = await execute(trans);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -238,7 +239,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			child_code: master_code + "-m1",
 			created_at: new Date(),
 		};
-		let result = await blockchain.initiateTransfer(trans);
+		let result = await execute(trans);
 		if (result.status == 0) {
 			txStatus = 0;
 		}
@@ -257,7 +258,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			child_code: master_code + "-m2",
 			created_at: new Date(),
 		};
-		result = await blockchain.initiateTransfer(trans);
+		result = await execute(trans);
 		if (result.status == 0) {
 			txStatus = 0;
 		}
@@ -276,7 +277,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			child_code: master_code + "-m3",
 			created_at: new Date(),
 		};
-		result = await blockchain.initiateTransfer(trans);
+		result = await execute(trans);
 		if (result.status == 0) {
 			txStatus = 0;
 		}
