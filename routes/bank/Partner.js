@@ -21,6 +21,8 @@ const { errorMessage, catchError } = require("../utils/errorHandler");
 const Bank = require("../../models/Bank");
 const OTP = require("../../models/OTP");
 const Partner = require("../../models/partner/Partner");
+const PartnerBranch = require("../../models/partner/Branch");
+const PartnerCashier = require("../../models/partner/Cashier");
 const Document = require("../../models/Document");
 
 router.post("/bank/blockPartner", jwtTokenAuth, function (req, res) {
@@ -44,7 +46,7 @@ router.post("/bank/blockPartner", jwtTokenAuth, function (req, res) {
 					{ _id: partner_id },
 					{
 						$set: {
-							status: 0,
+							status: -1,
 						},
 					},
 					(err, partner) => {
@@ -52,10 +54,43 @@ router.post("/bank/blockPartner", jwtTokenAuth, function (req, res) {
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
-							res.status(200).json({
-								status: 1,
-								message: "blocked Partner",
-							});
+							PartnerBranch.updateMany(
+								{partner_id: partner_id},
+								{
+									$set: {
+										status: -1,
+									},
+								},
+								(err, branches) => {
+									let result = errorMessage(err, branches, "Branchs not found");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										PartnerCashier.updateMany(
+											{partner_id: partner_id},
+											{
+												$set: {
+													status: -1,
+												},
+											},
+											(err, cashiers) => {
+												let result = errorMessage(err, cashiers, "Cashiers not found");
+												if (result.status == 0) {
+													res.status(200).json(result);
+												} else {
+													res.status(200).json({
+														status: 1,
+														message: "blocked Partner",
+													});
+												}
+											}
+
+										);
+
+									}
+								}
+							);
+							
 						}
 					}
 				);
@@ -93,10 +128,42 @@ router.post("/bank/unblockPartner", jwtTokenAuth, function (req, res) {
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
-							res.status(200).json({
-								status: 1,
-								data: "Unblocked Partner",
-							});
+							PartnerBranch.updateMany(
+								{partner_id: partner_id},
+								{
+									$set: {
+										status: 1,
+									},
+								},
+								(err, branches) => {
+									let result = errorMessage(err, branches, "Branchs not found");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										PartnerCashier.updateMany(
+											{partner_id: partner_id},
+											{
+												$set: {
+													status: 1,
+												},
+											},
+											(err, cashiers) => {
+												let result = errorMessage(err, cashiers, "Cashiers not found");
+												if (result.status == 0) {
+													res.status(200).json(result);
+												} else {
+													res.status(200).json({
+														status: 1,
+														message: "Unblocked Partner",
+													});
+												}
+											}
+
+										);
+
+									}
+								}
+							);
 						}
 					}
 				);

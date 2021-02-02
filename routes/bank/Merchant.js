@@ -14,6 +14,8 @@ const { createWallet } = require("../../services/Blockchain.js");
 
 const Bank = require("../../models/Bank");
 const Merchant = require("../../models/merchant/Merchant");
+const MerchantBranch = require("../../models/merchant/MerchantBranch");
+const MerchantPosition = require("../../models/merchant/Position");
 const getWalletIds = require("../utils/getWalletIds");
 
 router.post("/bank/changeMerchantAcces", jwtTokenAuth, function (req, res) {
@@ -86,10 +88,42 @@ router.post("/bank/blockMerchant", jwtTokenAuth, function (req, res) {
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
-							res.status(200).json({
-								status: 1,
-								message: "blocked Merchant",
-							});
+							MerchantBranch.updateMany(
+								{merchant_id: merchant_id},
+								{
+									$set: {
+										status: 0,
+									},
+								},
+								(err, branches) => {
+									let result = errorMessage(err, branches, "Branchs not found");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										MerchantPosition.updateMany(
+											{merchant_id: merchant_id},
+											{
+												$set: {
+													status: 0,
+												},
+											},
+											(err, cashiers) => {
+												let result = errorMessage(err, cashiers, "Cashiers not found");
+												if (result.status == 0) {
+													res.status(200).json(result);
+												} else {
+													res.status(200).json({
+														status: 1,
+														message: "blocked Merchant",
+													});
+												}
+											}
+
+										);
+
+									}
+								}
+							);
 						}
 					}
 				);
@@ -127,10 +161,42 @@ router.post("/bank/unblockMerchant", jwtTokenAuth, function (req, res) {
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
-							res.status(200).json({
-								status: 1,
-								data: "Unblocked Merchant",
-							});
+							MerchantBranch.updateMany(
+								{merchant_id: merchant_id},
+								{
+									$set: {
+										status: 1,
+									},
+								},
+								(err, branches) => {
+									let result = errorMessage(err, branches, "Branchs not found");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										MerchantPosition.updateMany(
+											{merchant_id: merchant_id},
+											{
+												$set: {
+													status: 1,
+												},
+											},
+											(err, cashiers) => {
+												let result = errorMessage(err, cashiers, "Cashiers not found");
+												if (result.status == 0) {
+													res.status(200).json(result);
+												} else {
+													res.status(200).json({
+														status: 1,
+														message: "unblocked Merchant",
+													});
+												}
+											}
+
+										);
+
+									}
+								}
+							);
 						}
 					}
 				);
