@@ -173,6 +173,7 @@ module.exports.initiateTransfer = async function (transaction) {
 			},
 		};
 		let res = await doRequest(options);
+		console.log(res);
 		return res;
 	} catch (err) {
 		throw err;

@@ -281,6 +281,7 @@ module.exports.partnerInvoicePay = async (req, res) => {
 												master_code: master_code,
 												payeCode: partner.code,
 												payerType: "partner",
+												cashierId: cashier._id,
 											};
 
 											var result = await cashierInvoicePay(

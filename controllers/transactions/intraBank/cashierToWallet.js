@@ -46,7 +46,8 @@ module.exports = async function (
 			mobile2: receiver.mobile,
 			from_name: branch.name,
 			to_name: receiver.name,
-			user_id: "",
+			sender_id: transfer.cashierId,
+			receiver_id: "",
 			master_code: master_code,
 			child_code: master_code + "-s1",
 			created_at: new Date(),
@@ -56,7 +57,7 @@ module.exports = async function (
 
 		// return response
 		if (res.status == 0) {
-			txstate.failed(transfer.master_code);
+			//txstate.failed(transfer.master_code);
 			return {
 				status: 0,
 				message: "Transaction failed!",
@@ -78,7 +79,8 @@ module.exports = async function (
 				mobile2: bank.mobile,
 				from_name: branch.name,
 				to_name: bank.name,
-				user_id: "",
+				sender_id: transfer.cashierId,
+				receiver_id: "",
 				master_code: master_code,
 				child_code: master_code + "-s2",
 				created_at: new Date(),
@@ -87,7 +89,7 @@ module.exports = async function (
 			res = await execute(trans2);
 			// return response
 			if (res.status == 0) {
-				txstate.failed(transfer.master_code);
+				//txstate.failed(transfer.master_code);
 				return {
 					status: 0,
 					message: "Transaction failed!",
@@ -143,7 +145,8 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			mobile2: infra.mobile,
 			from_name: bank.name,
 			to_name: infra.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: master_code,
 			child_code: master_code + "-s3",
 			created_at: new Date(),
@@ -166,7 +169,8 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			mobile2: infra.mobile,
 			from_name: bank.name,
 			to_name: infra.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: master_code,
 			child_code: master_code + "-s4",
 			created_at: new Date(),
@@ -188,7 +192,8 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			mobile2: branch.mobile,
 			from_name: bank.name,
 			to_name: branch.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: transfer.cashierId,
 			master_code: master_code,
 			child_code: master_code + "-s5",
 			created_at: new Date(),
@@ -244,7 +249,8 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			mobile1: bank.mobile,
 			from_name: bank.name,
 			to_name: bank.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: master_code,
 			child_code: master_code + "-m1",
 			created_at: new Date(),
@@ -263,7 +269,8 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			mobile1: infra.mobile,
 			from_name: infra.name,
 			to_name: infra.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: master_code,
 			child_code: master_code + "-m2",
 			created_at: new Date(),
@@ -282,7 +289,8 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			mobile1: branch.mobile,
 			from_name: branch.name,
 			to_name: branch.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: master_code,
 			child_code: master_code + "-m3",
 			created_at: new Date(),

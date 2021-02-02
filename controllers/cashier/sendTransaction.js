@@ -529,6 +529,7 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 																							master_code: master_code,
 																							senderType: "sendBranch",
 																							senderCode: branch.bcode,
+																							cashierId: cashier._id,
 																						};
 																						cashierToWallet(
 																							transfer,
@@ -741,6 +742,7 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 																								master_code: master_code,
 																								senderType: "sendPartner",
 																								senderCode: partner.code,
+																								cashierId: cashier._id,
 																							};
 																							cashierToWallet(
 																								transfer,
@@ -912,6 +914,7 @@ module.exports.cashierSendToOperational = async function (req, res) {
 																			master_code: master_code,
 																			senderType: "sendBranch",
 																			senderCode: branch.bcode,
+																			cashierId: cashier._id,
 																		};
 																		cashierToOperational(
 																			transfer,
@@ -1098,6 +1101,7 @@ module.exports.partnerSendToOperational = async function (req, res) {
 																							master_code: master_code,
 																							senderType: "sendPartner",
 																							senderCode: partner.code,
+																							cashierId: cashier._id,
 																						};
 																						cashierToOperational(
 																							transfer,

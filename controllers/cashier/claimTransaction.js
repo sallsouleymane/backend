@@ -435,6 +435,7 @@ module.exports.partnerClaimMoney = function (req, res) {
 																									sendRecord.send_branch_type,
 																								sendBranchId:
 																									sendRecord.send_branch_id,
+																								cashierId: cashier._id,
 																							};
 																							cashierClaimMoney(
 																								transfer,
