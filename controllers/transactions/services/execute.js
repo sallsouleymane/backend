@@ -5,7 +5,6 @@ const sendMail = require("../../../routes/utils/sendMail");
 const queue = require("./queue");
 
 //Models
-const RetryQueue = require("../../../models/RetryQueue");
 const TxState = require("../../../models/TxState");
 const {
 	getTransactionCode,
