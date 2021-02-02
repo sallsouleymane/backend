@@ -43,6 +43,8 @@ module.exports = async function (
 			mobile2: bank.mobile,
 			from_name: user.name,
 			to_name: bank.name,
+			sender_id: "",
+			receiver_id: "",
 			master_code: master_code,
 			child_code: master_code + "1",
 		};
@@ -68,6 +70,8 @@ module.exports = async function (
 			mobile2: merchantBank.mobile,
 			from_name: bank.name,
 			to_name: merchantBank.name,
+			sender_id: "",
+			receiver_id: "",
 			master_code: master_code,
 			child_code: master_code + "1",
 		};
@@ -93,6 +97,8 @@ module.exports = async function (
 			mobile2: merchant.mobile,
 			from_name: merchantBank.name,
 			to_name: merchant.name,
+			sender_id: "",
+			receiver_id: "",
 			master_code: master_code,
 			child_code: master_code + "1",
 		};
@@ -160,6 +166,8 @@ async function distributeRevenue(
 			mobile2: bank.mobile,
 			from_name: user.name,
 			to_name: bank.name,
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: getTransactionCode(user.mobile, bank.mobile) + "2",
 		};
@@ -181,6 +189,8 @@ async function distributeRevenue(
 			mobile2: infra.mobile,
 			from_name: bank.name,
 			to_name: infra.name,
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: getTransactionCode(bank.mobile, infra.mobile) + "3.1",
 		};
@@ -200,6 +210,8 @@ async function distributeRevenue(
 			mobile2: infra.mobile,
 			from_name: bank.name,
 			to_name: infra.name,
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: getTransactionCode(bank.mobile, infra.mobile) + "3.2",
 		};
@@ -221,7 +233,8 @@ async function distributeRevenue(
 			mobile2: merchantBank.mobile,
 			from_name: bank.name,
 			to_name: merchantBank.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "1.1",
 		};
@@ -241,7 +254,8 @@ async function distributeRevenue(
 			mobile2: merchantBank.mobile,
 			from_name: bank.name,
 			to_name: merchantBank.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "1.2",
 		};
@@ -263,6 +277,8 @@ async function distributeRevenue(
 			mobile2: merchantBank.mobile,
 			from_name: merchant.name,
 			to_name: merchantBank.name,
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code:
 				getTransactionCode(merchant.mobile, merchantBank.mobile) + "5",
@@ -281,6 +297,8 @@ async function distributeRevenue(
 			mobile2: bank.mobile,
 			from_name: merchantBank.name,
 			to_name: bank.name,
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: getTransactionCode(merchantBank.mobile, bank.mobile) + "5",
 		};
@@ -302,6 +320,8 @@ async function distributeRevenue(
 			mobile2: infra.mobile,
 			from_name: bank.name,
 			to_name: infra.name,
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: getTransactionCode(bank.mobile, infra.mobile) + "6.1",
 		};
@@ -320,6 +340,8 @@ async function distributeRevenue(
 			mobile2: infra.mobile,
 			from_name: bank.name,
 			to_name: infra.name,
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: getTransactionCode(bank.mobile, infra.mobile) + "6.2",
 		};
@@ -342,7 +364,8 @@ async function distributeRevenue(
 			mobile2: merchantBank.mobile,
 			from_name: bank.name,
 			to_name: merchantBank.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "1.1",
 		};
@@ -362,7 +385,8 @@ async function distributeRevenue(
 			mobile2: merchantBank.mobile,
 			from_name: bank.name,
 			to_name: merchantBank.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "1.2",
 		};

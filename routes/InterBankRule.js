@@ -143,6 +143,7 @@ router.post(
 																						const transfer = {
 																							amount: amount,
 																							isInclusive: is_inclusive,
+																							cashierId: cashier._id,
 																						};
 																						interPartnerCashierToOperational(
 																							transfer,
@@ -426,6 +427,7 @@ router.post(
 																						const transfer = {
 																							amount: amount,
 																							isInclusive: is_inclusive,
+																							cashierId: cashier._id,
 																						};
 																						interCashierToOperational(
 																							transfer,
@@ -2105,6 +2107,8 @@ router.post(
 																																		cs.is_inclusive,
 																																	partnerCode:
 																																		partner.code,
+																																	cashierId:
+																																		cashier._id,
 																																};
 																																interPartnerCashierClaimMoney(
 																																	transfer,
@@ -3075,6 +3079,7 @@ router.post("/cashier/interBank/claimMoney", JWTTokenAuth, function (req, res) {
 																												amount: cs.amount,
 																												isInclusive:
 																													cs.is_inclusive,
+																												cashierId: cashier._id,
 																											};
 																											interCashierClaimMoney(
 																												transfer,

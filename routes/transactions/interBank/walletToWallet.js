@@ -54,7 +54,8 @@ module.exports = async function (
 			mobile2: bank.mobile,
 			from_name: sender.name,
 			to_name: bank.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: master_code,
 			child_code: master_code + "1",
 		};
@@ -78,7 +79,8 @@ module.exports = async function (
 			mobile2: receiverBank.mobile,
 			from_name: bank.name,
 			to_name: receiverBank.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: master_code,
 			child_code: master_code + "1",
 		};
@@ -102,7 +104,8 @@ module.exports = async function (
 			mobile2: receiver.mobile,
 			from_name: receiverBank.name,
 			to_name: receiver.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: master_code,
 			child_code: master_code + "1",
 		};
@@ -159,7 +162,8 @@ async function distributeRevenue(
 			mobile2: bank.mobile,
 			from_name: sender.name,
 			to_name: bank.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "2",
 		};
@@ -181,7 +185,8 @@ async function distributeRevenue(
 			mobile2: infra.mobile,
 			from_name: bank.name,
 			to_name: infra.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "3.1",
 		};
@@ -200,7 +205,8 @@ async function distributeRevenue(
 			mobile2: infra.mobile,
 			from_name: bank.name,
 			to_name: infra.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "3.2",
 		};
@@ -219,7 +225,8 @@ async function distributeRevenue(
 			mobile2: receiverBank.mobile,
 			from_name: bank.name,
 			to_name: receiverBank.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "4.1",
 		};
@@ -239,7 +246,8 @@ async function distributeRevenue(
 			mobile2: receiverBank.mobile,
 			from_name: bank.name,
 			to_name: receiverBank.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "4.2",
 		};

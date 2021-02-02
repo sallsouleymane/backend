@@ -156,6 +156,7 @@ router.post("/user/interBank/payInvoice", jwtTokenAuth, (req, res) => {
 												comm,
 												comm,
 											};
+
 											var result = await iBwalletInvoicePay(
 												total_amount,
 												infra,
@@ -451,8 +452,13 @@ router.post(
 																		comm: comm2,
 																	};
 
+																	let transfer = {
+																		amount: total_amount,
+																		cashierId: cashier._id,
+																	};
+
 																	var result = await iBpartnerCashierInvoicePay(
-																		total_amount,
+																		transfer,
 																		infra,
 																		bank,
 																		merchantBank,
@@ -754,9 +760,13 @@ router.post("/cashier/interBank/payInvoice", jwtTokenAuth, (req, res) => {
 																fee: fee2,
 																comm: comm2,
 															};
+															let transfer = {
+																amount: total_amount,
+																cashierId: cashier._id,
+															};
 
 															var result = await iBCashierInvoicePay(
-																total_amount,
+																transfer,
 																infra,
 																bank,
 																merchantBank,
