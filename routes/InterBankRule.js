@@ -904,24 +904,21 @@ router.post(
 																							email: email,
 																							note: note,
 																						};
-																						data.sender_info = JSON.stringify(
-																							temp
-																						);
+																						data.sender_info = temp;
+
 																						temp = {
 																							country: senderIdentificationCountry,
 																							type: senderIdentificationType,
 																							number: senderIdentificationNumber,
 																							valid: senderIdentificationValidTill,
 																						};
-																						data.sender_id = JSON.stringify(
-																							temp
-																						);
+																						data.sender_id = temp;
+
 																						temp = {
 																							mobile: receiverMobile,
 																						};
-																						data.receiver_info = JSON.stringify(
-																							temp
-																						);
+																						data.receiver_info = temp;
+
 																						data.amount = receiverIdentificationAmount;
 																						data.is_inclusive = isInclusive;
 																						data.cashier_id = cashier._id;
@@ -1375,18 +1372,18 @@ router.post(
 																				email: email,
 																				note: note,
 																			};
-																			data.sender_info = JSON.stringify(temp);
+																			data.sender_info = temp;
 																			temp = {
 																				country: senderIdentificationCountry,
 																				type: senderIdentificationType,
 																				number: senderIdentificationNumber,
 																				valid: senderIdentificationValidTill,
 																			};
-																			data.sender_id = JSON.stringify(temp);
+																			data.sender_id = temp;
 																			temp = {
 																				mobile: receiverMobile,
 																			};
-																			data.receiver_info = JSON.stringify(temp);
+																			data.receiver_info = temp;
 																			data.amount = receiverIdentificationAmount;
 																			data.is_inclusive = isInclusive;
 																			data.cashier_id = cashier._id;
@@ -1766,7 +1763,7 @@ router.post(
 							country: sender.country,
 							email: sender.email,
 						};
-						data.sender_info = JSON.stringify(temp);
+						data.sender_info = temp;
 						temp = {
 							mobile: receiverMobile,
 							// ccode: receiverccode,
@@ -1775,14 +1772,14 @@ router.post(
 							country: receiverCountry,
 							email: receiverEmail,
 						};
-						data.receiver_info = JSON.stringify(temp);
+						data.receiver_info = temp;
 						temp = {
 							country: receiverCountry,
 							type: receiverIdentificationType,
 							number: receiverIdentificationNumber,
 							valid: receiverIdentificationValidTill,
 						};
-						data.receiver_id = JSON.stringify(temp);
+						data.receiver_id = temp;
 						data.amount = receiverIdentificationAmount;
 						data.is_inclusive = isInclusive;
 						const transactionCode = makeid(8);
@@ -2506,14 +2503,14 @@ router.post(
 																		email: email,
 																		note: note,
 																	};
-																	data.sender_info = JSON.stringify(temp);
+																	data.sender_info = temp;
 																	temp = {
 																		country: senderIdentificationCountry,
 																		type: senderIdentificationType,
 																		number: senderIdentificationNumber,
 																		valid: senderIdentificationValidTill,
 																	};
-																	data.sender_id = JSON.stringify(temp);
+																	data.sender_id = temp;
 																	data.sending_bank_id = bank._id;
 																	temp = {
 																		mobile: receiverMobile,
@@ -2523,14 +2520,14 @@ router.post(
 																		country: receiverCountry,
 																		email: receiverEmail,
 																	};
-																	data.receiver_info = JSON.stringify(temp);
+																	data.receiver_info = temp;
 																	temp = {
 																		country: receiverIdentificationCountry,
 																		type: receiverIdentificationType,
 																		number: receiverIdentificationNumber,
 																		valid: receiverIdentificationValidTill,
 																	};
-																	data.receiver_id = JSON.stringify(temp);
+																	data.receiver_id = temp;
 																	data.amount = receiverIdentificationAmount;
 																	data.is_inclusive = isInclusive;
 																	data.cashier_id = cashier._id;
@@ -3432,14 +3429,14 @@ router.post(
 															email: email,
 															note: note,
 														};
-														data.sender_info = JSON.stringify(temp);
+														data.sender_info = temp;
 														temp = {
 															country: senderIdentificationCountry,
 															type: senderIdentificationType,
 															number: senderIdentificationNumber,
 															valid: senderIdentificationValidTill,
 														};
-														data.sender_id = JSON.stringify(temp);
+														data.sender_id = temp;
 														data.sending_bank_id = bank._id;
 														temp = {
 															mobile: receiverMobile,
@@ -3449,14 +3446,14 @@ router.post(
 															country: receiverCountry,
 															email: receiverEmail,
 														};
-														data.receiver_info = JSON.stringify(temp);
+														data.receiver_info = temp;
 														temp = {
 															country: receiverIdentificationCountry,
 															type: receiverIdentificationType,
 															number: receiverIdentificationNumber,
 															valid: receiverIdentificationValidTill,
 														};
-														data.receiver_id = JSON.stringify(temp);
+														data.receiver_id = temp;
 														data.amount = receiverIdentificationAmount;
 														data.is_inclusive = isInclusive;
 														data.cashier_id = cashier._id;
