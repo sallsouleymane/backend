@@ -21,8 +21,6 @@ const PartnerCashier = require("../../models/partner/Cashier");
 const PartnerBranch = require("../../models/partner/Branch");
 
 module.exports.cashierInvoicePay = async (req, res) => {
-	// Initiate transaction state
-	const master_code = await txstate.initiate();
 	const today = new Date();
 
 	const { invoices, merchant_id } = req.body;
@@ -32,7 +30,7 @@ module.exports.cashierInvoicePay = async (req, res) => {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, cashier) {
+		async function (err, cashier) {
 			let errRes = errorMessage(
 				err,
 				cashier,
@@ -41,6 +39,11 @@ module.exports.cashierInvoicePay = async (req, res) => {
 			if (errRes.status == 0) {
 				res.status(200).json(errRes);
 			} else {
+				// Initiate transaction state
+				const master_code = await txstate.initiate(
+					cashier.bank_id,
+					"Non Wallet to Merchant"
+				);
 				MerchantRule.findOne(
 					{ merchant_id: merchant_id, type: "NWM-F", status: 1, active: 1 },
 					(err, fee) => {
@@ -181,8 +184,6 @@ module.exports.cashierInvoicePay = async (req, res) => {
 };
 
 module.exports.partnerInvoicePay = async (req, res) => {
-	// Initiate transaction state
-	const master_code = await txstate.initiate();
 	const today = new Date();
 
 	const { invoices, merchant_id } = req.body;
@@ -192,7 +193,7 @@ module.exports.partnerInvoicePay = async (req, res) => {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, cashier) {
+		async function (err, cashier) {
 			let errRes = errorMessage(
 				err,
 				cashier,
@@ -201,6 +202,11 @@ module.exports.partnerInvoicePay = async (req, res) => {
 			if (errRes.status == 0) {
 				res.status(200).json(errRes);
 			} else {
+				// Initiate transaction state
+				const master_code = await txstate.initiate(
+					cashier.bank_id,
+					"Non Wallet to Merchant"
+				);
 				MerchantRule.findOne(
 					{ merchant_id: merchant_id, type: "NWM-F", status: 1, active: 1 },
 					(err, fee) => {

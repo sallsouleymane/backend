@@ -25,9 +25,6 @@ const walletToWallet = require("../transactions/intraBank/walletToWallet");
 const walletToCashier = require("../transactions/intraBank/walletToCashier");
 
 module.exports.sendMoneyToNonWallet = async function (req, res) {
-	// Initiate transaction state
-	const master_code = await txstate.initiate();
-
 	const username = req.sign_creds.username;
 	const transactionCode = makeid(8);
 
@@ -51,11 +48,16 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 				contact_list: receiverMobile,
 			},
 		},
-		function (err, sender) {
+		async function (err, sender) {
 			let result = errorMessage(err, sender, "Sender not found");
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
+				// Initiate transaction state
+				const master_code = await txstate.initiate(
+					sender.bank_id,
+					"Wallet To Non Wallet"
+				);
 				receiver = {
 					name: receiverGivenName,
 					last_name: receiverFamilyName,
@@ -222,9 +224,6 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 };
 
 module.exports.sendMoneyToWallet = async function (req, res) {
-	// Initiate transaction state
-	const master_code = await txstate.initiate();
-
 	const username = req.sign_creds.username;
 
 	const { receiverMobile, sending_amount, isInclusive } = req.body;
@@ -248,6 +247,11 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
+				// Initiate transaction state
+				const master_code = await txstate.initiate(
+					sender.bank_id,
+					"Wallet to Wallet"
+				);
 				User.findOne(
 					{
 						mobile: receiverMobile,

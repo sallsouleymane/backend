@@ -17,8 +17,6 @@ const Merchant = require("../../models/merchant/Merchant");
 const User = require("../../models/User");
 
 module.exports = async (req, res) => {
-	// Initiate transaction state
-	const master_code = await txstate.initiate();
 	const today = new Date();
 	const { invoices, merchant_id } = req.body;
 	const username = req.sign_creds.username;
@@ -27,11 +25,16 @@ module.exports = async (req, res) => {
 			username,
 			status: 1,
 		},
-		function (err, user) {
+		async function (err, user) {
 			let errRes = errorMessage(err, user, "User is not valid");
 			if (errRes.status == 0) {
 				res.status(200).json(errRes);
 			} else {
+				// Initiate transaction state
+				const master_code = await txstate.initiate(
+					user.bank_id,
+					"Wallet to Merchant"
+				);
 				MerchantRule.findOne(
 					{ merchant_id: merchant_id, type: "WM-F", status: 1, active: 1 },
 					(err, fee) => {

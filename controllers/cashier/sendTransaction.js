@@ -216,9 +216,6 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 
 module.exports.partnerSendMoney = async function (req, res) {
 	try {
-		// Initiate transaction state
-		const master_code = await txstate.initiate();
-
 		const {
 			receiverMobile,
 			receiverEmail,
@@ -234,7 +231,7 @@ module.exports.partnerSendMoney = async function (req, res) {
 				username: jwtusername,
 				status: 1,
 			},
-			function (err, cashier) {
+			async function (err, cashier) {
 				let result = errorMessage(
 					err,
 					cashier,
@@ -243,6 +240,11 @@ module.exports.partnerSendMoney = async function (req, res) {
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
+					// Initiate transaction state
+					const master_code = await txstate.initiate(
+						cashier.bank_id,
+						"Non Wallet To Non Wallet"
+					);
 					Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
 						let result = errorMessage(err, partner, "Partner not found");
 						if (result.status == 0) {
@@ -315,6 +317,7 @@ module.exports.partnerSendMoney = async function (req, res) {
 																						senderType: "sendPartner",
 																						senderCode: partner.code,
 																						master_code: master_code,
+																						cashierId: cashier._id,
 																					};
 																					cashierToCashier(
 																						transfer,
@@ -408,8 +411,6 @@ module.exports.partnerSendMoney = async function (req, res) {
 
 module.exports.cashierSendMoneyToWallet = async function (req, res) {
 	try {
-		// Initiate transaction state
-		const master_code = await txstate.initiate();
 		const {
 			receiverMobile,
 			receiverIdentificationAmount,
@@ -422,7 +423,7 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 				username: jwtusername,
 				status: 1,
 			},
-			function (err, cashier) {
+			async function (err, cashier) {
 				let result = errorMessage(
 					err,
 					cashier,
@@ -431,6 +432,11 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
+					// Initiate transaction state
+					const master_code = await txstate.initiate(
+						cashier.bank_id,
+						"Non Wallet to Wallet"
+					);
 					User.findOne(
 						{
 							mobile: receiverMobile,
@@ -610,9 +616,6 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 };
 
 module.exports.partnerSendMoneyToWallet = async function (req, res) {
-	// Initiate transaction state
-	const master_code = await txstate.initiate();
-
 	const {
 		receiverMobile,
 		receiverIdentificationAmount,
@@ -625,7 +628,7 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, cashier) {
+		async function (err, cashier) {
 			let result = errorMessage(
 				err,
 				cashier,
@@ -634,6 +637,11 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
+				// Initiate transaction state
+				const master_code = await txstate.initiate(
+					cashier.bank_id,
+					"Non Wallet to Wallet"
+				);
 				Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
 					let result = errorMessage(err, partner, "Partner Not Found");
 					if (result.status == 0) {
@@ -824,9 +832,6 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 };
 
 module.exports.cashierSendToOperational = async function (req, res) {
-	// Initiate transaction state
-	const master_code = await txstate.initiate();
-
 	const { walletId, receiverIdentificationAmount, isInclusive } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
@@ -834,7 +839,7 @@ module.exports.cashierSendToOperational = async function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, cashier) {
+		async function (err, cashier) {
 			let result = errorMessage(
 				err,
 				cashier,
@@ -843,6 +848,11 @@ module.exports.cashierSendToOperational = async function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
+				// Initiate transaction state
+				const master_code = await txstate.initiate(
+					cashier.bank_id,
+					"Non Wallet to Operational"
+				);
 				Branch.findOne({ _id: cashier.branch_id }, (err, branch) => {
 					let result = errorMessage(err, branch, "Branch not found");
 					if (result.status == 0) {
@@ -996,7 +1006,7 @@ module.exports.partnerSendToOperational = async function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, cashier) {
+		async function (err, cashier) {
 			let result = errorMessage(
 				err,
 				cashier,
@@ -1005,6 +1015,11 @@ module.exports.partnerSendToOperational = async function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
+				// Initiate transaction state
+				const master_code = await txstate.initiate(
+					cashier.bank_id,
+					"Non Wallet to Operational"
+				);
 				Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
 					let result = errorMessage(err, partner, "Partner Not Found");
 					if (result.status == 0) {
