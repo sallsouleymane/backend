@@ -9,6 +9,7 @@ const makeotp = require("./utils/makeotp");
 const getTypeClass = require("./utils/getTypeClass");
 const JWTTokenAuth = require("./JWTTokenAuth");
 const { errorMessage, catchError } = require("./utils/errorHandler");
+const txstate = require("../controllers/transactions/services/states");
 
 //transactions
 const interCashierToCashier = require("./transactions/interBank/cashierToCashier");
@@ -57,7 +58,7 @@ router.post(
 				username: jwtusername,
 				status: 1,
 			},
-			function (err, cashier) {
+			async function (err, cashier) {
 				let result = errorMessage(
 					err,
 					cashier,
@@ -66,6 +67,12 @@ router.post(
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
+					// Initiate transaction
+					const master_code = await txstate.initiate(
+						cashier.bank_id,
+						"Non Wallet To Operational"
+					);
+
 					PartnerBranch.findOne({ _id: cashier.branch_id }, (err, branch) => {
 						let result = errorMessage(err, branch, "Branch not found");
 						if (result.status == 0) {
@@ -141,6 +148,7 @@ router.post(
 																						res.status(200).json(result);
 																					} else {
 																						const transfer = {
+																							master_code: master_code,
 																							amount: amount,
 																							isInclusive: is_inclusive,
 																							cashierId: cashier._id,
@@ -163,7 +171,7 @@ router.post(
 																											status: 1,
 																											fee: result1.fee,
 																										},
-																										(err) => {
+																										async (err) => {
 																											if (err) {
 																												console.log(err);
 																												var message = err;
@@ -279,6 +287,9 @@ router.post(
 																														}
 																													}
 																												);
+																												await txstate.completed(
+																													master_code
+																												);
 																												res.status(200).json({
 																													status: 1,
 																													message:
@@ -341,7 +352,7 @@ router.post(
 				username: jwtusername,
 				status: 1,
 			},
-			function (err, cashier) {
+			async function (err, cashier) {
 				let result = errorMessage(
 					err,
 					cashier,
@@ -350,6 +361,11 @@ router.post(
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
+					// Initiate transaction
+					const master_code = await txstate.initiate(
+						cashier.bank_id,
+						"Non Wallet To Operational"
+					);
 					Branch.findOne({ _id: cashier.branch_id }, (err, branch) => {
 						let result = errorMessage(err, branch, "Branch not found");
 						if (result.status == 0) {
@@ -425,6 +441,7 @@ router.post(
 																						res.status(200).json(result);
 																					} else {
 																						const transfer = {
+																							master_code: master_code,
 																							amount: amount,
 																							isInclusive: is_inclusive,
 																							cashierId: cashier._id,
@@ -563,6 +580,9 @@ router.post(
 																														}
 																													}
 																												);
+																												await txstate.completed(
+																													master_code
+																												);
 																												res.status(200).json({
 																													status: 1,
 																													message:
@@ -700,6 +720,12 @@ router.post(
 				);
 			}
 
+			// Initiate transaction
+			const master_code = await txstate.initiate(
+				sender.bank_id,
+				"Inter Bank Wallet To Wallet"
+			);
+
 			const receiver = await User.findOne({
 				mobile: receiverMobile,
 			});
@@ -737,6 +763,7 @@ router.post(
 			}
 
 			const transfer = {
+				master_code: master_code,
 				amount: sending_amount,
 				isInclusive: isInclusive,
 				note: note,
@@ -752,6 +779,9 @@ router.post(
 			);
 			console.log("Result: " + result1);
 			if (result1.status == 1) {
+				await txstate.completed(
+					master_code
+				);
 				res.status(200).json({
 					status: 1,
 					message: sending_amount + " XOF is transferred to " + receiver.name,
@@ -814,7 +844,7 @@ router.post(
 				username: jwtusername,
 				status: 1,
 			},
-			function (err, cashier) {
+			async function (err, cashier) {
 				let result = errorMessage(
 					err,
 					cashier,
@@ -823,6 +853,11 @@ router.post(
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
+					// Initiate transaction
+					const master_code = await txstate.initiate(
+						cashier.bank_id,
+						"Inter Bank Non Wallet To Wallet"
+					);
 					Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
 						let result = errorMessage(err, partner, "Partner not found");
 						if (result.status == 0) {
@@ -1015,6 +1050,7 @@ router.post(
 																													} else {
 																														//End
 																														var transfer = {
+																															master_code: master_code,
 																															amount: amount,
 																															isInclusive: isInclusive,
 																															cashierId:
@@ -1190,6 +1226,9 @@ router.post(
 																																						}
 																																					}
 																																				);
+																																				await txstate.completed(
+																																					master_code
+																																				);
 																																				res
 																																					.status(
 																																						200
@@ -1293,7 +1332,7 @@ router.post(
 				username: jwtusername,
 				status: 1,
 			},
-			function (err, cashier) {
+			async function (err, cashier) {
 				let result = errorMessage(
 					err,
 					cashier,
@@ -1302,6 +1341,11 @@ router.post(
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
+					// Initiate transaction
+					const master_code = await txstate.initiate(
+						cashier.bank_id,
+						"Inter Bank Non Wallet To Wallet"
+					);
 					User.findOne(
 						{
 							mobile: receiverMobile,
@@ -1463,6 +1507,7 @@ router.post(
 																										} else {
 																											//End
 																											var transfer = {
+																												master_code: master_code,
 																												amount: amount,
 																												isInclusive: isInclusive,
 																												cashierId: cashier._id,
@@ -1627,6 +1672,9 @@ router.post(
 																																			}
 																																		}
 																																	);
+																																	await txstate.completed(
+																																		master_code
+																																	);
 																																	res
 																																		.status(200)
 																																		.json({
@@ -1720,6 +1768,11 @@ router.post(
 				if (result1.status == 0) {
 					res.status(200).json(result1);
 				} else {
+					// Initiate transaction
+					const master_code = await txstate.initiate(
+						cashier.bank_id,
+						"Inter Bank Wallet To Non Wallet"
+					);
 					var receiver = {
 						name: receiverGivenName,
 						last_name: receiverFamilyName,
@@ -1807,6 +1860,7 @@ router.post(
 						var cs = await data.save();
 
 						var transfer = {
+							master_code: master_code,
 							amount: receiverIdentificationAmount,
 							isInclusive: isInclusive,
 							receiverFamilyName: receiverFamilyName,
@@ -1838,6 +1892,9 @@ router.post(
 							}
 
 							NWUser.create(receiver);
+							await txstate.waitingForCompletion(
+								master_code
+							);
 							res.status(200).json({
 								status: 1,
 								message:
@@ -2098,6 +2155,7 @@ router.post(
 																																	});
 																															} else {
 																																var transfer = {
+																																	master_code: master_code,
 																																	amount:
 																																		cs.amount,
 																																	isInclusive:
@@ -2228,6 +2286,9 @@ router.post(
 																																												err,
 																																												c
 																																											) {
+																																												await txstate.completed(
+																																													master_code
+																																												);
 																																												res
 																																													.status(
 																																														200
@@ -2388,24 +2449,20 @@ router.post(
 				username: jwtusername,
 				status: 1,
 			},
-			function (err, cashier) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (cashier == null) {
-					res.status(200).json({
-						status: 0,
-						message:
-							"Token changed or user not valid. Try to login again or contact system administrator.",
-					});
+			async function (err, cashier) {
+				let errRes = errorMessage(
+					err,
+					cashier,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (errRes.status == 0) {
+					res.status(200).json(errRes);
 				} else {
+					// Initiate transaction
+					const master_code = await txstate.initiate(
+						cashier.bank_id,
+						"Inter Bank Non Wallet To Non Wallet"
+					);
 					PartnerBranch.findOne(
 						{
 							_id: cashier.branch_id,
@@ -2619,6 +2676,7 @@ router.post(
 																									});
 																								} else {
 																									var transfer = {
+																										master_code: master_code,
 																										amount: amount,
 																										isInclusive: isInclusive,
 																										partnerCode: partner.code,
@@ -2792,6 +2850,9 @@ router.post(
 																																	);
 																																}
 																															}
+																														);
+																														await txstate.waitingForCompletion(
+																															master_code
 																														);
 																														res
 																															.status(200)
@@ -3073,6 +3134,7 @@ router.post("/cashier/interBank/claimMoney", JWTTokenAuth, function (req, res) {
 																											});
 																										} else {
 																											var transfer = {
+																												master_code: master_code,
 																												amount: cs.amount,
 																												isInclusive:
 																													cs.is_inclusive,
@@ -3218,6 +3280,9 @@ router.post("/cashier/interBank/claimMoney", JWTTokenAuth, function (req, res) {
 																																						err,
 																																						c
 																																					) {
+																																						await txstate.completed(
+																																							master_code
+																																						);
 																																						res
 																																							.status(
 																																								200
@@ -3333,24 +3398,20 @@ router.post(
 				username: jwtusername,
 				status: 1,
 			},
-			function (err, cashier) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
-					}
-					res.status(200).json({
-						status: 0,
-						message: message,
-					});
-				} else if (cashier == null) {
-					res.status(200).json({
-						status: 0,
-						message:
-							"Token changed or user not valid. Try to login again or contact system administrator.",
-					});
+			async function (err, cashier) {
+				let errRes = errorMessage(
+					err,
+					cashier,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (errRes.status == 0) {
+					res.status(200).json(errRes);
 				} else {
+					// Initiate transaction
+					const master_code = await txstate.initiate(
+						cashier.bank_id,
+						"Inter Bank Non Wallet To Non Wallet"
+					);
 					Branch.findOne(
 						{
 							_id: cashier.branch_id,
@@ -3536,6 +3597,7 @@ router.post(
 																					});
 																				} else {
 																					var transfer = {
+																						master_code: master_code,
 																						amount: amount,
 																						isInclusive: isInclusive,
 																						cashierId: cashier._id,
@@ -3673,6 +3735,9 @@ router.post(
 																													);
 																												}
 																											}
+																										);
+																										await txstate.waitingForCompletion(
+																											master_code
 																										);
 																										res.status(200).json({
 																											status: 1,

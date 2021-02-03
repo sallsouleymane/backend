@@ -36,7 +36,7 @@ module.exports = async function (
 			throw new Error("Not enough balance in your wallet");
 		}
 
-		let master_code = getTransactionCode(sender.mobile, receiver.mobile);
+		let master_code = transfer.master_code;
 
 		let trans1 = {
 			from: senderWallet,

@@ -51,11 +51,16 @@ router.post("/user/interBank/payInvoice", jwtTokenAuth, (req, res) => {
 			username,
 			status: 1,
 		},
-		function (err, user) {
+		async function (err, user) {
 			let errRes = errorMessage(err, user, "User is not valid");
 			if (errRes.status == 0) {
 				res.status(200).json(errRes);
 			} else {
+				// Initiate transaction
+				const master_code = await txstate.initiate(
+					user.bank_id,
+					"Inter Bank Wallet To Merchant"
+				);
 				Bank.findOne({ _id: user.bank_id }, (err, bank) => {
 					let errRes = errorMessage(err, bank, "Bank not found");
 					if (errRes.status == 0) {
@@ -157,8 +162,13 @@ router.post("/user/interBank/payInvoice", jwtTokenAuth, (req, res) => {
 												comm,
 											};
 
+											let transfer = {
+												amount: total_amount,
+												master_code: master_code,
+											};
+
 											var result = await iBwalletInvoicePay(
-												total_amount,
+												transfer,
 												infra,
 												bank,
 												merchantBank,
@@ -251,6 +261,7 @@ router.post("/user/interBank/payInvoice", jwtTokenAuth, (req, res) => {
 												}
 											}
 											result.status_update_feedback = status_update_feedback;
+											await txstate.completed(master_code);
 											res.status(200).json(result);
 										} catch (err) {
 											console.log(err);
@@ -282,7 +293,7 @@ router.post(
 				username: jwtusername,
 				status: 1,
 			},
-			function (err, cashier) {
+			async function (err, cashier) {
 				let errRes = errorMessage(
 					err,
 					cashier,
@@ -291,6 +302,11 @@ router.post(
 				if (errRes.status == 0) {
 					res.status(200).json(errRes);
 				} else {
+					// Initiate transaction
+					const master_code = await txstate.initiate(
+						cashier.bank_id,
+						"Inter Bank Non Wallet To Merchant"
+					);
 					Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
 						var find = {
 							merchant_id: merchant_id,
@@ -455,6 +471,7 @@ router.post(
 																	let transfer = {
 																		amount: total_amount,
 																		cashierId: cashier._id,
+																		master_code: master_code,
 																	};
 
 																	var result = await iBpartnerCashierInvoicePay(
@@ -571,6 +588,7 @@ router.post(
 																		}
 																	}
 																	result.status_update_feedback = status_update_feedback;
+																	await txstate.completed(master_code);
 																	res.status(200).json(result);
 																} catch (err) {
 																	console.log(err);
@@ -609,7 +627,7 @@ router.post("/cashier/interBank/payInvoice", jwtTokenAuth, (req, res) => {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, cashier) {
+		async function (err, cashier) {
 			let errRes = errorMessage(
 				err,
 				cashier,
@@ -618,6 +636,11 @@ router.post("/cashier/interBank/payInvoice", jwtTokenAuth, (req, res) => {
 			if (errRes.status == 0) {
 				res.status(200).json(errRes);
 			} else {
+				// Initiate transaction
+				const master_code = await txstate.initiate(
+					cashier.bank_id,
+					"Inter Bank Non Wallet To Wallet"
+				);
 				var find = {
 					merchant_id: merchant_id,
 					type: "IBNWM-F",
@@ -763,6 +786,7 @@ router.post("/cashier/interBank/payInvoice", jwtTokenAuth, (req, res) => {
 															let transfer = {
 																amount: total_amount,
 																cashierId: cashier._id,
+																master_code: master_code,
 															};
 
 															var result = await iBCashierInvoicePay(
@@ -879,6 +903,7 @@ router.post("/cashier/interBank/payInvoice", jwtTokenAuth, (req, res) => {
 																}
 															}
 															result.status_update_feedback = status_update_feedback;
+															await txstate.completed(master_code);
 															res.status(200).json(result);
 														} catch (err) {
 															console.log(err);

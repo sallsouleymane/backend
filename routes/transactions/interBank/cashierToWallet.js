@@ -36,7 +36,7 @@ module.exports = async function (
 			throw new Error("Not enough balance in branch operational wallet");
 		}
 
-		let master_code = getTransactionCode(branch.mobile, receiver.mobile);
+		let master_code = transfer.master_code;
 
 		let trans = {
 			from: branchOpWallet,

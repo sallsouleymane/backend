@@ -33,7 +33,7 @@ module.exports = async function (
 			};
 		}
 
-		let master_code = getTransactionCode(branch.mobile, bank.mobile);
+		let master_code = transfer.master_code;
 
 		let trans = {
 			from: branch.wallet_ids.operational,

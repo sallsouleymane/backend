@@ -7,7 +7,7 @@ const {
 const execute = require("../../../controllers/transactions/services/execute");
 
 module.exports = async function (
-	amount,
+	transfer,
 	infra,
 	bank,
 	merchantBank,
@@ -29,10 +29,10 @@ module.exports = async function (
 			throw new Error("Not enough balance. Recharge Your wallet.");
 		}
 
-		let master_code = getTransactionCode(branch.mobile, merchant.mobile);
+		let master_code = transfer.master_code;
 
 		// first transaction
-		amount = Number(amount);
+		amount = Number(transfer.amount);
 
 		let trans1 = {
 			from: branchOpWallet,
@@ -129,13 +129,9 @@ module.exports = async function (
 				rule2.comm,
 				branch.code
 			);
-
-			var transfer = {};
-			transfer.amount = amount;
 			transfer.bankFee = bankFee;
 			transfer.partnerFeeShare = partnerFeeShare;
 			transfer.partnerCommShare = partnerCommShare;
-			transfer.master_code = master_code;
 
 			distributeRevenue(
 				transfer,

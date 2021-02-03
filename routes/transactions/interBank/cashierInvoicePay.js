@@ -28,7 +28,7 @@ module.exports = async function (
 			throw new Error("Not enough balance. Recharge Your wallet.");
 		}
 
-		let master_code = getTransactionCode(branch.mobile, merchant.mobile);
+		let master_code = transfer.master_code;
 
 		// first transaction
 		amount = Number(transfer.amount);

@@ -29,7 +29,7 @@ module.exports = async function (transfer, infra, bank, branch, rule1, rule2) {
 			};
 		}
 
-		let master_code = getTransactionCode(branch.mobile, bank.mobile);
+		let master_code = transfer.master_code;
 
 		let trans1 = {
 			from: branchOpWallet,

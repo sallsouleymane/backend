@@ -25,7 +25,7 @@ module.exports = async function (
 			amount = amount - fee;
 		}
 
-		let master_code = getTransactionCode(sendingBank.mobile, branch.mobile);
+		let master_code = transfer.master_code;
 
 		let trans = {
 			from: senderBankEsWallet,
