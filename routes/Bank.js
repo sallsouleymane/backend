@@ -414,7 +414,7 @@ router.post(
 			} else if (type == "IBNWO") {
 				ib_type = "Non Wallet to Operational";
 			} else {
-				res.status(200).json({
+				return res.status(200).json({
 					status: 0,
 					message: "Interbank rule type not supported.",
 				});

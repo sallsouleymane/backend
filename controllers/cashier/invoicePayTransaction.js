@@ -115,6 +115,7 @@ module.exports.cashierInvoicePay = async (req, res) => {
 												master_code: master_code,
 												payerCode: branch.bcode,
 												payerType: "branch",
+												cashierId: cashier._id,
 											};
 
 											var result = await cashierInvoicePay(
