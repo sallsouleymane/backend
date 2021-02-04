@@ -1770,7 +1770,7 @@ router.post(
 				} else {
 					// Initiate transaction
 					const master_code = await txstate.initiate(
-						cashier.bank_id,
+						sender.bank_id,
 						"Inter Bank Wallet To Non Wallet"
 					);
 					var receiver = {
@@ -1841,6 +1841,7 @@ router.post(
 						data.sending_bank_id = bank._id;
 						data.inter_bank_rule_type = "IBWNW";
 						data.is_inter_bank = 1;
+						data.master_code = master_code;
 
 						data.without_id = withoutID ? 1 : 0;
 						if (requireOTP) {
@@ -1885,7 +1886,6 @@ router.post(
 							const caSend = await CashierSend.findByIdAndUpdate(cs._id, {
 								status: 1,
 								fee: result.fee,
-								master_code: result.master_code,
 							});
 							if (caSend == null) {
 								throw new Error("Cashier send record not found");

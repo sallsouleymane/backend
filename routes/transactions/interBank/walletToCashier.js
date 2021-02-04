@@ -75,7 +75,6 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 			await execute(trans2);
 		}
 
-		transfer.master_code = master_code;
 		distributeRevenue(transfer, infra, bank, rule1);
 		return {
 			status: 1,
@@ -84,7 +83,6 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 			balance: balance,
 			amount: amount,
 			fee: fee,
-			master_code: master_code,
 		};
 	} catch (err) {
 		throw err;
