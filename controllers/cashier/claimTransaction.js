@@ -267,7 +267,7 @@ module.exports.cashierClaimMoney = function (req, res) {
 																												.json(catchError(err));
 																										} else {
 																											txstate.completed(
-																												master_code
+																												sendRecord.master_code
 																											);
 																											res.status(200).json({
 																												status: 1,
@@ -463,6 +463,9 @@ module.exports.partnerClaimMoney = function (req, res) {
 																															catchError(err)
 																														);
 																												} else {
+																													txstate.completed(
+																														sendRecord.master_code
+																													);
 																													res.status(200).json({
 																														status: 1,
 																														message:
