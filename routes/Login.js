@@ -86,6 +86,7 @@ router.post("/partnerCashier/login", function (req, res) {
 												branch_id: cashier.branch_id,
 												partner_name:partner.name,
 												branch_name:branch.name,
+												max_trans_amt:cashier.max_trans_amt,
 												id: user._id,
 											});
 										}	
