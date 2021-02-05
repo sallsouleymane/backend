@@ -171,7 +171,6 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 																				{
 																					status: 1,
 																					fee: result.fee,
-																					master_code: result.master_code,
 																				},
 																				(err) => {
 																					if (err) {

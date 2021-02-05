@@ -464,7 +464,7 @@ router.post(
 																											status: 1,
 																											fee: result1.fee,
 																										},
-																										(err) => {
+																										async (err) => {
 																											if (err) {
 																												console.log(err);
 																												var message = err;
@@ -779,9 +779,7 @@ router.post(
 			);
 			console.log("Result: " + result1);
 			if (result1.status == 1) {
-				await txstate.completed(
-					master_code
-				);
+				await txstate.completed(master_code);
 				res.status(200).json({
 					status: 1,
 					message: sending_amount + " XOF is transferred to " + receiver.name,
@@ -1088,7 +1086,9 @@ router.post(
 																																			master_code:
 																																				result.master_code,
 																																		},
-																																		(err) => {
+																																		async (
+																																			err
+																																		) => {
 																																			if (err) {
 																																				console.log(
 																																					err
@@ -1539,7 +1539,7 @@ router.post(
 																																master_code:
 																																	result.master_code,
 																															},
-																															(err) => {
+																															async (err) => {
 																																if (err) {
 																																	console.log(
 																																		err
@@ -1770,7 +1770,7 @@ router.post(
 				} else {
 					// Initiate transaction
 					const master_code = await txstate.initiate(
-						cashier.bank_id,
+						sender.bank_id,
 						"Inter Bank Wallet To Non Wallet"
 					);
 					var receiver = {
@@ -1841,6 +1841,7 @@ router.post(
 						data.sending_bank_id = bank._id;
 						data.inter_bank_rule_type = "IBWNW";
 						data.is_inter_bank = 1;
+						data.master_code = master_code;
 
 						data.without_id = withoutID ? 1 : 0;
 						if (requireOTP) {
@@ -1885,16 +1886,13 @@ router.post(
 							const caSend = await CashierSend.findByIdAndUpdate(cs._id, {
 								status: 1,
 								fee: result.fee,
-								master_code: result.master_code,
 							});
 							if (caSend == null) {
 								throw new Error("Cashier send record not found");
 							}
 
 							NWUser.create(receiver);
-							await txstate.waitingForCompletion(
-								master_code
-							);
+							await txstate.waitingForCompletion(master_code);
 							res.status(200).json({
 								status: 1,
 								message:
@@ -2282,7 +2280,7 @@ router.post(
 																																										data.cashier_id =
 																																											cashier._id;
 																																										data.save(
-																																											function (
+																																											async function (
 																																												err,
 																																												c
 																																											) {
@@ -2723,7 +2721,7 @@ router.post(
 																														master_code:
 																															result.master_code,
 																													},
-																													(err) => {
+																													async (err) => {
 																														if (err) {
 																															console.log(err);
 																															var message = err;
@@ -3276,7 +3274,7 @@ router.post("/cashier/interBank/claimMoney", JWTTokenAuth, function (req, res) {
 																																					{
 																																						amount: amt,
 																																					},
-																																					function (
+																																					async function (
 																																						err,
 																																						c
 																																					) {
@@ -3643,7 +3641,7 @@ router.post(
 																										master_code:
 																											result.master_code,
 																									},
-																									(err) => {
+																									async (err) => {
 																										if (err) {
 																											console.log(err);
 																											var message = err;

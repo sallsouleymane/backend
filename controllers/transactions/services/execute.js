@@ -18,7 +18,7 @@ module.exports = async function (transaction, queue_name = "") {
 			sendSuccessMail(transaction);
 		} else {
 			sendFailureMail(transaction);
-			// queue.send(queue_name, transaction);
+			queue.send(queue_name, transaction);
 		}
 		return res;
 	} catch (err) {

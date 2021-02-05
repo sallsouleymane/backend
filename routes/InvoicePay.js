@@ -3,6 +3,7 @@ const router = express.Router();
 
 //services
 const blockchain = require("../services/Blockchain.js");
+const txstate = require("../controllers/transactions/services/states");
 
 //utils
 const sendSMS = require("./utils/sendSMS");
