@@ -1,7 +1,8 @@
 var amqp = require("amqplib/callback_api");
+var config = require("../../../config.json");
 
 module.exports.send = function (queue_name, transaction) {
-	amqp.connect("amqp://localhost", function (error0, connection) {
+	amqp.connect("amqp://" + config.rabbitmqIP, function (error0, connection) {
 		if (error0) {
 			throw error0;
 		}

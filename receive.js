@@ -1,10 +1,11 @@
 var amqp = require("amqplib/callback_api");
 var util = require("util");
+const config = require("./config.json");
 const execute = require("./controllers/transactions/services/execute");
 
 const queue_name = process.argv[2];
 
-amqp.connect("amqp://localhost", function (error0, connection) {
+amqp.connect("amqp://" + config.rabbitmqIP, function (error0, connection) {
 	if (error0) {
 		throw error0;
 	}
