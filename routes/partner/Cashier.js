@@ -833,6 +833,8 @@ router.post(
 	jwtTokenAuth,
 	function (req, res) {
 		const {
+			type,
+			interbank,
 			givenname,
 			familyname,
 			note,
@@ -914,6 +916,8 @@ router.post(
 					data.amount = receiverIdentificationAmount;
 					data.transaction_details = JSON.stringify(temp);
 					data.cashier_id = cashier._id;
+					data.trans_type = type;
+					data.interbank = interbank;
 
 					let pending = Number(cashier.pending_trans) + 1;
 
