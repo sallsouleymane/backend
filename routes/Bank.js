@@ -80,12 +80,12 @@ router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
 								if (result.status == 0) {
 									res.status(200).json({
 										status: 0,
-										message: "Transaction failed! - " + res.message,
+										message: "Transaction failed! - " + result.message,
 									});
 								} else {
 									res.status(200).json({
-										status: 0,
-										message: "Transaction Success !! " + res.message,
+										status: 1,
+										message: "Transaction Success !! " + result.message,
 									});
 								}
 							} catch (err) {
