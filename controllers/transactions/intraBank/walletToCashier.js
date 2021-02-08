@@ -92,8 +92,8 @@ async function distributeRevenue(transfer, infra, bank, sender, rule1) {
 			to_name: bank.name,
 			sender_id: "",
 			receiver_id: "",
-			master_code: master_code,
-			child_code: master_code + "-s2",
+			master_code: transfer.master_code,
+			child_code: transfer.master_code + "-s2",
 			created_at: new Date(),
 		};
 		let res = await execute(trans2);

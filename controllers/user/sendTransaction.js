@@ -135,6 +135,7 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 																	amount: receiverIdentificationAmount,
 																	is_inclusive: isInclusive,
 																	master_code: master_code,
+																	receiverFamilyName: receiverFamilyName,
 																};
 																walletToCashier(
 																	transfer,

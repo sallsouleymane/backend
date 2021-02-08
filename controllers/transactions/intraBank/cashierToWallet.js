@@ -17,7 +17,6 @@ module.exports = async function (
 	try {
 		const branchOpWallet = branch.wallet_ids.operational;
 		const receiverWallet = receiver.wallet_id;
-		const bankOpWallet = bank.wallet_ids.operational;
 
 		// first transaction
 		var amount = Number(transfer.amount);
@@ -68,35 +67,6 @@ module.exports = async function (
 		transfer.fee = fee;
 		var sendFee = 0;
 		if (fee > 0) {
-			let trans2 = {
-				from: branchOpWallet,
-				to: bankOpWallet,
-				amount: fee,
-				note: "Cashier Send Bank Fee",
-				email1: branch.email,
-				email2: bank.email,
-				mobile1: branch.mobile,
-				mobile2: bank.mobile,
-				from_name: branch.name,
-				to_name: bank.name,
-				sender_id: transfer.cashierId,
-				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code + "-s2",
-				created_at: new Date(),
-			};
-
-			res = await execute(trans2);
-			// return response
-			if (res.status == 0) {
-				//txstate.failed(transfer.master_code);
-				return {
-					status: 0,
-					message: "Transaction failed!",
-					blockchain_message: res.message,
-				};
-			}
-
 			sendFee = calculateShare(
 				transfer.senderType,
 				transfer.amount,
@@ -130,6 +100,30 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 	let master_code = transfer.master_code;
 	let allTxSuccess = true;
 
+	if (fee > 0) {
+		let trans2 = {
+			from: branchOpWallet,
+			to: bankOpWallet,
+			amount: fee,
+			note: "Cashier Send Bank Fee",
+			email1: branch.email,
+			email2: bank.email,
+			mobile1: branch.mobile,
+			mobile2: bank.mobile,
+			from_name: branch.name,
+			to_name: bank.name,
+			sender_id: transfer.cashierId,
+			receiver_id: "",
+			master_code: master_code,
+			child_code: master_code + "-s2",
+			created_at: new Date(),
+		};
+
+		res = await execute(trans2);
+		if (res.status == 0) {
+			allTxSuccess = false;
+		}
+	}
 	var infraShare = calculateShare("infra", transfer.amount, rule1);
 	transfer.infraShare = infraShare;
 
