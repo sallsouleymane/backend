@@ -69,6 +69,55 @@ router.post("/partnerBranch/SetupUpdate", jwtTokenAuth, function (req, res) {
 	);
 });
 
+router.post("/partnerBranch/updateCashierTransferStatus", jwtTokenAuth, function (req, res) {
+	const { transfer_id, cashier_id, status } = req.body;
+
+	const jwtusername = req.sign_creds.username;
+	PartnerBranch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, f) {
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				CashierPending.findByIdAndUpdate(
+					transfer_id,
+					{ status: status },
+					function (err, d) {
+						let result = errorMessage(err, d, "History not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							PartnerCashier.findByIdAndUpdate(
+								cashier_id,
+								{ $inc: {pending_trans: -1}},
+								function (err, cashier) {
+									let result = errorMessage(err, cashier, "Cashier not found");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										res.status(200).json({
+											status: 1,
+											message: "Updated successfully",
+										});
+									}
+								}
+							);
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post(
 	"/partnerBranch/getHistoryTotal",
 	jwtTokenAuth,

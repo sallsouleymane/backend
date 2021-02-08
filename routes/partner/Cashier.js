@@ -833,6 +833,8 @@ router.post(
 	jwtTokenAuth,
 	function (req, res) {
 		const {
+			type,
+			interbank,
 			givenname,
 			familyname,
 			note,
@@ -914,6 +916,8 @@ router.post(
 					data.amount = receiverIdentificationAmount;
 					data.transaction_details = JSON.stringify(temp);
 					data.cashier_id = cashier._id;
+					data.trans_type = type;
+					data.interbank = interbank;
 
 					let pending = Number(cashier.pending_trans) + 1;
 
@@ -1045,24 +1049,42 @@ router.post("/partnerCashier/getHistory", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				PartnerBranch.findOne({ _id: cashier.branch_id }, (err, branch) => {
-					const wallet = branch.wallet_ids[from];
-					blockchain
-						.getStatement(wallet)
-						.then(function (history) {
-							res.status(200).json({
-								status: 1,
-								history: history,
+				CashierPending.find(
+					{ cashier_id: cashier._id },
+					async (err, pending) => {
+						let errMsg = errorMessage(
+							err,
+							pending,
+							"History not found."
+						);
+						if (errMsg.status == 0) {
+							res.status(200).json(errMsg);
+						} else {
+							PartnerBranch.findOne({ _id: cashier.branch_id }, (err, branch) => {
+								const wallet = branch.wallet_ids[from];
+								blockchain
+									.getStatement(wallet)
+									.then(function (history) {
+										res.status(200).json({
+											status: 1,
+											history: history,
+											pending: pending,
+										});
+									})
+									.catch((err) => {
+										res.status(200).json(catchError(err));
+									});
 							});
-						})
-						.catch((err) => {
-							res.status(200).json(catchError(err));
-						});
-				});
+						}
+					}
+				);
+				
 			}
 		}
 	);
 });
+
+
 
 router.post(
 	"/partnerCashier/getBranchByName",
