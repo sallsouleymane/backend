@@ -18,6 +18,9 @@ module.exports = async function (transaction, queue_name = "") {
 			sendSuccessMail(transaction);
 		} else {
 			sendFailureMail(transaction);
+			if (queue_name == "") {
+				queue_name = "GENERAL";
+			}
 			queue.send(queue_name, transaction);
 		}
 		return res;
