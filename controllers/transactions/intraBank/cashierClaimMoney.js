@@ -17,6 +17,7 @@ module.exports = async function (transfer, bank, branch, rule1) {
 	try {
 		const bankEsWallet = bank.wallet_ids.escrow;
 		const branchOpWallet = branch.wallet_ids.operational;
+		const bankOpWallet = bank.wallet_ids.operational;
 
 		var amount = Number(transfer.amount);
 		var fee = calculateShare("bank", transfer.amount, rule1);
@@ -28,10 +29,21 @@ module.exports = async function (transfer, bank, branch, rule1) {
 		var balance = await blockchain.getBalance(bankEsWallet);
 
 		// Check balance first
-		if (Number(balance) < amount + fee) {
+		if (Number(balance) < amount) {
 			return {
 				status: 0,
-				message: "Not enough balance in branch operational wallet",
+				message: "Not enough balance in bank escrow wallet",
+			};
+		}
+
+		// Check balance
+		balance = await blockchain.getBalance(bankOpWallet);
+
+		// Check balance first
+		if (Number(balance) < fee) {
+			return {
+				status: 0,
+				message: "Not enough balance in bank operational wallet",
 			};
 		}
 
