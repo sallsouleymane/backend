@@ -78,14 +78,23 @@ router.post("/partnerBranch/updateCashierTransferStatus", jwtTokenAuth, function
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, f) {
-			let result = errorMessage(
-				err,
-				f,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
+		function (err, branch) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (!branch) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
 			} else {
 				CashierPending.findByIdAndUpdate(
 					transfer_id,
