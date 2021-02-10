@@ -12,6 +12,7 @@ const blockchain = require("../../services/Blockchain");
 const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
 const CashierTransfer = require("../../models/CashierTransfer");
+const CashierPending = require("../../models/CashierPending");
 
 router.post("/partnerBranch/SetupUpdate", jwtTokenAuth, function (req, res) {
 	const { password } = req.body;
@@ -78,14 +79,23 @@ router.post("/partnerBranch/updateCashierTransferStatus", jwtTokenAuth, function
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, f) {
-			let result = errorMessage(
-				err,
-				f,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
+		function (err, branch) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (!branch) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
 			} else {
 				CashierPending.findByIdAndUpdate(
 					transfer_id,
