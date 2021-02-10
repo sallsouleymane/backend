@@ -49,7 +49,7 @@ module.exports = async function (transfer, infra, bank, branch, rule1) {
 			created_at: new Date(),
 		};
 
-		let res = await execute(trans, "AMOUNT");
+		let res = await execute(trans);
 
 		// return response
 		if (res.status == 0) {
