@@ -67,7 +67,7 @@ module.exports = async function (transfer, bank, branch, rule1) {
 			created_at: new Date(),
 		};
 
-		let result = await execute(trans, "CLAIMAMOUNT");
+		let result = await execute(trans);
 
 		// return response
 		if (result.status == 0) {
