@@ -580,11 +580,13 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 																										}
 																									);
 																								} else {
+																									txstate.failed(master_code);
 																									res.status(200).json(result);
 																								}
 																							})
 																							.catch((err) => {
 																								console.log(err);
+																								txstate.failed(master_code);
 																								res.status(200).json({
 																									status: 0,
 																									message: err.message,

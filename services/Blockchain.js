@@ -1,6 +1,5 @@
 const doRequest = require("../routes/utils/doRequest");
 const config = require("../config.json");
-const TxState = require("../models/TxState");
 
 module.exports.createWallet = async (arr) => {
 	try {

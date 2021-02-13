@@ -7,7 +7,7 @@ const {
 const execute = require("../../../controllers/transactions/services/execute");
 
 module.exports = async function (
-	amount,
+	transfer,
 	infra,
 	bank,
 	merchantBank,
@@ -23,15 +23,13 @@ module.exports = async function (
 		const merBankOpWallet = merchantBank.wallet_ids.operational;
 
 		// check branch operational wallet balance
+		let amount = transfer.amount;
 		var balance = await blockchain.getBalance(userWallet);
 		if (Number(balance) < amount) {
 			throw new Error("Not enough balance. Recharge Your wallet.");
 		}
 
 		let master_code = transfer.master_code;
-
-		// first transaction
-		amount = Number(amount);
 
 		let trans1 = {
 			from: userWallet,
@@ -114,9 +112,6 @@ module.exports = async function (
 				blockchain_message: result.message,
 			};
 		} else {
-			var transfer = {};
-			transfer.amount = amount;
-			transfer.master_code = master_code;
 			distributeRevenue(
 				transfer,
 				infra,

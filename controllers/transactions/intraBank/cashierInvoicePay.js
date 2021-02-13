@@ -19,14 +19,13 @@ module.exports = async function (
 		// receiver's wallet names
 		const branchOpWallet = branch.wallet_ids.operational;
 		const merchantOpWallet = merchant.wallet_ids.operational;
-		const bankOpWallet = bank.wallet_ids.operational;
 
 		let master_code = transfer.master_code;
 		// check branch operational wallet balance
 		let amount = Number(transfer.amount);
 		let bankFee = calculateShare("bank", amount, fee);
 		var balance = await blockchain.getBalance(branchOpWallet);
-		if (Number(balance) + Number(branch.credit_limit) < amount + bankFee) {
+		if (Number(balance) < amount + bankFee) {
 			return {
 				status: 0,
 				message: "Not enough balance. Recharge Your wallet.",
@@ -62,66 +61,7 @@ module.exports = async function (
 			};
 		}
 
-		if (bankFee > 0) {
-			let trans2 = {
-				from: branchOpWallet,
-				to: bankOpWallet,
-				amount: bankFee,
-				note: "Bank fee on paid bill",
-				email1: branch.email,
-				email2: bank.email,
-				mobile1: branch.mobile,
-				mobile2: bank.mobile,
-				from_name: branch.name,
-				to_name: bank.name,
-				sender_id: transfer.cashierId,
-				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code + "-p2",
-				created_at: new Date(),
-			};
-
-			res = await execute(trans2);
-			if (res.status == 0) {
-				return {
-					status: 0,
-					message: "Transaction failed!",
-					blockchain_message: res.message,
-				};
-			}
-		}
-
 		let bankComm = calculateShare("bank", amount, comm);
-		transfer.bankComm = bankComm;
-		if (bankComm > 0) {
-			let trans5 = {
-				from: merchantOpWallet,
-				to: bankOpWallet,
-				amount: bankComm,
-				note: "Bank commission on paid bill",
-				email1: merchant.email,
-				email2: bank.email,
-				mobile1: merchant.mobile,
-				mobile2: bank.mobile,
-				from_name: merchant.name,
-				to_name: bank.name,
-				sender_id: "",
-				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code + "-p6",
-				created_at: new Date(),
-			};
-
-			let res = await execute(trans5);
-			if (res.status == 0) {
-				return {
-					status: 0,
-					message: "Transaction failed!",
-					blockchain_message: res.message,
-				};
-			}
-		}
-
 		let payerType = transfer.payerType;
 		let payerCode = transfer.payerCode;
 		let partnerFeeShare = calculateShare(payerType, amount, fee, {}, payerCode);
@@ -164,6 +104,55 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 	//second transaction
 	let bankFee = transfer.bankFee;
 	let bankComm = transfer.bankComm;
+
+	if (bankFee > 0) {
+		let trans2 = {
+			from: branchOpWallet,
+			to: bankOpWallet,
+			amount: bankFee,
+			note: "Bank fee on paid bill",
+			email1: branch.email,
+			email2: bank.email,
+			mobile1: branch.mobile,
+			mobile2: bank.mobile,
+			from_name: branch.name,
+			to_name: bank.name,
+			sender_id: transfer.cashierId,
+			receiver_id: "",
+			master_code: master_code,
+			child_code: master_code + "-p2",
+			created_at: new Date(),
+		};
+		let res = await execute(trans2);
+		if (res.status == 0) {
+			allTxSuccess = false;
+		}
+	}
+
+	if (bankComm > 0) {
+		let trans5 = {
+			from: merchantOpWallet,
+			to: bankOpWallet,
+			amount: bankComm,
+			note: "Bank commission on paid bill",
+			email1: merchant.email,
+			email2: bank.email,
+			mobile1: merchant.mobile,
+			mobile2: bank.mobile,
+			from_name: merchant.name,
+			to_name: bank.name,
+			sender_id: "",
+			receiver_id: "",
+			master_code: master_code,
+			child_code: master_code + "-p6",
+			created_at: new Date(),
+		};
+
+		let res = await execute(trans5);
+		if (res.status == 0) {
+			allTxSuccess = false;
+		}
+	}
 
 	//third transaction
 	infraShare = calculateShare("infra", amount, fee);
