@@ -82,7 +82,7 @@ router.post("/getBranchDashStats", jwtTokenAuth, function (req, res) {
 												{ $match : {branch_id: user._id}},
 												{
 													$group: {
-														_id: "$branch_id",
+														_id: null,
 														total: {
 															$sum: "$cash_in_hand",
 														},
