@@ -23,7 +23,7 @@ module.exports.send = function (queue_name, transaction) {
 				channel.sendToQueue(queue, Buffer.from(msg));
 
 				console.log(" [x] Sent %s to queue %s", msg, queue_name);
-				connection.close();
+				// connection.close();
 			});
 		});
 	} catch (err) {
