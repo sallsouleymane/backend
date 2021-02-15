@@ -79,6 +79,7 @@ router.post("/getBranchDashStats", jwtTokenAuth, function (req, res) {
 
 										Cashier.aggregate(
 											[
+												{ $match : { branch_id: user._id} },
 												{
 													$group: {
 														_id: null,
