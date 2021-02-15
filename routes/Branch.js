@@ -99,17 +99,17 @@ router.post("/getBranchDashStats", jwtTokenAuth, function (req, res) {
 												},
 											],
 											async (e, post5) => {
-												let cin = 0;
-												if (
-													post5 != undefined &&
-													post5 != null &&
-													post5.length > 0
-												) {
-													cin = post5[0].total;
-													fg = post5[0].totalFee;
-													cg = post5[0].totalCommission;
-													ob = post5[0].openingBalance;
-												}
+												// let cin = 0;
+												// if (
+												// 	post5 != undefined &&
+												// 	post5 != null &&
+												// 	post5.length > 0
+												// ) {
+												// 	cin = post5[0].total;
+												// 	fg = post5[0].totalFee;
+												// 	cg = post5[0].totalCommission;
+												// 	ob = post5[0].openingBalance;
+												// }
 												var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, branch_id: user._id});
 												var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, branch_id: user._id});
 												var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, branch_id: user._id});
@@ -119,10 +119,11 @@ router.post("/getBranchDashStats", jwtTokenAuth, function (req, res) {
 													totalCashier: post4,
 													cashPaid: paid == null ? 0 : paid,
 													cashReceived: received == null ? 0 : received,
-													cashInHand: cin,
-													feeGenerated : fg,
-													commissionGenerated: cg,
-													openingBalance: ob,
+													group:post5,
+													// cashInHand: cin,
+													// feeGenerated : fg,
+													// commissionGenerated: cg,
+													// openingBalance: ob,
 													cancelled: totalcancelledTransfers,
 													pending: totalPendingTransfers,
 													accepted: totalAcceptedTransfers,
