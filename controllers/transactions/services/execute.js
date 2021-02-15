@@ -6,9 +6,6 @@ const queue = require("./queue");
 
 //Models
 const TxState = require("../../../models/TxState");
-const {
-	getTransactionCode,
-} = require("../../../routes/utils/calculateShare.js");
 
 module.exports = async function (transaction, queue_name = "") {
 	try {
@@ -119,6 +116,10 @@ async function saveTxState(transaction, res) {
 					"childTx.$.state": res.status,
 					"childTx.$.message": res.message,
 					"childTx.$.transaction": transaction,
+					"childTx.$.retry_at": Date.now(),
+				},
+				$inc: {
+					"childTx.$.retry_count": 1,
 				},
 			}
 		);

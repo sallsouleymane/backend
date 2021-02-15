@@ -28,7 +28,7 @@ module.exports = async function (
 		var balance = await blockchain.getBalance(branchOpWallet);
 
 		//Check balance first
-		if (Number(balance) + Number(branch.credit_limit) < amount + fee) {
+		if (Number(balance) < amount + fee) {
 			throw new Error("Not enough balance in branch operational wallet");
 		}
 

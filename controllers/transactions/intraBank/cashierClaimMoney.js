@@ -10,8 +10,8 @@ const { calculateShare } = require("../../../routes/utils/calculateShare");
 const getTypeClass = require("../../../routes/utils/getTypeClass");
 
 //transaction
-const txstate = require("../services/states");
 const execute = require("../services/execute.js");
+const qname = require("../queueName");
 
 module.exports = async function (transfer, bank, branch, rule1) {
 	try {
@@ -25,27 +25,27 @@ module.exports = async function (transfer, bank, branch, rule1) {
 			amount = amount - fee;
 		}
 
-		// Check balance
-		var balance = await blockchain.getBalance(bankEsWallet);
+		// // Check balance
+		// var balance = await blockchain.getBalance(bankEsWallet);
 
-		// Check balance first
-		if (Number(balance) < amount) {
-			return {
-				status: 0,
-				message: "Not enough balance in bank escrow wallet",
-			};
-		}
+		// // Check balance first
+		// if (Number(balance) < amount) {
+		// 	return {
+		// 		status: 0,
+		// 		message: "Not enough balance in bank escrow wallet",
+		// 	};
+		// }
 
-		// Check balance
-		balance = await blockchain.getBalance(bankOpWallet);
+		// // Check balance
+		// balance = await blockchain.getBalance(bankOpWallet);
 
-		// Check balance first
-		if (Number(balance) < fee) {
-			return {
-				status: 0,
-				message: "Not enough balance in bank operational wallet",
-			};
-		}
+		// // Check balance first
+		// if (Number(balance) < fee) {
+		// 	return {
+		// 		status: 0,
+		// 		message: "Not enough balance in bank operational wallet",
+		// 	};
+		// }
 
 		let master_code = transfer.master_code;
 
@@ -127,7 +127,7 @@ async function distributeRevenue(transfer, bank, branch) {
 			child_code: master_code + "-c2",
 			created_at: new Date(),
 		};
-		await execute(trans, "CLAIMFEE");
+		await execute(trans, qname.claim_fee);
 	}
 	let txInfo = await TxState.findById(master_code);
 	let alltxsuccess = allTxSuccess(txInfo);
@@ -174,7 +174,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 		child_code: master_code + "-m1",
 		created_at: new Date(),
 	};
-	let result = await execute(trans, "BANKMASTER");
+	let result = await execute(trans, qname.bank_master);
 	if (result.status == 0) {
 		txStatus = 0;
 	}
@@ -194,7 +194,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 		child_code: master_code + "-m2",
 		created_at: new Date(),
 	};
-	result = await execute(trans, "INFRAMASTER");
+	result = await execute(trans, qname.infra_master);
 	if (result.status == 0) {
 		txStatus = 0;
 	}
@@ -217,7 +217,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 			child_code: master_code + "-m3",
 			created_at: new Date(),
 		};
-		result = await execute(trans, "SENDMASTER");
+		result = await execute(trans, qname.send_master);
 		if (result.status == 0) {
 			txStatus = 0;
 		}
@@ -238,7 +238,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 		child_code: master_code + "-m4",
 		created_at: new Date(),
 	};
-	result = await execute(trans, "CLAIMMASTER");
+	result = await execute(trans, qname.claim_master);
 	if (result.status == 0) {
 		txStatus = 0;
 	}

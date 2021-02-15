@@ -2,8 +2,8 @@
 // const state = require("./transactions/state");
 const blockchain = require("../../../services/Blockchain.js");
 const { calculateShare } = require("../../../routes/utils/calculateShare");
-const txstate = require("../services/states");
 const execute = require("../services/execute.js");
+const qname = require("../queueName");
 
 module.exports = async function (transfer, infra, bank, branch, rule1) {
 	try {
@@ -89,7 +89,6 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 
-	let allTxSuccess = true;
 	fee = transfer.fee;
 
 	if (fee > 0) {
@@ -111,7 +110,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			created_at: new Date(),
 		};
 
-		let res = await execute(trans, "FEE");
+		let res = await execute(trans, qname.fee);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -138,7 +137,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			child_code: transfer.master_code + "-s3",
 			created_at: new Date(),
 		};
-		res = await execute(trans, "INFRAPERCENT");
+		res = await execute(trans, qname.infra_percent);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -163,7 +162,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			child_code: transfer.master_code + "-s4",
 			created_at: new Date(),
 		};
-		res = await execute(trans, "INFRAFIXED");
+		res = await execute(trans, qname.infra_fixed);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -189,7 +188,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			created_at: new Date(),
 		};
 
-		res = await execute(trans, "SENDFEE");
+		res = await execute(trans, qname.send_fee);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
