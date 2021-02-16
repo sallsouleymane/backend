@@ -122,7 +122,6 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 																				master_code: master_code,
 																				senderType: "sendBranch",
 																				senderCode: branch.bcode,
-																				isInterBank: 0,
 																				cashierId: cashier._id,
 																			};
 																			cashierToCashier(
@@ -188,9 +187,8 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 																					}
 																				})
 																				.catch((err) => {
-																					let errMsg = catchError(err);
 																					txstate.failed(transfer.master_code);
-																					res.status(200).json(errMsg);
+																					res.status(200).json(catchError(err));
 																				});
 																		}
 																	}
@@ -379,10 +377,16 @@ module.exports.partnerSendMoney = async function (req, res) {
 																									}
 																								);
 																							} else {
+																								txstate.failed(
+																									transfer.master_code
+																								);
 																								res.status(200).json(result);
 																							}
 																						})
 																						.catch((err) => {
+																							txstate.failed(
+																								transfer.master_code
+																							);
 																							res.status.json(catchError(err));
 																						});
 																				}

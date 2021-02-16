@@ -49,7 +49,7 @@ router.post(
 	cashSendTransCntrl.cashierSendToOperational
 );
 
-router.post("/cashier/getFailedTransactions", jwtTokenAuth, function (req, res) {
+router.post("/cashier/getTransactions", jwtTokenAuth, function (req, res) {
 	const { bank_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(

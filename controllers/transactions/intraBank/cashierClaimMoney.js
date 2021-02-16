@@ -174,10 +174,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 		child_code: master_code + "-m1",
 		created_at: new Date(),
 	};
-	let result = await execute(trans, qname.bank_master);
-	if (result.status == 0) {
-		txStatus = 0;
-	}
+	execute(trans, qname.bank_master);
 
 	trans = {
 		from: infraOpWallet,
@@ -194,10 +191,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 		child_code: master_code + "-m2",
 		created_at: new Date(),
 	};
-	result = await execute(trans, qname.infra_master);
-	if (result.status == 0) {
-		txStatus = 0;
-	}
+	execute(trans, qname.infra_master);
 
 	if (sendBranchPart > 0) {
 		const sendBranchOpWallet = sendBranch.wallet_ids.operational;
@@ -217,10 +211,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 			child_code: master_code + "-m3",
 			created_at: new Date(),
 		};
-		result = await execute(trans, qname.send_master);
-		if (result.status == 0) {
-			txStatus = 0;
-		}
+		execute(trans, qname.send_master);
 	}
 
 	trans = {
@@ -238,10 +229,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 		child_code: master_code + "-m4",
 		created_at: new Date(),
 	};
-	result = await execute(trans, qname.claim_master);
-	if (result.status == 0) {
-		txStatus = 0;
-	}
+	execute(trans, qname.claim_master);
 }
 
 function allTxSuccess(txInfo) {
