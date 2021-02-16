@@ -15,7 +15,6 @@ amqp.connect(connection_url, function (error0, connection) {
 				throw error1;
 			}
 
-			console.log("Channel created: ", channel);
 			var queue = queue_name;
 
 			channel.assertQueue(queue, {
