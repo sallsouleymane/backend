@@ -395,7 +395,7 @@ router.post("/partnerBranch/getDashStats", jwtTokenAuth, function (req, res) {
 						}
 						PartnerCashier.aggregate(
 							[
-								{ $match : { branch_id: branch._id} },
+								{ $match : {branch_id: String(branch._id)}},
 								{
 									$group: {
 										_id: null,
