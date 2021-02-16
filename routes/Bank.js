@@ -67,7 +67,9 @@ router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
 							try {
 								let txArr = tx.childTx;
 								var childTrans = txArr.find(
-									(childTx) => childTx.transaction.child_code == child_code
+									(childTx) =>
+										childTx.transaction.child_code == child_code &&
+										childTx.state == 0
 								);
 								let result = await execute(
 									childTrans.transaction,
@@ -116,16 +118,20 @@ router.post("/bank/getFailedTransactions", jwtTokenAuth, function (req, res) {
 			if (errMsg.status == 0) {
 				res.status(200).json(errMsg);
 			} else {
-				TxState.find({ bankId: bank._id }, (err, txstates) => {
-					if (err) {
-						res.status(200).json(catchError(err));
-					} else {
-						res.status(200).json({
-							status: 1,
-							transactions: txstates,
-						});
+				TxState.find(
+					{ bankId: bank._id },
+					{ childTx: { $elemMatch: { state: 0 } } },
+					(err, txstates) => {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							res.status(200).json({
+								status: 1,
+								transactions: txstates,
+							});
+						}
 					}
-				});
+				);
 			}
 		}
 	);
