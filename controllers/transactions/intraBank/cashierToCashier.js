@@ -110,10 +110,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			created_at: new Date(),
 		};
 
-		let res = await execute(trans, qname.fee);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
+		execute(trans, qname.fee);
 	}
 
 	var infraShare = calculateShare("infra", transfer.amount, rule1);
@@ -137,10 +134,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			child_code: transfer.master_code + "-s3",
 			created_at: new Date(),
 		};
-		res = await execute(trans, qname.infra_percent);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
+		execute(trans, qname.infra_percent);
 	}
 
 	if (infraShare.fixed_amount > 0) {
@@ -162,10 +156,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			child_code: transfer.master_code + "-s4",
 			created_at: new Date(),
 		};
-		res = await execute(trans, qname.infra_fixed);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
+		execute(trans, qname.infra_fixed);
 	}
 
 	if (fee > 0) {
@@ -188,9 +179,6 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			created_at: new Date(),
 		};
 
-		res = await execute(trans, qname.send_fee);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
+		execute(trans, qname.send_fee);
 	}
 }

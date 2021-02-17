@@ -5,6 +5,7 @@ const { calculateShare } = require("../../../routes/utils/calculateShare");
 // transaction services
 const txstate = require("../services/states");
 const execute = require("../services/execute.js");
+const qname = require("../queueName");
 
 module.exports = async function (
 	transfer,
@@ -56,8 +57,7 @@ module.exports = async function (
 		if (res.status == 0) {
 			return {
 				status: 0,
-				message: "Transaction failed!",
-				blockchain_message: res.message,
+				message: "Transaction failed! - " + res.message,
 			};
 		}
 
@@ -73,7 +73,6 @@ module.exports = async function (
 			payerCode
 		);
 
-		transfer.amount = amount;
 		transfer.bankFee = bankFee;
 		transfer.bankComm = bankComm;
 		transfer.partnerFeeShare = partnerFeeShare;
@@ -123,7 +122,7 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 			child_code: master_code + "-p2",
 			created_at: new Date(),
 		};
-		let res = await execute(trans2);
+		let res = await execute(trans2, qname.fee);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -148,7 +147,7 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 			created_at: new Date(),
 		};
 
-		let res = await execute(trans5);
+		let res = await execute(trans5, qname.comm);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -175,7 +174,7 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 			child_code: master_code + "-p3",
 			created_at: new Date(),
 		};
-		let res = await execute(trans31);
+		let res = await execute(trans31, qname.infra_percent);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -199,7 +198,7 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 			child_code: master_code + "-p4",
 			created_at: new Date(),
 		};
-		let res = await execute(trans32);
+		let res = await execute(trans32, qname.infra_fixed);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -226,7 +225,7 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 			created_at: new Date(),
 		};
 
-		let res = await execute(trans4);
+		let res = await execute(trans4, qname.partner_share);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -254,7 +253,7 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 			created_at: new Date(),
 		};
 
-		let res = await execute(trans61);
+		let res = await execute(trans61, qname.infra_percentage);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -278,7 +277,7 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 			created_at: new Date(),
 		};
 
-		let res = await execute(trans62);
+		let res = await execute(trans62, qname.infra_fixed);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -305,17 +304,14 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 			created_at: new Date(),
 		};
 
-		let res = await execute(trans7);
+		let res = await execute(trans7, qname.partner_share);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
 	}
 
 	if (allTxSuccess) {
-		txstate.nearCompletion(master_code);
 		transferToMasterWallets(transfer, infra, bank, branch);
-	} else {
-		txstate.failed(transfer.master_code);
 	}
 }
 
@@ -359,7 +355,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 		child_code: master_code + "-m1",
 		created_at: new Date(),
 	};
-	let result = await execute(trans);
+	let result = await execute(trans, qname.bank_master);
 	if (result.status == 0) {
 		txStatus = 0;
 	}
@@ -379,7 +375,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 		child_code: master_code + "-m2",
 		created_at: new Date(),
 	};
-	result = await execute(trans);
+	result = await execute(trans, qname.infra_master);
 	if (result.status == 0) {
 		txStatus = 0;
 	}
@@ -399,7 +395,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 		child_code: master_code + "-m3",
 		created_at: new Date(),
 	};
-	result = await execute(trans);
+	result = await execute(trans, qname.send_master);
 	if (result.status == 0) {
 		txStatus = 0;
 	}

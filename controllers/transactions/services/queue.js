@@ -13,7 +13,6 @@ module.exports.send = function (queue_name, transaction) {
 				if (error1) {
 					console.log(error1);
 				}
-				console.log("Channel created: ", channel);
 				var queue = queue_name;
 				var msg = Buffer.from(JSON.stringify(transaction));
 

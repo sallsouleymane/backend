@@ -4,6 +4,8 @@ const TxStateSchema = new mongoose.Schema({
 	state: { type: String, required: false },
 	txType: { type: String, required: false },
 	bankId: { type: String, required: false },
+	cashier_id: { type: String, required: false },
+	cash_in_hand: { type: Number, required: false, default: 0 },
 	childTx: [
 		{
 			state: { type: String, required: false },
@@ -13,7 +15,6 @@ const TxStateSchema = new mongoose.Schema({
 			retry_at: { type: Date, required: false, default: Date.now },
 		},
 	],
-
 	createdAt: { type: Date, required: true, default: Date.now },
 });
 module.exports = mongoose.model("TxState", TxStateSchema);

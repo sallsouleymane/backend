@@ -164,12 +164,14 @@ module.exports.cashierInvoicePay = async (req, res) => {
 													throw new Error(status);
 												}
 
-												txstate.reported(master_code);
+												txstate.completed(master_code);
 												res.status(200).json(result);
 											} else {
+												txstate.failed(master_code);
 												res.status(200).json(result);
 											}
 										} catch (err) {
+											txstate.failed(master_code);
 											res.status(200).json(catchError(err));
 										}
 									}
