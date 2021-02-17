@@ -518,9 +518,9 @@ router.post("/getCashierDetails", jwtTokenAuth, function (req, res) {
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
-							var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, branch_id: user._id});
-							var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, branch_id: user._id});
-							var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, branch_id: user._id});
+							var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, cashier_id: cashier_id});
+							var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, cashier_id: cashier_id});
+							var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, cashier_id: cashier_id});
 							res.status(200).json({
 								status: 1,
 								cashier: cashier,
