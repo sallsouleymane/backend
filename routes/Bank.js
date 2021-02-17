@@ -103,6 +103,8 @@ router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/bank/getFailedTransactions", jwtTokenAuth, function (req, res) {
+	//const { status, date_range, page_start, page_end } = req.body;
+	let status = 0;
 	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
@@ -119,8 +121,7 @@ router.post("/bank/getFailedTransactions", jwtTokenAuth, function (req, res) {
 				res.status(200).json(errMsg);
 			} else {
 				TxState.find(
-					{ bankId: bank._id },
-					{ childTx: { $elemMatch: { state: 0 } } },
+					{ bankId: bank._id, "childTx.state": status },
 					(err, txstates) => {
 						if (err) {
 							res.status(200).json(catchError(err));
