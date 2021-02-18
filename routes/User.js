@@ -15,6 +15,7 @@ const CashierSend = require("../models/CashierSend");
 const Merchant = require("../models/merchant/Merchant");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
 const Invoice = require("../models/merchant/Invoice");
+const TxState = require("../models/TxState");
 
 //utils
 const sendSMS = require("./utils/sendSMS");
@@ -28,6 +29,42 @@ const walletToCashier = require("./transactions/intraBank/walletToCashier");
 
 //controllers
 const userSendTransCntrl = require("../controllers/user/sendTransaction");
+
+router.post(
+	"/user/getFailedTransactions",
+	jwtTokenAuth,
+	function (req, res) {
+		const { bank_id } = req.body;
+		const jwtusername = req.sign_creds.username;
+		User.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, cashier) {
+				let errMsg = errorMessage(
+					err,
+					cashier,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (errMsg.status == 0) {
+					res.status(200).json(errMsg);
+				} else {
+					TxState.find({ bankId: bank_id }, (err, txstates) => {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							res.status(200).json({
+								status: 1,
+								transactions: txstates,
+							});
+						}
+					});
+				}
+			}
+		);
+	}
+);
 
 router.post("/user/getMerchantPenaltyRule", jwtTokenAuth, function (req, res) {
 	const { merchant_id } = req.body;
