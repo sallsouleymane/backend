@@ -103,9 +103,31 @@ router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/bank/getFailedTransactions", jwtTokenAuth, function (req, res) {
-	//const { status, date_range, page_start, page_end } = req.body;
-	let status = 0;
+	var { status, date_after, date_before, page_start, limit } = req.body;
 	const jwtusername = req.sign_creds.username;
+
+	let date_range = [];
+	if (date_after && date_after != "") {
+		date_after = new Date(date_after);
+		date_range[0] = { createdAt: { $gte: date_after.toISOString() } };
+	}
+
+	if (date_before && date_before != "") {
+		date_before = new Date(date_before);
+		date_range[1] = { createdAt: { $lte: date_before.toISOString() } };
+	}
+
+	var status_query;
+	if (status == "0") {
+		status_query = { $elemMatch: { state: "0" } };
+	} else if (status == "1") {
+		status_query = { $not: { $elemMatch: { state: "0" } } };
+	} else {
+		status_query = { $elemMatch: {} };
+	}
+
+	console.log(date_range);
+	console.log(status_query);
 	Bank.findOne(
 		{
 			username: jwtusername,
@@ -121,7 +143,13 @@ router.post("/bank/getFailedTransactions", jwtTokenAuth, function (req, res) {
 				res.status(200).json(errMsg);
 			} else {
 				TxState.find(
-					{ bankId: bank._id, "childTx.state": status },
+					{
+						bankId: bank._id,
+						childTx: status_query,
+						$and: date_range,
+					},
+					null,
+					{ skip: page_start, limit: limit },
 					(err, txstates) => {
 						if (err) {
 							res.status(200).json(catchError(err));
