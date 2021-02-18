@@ -3,6 +3,7 @@ FROM node:8.11.1-alpine
 WORKDIR /usr/src/app
 
 COPY ./config.json .
+COPY ./dbConfig.js .
 COPY ./receive.js .
 COPY ./controllers/transactions/services/execute.js ./controllers/transactions/services/
 COPY ./controllers/transactions/services/queue.js ./controllers/transactions/services/

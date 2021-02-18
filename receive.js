@@ -10,6 +10,7 @@ amqp.connect(connection_url, function (error0, connection) {
 			throw error0;
 		}
 		console.log("Connected to ", connection_url);
+		require("./dbConfig");
 		connection.createChannel(function (error1, channel) {
 			if (error1) {
 				throw error1;
