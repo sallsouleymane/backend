@@ -14,6 +14,49 @@ const PartnerCashier = require("../../models/partner/Cashier");
 const CashierTransfer = require("../../models/CashierTransfer");
 const CashierPending = require("../../models/CashierPending");
 
+router.post("/partnerBranch/getCashierDetails", jwtTokenAuth, function (req, res) {
+	const { cashier_id } = req.body;
+
+	const jwtusername = req.sign_creds.username;
+	PartnerBranch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, f) {
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				PartnerCashier.findById(
+					cashier_id,
+					async(err, cashier) => {
+						let result = errorMessage(err, cashier, "Cashier not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, cashier_id: cashier_id});
+							var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, cashier_id: cashier_id});
+							var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, cashier_id: cashier_id});
+							res.status(200).json({
+								status: 1,
+								cashier: cashier,
+								pending: totalPendingTransfers,
+								accepted: totalAcceptedTransfers,
+								cancelled: totalcancelledTransfers
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/partnerBranch/SetupUpdate", jwtTokenAuth, function (req, res) {
 	const { password } = req.body;
 	const jwtusername = req.sign_creds.username;

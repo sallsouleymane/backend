@@ -493,6 +493,49 @@ router.post("/updateCashierTransferStatus", jwtTokenAuth, function (req, res) {
 	);
 });
 
+router.post("/getCashierDetails", jwtTokenAuth, function (req, res) {
+	const { cashier_id } = req.body;
+
+	const jwtusername = req.sign_creds.username;
+	Branch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, f) {
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Cashier.findById(
+					cashier_id,
+					async(err, cashier) => {
+						let result = errorMessage(err, cashier, "Cashier not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, cashier_id: cashier_id});
+							var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, cashier_id: cashier_id});
+							var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, cashier_id: cashier_id});
+							res.status(200).json({
+								status: 1,
+								cashier: cashier,
+								pending: totalPendingTransfers,
+								accepted: totalAcceptedTransfers,
+								cancelled: totalcancelledTransfers
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/branchVerifyClaim", jwtTokenAuth, function (req, res) {
 	const { otpId, otp } = req.body;
 
