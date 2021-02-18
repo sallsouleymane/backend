@@ -11,6 +11,7 @@ const getTypeClass = require("./utils/getTypeClass");
 const getWalletIds = require("./utils/getWalletIds");
 const jwtTokenAuth = require("./JWTTokenAuth");
 const { errorMessage, catchError } = require("./utils/errorHandler");
+const cashierCommonContrl = require("../controllers/cashier/common");
 
 //services
 const blockchain = require("../services/Blockchain.js");
@@ -50,39 +51,9 @@ router.post(
 );
 
 router.post(
-	"/cashier/getFailedTransactions",
+	"/cashier/queryTransactionStates",
 	jwtTokenAuth,
-	function (req, res) {
-		const { bank_id } = req.body;
-		const jwtusername = req.sign_creds.username;
-		Cashier.findOne(
-			{
-				username: jwtusername,
-				status: 1,
-			},
-			function (err, cashier) {
-				let errMsg = errorMessage(
-					err,
-					cashier,
-					"Token changed or user not valid. Try to login again or contact system administrator."
-				);
-				if (errMsg.status == 0) {
-					res.status(200).json(errMsg);
-				} else {
-					TxState.find({ bankId: bank_id }, (err, txstates) => {
-						if (err) {
-							res.status(200).json(catchError(err));
-						} else {
-							res.status(200).json({
-								status: 1,
-								transactions: txstates,
-							});
-						}
-					});
-				}
-			}
-		);
-	}
+	cashierCommonContrl.queryTransactionStates
 );
 
 router.post(

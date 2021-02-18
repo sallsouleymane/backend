@@ -11,6 +11,7 @@ const getWalletIds = require("./utils/getWalletIds");
 const jwtTokenAuth = require("./JWTTokenAuth");
 const { errorMessage, catchError } = require("./utils/errorHandler");
 const execute = require("../controllers/transactions/services/execute");
+const bankCommonContrl = require("../controllers/bank/common");
 
 //services
 const {
@@ -102,69 +103,11 @@ router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/bank/getFailedTransactions", jwtTokenAuth, function (req, res) {
-	var { status, date_after, date_before, page_start, limit } = req.body;
-	const jwtusername = req.sign_creds.username;
-
-	let date_range = [];
-	if (date_after && date_after != "") {
-		date_after = new Date(date_after);
-		date_range[0] = { createdAt: { $gte: date_after.toISOString() } };
-	}
-
-	if (date_before && date_before != "") {
-		date_before = new Date(date_before);
-		date_range[1] = { createdAt: { $lte: date_before.toISOString() } };
-	}
-
-	var status_query;
-	if (status == "0") {
-		status_query = { $elemMatch: { state: "0" } };
-	} else if (status == "1") {
-		status_query = { $not: { $elemMatch: { state: "0" } } };
-	} else {
-		status_query = { $elemMatch: {} };
-	}
-
-	console.log(date_range);
-	console.log(status_query);
-	Bank.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, bank) {
-			let errMsg = errorMessage(
-				err,
-				bank,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (errMsg.status == 0) {
-				res.status(200).json(errMsg);
-			} else {
-				TxState.find(
-					{
-						bankId: bank._id,
-						childTx: status_query,
-						$and: date_range,
-					},
-					null,
-					{ skip: page_start, limit: limit },
-					(err, txstates) => {
-						if (err) {
-							res.status(200).json(catchError(err));
-						} else {
-							res.status(200).json({
-								status: 1,
-								transactions: txstates,
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
+router.post(
+	"/bank/queryTransactionStates",
+	jwtTokenAuth,
+	bankCommonContrl.queryTransactionStates
+);
 
 router.post("/bank/getBranchWalletBalance", jwtTokenAuth, function (req, res) {
 	const { branch_id, wallet_type } = req.body;
