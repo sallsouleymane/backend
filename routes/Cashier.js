@@ -57,6 +57,18 @@ router.post(
 );
 
 router.post(
+	"/cashier/addDailyReport",
+	jwtTokenAuth,
+	cashierCommonContrl.addDailyReport
+);
+
+router.post(
+	"/cashier/queryDailyReport",
+	jwtTokenAuth,
+	cashierCommonContrl.queryDailyReport
+);
+
+router.post(
 	"/cashier/getTransactionHistory",
 	jwtTokenAuth,
 	function (req, res) {

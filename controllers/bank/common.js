@@ -6,7 +6,6 @@ const { queryTxStates } = require("../utils/common");
 const Bank = require("../../models/Bank");
 
 module.exports.queryTransactionStates = function (req, res) {
-	var { status, date_after, date_before, page_start, limit } = req.body;
 	const jwtusername = req.sign_creds.username;
 
 	Bank.findOne(
@@ -23,25 +22,16 @@ module.exports.queryTransactionStates = function (req, res) {
 			if (errMsg.status == 0) {
 				res.status(200).json(errMsg);
 			} else {
-				queryTxStates(
-					bank._id,
-					null,
-					status,
-					date_after,
-					date_before,
-					page_start,
-					limit,
-					function (err, txstates) {
-						if (err) {
-							res.status(200).json(catchError(err));
-						} else {
-							res.status(200).json({
-								status: 1,
-								transactions: txstates,
-							});
-						}
+				queryTxStates(bank._id, null, req, function (err, txstates) {
+					if (err) {
+						res.status(200).json(catchError(err));
+					} else {
+						res.status(200).json({
+							status: 1,
+							transactions: txstates,
+						});
 					}
-				);
+				});
 			}
 		}
 	);
