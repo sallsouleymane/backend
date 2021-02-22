@@ -1083,11 +1083,16 @@ router.get("/merchantStaff/staffDashStatus", jwtTokenAuth, function (req, res) {
 						creator_id: position._id,
 						paid: 1,
 					});
+					let counter_invoices = await Invoice.countDocuments({
+						creator_id: position._id,
+						is_counter: true,
+					});
 					res.status(200).json({
 						status: 1,
 						message: "Today's Status",
 						bills_paid: bills_paid,
 						bills_raised: bills_raised,
+						counter_invoices: counter_invoices,
 					});
 				} catch (err) {
 					res.status(200).json(catchError(err));
