@@ -1189,6 +1189,7 @@ router.get("/merchantStaff/staffDashStatus", jwtTokenAuth, function (req, res) {
 						bills_paid: bills_paid,
 						bills_raised: bills_raised,
 						counter_invoices: counter_invoices,
+						is_closed:position.is_closed,
 					});
 				} catch (err) {
 					res.status(200).json(catchError(err));
