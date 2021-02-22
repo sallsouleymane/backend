@@ -188,6 +188,102 @@ router.post(
 );
 
 router.post(
+	"/merchantStaff/openstaff",
+	jwtTokenAuth,
+	function (req, res) {
+		const jwtusername = req.sign_creds.username;
+		MerchantPosition.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, ba) {
+				let result = errorMessage(
+					err,
+					ba,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					upd = {
+						is_closed: false,
+					};
+					console.log(upd);
+
+					MerchantPosition.findByIdAndUpdate(ba._id, upd, (err) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Cashier is open now",
+							});
+						}
+					});
+				}
+			}
+		);
+	}
+);
+
+router.post(
+	"/merchantStaff/closeStaff",
+	jwtTokenAuth,
+	function (req, res) {
+		const jwtusername = req.sign_creds.username;
+		MerchantPosition.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, ba) {
+				let result = errorMessage(
+					err,
+					ba,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					upd = {
+						is_closed: true,
+					};
+					console.log(upd);
+
+					MerchantPosition.findByIdAndUpdate(ba._id, upd, (err) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Cashier is closed now",
+							});
+						}
+					});
+				}
+			}
+		);
+	}
+);
+
+router.post(
 	"/merchantStaff/getCashierIncomingTransfer",
 	jwtTokenAuth,
 	function (req, res) {
