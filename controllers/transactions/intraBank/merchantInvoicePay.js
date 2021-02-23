@@ -56,7 +56,7 @@ module.exports = async function (transfer, infra, bank, merchant, comm) {
 				};
 			}
 		}
-		distributeRevenue(transfer, infra, bank, merchant, fee, comm);
+		distributeRevenue(transfer, infra, bank, comm);
 
 		return {
 			status: 1,
@@ -67,7 +67,7 @@ module.exports = async function (transfer, infra, bank, merchant, comm) {
 	}
 };
 
-async function distributeRevenue(transfer, infra, bank) {
+async function distributeRevenue(transfer, infra, bank, comm) {
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 
