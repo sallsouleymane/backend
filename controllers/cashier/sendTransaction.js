@@ -52,7 +52,9 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 					// Initiate transaction state
 					const master_code = await txstate.initiate(
 						cashier.bank_id,
-						"Non Wallet To Non Wallet"
+						"Non Wallet To Non Wallet",
+						cashier._id,
+						""
 					);
 
 					Branch.findOne(
@@ -241,7 +243,9 @@ module.exports.partnerSendMoney = async function (req, res) {
 					// Initiate transaction state
 					const master_code = await txstate.initiate(
 						cashier.bank_id,
-						"Non Wallet To Non Wallet"
+						"Non Wallet To Non Wallet",
+						cashier._id,
+						""
 					);
 					Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
 						let result = errorMessage(err, partner, "Partner not found");
@@ -439,7 +443,9 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 					// Initiate transaction state
 					const master_code = await txstate.initiate(
 						cashier.bank_id,
-						"Non Wallet to Wallet"
+						"Non Wallet to Wallet",
+						cashier._id,
+						""
 					);
 					User.findOne(
 						{
@@ -646,7 +652,9 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 				// Initiate transaction state
 				const master_code = await txstate.initiate(
 					cashier.bank_id,
-					"Non Wallet to Wallet"
+					"Non Wallet to Wallet",
+					cashier._id,
+					""
 				);
 				Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
 					let result = errorMessage(err, partner, "Partner Not Found");
@@ -857,7 +865,9 @@ module.exports.cashierSendToOperational = async function (req, res) {
 				// Initiate transaction state
 				const master_code = await txstate.initiate(
 					cashier.bank_id,
-					"Non Wallet to Operational"
+					"Non Wallet to Operational",
+					cashier._id,
+					""
 				);
 				Branch.findOne({ _id: cashier.branch_id }, (err, branch) => {
 					let result = errorMessage(err, branch, "Branch not found");
@@ -1024,7 +1034,9 @@ module.exports.partnerSendToOperational = async function (req, res) {
 				// Initiate transaction state
 				const master_code = await txstate.initiate(
 					cashier.bank_id,
-					"Non Wallet to Operational"
+					"Non Wallet to Operational",
+					cashier._id,
+					""
 				);
 				Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
 					let result = errorMessage(err, partner, "Partner Not Found");
