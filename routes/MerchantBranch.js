@@ -115,6 +115,72 @@ router.get("/merchantBranch/todaysStatus", jwtTokenAuth, function (req, res) {
 	);
 });
 
+router.post("/merchantBranch/getDashStats", jwtTokenAuth, function (req, res) {
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+
+	const jwtusername = req.sign_creds.username;
+	MerchantBranch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, user) {
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				MerchantPosition.aggregate(
+					[
+						{ $match :
+							{
+								branch_id: String(user._id),
+								type: 'cashier'
+							}
+						},
+						{
+							$group: {
+								_id: null,
+								total: {
+									$sum: "$cash_in_hand",
+								},
+								openingBalance: {
+									$sum: "$opening_balance",
+								},
+							},
+						},
+					],
+					async (e, post5) => {
+						let cin = 0;
+						let ob = 0;
+							if (
+								post5 != undefined &&
+								post5 != null &&
+								post5.length > 0
+							) {
+								cin = post5[0].total;
+								ob = post5[0].openingBalance;
+							}
+								
+								res.status(200).json({
+									status: 1,
+									cashInHand: cin,
+									openingBalance: ob,
+								});
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/merchantBranch/editPosition", jwtTokenAuth, (req, res) => {
 	const {
 		position_id,
