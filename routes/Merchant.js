@@ -1254,6 +1254,8 @@ router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 				data.description = description;
 				data.merchant_id = merchant._id;
 				data.type = type;
+				data.branch_count = 0,
+				data.subzone_count = 0,
 				data.save((err, zone) => {
 					if (err) {
 						console.log(err);
