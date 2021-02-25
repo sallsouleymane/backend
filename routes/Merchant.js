@@ -1208,7 +1208,7 @@ router.get("/merchant/getZoneList", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Zone.find({ merchant_id: merchant._id }, (err, zones) => {
+				Zone.find({ merchant_id: merchant._id }, async (err, zones) => {
 					if (err) {
 						console.log(err);
 						var message = err;
@@ -1313,11 +1313,29 @@ router.post("/merchant/createSubzone", jwtTokenAuth, (req, res) => {
 								message: message,
 							});
 						} else {
-							return res.status(200).json({
-								status: 1,
-								message: "Subzone Created",
-								subzone: subzone,
-							});
+							Zone.updateOne(
+								{ _id: zone_id },
+								{ $inc: { subzone_count: 1 } },
+								function (err, zone) {
+									let result = errorMessage(
+										err,
+										zone,
+										"Zone not found"
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										return res.status(200).json({
+											status: 1,
+											message: "Subzone Created",
+											subzone: subzone,
+										});
+										
+									}
+
+								}
+							);
+							
 						}
 					});
 			}
@@ -2013,40 +2031,58 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 										if (result.status == 0) {
 											res.status(200).json(result);
 										} else {
-											let content =
-												"<p>You are added as a branch for merchant " +
-												merchant.name +
-												" in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-												config.mainIP +
-												"/merchant/branch/" +
-												name +
-												"'>http://" +
-												config.mainIP +
-												"/merchant/branch/" +
-												name +
-												"</a></p><p><p>Your username: " +
-												username +
-												"</p><p>Your password: " +
-												data.password +
-												"</p>";
-											sendMail(content, "Merchant Branch Created", email);
-											let content2 =
-												"You are added as a branch for merchant " +
-												merchant.name +
-												" in E-Wallet application Login URL: http://" +
-												config.mainIP +
-												"/merchant/branch/" +
-												name +
-												" Your username: " +
-												username +
-												" Your password: " +
-												data.password;
-											sendSMS(content2, mobile);
-											res.status(200).json({
-												status: 1,
-												message: "Branch Created",
-												branch: branch,
-											});
+											Zone.updateOne(
+												{ _id: subzone.zone_id },
+												{ $inc: { branch_count: 1 } },
+												function (err, zone) {
+													let result = errorMessage(
+														err,
+														zone,
+														"Zone not found"
+													);
+													if (result.status == 0) {
+														res.status(200).json(result);
+													} else {
+														let content =
+														"<p>You are added as a branch for merchant " +
+														merchant.name +
+														" in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+														config.mainIP +
+														"/merchant/branch/" +
+														name +
+														"'>http://" +
+														config.mainIP +
+														"/merchant/branch/" +
+														name +
+														"</a></p><p><p>Your username: " +
+														username +
+														"</p><p>Your password: " +
+														data.password +
+														"</p>";
+													sendMail(content, "Merchant Branch Created", email);
+														let content2 =
+														"You are added as a branch for merchant " +
+														merchant.name +
+														" in E-Wallet application Login URL: http://" +
+														config.mainIP +
+														"/merchant/branch/" +
+														name +
+														" Your username: " +
+														username +
+														" Your password: " +
+														data.password;
+														sendSMS(content2, mobile);
+														res.status(200).json({
+															status: 1,
+															message: "Branch Created",
+															branch: branch,
+														});
+
+													}
+
+												}
+											);
+											
 										}
 									}
 								);

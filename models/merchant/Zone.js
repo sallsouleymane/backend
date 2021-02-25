@@ -4,6 +4,8 @@ const ZoneSchema = new mongoose.Schema({
     merchant_id: { type: String, required: true },
     name: { type: String, required: true },
     description: { type: String, required: false },
-    type: { type: String, required: false }
+    type: { type: String, required: false },
+    branch_count: { type: Number, required: false},
+    subzone_count: { type: Number, required: false},
 });
 module.exports = mongoose.model("Zone", ZoneSchema);
