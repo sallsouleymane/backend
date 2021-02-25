@@ -2078,6 +2078,7 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 															status: 1,
 															message: "Branch Created",
 															branch: branch,
+															zone:zone,
 														});
 
 													}
