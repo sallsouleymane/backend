@@ -1,7 +1,7 @@
 //models
 const TxState = require("../../models/TxState");
 
-module.exports.queryTxStates = function (bankId, cashierId, req, next) {
+module.exports.queryTxStates = function (bankId, payerId, req, next) {
 	var { status, date_after, date_before, page_start, limit } = req.body;
 	let date_range = [];
 	if (date_after && date_after != "") {
@@ -33,7 +33,7 @@ module.exports.queryTxStates = function (bankId, cashierId, req, next) {
 	TxState.find(
 		{
 			bankId: bankId,
-			cashier_id: cashierId,
+			payer_id: payerId,
 			childTx: status_query,
 			$and: date_range,
 		},
