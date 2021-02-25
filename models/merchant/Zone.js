@@ -5,7 +5,7 @@ const ZoneSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: { type: String, required: false },
     type: { type: String, required: false },
-    branch_count: { type: Number, required: false},
-    subzone_count: { type: Number, required: false},
+    branch_count: { type: Number, required: false, default: 0},
+    subzone_count: { type: Number, required: false, default: 0},
 });
 module.exports = mongoose.model("Zone", ZoneSchema);
