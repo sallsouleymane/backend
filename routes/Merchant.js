@@ -1951,6 +1951,7 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 	const {
 		name,
 		code,
+		zone_id,
 		subzone_id,
 		username,
 		address1,
@@ -2034,7 +2035,7 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 											res.status(200).json(result);
 										} else {
 											Zone.updateOne(
-												{ _id: subzone.zone_id },
+												{ _id: zone_id },
 												{ $inc: { branch_count: 1 } },
 												function (err, zone) {
 													let result = errorMessage(
