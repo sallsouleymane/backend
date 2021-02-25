@@ -144,7 +144,7 @@ router.post("/merchantBranch/getDashStats", jwtTokenAuth, function (req, res) {
 								branch_id: String(user._id),
 								type: 'cashier'
 							}
-						},
+						}, 
 						{
 							$group: {
 								_id: null,
@@ -168,11 +168,15 @@ router.post("/merchantBranch/getDashStats", jwtTokenAuth, function (req, res) {
 								cin = post5[0].total;
 								ob = post5[0].openingBalance;
 							}
+							var totalStaff = await MerchantPosition.countDocuments({branch_id: user._id, type: 'staff'});
+							var totalCashier = await MerchantPosition.countDocuments({ branch_id: user._id, type: 'cashier'});
 								
 								res.status(200).json({
 									status: 1,
-									cashInHand: cin,
-									openingBalance: ob,
+									cash_in_hand: cin,
+									opening_balance: ob,
+									total_cashier: totalCashier,
+									total_staff: totalStaff,
 								});
 					}
 				);
