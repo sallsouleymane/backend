@@ -15,7 +15,7 @@ module.exports.jwtAuthentication = function (req, next) {
 		function (err, position) {
 			let errMsg = errorMessage(
 				err,
-				cashier,
+				position,
 				"Token changed or user not valid. Try to login again or contact system administrator."
 			);
 			if (errMsg.status == 0) {
