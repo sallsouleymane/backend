@@ -15,7 +15,6 @@ module.exports.queryTransactionStates = function (req, res) {
 				cashier.bank_id,
 				cashier._id,
 				req,
-				limit,
 				function (err, txstates) {
 					if (err) {
 						res.status(200).json(catchError(err));
