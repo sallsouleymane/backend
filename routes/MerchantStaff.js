@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const jwtTokenAuth = require("./JWTTokenAuth");
+const cashierCommonContrl = require("../controllers/merchantCashier/common");
 const { errorMessage, catchError } = require("./utils/errorHandler");
 
 //models
@@ -18,6 +19,12 @@ const MerchantSettings = require("../models/merchant/MerchantSettings");
 const Customer = require("../models/merchant/Customer");
 const CashierLedger = require("../models/CashierLedger");
 const CashierTransfer = require("../models/CashierTransfer");
+
+router.post(
+	"/merchantStaff/queryTransactionStates",
+	jwtTokenAuth,
+	cashierCommonContrl.queryTransactionStates
+);
 
 router.post(
 	"/merchantStaff/getClosingBalance",
