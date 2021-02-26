@@ -8,8 +8,9 @@ const { errorMessage, catchError } = require("./utils/errorHandler");
 const MerchantBranch = require("../models/merchant/MerchantBranch");
 const MerchantStaff = require("../models/merchant/Staff");
 const MerchantPosition = require("../models/merchant/Position");
+const Invoice = require("../models/merchant/Invoice");
 
-router.post("/merchanBranch/listInvoicesByDate", jwtTokenAuth, (req, res) => {
+router.post("/merchantBranch/listInvoicesByDate", jwtTokenAuth, (req, res) => {
 	const { date, staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantBranch.findOne(
