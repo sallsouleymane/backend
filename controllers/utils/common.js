@@ -33,7 +33,7 @@ module.exports.queryTxStates = function (bankId, payerId, req, next) {
 	TxState.find(
 		{
 			bankId: bankId,
-			payer_id: payerId,
+			payerId: payerId,
 			childTx: status_query,
 			$and: date_range,
 		},

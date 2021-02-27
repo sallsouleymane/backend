@@ -5,7 +5,7 @@ module.exports.initiate = async function (
 	bank_id,
 	tx_type,
 	payer_id = "",
-	reciever_id = ""
+	receiver_id = ""
 ) {
 	try {
 		console.log("Transaction initiated");
@@ -14,7 +14,7 @@ module.exports.initiate = async function (
 		tx.bankId = bank_id;
 		tx.txType = tx_type;
 		tx.payerId = payer_id;
-		tx.recieverId = reciever_id;
+		tx.receiverId = receiver_id;
 		let txstate = await tx.save();
 		return txstate._id;
 	} catch (err) {
