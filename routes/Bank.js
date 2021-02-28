@@ -937,6 +937,53 @@ router.post("/listEndUsers", jwtTokenAuth, function (req, res) {
 	);
 });
 
+router.post("/broadcastMessage", jwtTokenAuth, function (req, res) {
+	const { message } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, user) {
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				const user_id = user._id;
+				User.updateMany(
+					{
+						bank_id: user_id,
+					},
+					{$push: {bank_messages: {message: message}}},
+					function (err, bank) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Message Broadcasted Successfully",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/addBranch", jwtTokenAuth, function (req, res) {
 	let data = new Branch();
 	const {
