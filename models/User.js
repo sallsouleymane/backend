@@ -36,8 +36,11 @@ const UserSchema = new mongoose.Schema({
 	wallet_id: { type: String, required: false },
 	bank_messages: [
 		{
+			logo: { type: String, required: false },
+			message_title: { type: String, required: false },
 			message: { type: String, required: false },
 			date: { type: Date, default: Date.now },
+			from: { type: String, required: false },
 		},
 	],
 });

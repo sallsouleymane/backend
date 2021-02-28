@@ -938,7 +938,7 @@ router.post("/listEndUsers", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/broadcastMessage", jwtTokenAuth, function (req, res) {
-	const { message } = req.body;
+	const { message, message_title } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
@@ -959,7 +959,7 @@ router.post("/broadcastMessage", jwtTokenAuth, function (req, res) {
 					{
 						bank_id: user_id,
 					},
-					{$push: {bank_messages: {message: message}}},
+					{$push: {bank_messages: {message: message, message_title:message_title, from:user.name, logo:user.logo}}},
 					function (err, bank) {
 						if (err) {
 							console.log(err);
