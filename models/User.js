@@ -34,5 +34,11 @@ const UserSchema = new mongoose.Schema({
 	},
 	contact_list: { type: [String], required: false, default: null },
 	wallet_id: { type: String, required: false },
+	bank_messages: [
+		{
+			message: { type: String, required: false },
+			date: { type: Date, default: Date.now },
+		},
+	],
 });
 module.exports = mongoose.model("User", UserSchema);
