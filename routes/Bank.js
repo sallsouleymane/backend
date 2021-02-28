@@ -959,7 +959,7 @@ router.post("/broadcastMessage", jwtTokenAuth, function (req, res) {
 					{
 						bank_id: user_id,
 					},
-					{$push: {bank_messages: {message: message, message_title:message_title, from:user.name, logo:user.logo}}},
+					{$push: {messages: {message: message, message_title:message_title, from:user.name, logo:user.logo}}},
 					function (err, bank) {
 						if (err) {
 							console.log(err);

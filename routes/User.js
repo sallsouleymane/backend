@@ -730,6 +730,31 @@ router.get("/user/getBanks", jwtTokenAuth, function (req, res) {
 	);
 });
 
+router.get("/user/getMessages", jwtTokenAuth, function (req, res) {
+	const username = req.sign_creds.username;
+	User.findOne(
+		{
+			username,
+		},
+		function (err, user) {
+			let result = errorMessage(
+				err,
+				user,
+				"You are either not authorised or not logged in."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				res.status(200).json({
+					status: 1,
+					messages: user.messages,
+				});
+					
+			}
+		}
+	);
+});
+
 router.get("/user/getTransactionHistory", jwtTokenAuth, function (req, res) {
 	const username = req.sign_creds.username;
 	User.findOne(

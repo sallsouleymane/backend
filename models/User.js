@@ -34,7 +34,7 @@ const UserSchema = new mongoose.Schema({
 	},
 	contact_list: { type: [String], required: false, default: null },
 	wallet_id: { type: String, required: false },
-	bank_messages: [
+	messages: [
 		{
 			logo: { type: String, required: false },
 			message_title: { type: String, required: false },
