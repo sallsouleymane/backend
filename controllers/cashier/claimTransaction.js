@@ -217,6 +217,13 @@ module.exports.cashierClaimMoney = function (req, res) {
 																	if (errRes.status == 0) {
 																		res.status(200).json(errRes);
 																	} else {
+																		// update calimer id
+																		txstate.updateClaimer(
+																			sendRecord.master_code,
+																			cashier._id
+																		);
+
+																		// add a cashier claimer record
 																		var otherInfo = {
 																			cashierId: cashier._id,
 																			sendRecord: sendRecord,
@@ -242,6 +249,7 @@ module.exports.cashierClaimMoney = function (req, res) {
 																						cashierId: cashier._id,
 																					};
 
+																					// perform claim transaction
 																					cashierClaimMoney(
 																						transfer,
 																						bank,
@@ -257,6 +265,7 @@ module.exports.cashierClaimMoney = function (req, res) {
 																								otherInfo.claimFee =
 																									result.claimFee;
 
+																								//update claimer record
 																								updateClaimRecord(
 																									"cashier",
 																									otherInfo,
