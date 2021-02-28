@@ -747,7 +747,7 @@ router.get("/user/getMessages", jwtTokenAuth, function (req, res) {
 			} else {
 				res.status(200).json({
 					status: 1,
-					messages: user.messages,
+					user: user,
 				});
 					
 			}
