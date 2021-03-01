@@ -48,7 +48,8 @@ module.exports = (req, res) => {
 							// Initiate transaction state
 							const master_code = await txstate.initiate(
 								merchant.bank_id,
-								"Merchant to Merchant"
+								"Merchant to Merchant",
+								cashier._id
 							);
 							MerchantRule.findOne(
 								{
