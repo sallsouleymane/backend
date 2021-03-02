@@ -38,13 +38,7 @@ module.exports = async function (
 			from: senderWallet,
 			to: receiverWallet,
 			amount: amount,
-			note:
-				"Transfer from " +
-				sender.name +
-				" to " +
-				receiver.name +
-				": " +
-				transfer.note,
+			note: "Transfer from " + sender.name + " to " + receiver.name,
 			email1: sender.email,
 			email2: receiver.email,
 			mobile1: sender.mobile,

@@ -42,13 +42,7 @@ module.exports = async function (
 			from: senderWallet,
 			to: bankOpWallet,
 			amount: amount,
-			note:
-				"Transfer from " +
-				sender.name +
-				" to " +
-				receiver.name +
-				": " +
-				transfer.note,
+			note: "Transfer from " + sender.name + " to " + receiver.name,
 			email1: sender.email,
 			email2: bank.email,
 			mobile1: sender.mobile,
@@ -67,13 +61,7 @@ module.exports = async function (
 			from: bankOpWallet,
 			to: receiverBankOpWallet,
 			amount: amount,
-			note:
-				"Transfer from " +
-				sender.name +
-				" to " +
-				receiver.name +
-				": " +
-				transfer.note,
+			note: "Transfer from " + sender.name + " to " + receiver.name,
 			email1: bank.email,
 			email2: receiverBank.email,
 			mobile1: bank.mobile,
@@ -92,13 +80,7 @@ module.exports = async function (
 			from: receiverBankOpWallet,
 			to: receiverWallet,
 			amount: amount,
-			note:
-				"Transfer from " +
-				sender.name +
-				" to " +
-				receiver.name +
-				": " +
-				transfer.note,
+			note: "Transfer from " + sender.name + " to " + receiver.name,
 			email1: receiverBank.email,
 			email2: receiver.email,
 			mobile1: receiverBank.mobile,
