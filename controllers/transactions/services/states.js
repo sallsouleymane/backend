@@ -46,20 +46,20 @@ module.exports.nearCompletion = async function (master_code) {
 	}
 };
 
-module.exports.failed = async function (master_code) {
+module.exports.failed = async function (master_code, cash_in_hand = 0) {
 	try {
 		console.log("Transaction failed");
-		let tx = { state: "FAILED" };
+		let tx = { state: "FAILED", cash_in_hand: cash_in_hand };
 		await TxState.updateOne({ _id: master_code }, tx);
 	} catch (err) {
 		throw err;
 	}
 };
 
-module.exports.completed = async function completed(master_code) {
+module.exports.completed = async function completed(master_code, cash_in_hand = 0) {
 	try {
 		console.log("Transaction Completed");
-		let tx = { state: "DONE" };
+		let tx = { state: "DONE", cash_in_hand: cash_in_hand };
 		await TxState.updateOne({ _id: master_code }, tx);
 	} catch (err) {
 		throw err;

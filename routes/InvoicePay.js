@@ -17,9 +17,9 @@ const userInvoicePay = require("../controllers/user/invoicePayTransaction");
 const merchantInvoicePay = require("../controllers/merchant/invoicePayTransaction");
 
 //transactions
-const walletInvoicePay = require("./transactions/intraBank/walletInvoicePay");
-const partnerCashierInvoicePay = require("./transactions/intraBank/partnerCashierInvoicePay");
-const merchantCashierInvoicePay = require("./transactions/intraBank/merchantCashierInvoicePay");
+// const walletInvoicePay = require("./transactions/intraBank/walletInvoicePay");
+// const partnerCashierInvoicePay = require("./transactions/intraBank/partnerCashierInvoicePay");
+// const merchantCashierInvoicePay = require("./transactions/intraBank/merchantCashierInvoicePay");
 const iBCashierInvoicePay = require("./transactions/interBank/cashierInvoicePay");
 const iBwalletInvoicePay = require("./transactions/interBank/walletInvoicePay");
 const iBpartnerCashierInvoicePay = require("./transactions/interBank/partnerCashierInvoicePay");

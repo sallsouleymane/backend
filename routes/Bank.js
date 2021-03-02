@@ -25,6 +25,7 @@ const Bank = require("../models/Bank");
 const OTP = require("../models/OTP");
 const Branch = require("../models/Branch");
 const BankUser = require("../models/BankUser");
+const User = require("../models/User");
 const Cashier = require("../models/Cashier");
 const Fee = require("../models/Fee");
 const CashierLedger = require("../models/CashierLedger");
@@ -882,6 +883,98 @@ router.post("/getBankUsers", jwtTokenAuth, function (req, res) {
 							res.status(200).json({
 								status: 1,
 								users: bank,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/listEndUsers", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, user) {
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				const user_id = user._id;
+				User.find(
+					{
+						bank_id: user_id,
+					},
+					function (err, bank) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								users: bank,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/broadcastMessage", jwtTokenAuth, function (req, res) {
+	const { message, message_title } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, user) {
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				const user_id = user._id;
+				User.updateMany(
+					{
+						bank_id: user_id,
+					},
+					{$push: {messages: {message: message, message_title:message_title, from:user.name, logo:user.logo}}},
+					function (err, bank) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Message Broadcasted Successfully",
 							});
 						}
 					}
