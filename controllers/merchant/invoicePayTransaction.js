@@ -52,7 +52,7 @@ module.exports = (req, res) => {
 							);
 							const master_code = await txstate.initiate(
 								merchant.bank_id,
-								"Merchant to Merchant",
+								" Merchant cashier to Merchant",
 								cashier._id,
 								cashier.cash_in_hand,
 								total_amount,
