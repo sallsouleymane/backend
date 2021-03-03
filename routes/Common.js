@@ -745,7 +745,7 @@ router.post("/editBankBank", (req, res) => {
 								let data2 = new Document();
 								data2.bank_id = bank_id;
 								data2.contract = contract;
-								data2.save(() => {});
+								data2.save(() => { });
 								res.status(200).json({
 									status: 1,
 									message: "Edited Successfully",
@@ -1370,8 +1370,8 @@ router.put("/updateCashier", jwtTokenAuth, function (req, res) {
 
 router.post("/:user/forgotPassword", function (req, res) {
 	let data = new OTP();
-	const user_type = req.params.user;
-	const { mobile } = req.body;
+	// const user_type = req.params.user;
+	const { mobile, user_type } = req.body;
 	const Type = getTypeClass(user_type);
 	Type.findOne(
 		{
@@ -2046,149 +2046,149 @@ router.get("/clearDb", function (req, res) {
 
 	if (type == "all" || type == "infra") {
 		matchfound = true;
-		db.dropCollection("infras", function () {});
+		db.dropCollection("infras", function () { });
 	}
 	if (type == "all" || type == "otp") {
 		matchfound = true;
-		db.dropCollection("otps", function () {});
+		db.dropCollection("otps", function () { });
 	}
 	if (type == "all" || type == "bank") {
 		matchfound = true;
-		db.dropCollection("banks", function () {});
+		db.dropCollection("banks", function () { });
 	}
 	if (type == "all" || type == "profile") {
 		matchfound = true;
-		db.dropCollection("profiles", function () {});
+		db.dropCollection("profiles", function () { });
 	}
 	if (type == "all" || type == "fee") {
 		matchfound = true;
-		db.dropCollection("fees", function () {});
+		db.dropCollection("fees", function () { });
 	}
 	if (type == "all" || type == "document") {
 		matchfound = true;
-		db.dropCollection("documents", function () {});
+		db.dropCollection("documents", function () { });
 	}
 	if (type == "all" || type == "bankfee") {
 		matchfound = true;
-		db.dropCollection("bankfees", function () {});
+		db.dropCollection("bankfees", function () { });
 	}
 	if (type == "all" || type == "branch") {
 		matchfound = true;
-		db.dropCollection("branches", function () {});
+		db.dropCollection("branches", function () { });
 	}
 	if (type == "all" || type == "cashier") {
 		matchfound = true;
-		db.dropCollection("cashiers", function () {});
+		db.dropCollection("cashiers", function () { });
 	}
 
 	if (type == "all" || type == "bankuser") {
 		matchfound = true;
-		db.dropCollection("bankusers", function () {});
+		db.dropCollection("bankusers", function () { });
 	}
 
 	if (type == "all" || type == "cashiersend") {
 		matchfound = true;
-		db.dropCollection("cashiersends", function () {});
+		db.dropCollection("cashiersends", function () { });
 	}
 
 	if (type == "all" || type == "cashierclaim") {
 		matchfound = true;
-		db.dropCollection("cashierclaims", function () {});
+		db.dropCollection("cashierclaims", function () { });
 	}
 
 	if (type == "all" || type == "cashierledger") {
 		matchfound = true;
-		db.dropCollection("cashierledgers", function () {});
+		db.dropCollection("cashierledgers", function () { });
 	}
 
 	if (type == "all" || type == "branchsend") {
 		matchfound = true;
-		db.dropCollection("branchsends", function () {});
+		db.dropCollection("branchsends", function () { });
 	}
 
 	if (type == "all" || type == "branchclaim") {
 		matchfound = true;
-		db.dropCollection("branchclaims", function () {});
+		db.dropCollection("branchclaims", function () { });
 	}
 
 	if (type == "all" || type == "branchledger") {
 		matchfound = true;
-		db.dropCollection("branchledgers", function () {});
+		db.dropCollection("branchledgers", function () { });
 	}
 
 	if (type == "all" || type == "user") {
 		matchfound = true;
-		db.dropCollection("users", function () {});
+		db.dropCollection("users", function () { });
 	}
 
 	if (type == "all" || type == "merchant") {
 		matchfound = true;
-		db.dropCollection("merchants", function () {});
+		db.dropCollection("merchants", function () { });
 	}
 
 	if (type == "all" || type == "merchantrule") {
 		matchfound = true;
-		db.dropCollection("merchantrules", function () {});
+		db.dropCollection("merchantrules", function () { });
 	}
 
 	if (type == "all" || type == "failedtx") {
 		matchfound = true;
-		db.dropCollection("failedtxes", function () {});
+		db.dropCollection("failedtxes", function () { });
 	}
 
 	if (type == "all" || type == "invoicegroup") {
 		matchfound = true;
-		db.dropCollection("invoicegroups", function () {});
+		db.dropCollection("invoicegroups", function () { });
 	}
 
 	if (type == "all" || type == "invoice") {
 		matchfound = true;
-		db.dropCollection("invoices", function () {});
+		db.dropCollection("invoices", function () { });
 	}
 
 	if (type == "all" || type == "merchantbranch") {
 		matchfound = true;
-		db.dropCollection("merchantbranches", function () {});
+		db.dropCollection("merchantbranches", function () { });
 	}
 
 	if (type == "all" || type == "merchantstaff") {
 		matchfound = true;
-		db.dropCollection("merchantstaffs", function () {});
+		db.dropCollection("merchantstaffs", function () { });
 	}
 
 	if (type == "all" || type == "merchantstaff") {
 		matchfound = true;
-		db.dropCollection("merchantstaffs", function () {});
+		db.dropCollection("merchantstaffs", function () { });
 	}
 
 	if (type == "all" || type == "zone") {
 		matchfound = true;
-		db.dropCollection("zones", function () {});
+		db.dropCollection("zones", function () { });
 	}
 
 	if (type == "all" || type == "partnerbranch") {
 		matchfound = true;
-		db.dropCollection("partnerbranches", function () {});
+		db.dropCollection("partnerbranches", function () { });
 	}
 
 	if (type == "all" || type == "partneruser") {
 		matchfound = true;
-		db.dropCollection("partnerusers", function () {});
+		db.dropCollection("partnerusers", function () { });
 	}
 
 	if (type == "all" || type == "partnercashier") {
 		matchfound = true;
-		db.dropCollection("partnercashiers", function () {});
+		db.dropCollection("partnercashiers", function () { });
 	}
 
 	if (type == "all" || type == "merchantbranch") {
 		matchfound = true;
-		db.dropCollection("merchantbranches", function () {});
+		db.dropCollection("merchantbranches", function () { });
 	}
 
 	if (type == "all" || type == "merchantuser") {
 		matchfound = true;
-		db.dropCollection("merchantusers", function () {});
+		db.dropCollection("merchantusers", function () { });
 	}
 
 	res.status(200).json({

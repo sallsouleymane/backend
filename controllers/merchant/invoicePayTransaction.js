@@ -46,10 +46,16 @@ module.exports = (req, res) => {
 							res.status(200).json(errRes);
 						} else {
 							// Initiate transaction state
+							const total_amount = await invoicesTotalAmount(
+								invoices,
+								merchant._id
+							);
 							const master_code = await txstate.initiate(
 								merchant.bank_id,
 								"Merchant to Merchant",
-								cashier._id
+								cashier._id,
+								cashier.cash_in_hand,
+								total_amount
 							);
 							MerchantRule.findOne(
 								{
@@ -93,10 +99,10 @@ module.exports = (req, res) => {
 												{ amount_collected: 0 }
 											);
 
-											const total_amount = await invoicesTotalAmount(
-												invoices,
-												merchant._id
-											);
+											// const total_amount = await invoicesTotalAmount(
+											// 	invoices,
+											// 	merchant._id
+											// );
 											let transfer = {
 												amount: total_amount,
 												master_code: master_code,
@@ -138,7 +144,7 @@ module.exports = (req, res) => {
 												if (status != null) {
 													throw new Error(status);
 												}
-
+												//update cash in hand
 												txstate.reported(master_code);
 												res.status(200).json(result);
 											} else {

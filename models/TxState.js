@@ -8,6 +8,7 @@ const TxStateSchema = new mongoose.Schema({
 	payerId: { type: String, required: false },
 	receiverId: { type: String, required: false },
 	cash_in_hand: { type: Number, required: false, default: 0 },
+	amount: { type: Number, required: false, default: 0 },
 	childTx: [
 		{
 			state: { type: String, required: false },
