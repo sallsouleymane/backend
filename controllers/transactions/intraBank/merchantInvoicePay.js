@@ -53,6 +53,7 @@ module.exports = async function (transfer, infra, bank, merchant, comm) {
 					status: 0,
 					message: "Transaction failed!",
 					blockchain_message: res.message,
+					transactionCode: master_code
 				};
 			}
 		}
@@ -61,6 +62,7 @@ module.exports = async function (transfer, infra, bank, merchant, comm) {
 		return {
 			status: 1,
 			message: "Transaction success!",
+			transactionCode: master_code
 		};
 	} catch (err) {
 		throw err;
