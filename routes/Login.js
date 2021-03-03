@@ -275,6 +275,7 @@ router.post("/merchantStaff/login", (req, res) => {
 																staff: staff,
 																branch: branch,
 																merchant: merchant,
+																bank:bank,
 															});
 														
 														}
