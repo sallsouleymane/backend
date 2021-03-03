@@ -17,7 +17,7 @@ const MerchantPosition = require("../../models/merchant/Position");
 const Merchant = require("../../models/merchant/Merchant");
 
 module.exports = (req, res) => {
-	const { invoices } = req.body;
+	const { invoices, description } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantPosition.findOne(
 		{
@@ -56,7 +56,8 @@ module.exports = (req, res) => {
 								cashier._id,
 								cashier.cash_in_hand,
 								total_amount,
-								`bill paid against ${invoices.length} invoices for ${invoices[0].name}`
+								description
+
 							);
 							MerchantRule.findOne(
 								{
