@@ -251,19 +251,34 @@ router.post("/merchantStaff/login", (req, res) => {
 											if (result.status == 0) {
 												res.status(200).json(result);
 											} else {
-												let sign_creds = {
-													username: username,
-													type: "merchantCashier",
-												};
-												const token = jwtsign(sign_creds);
-												res.status(200).json({
-													status: 1,
-													token: token,
-													position: position,
-													staff: staff,
-													branch: branch,
-													merchant: merchant,
-												});
+												Bank.findOne(
+													{
+														_id: merchant.bank_id,
+													},(err, bank) => {
+														var result = errorMessage(
+															err,
+															bank,
+															"No bank is assigned to the merchant"
+														);
+														if (result.status == 0) {
+															res.status(200).json(result);
+														} else {
+															let sign_creds = {
+																username: username,
+																type: "merchantCashier",
+															};
+															const token = jwtsign(sign_creds);
+															res.status(200).json({
+																status: 1,
+																token: token,
+																position: position,
+																staff: staff,
+																branch: branch,
+																merchant: merchant,
+															});
+														
+														}
+													});
 											}
 										}
 									);
