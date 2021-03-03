@@ -1,7 +1,7 @@
 const TxState = require("../../../models/TxState");
 const blockchain = require("../../../services/Blockchain");
 
-module.exports.initiate = async function (bank_id, tx_type, payer_id = "", cash_in_hand = 0, amount = 0) {
+module.exports.initiate = async function (bank_id, tx_type, payer_id = "", cash_in_hand = 0, amount = 0, description) {
 	try {
 		console.log("Transaction initiated");
 		let tx = new TxState();
@@ -11,6 +11,7 @@ module.exports.initiate = async function (bank_id, tx_type, payer_id = "", cash_
 		tx.payerId = payer_id;
 		tx.cash_in_hand = cash_in_hand;
 		tx.amount = amount;
+		tx.description = description;
 		let txstate = await tx.save();
 		return txstate._id;
 	} catch (err) {
