@@ -9,6 +9,8 @@ const TxStateSchema = new mongoose.Schema({
 	receiverId: { type: String, required: false },
 	cash_in_hand: { type: Number, required: false, default: 0 },
 	amount: { type: Number, required: false, default: 0 },
+	description: { type: String, required: false },
+
 	childTx: [
 		{
 			state: { type: String, required: false },
