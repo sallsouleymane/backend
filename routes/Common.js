@@ -157,7 +157,7 @@ router.post("/:user/getPaidInvoiceList", jwtTokenAuth, function (req, res) {
 				res.status(200).json(result);
 			} else {
 				Invoice.find(
-					{ paid_by: paid_by, payer_id: data._id, date_paid: new },
+					{ paid_by: paid_by, payer_id: data._id },
 					(err, invoices) => {
 						if (err) {
 							res.status(200).json(catchError(err));
