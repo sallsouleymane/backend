@@ -64,6 +64,65 @@ router.get("/getClaimCode", function (req, res) {
 	);
 });
 
+router.post("/:user/searchPaidInvoiceList", jwtTokenAuth, function (req, res) {
+	const { from_date, to_date } = req.body;
+	const jwtusername = req.sign_creds.username;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	var paid_by;
+	if (user == "merchantStaff") {
+		User = getTypeClass("merchantPosition");
+		paid_by = "MC";
+	} else if (user == "partnerCashier") {
+		paid_by = "PC";
+	} else if (user == "user") {
+		paid_by = "US";
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.find(
+					{ 	paid_by: paid_by,
+						payer_id: data._id,
+						date_paid: {
+							$gte: from_date,
+							$lte: to_date,
+						  }
+					},
+					(err, invoices) => {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "List of paid invoices",
+								invoices: invoices,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/:user/getPaidInvoiceList", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
@@ -98,7 +157,7 @@ router.post("/:user/getPaidInvoiceList", jwtTokenAuth, function (req, res) {
 				res.status(200).json(result);
 			} else {
 				Invoice.find(
-					{ paid_by: paid_by, payer_id: data._id },
+					{ paid_by: paid_by, payer_id: data._id, date_paid: new },
 					(err, invoices) => {
 						if (err) {
 							res.status(200).json(catchError(err));
