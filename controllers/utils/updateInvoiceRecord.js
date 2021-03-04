@@ -64,6 +64,7 @@ module.exports = async function (reqData, otherData) {
 				payer_id: payer_id,
 				penalty: penalty,
 				transaction_code: master_code,
+				date_paid: new Date(),
 			}
 		);
 		if (i == null) {
