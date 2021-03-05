@@ -16,6 +16,7 @@ module.exports = async function (
 ) {
 	try {
 		transfer = getAllShares(transfer, rule);
+		
 		var balance = await blockchain.getBalance(branch.wallet_ids.operational);
 		//Check balance first
 		if (Number(balance) < transfer.exclusiveAmount + fee) {
