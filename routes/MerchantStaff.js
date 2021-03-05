@@ -157,15 +157,13 @@ router.post(
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
-					var bal =
-						Number(ba.closing_balance) > 0
-							? ba.closing_balance
-							: ba.opening_balance;
+					var bal = ba.closing_balance;
 					upd = {
+						cash_in_hand: bal,
 						opening_balance: bal,
 						closing_balance: 0,
+						opening_time: new Date(),
 						closing_time: null,
-						transaction_started: true,
 						is_closed: false,
 					};
 					console.log(upd);
@@ -184,7 +182,7 @@ router.post(
 						} else {
 							res.status(200).json({
 								status: 1,
-								message: "Cashier account is open now",
+								message: "Cashier is open now",
 							});
 						}
 					});
@@ -650,7 +648,8 @@ router.post(
 						closingBalance: user.closing_balance,
 						cashInHand: user.cash_in_hand,
 						closingTime: user.closing_time,
-						transactionStarted: user.transaction_started,
+						openingTime: user.opening_time,
+						discrepancy: user.discrepancy,
 						branchId: user.branch_id,
 						isClosed: user.is_closed,
 					});
