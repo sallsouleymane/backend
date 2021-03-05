@@ -5,6 +5,8 @@ const updateInvoiceRecord = require("../utils/updateInvoiceRecord");
 
 //controllers
 const merchantInvoicePay = require("../transactions/intraBank/merchantInvoicePay");
+const Invoice = require("../../models/merchant/Invoice");
+
 
 // transactions
 const txstate = require("../transactions/services/states");
@@ -17,7 +19,7 @@ const MerchantPosition = require("../../models/merchant/Position");
 const Merchant = require("../../models/merchant/Merchant");
 
 module.exports = (req, res) => {
-	const { invoices, description } = req.body;
+	const { invoices } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantPosition.findOne(
 		{
