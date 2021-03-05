@@ -89,7 +89,7 @@ module.exports = (req, res) => {
 												invoices,
 												merchant._id
 											);
-											const invoiceDetails = await Invoice.findOne({ _id: invoices[0] })
+											const invoiceDetails = await Invoice.findOne({ _id: invoices[0].id })
 											let otherInfo = {
 												total_amount: total_amount,
 												master_code: master_code,
