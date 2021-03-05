@@ -24,47 +24,40 @@ const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
 const blockchain = require("../services/Blockchain");
 
-const walletToWallet = require("./transactions/intraBank/walletToWallet");
-const walletToCashier = require("./transactions/intraBank/walletToCashier");
-
 //controllers
 const userSendTransCntrl = require("../controllers/user/sendTransaction");
 
-router.post(
-	"/user/getFailedTransactions",
-	jwtTokenAuth,
-	function (req, res) {
-		const { bank_id } = req.body;
-		const jwtusername = req.sign_creds.username;
-		User.findOne(
-			{
-				username: jwtusername,
-				status: 1,
-			},
-			function (err, cashier) {
-				let errMsg = errorMessage(
-					err,
-					cashier,
-					"Token changed or user not valid. Try to login again or contact system administrator."
-				);
-				if (errMsg.status == 0) {
-					res.status(200).json(errMsg);
-				} else {
-					TxState.find({ bankId: bank_id }, (err, txstates) => {
-						if (err) {
-							res.status(200).json(catchError(err));
-						} else {
-							res.status(200).json({
-								status: 1,
-								transactions: txstates,
-							});
-						}
-					});
-				}
+router.post("/user/getFailedTransactions", jwtTokenAuth, function (req, res) {
+	const { bank_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			let errMsg = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errMsg.status == 0) {
+				res.status(200).json(errMsg);
+			} else {
+				TxState.find({ bankId: bank_id }, (err, txstates) => {
+					if (err) {
+						res.status(200).json(catchError(err));
+					} else {
+						res.status(200).json({
+							status: 1,
+							transactions: txstates,
+						});
+					}
+				});
 			}
-		);
-	}
-);
+		}
+	);
+});
 
 router.post("/user/getMerchantPenaltyRule", jwtTokenAuth, function (req, res) {
 	const { merchant_id } = req.body;
@@ -749,7 +742,6 @@ router.get("/user/getMessages", jwtTokenAuth, function (req, res) {
 					status: 1,
 					user: user,
 				});
-					
 			}
 		}
 	);

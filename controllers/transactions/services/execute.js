@@ -7,16 +7,18 @@ const queue = require("./queue");
 //Models
 const TxState = require("../../../models/TxState");
 
-module.exports = async function (transaction, queue_name = "") {
+module.exports = async function (transactions, queue_name = "") {
 	try {
-		var res = await blockchain.initiateTransfer(transaction);
-		await saveTxState(transaction, res);
-		if (res.status == 1) {
-			sendSuccessMail(transaction);
-		} else {
-			sendFailureMail(transaction);
-			if (queue_name != "") {
-				queue.send(queue_name, transaction);
+		var res = await blockchain.initiateMultiTransfer(transactions);
+		for (transaction of transactions) {
+			await saveTxState(transaction, res);
+			if (res.status == 1) {
+				sendSuccessMail(transaction);
+			} else {
+				sendFailureMail(transaction);
+				if (queue_name != "") {
+					queue.send(queue_name, [transaction]);
+				}
 			}
 		}
 		return res;

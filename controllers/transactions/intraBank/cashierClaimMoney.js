@@ -19,11 +19,7 @@ module.exports = async function (transfer, bank, branch, rule1) {
 		const branchOpWallet = branch.wallet_ids.operational;
 		const bankOpWallet = bank.wallet_ids.operational;
 
-		var amount = Number(transfer.amount);
-		var fee = calculateShare("bank", transfer.amount, rule1);
-		if (transfer.isInclusive) {
-			amount = amount - fee;
-		}
+		transfer = getAllShares(transfer, rule);
 
 		// // Check balance
 		// var balance = await blockchain.getBalance(bankEsWallet);
@@ -47,25 +43,45 @@ module.exports = async function (transfer, bank, branch, rule1) {
 		// 	};
 		// }
 
-		let master_code = transfer.master_code;
+		let trans = [
+			{
+				from: bankEsWallet,
+				to: branchOpWallet,
+				amount: transfer.exclusiveAmount,
+				note: "Cashier claim Money",
+				email1: bank.email,
+				email2: branch.email,
+				mobile1: bank.mobile,
+				mobile2: branch.mobile,
+				from_name: bank.name,
+				to_name: branch.name,
+				sender_id: bank._id,
+				receiver_id: transfer.cashierId,
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + "-c1",
+				created_at: new Date(),
+			},
+		];
 
-		let trans = {
-			from: bankEsWallet,
-			to: branchOpWallet,
-			amount: amount,
-			note: "Cashier claim Money",
-			email1: bank.email,
-			email2: branch.email,
-			mobile1: bank.mobile,
-			mobile2: branch.mobile,
-			from_name: bank.name,
-			to_name: branch.name,
-			sender_id: bank._id,
-			receiver_id: transfer.cashierId,
-			master_code: master_code,
-			child_code: master_code + "-c1",
-			created_at: new Date(),
-		};
+		if (transfer.fee > 0) {
+			trans.push({
+				from: bankOpWallet,
+				to: branchOpWallet,
+				amount: transfer.claimFee,
+				note: "Claim Revenue",
+				email1: bank.email,
+				email2: branch.email,
+				mobile1: bank.mobile,
+				mobile2: branch.mobile,
+				from_name: bank.name,
+				to_name: branch.name,
+				sender_id: bank._id,
+				receiver_id: transfer.cashierId,
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + "-c2",
+				created_at: new Date(),
+			});
+		}
 
 		let result = await execute(trans);
 
@@ -77,20 +93,7 @@ module.exports = async function (transfer, bank, branch, rule1) {
 			};
 		}
 
-		var claimFee = 0;
-		if (fee > 0) {
-			claimFee = calculateShare(
-				transfer.claimerType,
-				transfer.amount,
-				rule1,
-				{},
-				transfer.claimerCode
-			);
-		}
-		transfer.fee = fee;
-		transfer.claimFee = claimFee;
 		distributeRevenue(transfer, bank, branch);
-
 		return {
 			status: 1,
 			message: "Transaction success!",
@@ -103,36 +106,9 @@ module.exports = async function (transfer, bank, branch, rule1) {
 };
 
 async function distributeRevenue(transfer, bank, branch) {
-	const branchOpWallet = branch.wallet_ids.operational;
-	const bankOpWallet = bank.wallet_ids.operational;
-
-	let fee = transfer.fee;
-	let master_code = transfer.master_code;
-
-	if (fee > 0) {
-		let trans = {
-			from: bankOpWallet,
-			to: branchOpWallet,
-			amount: transfer.claimFee,
-			note: "Claim Revenue",
-			email1: bank.email,
-			email2: branch.email,
-			mobile1: bank.mobile,
-			mobile2: branch.mobile,
-			from_name: bank.name,
-			to_name: branch.name,
-			sender_id: bank._id,
-			receiver_id: transfer.cashierId,
-			master_code: master_code,
-			child_code: master_code + "-c2",
-			created_at: new Date(),
-		};
-		await execute(trans, qname.claim_fee);
-	}
-	let txInfo = await TxState.findById(master_code);
+	let txInfo = await TxState.findById(transfer.master_code);
 	let alltxsuccess = allTxSuccess(txInfo);
 	if (alltxsuccess) {
-		// txstate.nearCompletion(master_code);
 		transferToMasterWallets(transfer, bank, branch, txInfo);
 	}
 }
@@ -159,76 +135,84 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 	let claimBranchPart = getPart(txInfo, master_code, ["c2"], []);
 	let bankPart = getPart(txInfo, master_code, ["s2"], ["s3", "s5", "c2"]);
 
-	let trans = {
-		from: bankOpWallet,
-		to: bankMasterWallet,
-		amount: bankPart,
-		note: "Bank share",
-		email1: bank.email,
-		mobile1: bank.mobile,
-		from_name: bank.name,
-		to_name: bank.name,
-		sender_id: bank._id,
-		receiver_id: bank._id,
-		master_code: master_code,
-		child_code: master_code + "-m1",
-		created_at: new Date(),
-	};
+	let trans = [
+		{
+			from: bankOpWallet,
+			to: bankMasterWallet,
+			amount: bankPart,
+			note: "Bank share",
+			email1: bank.email,
+			mobile1: bank.mobile,
+			from_name: bank.name,
+			to_name: bank.name,
+			sender_id: bank._id,
+			receiver_id: bank._id,
+			master_code: master_code,
+			child_code: master_code + "-m1",
+			created_at: new Date(),
+		},
+	];
 	execute(trans, qname.bank_master);
 
-	trans = {
-		from: infraOpWallet,
-		to: infraMasterWallet,
-		amount: infraPart,
-		note: "Infra share",
-		email1: infra.email,
-		mobile1: infra.mobile,
-		from_name: infra.name,
-		to_name: infra.name,
-		sender_id: infra._id,
-		receiver_id: infra._id,
-		master_code: master_code,
-		child_code: master_code + "-m2",
-		created_at: new Date(),
-	};
+	trans = [
+		{
+			from: infraOpWallet,
+			to: infraMasterWallet,
+			amount: infraPart,
+			note: "Infra share",
+			email1: infra.email,
+			mobile1: infra.mobile,
+			from_name: infra.name,
+			to_name: infra.name,
+			sender_id: infra._id,
+			receiver_id: infra._id,
+			master_code: master_code,
+			child_code: master_code + "-m2",
+			created_at: new Date(),
+		},
+	];
 	execute(trans, qname.infra_master);
 
 	if (sendBranchPart > 0) {
 		const sendBranchOpWallet = sendBranch.wallet_ids.operational;
 		const sendBranchMasterWallet = sendBranch.wallet_ids.master;
-		trans = {
-			from: sendBranchOpWallet,
-			to: sendBranchMasterWallet,
-			amount: sendBranchPart,
-			note: "Sending Branch share",
-			email1: sendBranch.email,
-			mobile1: sendBranch.mobile,
-			from_name: sendBranch.name,
-			to_name: sendBranch.name,
-			sender_id: sendBranch._id,
-			receiver_id: sendBranch._id,
-			master_code: master_code,
-			child_code: master_code + "-m3",
-			created_at: new Date(),
-		};
+		trans = [
+			{
+				from: sendBranchOpWallet,
+				to: sendBranchMasterWallet,
+				amount: sendBranchPart,
+				note: "Sending Branch share",
+				email1: sendBranch.email,
+				mobile1: sendBranch.mobile,
+				from_name: sendBranch.name,
+				to_name: sendBranch.name,
+				sender_id: sendBranch._id,
+				receiver_id: sendBranch._id,
+				master_code: master_code,
+				child_code: master_code + "-m3",
+				created_at: new Date(),
+			},
+		];
 		execute(trans, qname.send_master);
 	}
 
-	trans = {
-		from: branchOpWallet,
-		to: branchMasterWallet,
-		amount: claimBranchPart,
-		note: "Claiming Branch share",
-		email1: branch.email,
-		mobile1: branch.mobile,
-		from_name: branch.name,
-		to_name: branch.name,
-		sender_id: branch._id,
-		receiver_id: branch._id,
-		master_code: master_code,
-		child_code: master_code + "-m4",
-		created_at: new Date(),
-	};
+	trans = [
+		{
+			from: branchOpWallet,
+			to: branchMasterWallet,
+			amount: claimBranchPart,
+			note: "Claiming Branch share",
+			email1: branch.email,
+			mobile1: branch.mobile,
+			from_name: branch.name,
+			to_name: branch.name,
+			sender_id: branch._id,
+			receiver_id: branch._id,
+			master_code: master_code,
+			child_code: master_code + "-m4",
+			created_at: new Date(),
+		},
+	];
 	execute(trans, qname.claim_master);
 }
 
@@ -267,4 +251,26 @@ function getPart(txInfo, masterId, childIds, otherIds) {
 	}
 
 	return myPart - othersPart;
+}
+
+function getAllShares(transfer, rule) {
+	let exclusiveAmount = transfer.amount;
+	if (transfer.isInclusive) {
+		exclusiveAmount = amount - transfer.fee;
+	}
+	let claimerShare = 0;
+	if (transfer.fee > 0) {
+		claimerShare = calculateShare(
+			transfer.claimerType,
+			transfer.amount,
+			rule,
+			{},
+			transfer.claimerCode
+		);
+	}
+
+	transfer.exclusiveAmount = exclusiveAmount;
+	transfer.fee = fee;
+	transfer.claimerShare = claimerShare;
+	return transfer;
 }

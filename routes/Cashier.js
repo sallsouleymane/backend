@@ -32,13 +32,6 @@ const CashierLedger = require("../models/CashierLedger");
 const CashierTransfer = require("../models/CashierTransfer");
 const Merchant = require("../models/merchant/Merchant");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
-const cashierToOperational = require("./transactions/intraBank/cashierToOperational");
-
-// transactions
-const txstate = require("./transactions/states");
-const cashierToCashier = require("./transactions/intraBank/cashierToCashier");
-const cashierToWallet = require("./transactions/intraBank/cashierToWallet");
-const cashierClaimMoney = require("./transactions/intraBank/cashierClaimMoney");
 
 //controllers
 const cashSendTransCntrl = require("../controllers/cashier/sendTransaction");

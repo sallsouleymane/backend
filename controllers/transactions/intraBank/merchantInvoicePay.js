@@ -29,22 +29,24 @@ module.exports = async function (transfer, infra, bank, merchant, comm) {
 
 		// first transaction
 		if (bankComm > 0) {
-			let trans1 = {
-				from: merchantOpWallet,
-				to: bankOpWallet,
-				amount: bankComm,
-				note: "Bank commission on paid bill",
-				email1: merchant.email,
-				email2: bank.email,
-				mobile1: merchant.mobile,
-				mobile2: bank.mobile,
-				from_name: merchant.name,
-				to_name: bank.name,
-				sender_id: "",
-				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code + "-p1",
-			};
+			let trans1 = [
+				{
+					from: merchantOpWallet,
+					to: bankOpWallet,
+					amount: bankComm,
+					note: "Bank commission on paid bill",
+					email1: merchant.email,
+					email2: bank.email,
+					mobile1: merchant.mobile,
+					mobile2: bank.mobile,
+					from_name: merchant.name,
+					to_name: bank.name,
+					sender_id: "",
+					receiver_id: "",
+					master_code: master_code,
+					child_code: master_code + "-p1",
+				},
+			];
 
 			let res = await execute(trans1);
 			// return response
@@ -53,7 +55,7 @@ module.exports = async function (transfer, infra, bank, merchant, comm) {
 					status: 0,
 					message: "Transaction failed!",
 					blockchain_message: res.message,
-					transactionCode: master_code
+					transactionCode: master_code,
 				};
 			}
 		}
@@ -62,7 +64,7 @@ module.exports = async function (transfer, infra, bank, merchant, comm) {
 		return {
 			status: 1,
 			message: "Transaction success!",
-			transactionCode: master_code
+			transactionCode: master_code,
 		};
 	} catch (err) {
 		throw err;
@@ -80,22 +82,24 @@ async function distributeRevenue(transfer, infra, bank, comm) {
 	infraShare = calculateShare("infra", amount, comm);
 	transfer.infraCommShare = infraShare;
 	if (infraShare.percentage_amount > 0) {
-		let trans21 = {
-			from: bankOpWallet,
-			to: infraOpWallet,
-			amount: infraShare.percentage_amount,
-			note: "Infra percentage commission on paid bill",
-			email1: bank.email,
-			email2: infra.email,
-			mobile1: bank.mobile,
-			mobile2: infra.mobile,
-			from_name: bank.name,
-			to_name: infra.name,
-			sender_id: "",
-			receiver_id: "",
-			master_code: master_code,
-			child_code: master_code + "-p2",
-		};
+		let trans21 = [
+			{
+				from: bankOpWallet,
+				to: infraOpWallet,
+				amount: infraShare.percentage_amount,
+				note: "Infra percentage commission on paid bill",
+				email1: bank.email,
+				email2: infra.email,
+				mobile1: bank.mobile,
+				mobile2: infra.mobile,
+				from_name: bank.name,
+				to_name: infra.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code + "-p2",
+			},
+		];
 
 		let res = await execute(trans21);
 		if (res.status == 0) {
@@ -103,22 +107,24 @@ async function distributeRevenue(transfer, infra, bank, comm) {
 		}
 	}
 	if (infraShare.fixed_amount > 0) {
-		let trans22 = {
-			from: bankOpWallet,
-			to: infraOpWallet,
-			amount: infraShare.fixed_amount,
-			note: "Infra fixed commission on paid bill",
-			email1: bank.email,
-			email2: infra.email,
-			mobile1: bank.mobile,
-			mobile2: infra.mobile,
-			from_name: bank.name,
-			to_name: infra.name,
-			sender_id: "",
-			receiver_id: "",
-			master_code: master_code,
-			child_code: master_code + "-p3",
-		};
+		let trans22 = [
+			{
+				from: bankOpWallet,
+				to: infraOpWallet,
+				amount: infraShare.fixed_amount,
+				note: "Infra fixed commission on paid bill",
+				email1: bank.email,
+				email2: infra.email,
+				mobile1: bank.mobile,
+				mobile2: infra.mobile,
+				from_name: bank.name,
+				to_name: infra.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code + "-p3",
+			},
+		];
 
 		let res = await execute(trans22);
 		if (res.status == 0) {
@@ -149,41 +155,45 @@ async function transferToMasterWallets(transfer, infra, bank) {
 
 	let txStatus = 1;
 
-	let trans = {
-		from: bankOpWallet,
-		to: bankMasterWallet,
-		amount: bankPart,
-		note: "Bank share to its Master Wallet",
-		email1: bank.email,
-		mobile1: bank.mobile,
-		from_name: bank.name,
-		to_name: bank.name,
-		sender_id: "",
-		receiver_id: "",
-		master_code: master_code,
-		child_code: master_code + "-m1",
-		created_at: new Date(),
-	};
+	let trans = [
+		{
+			from: bankOpWallet,
+			to: bankMasterWallet,
+			amount: bankPart,
+			note: "Bank share to its Master Wallet",
+			email1: bank.email,
+			mobile1: bank.mobile,
+			from_name: bank.name,
+			to_name: bank.name,
+			sender_id: "",
+			receiver_id: "",
+			master_code: master_code,
+			child_code: master_code + "-m1",
+			created_at: new Date(),
+		},
+	];
 	let result = await execute(trans);
 	if (result.status == 0) {
 		txStatus = 0;
 	}
 
-	trans = {
-		from: infraOpWallet,
-		to: infraMasterWallet,
-		amount: infraPart,
-		note: "Infra share to its Master Wallet",
-		email1: infra.email,
-		mobile1: infra.mobile,
-		from_name: infra.name,
-		to_name: infra.name,
-		sender_id: "",
-		receiver_id: "",
-		master_code: master_code,
-		child_code: master_code + "-m2",
-		created_at: new Date(),
-	};
+	trans = [
+		{
+			from: infraOpWallet,
+			to: infraMasterWallet,
+			amount: infraPart,
+			note: "Infra share to its Master Wallet",
+			email1: infra.email,
+			mobile1: infra.mobile,
+			from_name: infra.name,
+			to_name: infra.name,
+			sender_id: "",
+			receiver_id: "",
+			master_code: master_code,
+			child_code: master_code + "-m2",
+			created_at: new Date(),
+		},
+	];
 	result = await execute(trans);
 	if (result.status == 0) {
 		txStatus = 0;

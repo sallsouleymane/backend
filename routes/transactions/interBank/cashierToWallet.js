@@ -38,22 +38,24 @@ module.exports = async function (
 
 		let master_code = transfer.master_code;
 
-		let trans = {
-			from: branchOpWallet,
-			to: bankOpWallet,
-			amount: amount,
-			note: "Cashier Send Money",
-			email1: branch.email,
-			email2: bank.email,
-			mobile1: branch.mobile,
-			mobile2: bank.mobile,
-			from_name: branch.name,
-			to_name: bank.name,
-			sender_id: transfer.cashierId,
-			receiver_id: "",
-			master_code: master_code,
-			child_code: master_code + "1",
-		};
+		let trans = [
+			{
+				from: branchOpWallet,
+				to: bankOpWallet,
+				amount: amount,
+				note: "Cashier Send Money",
+				email1: branch.email,
+				email2: bank.email,
+				mobile1: branch.mobile,
+				mobile2: bank.mobile,
+				from_name: branch.name,
+				to_name: bank.name,
+				sender_id: transfer.cashierId,
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code + "1",
+			},
+		];
 
 		let result = await execute(trans);
 
@@ -66,22 +68,24 @@ module.exports = async function (
 			};
 		}
 
-		trans = {
-			from: bankOpWallet,
-			to: receiverBankOpWallet,
-			amount: amount,
-			note: "Sender's Bank transfer Money",
-			email1: bank.email,
-			email2: receiverBank.email,
-			mobile1: bank.mobile,
-			mobile2: receiverBank.mobile,
-			from_name: bank.name,
-			to_name: receiverBank.name,
-			sender_id: "",
-			receiver_id: "",
-			master_code: master_code,
-			child_code: master_code + "1",
-		};
+		trans = [
+			{
+				from: bankOpWallet,
+				to: receiverBankOpWallet,
+				amount: amount,
+				note: "Sender's Bank transfer Money",
+				email1: bank.email,
+				email2: receiverBank.email,
+				mobile1: bank.mobile,
+				mobile2: receiverBank.mobile,
+				from_name: bank.name,
+				to_name: receiverBank.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code + "1",
+			},
+		];
 
 		result = await execute(trans);
 

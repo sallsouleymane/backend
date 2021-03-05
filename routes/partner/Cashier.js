@@ -4,22 +4,10 @@ const router = express.Router();
 const jwtTokenAuth = require("../JWTTokenAuth");
 
 //utils
-const sendSMS = require("../utils/sendSMS");
-const sendMail = require("../utils/sendMail");
-const makeid = require("../utils/idGenerator");
-const makeotp = require("../utils/makeotp");
-const getTypeClass = require("../utils/getTypeClass");
 const { errorMessage, catchError } = require("../utils/errorHandler");
 const blockchain = require("../../services/Blockchain");
 
-const partnerCashierToOperational = require("../transactions/intraBank/partnerCashierToOperational");
-const partnerCashierToCashier = require("../transactions/intraBank/partnerCashierToCashier");
-const partnerCashierToWallet = require("../transactions/intraBank/partnerCashierToWallet");
-const partnerCashierClaimMoney = require("../transactions/intraBank/partnerCashierClaimMoney");
-
 //models
-const Infra = require("../../models/Infra");
-const Bank = require("../../models/Bank");
 const TxState = require("../../models/TxState");
 const Partner = require("../../models/partner/Partner");
 const PartnerBranch = require("../../models/partner/Branch");
@@ -46,37 +34,41 @@ router.post(
 	cashSendTransCntrl.partnerSendToOperational
 );
 
-router.post("/partnerCashier/getFailedTransactions", jwtTokenAuth, function (req, res) {
-	const { bank_id } = req.body;
-	const jwtusername = req.sign_creds.username;
-	PartnerCashier.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, cashier) {
-			let errMsg = errorMessage(
-				err,
-				cashier,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (errMsg.status == 0) {
-				res.status(200).json(errMsg);
-			} else {
-				TxState.find({ bankId: bank_id }, (err, txstates) => {
-					if (err) {
-						res.status(200).json(catchError(err));
-					} else {
-						res.status(200).json({
-							status: 1,
-							transactions: txstates,
-						});
-					}
-				});
+router.post(
+	"/partnerCashier/getFailedTransactions",
+	jwtTokenAuth,
+	function (req, res) {
+		const { bank_id } = req.body;
+		const jwtusername = req.sign_creds.username;
+		PartnerCashier.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, cashier) {
+				let errMsg = errorMessage(
+					err,
+					cashier,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (errMsg.status == 0) {
+					res.status(200).json(errMsg);
+				} else {
+					TxState.find({ bankId: bank_id }, (err, txstates) => {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							res.status(200).json({
+								status: 1,
+								transactions: txstates,
+							});
+						}
+					});
+				}
 			}
-		}
-	);
-});
+		);
+	}
+);
 
 router.post(
 	"/partnerCashier/getUserByMobile",
@@ -1087,39 +1079,35 @@ router.post("/partnerCashier/getHistory", jwtTokenAuth, function (req, res) {
 				CashierPending.find(
 					{ cashier_id: cashier._id },
 					async (err, pending) => {
-						let errMsg = errorMessage(
-							err,
-							pending,
-							"History not found."
-						);
+						let errMsg = errorMessage(err, pending, "History not found.");
 						if (errMsg.status == 0) {
 							res.status(200).json(errMsg);
 						} else {
-							PartnerBranch.findOne({ _id: cashier.branch_id }, (err, branch) => {
-								const wallet = branch.wallet_ids[from];
-								blockchain
-									.getStatement(wallet)
-									.then(function (history) {
-										res.status(200).json({
-											status: 1,
-											history: history,
-											pending: pending,
+							PartnerBranch.findOne(
+								{ _id: cashier.branch_id },
+								(err, branch) => {
+									const wallet = branch.wallet_ids[from];
+									blockchain
+										.getStatement(wallet)
+										.then(function (history) {
+											res.status(200).json({
+												status: 1,
+												history: history,
+												pending: pending,
+											});
+										})
+										.catch((err) => {
+											res.status(200).json(catchError(err));
 										});
-									})
-									.catch((err) => {
-										res.status(200).json(catchError(err));
-									});
-							});
+								}
+							);
 						}
 					}
 				);
-				
 			}
 		}
 	);
 });
-
-
 
 router.post(
 	"/partnerCashier/getBranchByName",

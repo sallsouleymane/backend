@@ -178,3 +178,34 @@ module.exports.initiateTransfer = async function (transaction) {
 		throw err;
 	}
 };
+
+module.exports.initiateMultiTransfer = async function (transactions) {
+	try {
+		console.log("Blockchain service: initiateMultiTransfer " + transactions);
+		let argument = transactions.map((transaction) => {
+			return {
+				from_wallet: transaction.from.toString(),
+				to_wallet: transaction.to.toString(),
+				amount: transaction.amount.toString(),
+				from_name: transaction.from_name,
+				to_name: transaction.to_name,
+				sender_id: transaction.sender_id,
+				receiver_id: transaction.receiver_id,
+				remarks: transaction.note.toString(),
+				master_id: transaction.master_code.toString(),
+				child_id: transaction.child_code.toString(),
+			};
+		});
+
+		var options = {
+			uri: "http://" + config.blockChainIP + ":8000/multipleTransfers",
+			method: "POST",
+			json: { transfers: argument },
+		};
+		let res = await doRequest(options);
+		console.log(res);
+		return res;
+	} catch (err) {
+		throw err;
+	}
+};

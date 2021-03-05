@@ -33,23 +33,25 @@ module.exports = async function (
 			};
 		}
 
-		let trans1 = {
-			from: branchOpWallet,
-			to: merchantOpWallet,
-			amount: amount,
-			note: "Bill amount",
-			email1: branch.email,
-			email2: merchant.email,
-			mobile1: branch.mobile,
-			mobile2: merchant.mobile,
-			from_name: branch.name,
-			to_name: merchant.name,
-			sender_id: transfer.cashierId,
-			receiver_id: "",
-			master_code: master_code,
-			child_code: master_code + "-p1",
-			created_at: new Date(),
-		};
+		let trans1 = [
+			{
+				from: branchOpWallet,
+				to: merchantOpWallet,
+				amount: amount,
+				note: "Bill amount",
+				email1: branch.email,
+				email2: merchant.email,
+				mobile1: branch.mobile,
+				mobile2: merchant.mobile,
+				from_name: branch.name,
+				to_name: merchant.name,
+				sender_id: transfer.cashierId,
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code + "-p1",
+				created_at: new Date(),
+			},
+		];
 
 		let res = await execute(trans1);
 
@@ -105,23 +107,25 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 	let bankComm = transfer.bankComm;
 
 	if (bankFee > 0) {
-		let trans2 = {
-			from: branchOpWallet,
-			to: bankOpWallet,
-			amount: bankFee,
-			note: "Bank fee on paid bill",
-			email1: branch.email,
-			email2: bank.email,
-			mobile1: branch.mobile,
-			mobile2: bank.mobile,
-			from_name: branch.name,
-			to_name: bank.name,
-			sender_id: transfer.cashierId,
-			receiver_id: "",
-			master_code: master_code,
-			child_code: master_code + "-p2",
-			created_at: new Date(),
-		};
+		let trans2 = [
+			{
+				from: branchOpWallet,
+				to: bankOpWallet,
+				amount: bankFee,
+				note: "Bank fee on paid bill",
+				email1: branch.email,
+				email2: bank.email,
+				mobile1: branch.mobile,
+				mobile2: bank.mobile,
+				from_name: branch.name,
+				to_name: bank.name,
+				sender_id: transfer.cashierId,
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code + "-p2",
+				created_at: new Date(),
+			},
+		];
 		let res = await execute(trans2, qname.fee);
 		if (res.status == 0) {
 			allTxSuccess = false;
@@ -129,23 +133,25 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 	}
 
 	if (bankComm > 0) {
-		let trans5 = {
-			from: merchantOpWallet,
-			to: bankOpWallet,
-			amount: bankComm,
-			note: "Bank commission on paid bill",
-			email1: merchant.email,
-			email2: bank.email,
-			mobile1: merchant.mobile,
-			mobile2: bank.mobile,
-			from_name: merchant.name,
-			to_name: bank.name,
-			sender_id: "",
-			receiver_id: "",
-			master_code: master_code,
-			child_code: master_code + "-p6",
-			created_at: new Date(),
-		};
+		let trans5 = [
+			{
+				from: merchantOpWallet,
+				to: bankOpWallet,
+				amount: bankComm,
+				note: "Bank commission on paid bill",
+				email1: merchant.email,
+				email2: bank.email,
+				mobile1: merchant.mobile,
+				mobile2: bank.mobile,
+				from_name: merchant.name,
+				to_name: bank.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code + "-p6",
+				created_at: new Date(),
+			},
+		];
 
 		let res = await execute(trans5, qname.comm);
 		if (res.status == 0) {
@@ -157,23 +163,25 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 	infraShare = calculateShare("infra", amount, fee);
 	transfer.infraFeeShare = infraShare;
 	if (infraShare.percentage_amount > 0) {
-		let trans31 = {
-			from: bankOpWallet,
-			to: infraOpWallet,
-			amount: infraShare.percentage_amount,
-			note: "Percentage share on paid bill",
-			email1: bank.email,
-			email2: infra.email,
-			mobile1: bank.mobile,
-			mobile2: infra.mobile,
-			from_name: bank.name,
-			to_name: infra.name,
-			sender_id: "",
-			receiver_id: "",
-			master_code: master_code,
-			child_code: master_code + "-p3",
-			created_at: new Date(),
-		};
+		let trans31 = [
+			{
+				from: bankOpWallet,
+				to: infraOpWallet,
+				amount: infraShare.percentage_amount,
+				note: "Percentage share on paid bill",
+				email1: bank.email,
+				email2: infra.email,
+				mobile1: bank.mobile,
+				mobile2: infra.mobile,
+				from_name: bank.name,
+				to_name: infra.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code + "-p3",
+				created_at: new Date(),
+			},
+		];
 		let res = await execute(trans31, qname.infra_percent);
 		if (res.status == 0) {
 			allTxSuccess = false;
@@ -181,23 +189,25 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 	}
 
 	if (infraShare.fixed_amount > 0) {
-		let trans32 = {
-			from: bankOpWallet,
-			to: infraOpWallet,
-			amount: infraShare.fixed_amount,
-			note: "Fixed share on paid bill",
-			email1: bank.email,
-			email2: infra.email,
-			mobile1: bank.mobile,
-			mobile2: infra.mobile,
-			from_name: bank.name,
-			to_name: infra.name,
-			sender_id: "",
-			receiver_id: "",
-			master_code: master_code,
-			child_code: master_code + "-p4",
-			created_at: new Date(),
-		};
+		let trans32 = [
+			{
+				from: bankOpWallet,
+				to: infraOpWallet,
+				amount: infraShare.fixed_amount,
+				note: "Fixed share on paid bill",
+				email1: bank.email,
+				email2: infra.email,
+				mobile1: bank.mobile,
+				mobile2: infra.mobile,
+				from_name: bank.name,
+				to_name: infra.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code + "-p4",
+				created_at: new Date(),
+			},
+		];
 		let res = await execute(trans32, qname.infra_fixed);
 		if (res.status == 0) {
 			allTxSuccess = false;
@@ -207,23 +217,25 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 	if (bankFee > 0) {
 		//fourth transaction
 		partnerShare = transfer.partnerFeeShare;
-		let trans4 = {
-			from: bankOpWallet,
-			to: branchOpWallet,
-			amount: partnerShare,
-			note: "Fee share on paid bill",
-			email1: bank.email,
-			email2: branch.email,
-			mobile1: bank.mobile,
-			mobile2: branch.mobile,
-			from_name: bank.name,
-			to_name: branch.name,
-			sender_id: "",
-			receiver_id: transfer.cashierId,
-			master_code: master_code,
-			child_code: master_code + "-p5",
-			created_at: new Date(),
-		};
+		let trans4 = [
+			{
+				from: bankOpWallet,
+				to: branchOpWallet,
+				amount: partnerShare,
+				note: "Fee share on paid bill",
+				email1: bank.email,
+				email2: branch.email,
+				mobile1: bank.mobile,
+				mobile2: branch.mobile,
+				from_name: bank.name,
+				to_name: branch.name,
+				sender_id: "",
+				receiver_id: transfer.cashierId,
+				master_code: master_code,
+				child_code: master_code + "-p5",
+				created_at: new Date(),
+			},
+		];
 
 		let res = await execute(trans4, qname.partner_share);
 		if (res.status == 0) {
@@ -235,23 +247,25 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 	infraShare = calculateShare("infra", amount, comm);
 	transfer.infraCommShare = infraShare;
 	if (infraShare.percentage_amount > 0) {
-		let trans61 = {
-			from: bankOpWallet,
-			to: infraOpWallet,
-			amount: infraShare.percentage_amount,
-			note: "Commission share on paid bill",
-			email1: bank.email,
-			email2: infra.email,
-			mobile1: bank.mobile,
-			mobile2: infra.mobile,
-			from_name: bank.name,
-			to_name: infra.name,
-			sender_id: "",
-			receiver_id: "",
-			master_code: master_code,
-			child_code: master_code + "-p7",
-			created_at: new Date(),
-		};
+		let trans61 = [
+			{
+				from: bankOpWallet,
+				to: infraOpWallet,
+				amount: infraShare.percentage_amount,
+				note: "Commission share on paid bill",
+				email1: bank.email,
+				email2: infra.email,
+				mobile1: bank.mobile,
+				mobile2: infra.mobile,
+				from_name: bank.name,
+				to_name: infra.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code + "-p7",
+				created_at: new Date(),
+			},
+		];
 
 		let res = await execute(trans61, qname.infra_percentage);
 		if (res.status == 0) {
@@ -259,23 +273,25 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 		}
 	}
 	if (infraShare.fixed_amount > 0) {
-		let trans62 = {
-			from: bankOpWallet,
-			to: infraOpWallet,
-			amount: infraShare.fixed_amount,
-			note: "Fixed Commission share on paid bill",
-			email1: bank.email,
-			email2: infra.email,
-			mobile1: bank.mobile,
-			mobile2: infra.mobile,
-			from_name: bank.name,
-			to_name: infra.name,
-			sender_id: "",
-			receiver_id: "",
-			master_code: master_code,
-			child_code: master_code + "-p8",
-			created_at: new Date(),
-		};
+		let trans62 = [
+			{
+				from: bankOpWallet,
+				to: infraOpWallet,
+				amount: infraShare.fixed_amount,
+				note: "Fixed Commission share on paid bill",
+				email1: bank.email,
+				email2: infra.email,
+				mobile1: bank.mobile,
+				mobile2: infra.mobile,
+				from_name: bank.name,
+				to_name: infra.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code + "-p8",
+				created_at: new Date(),
+			},
+		];
 
 		let res = await execute(trans62, qname.infra_fixed);
 		if (res.status == 0) {
@@ -286,23 +302,25 @@ async function distributeRevenue(transfer, infra, bank, branch, fee, comm) {
 	if (bankComm > 0) {
 		//seventh transaction
 		partnerShare = transfer.partnerCommShare;
-		let trans7 = {
-			from: bankOpWallet,
-			to: branchOpWallet,
-			amount: partnerShare,
-			note: "Commission share on paid bill",
-			email1: bank.email,
-			email2: branch.email,
-			mobile1: bank.mobile,
-			mobile2: branch.mobile,
-			from_name: bank.name,
-			to_name: branch.name,
-			sender_id: "",
-			receiver_id: transfer.cashierId,
-			master_code: master_code,
-			child_code: master_code + "-p9",
-			created_at: new Date(),
-		};
+		let trans7 = [
+			{
+				from: bankOpWallet,
+				to: branchOpWallet,
+				amount: partnerShare,
+				note: "Commission share on paid bill",
+				email1: bank.email,
+				email2: branch.email,
+				mobile1: bank.mobile,
+				mobile2: branch.mobile,
+				from_name: bank.name,
+				to_name: branch.name,
+				sender_id: "",
+				receiver_id: transfer.cashierId,
+				master_code: master_code,
+				child_code: master_code + "-p9",
+				created_at: new Date(),
+			},
+		];
 
 		let res = await execute(trans7, qname.partner_share);
 		if (res.status == 0) {
@@ -340,61 +358,67 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 
 	let txStatus = 1;
 
-	let trans = {
-		from: bankOpWallet,
-		to: bankMasterWallet,
-		amount: bankPart,
-		note: "Bank share to its Master Wallet",
-		email1: bank.email,
-		mobile1: bank.mobile,
-		from_name: bank.name,
-		to_name: bank.name,
-		sender_id: "",
-		receiver_id: "",
-		master_code: master_code,
-		child_code: master_code + "-m1",
-		created_at: new Date(),
-	};
+	let trans = [
+		{
+			from: bankOpWallet,
+			to: bankMasterWallet,
+			amount: bankPart,
+			note: "Bank share to its Master Wallet",
+			email1: bank.email,
+			mobile1: bank.mobile,
+			from_name: bank.name,
+			to_name: bank.name,
+			sender_id: "",
+			receiver_id: "",
+			master_code: master_code,
+			child_code: master_code + "-m1",
+			created_at: new Date(),
+		},
+	];
 	let result = await execute(trans, qname.bank_master);
 	if (result.status == 0) {
 		txStatus = 0;
 	}
 
-	trans = {
-		from: infraOpWallet,
-		to: infraMasterWallet,
-		amount: infraPart,
-		note: "Infra share to its Master Wallet",
-		email1: infra.email,
-		mobile1: infra.mobile,
-		from_name: infra.name,
-		to_name: infra.name,
-		sender_id: "",
-		receiver_id: "",
-		master_code: master_code,
-		child_code: master_code + "-m2",
-		created_at: new Date(),
-	};
+	trans = [
+		{
+			from: infraOpWallet,
+			to: infraMasterWallet,
+			amount: infraPart,
+			note: "Infra share to its Master Wallet",
+			email1: infra.email,
+			mobile1: infra.mobile,
+			from_name: infra.name,
+			to_name: infra.name,
+			sender_id: "",
+			receiver_id: "",
+			master_code: master_code,
+			child_code: master_code + "-m2",
+			created_at: new Date(),
+		},
+	];
 	result = await execute(trans, qname.infra_master);
 	if (result.status == 0) {
 		txStatus = 0;
 	}
 
-	trans = {
-		from: branchOpWallet,
-		to: branchMasterWallet,
-		amount: sendBranchPart,
-		note: "Sending Branch share to its Master Wallet",
-		email1: branch.email,
-		mobile1: branch.mobile,
-		from_name: branch.name,
-		to_name: branch.name,
-		sender_id: transfer.cashierId,
-		receiver_id: "",
-		master_code: master_code,
-		child_code: master_code + "-m3",
-		created_at: new Date(),
-	};
+	trans = [
+		{
+			from: branchOpWallet,
+			to: branchMasterWallet,
+			amount: sendBranchPart,
+			note: "Sending Branch share to its Master Wallet",
+			email1: branch.email,
+			mobile1: branch.mobile,
+			from_name: branch.name,
+			to_name: branch.name,
+			sender_id: transfer.cashierId,
+			receiver_id: "",
+			master_code: master_code,
+			child_code: master_code + "-m3",
+			created_at: new Date(),
+		},
+	];
 	result = await execute(trans, qname.send_master);
 	if (result.status == 0) {
 		txStatus = 0;

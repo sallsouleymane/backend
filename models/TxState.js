@@ -10,7 +10,7 @@ const TxStateSchema = new mongoose.Schema({
 	cash_in_hand: { type: Number, required: false, default: 0 },
 	amount: { type: Number, required: false, default: 0 },
 	description: { type: String, required: false },
-
+	masterTx: { type: Object, required: false },
 	childTx: [
 		{
 			state: { type: String, required: false },
