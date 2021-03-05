@@ -5,6 +5,8 @@ const updateInvoiceRecord = require("../utils/updateInvoiceRecord");
 
 //controllers
 const merchantInvoicePay = require("../transactions/intraBank/merchantInvoicePay");
+const Invoice = require("../../models/merchant/Invoice");
+
 
 // transactions
 const txstate = require("../transactions/services/states");
@@ -17,7 +19,7 @@ const MerchantPosition = require("../../models/merchant/Position");
 const Merchant = require("../../models/merchant/Merchant");
 
 module.exports = (req, res) => {
-	const { invoices, description } = req.body;
+	const { invoices } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantPosition.findOne(
 		{
@@ -46,17 +48,11 @@ module.exports = (req, res) => {
 							res.status(200).json(errRes);
 						} else {
 							// Initiate transaction state
-							const total_amount = await invoicesTotalAmount(
-								invoices,
-								merchant._id
-							);
 							const master_code = await txstate.initiate(
 								merchant.bank_id,
 								" Merchant cashier to Merchant",
 								cashier._id,
-								cashier.cash_in_hand,
-								total_amount,
-								description
+								cashier.cash_in_hand
 
 							);
 							MerchantRule.findOne(
@@ -89,6 +85,21 @@ module.exports = (req, res) => {
 											if (infra == null) {
 												throw new Error("Cashier's bank has invalid infra");
 											}
+											const total_amount = await invoicesTotalAmount(
+												invoices,
+												merchant._id
+											);
+											const invoiceDetails = await Invoice.findOne({ _id: invoices[0].id })
+											let otherInfo = {
+												total_amount: total_amount,
+												master_code: master_code,
+												paid_by: "MC",
+												payer_id: cashier._id,
+												merchant_id: merchant._id,
+												invoiceDetails: invoiceDetails,
+												invoices: invoices
+											};
+											txstate.waitingForCompletion(master_code, otherInfo);
 
 											const today = new Date();
 											await Merchant.findOneAndUpdate(
@@ -100,11 +111,6 @@ module.exports = (req, res) => {
 												},
 												{ amount_collected: 0 }
 											);
-
-											// const total_amount = await invoicesTotalAmount(
-											// 	invoices,
-											// 	merchant._id
-											// );
 											let transfer = {
 												amount: total_amount,
 												master_code: master_code,
@@ -132,15 +138,9 @@ module.exports = (req, res) => {
 													);
 												}
 
-												req.body.merchant_id = merchant._id;
-												let otherInfo = {
-													total_amount: total_amount,
-													master_code: master_code,
-													paid_by: "MC",
-													payer_id: cashier._id,
-												};
+
 												let status = await updateInvoiceRecord(
-													req.body,
+
 													otherInfo
 												);
 												if (status != null) {
