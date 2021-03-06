@@ -34,6 +34,51 @@ router.post(
 );
 
 router.post(
+	"/merchantStaff/getDailyReport",
+	jwtTokenAuth,
+	function (req, res) {
+		const { start, end } = req.body;
+		const jwtusername = req.sign_creds.username;
+		MerchantPosition.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, user) {
+				let result = errorMessage(
+					err,
+					user,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					DailyReport.find(
+						{ 	cashier_id: user._id,
+							created_at: {
+								$gte: new Date(
+									start
+								),
+								$lte: new Date(
+									end
+								),
+							},
+						},
+						(err, reports) => {
+							if (err) {
+								res.status(200).json(catchError(err));
+							} else {
+								res.status(200).json({ status: 1, reports: reports });
+							}
+						}
+					);
+				}
+			}
+		);
+	}
+);
+
+router.post(
 	"/merchantStaff/getClosingBalance",
 	jwtTokenAuth,
 	function (req, res) {
