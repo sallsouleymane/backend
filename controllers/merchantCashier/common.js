@@ -34,7 +34,7 @@ module.exports.queryTransactionStates = function (req, res) {
 module.exports.queryDailyReport = function (req, res) {
 	const { date_after, date_before, page_start, limit } = req.body;
 
-	jwtAuthentication(req, function (err, cashier) {
+	jwtAuthentication(req, function (err, position) {
 		if (err) {
 			res.status(200).json(err);
 		} else {
@@ -54,7 +54,7 @@ module.exports.queryDailyReport = function (req, res) {
 			}
 
 			DailyReport.find(
-				{ cashier_id: cashier._id, $and: date_range },
+				{ cashier_id: position._id, $and: date_range },
 				null,
 				{ skip: page_start, limit: limit },
 				(err, reports) => {
