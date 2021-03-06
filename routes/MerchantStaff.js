@@ -19,6 +19,7 @@ const MerchantSettings = require("../models/merchant/MerchantSettings");
 const Customer = require("../models/merchant/Customer");
 const CashierLedger = require("../models/CashierLedger");
 const CashierTransfer = require("../models/CashierTransfer");
+const DailyReport = require("../models/cashier/DailyReport");
 
 router.post(
 	"/merchantStaff/queryTransactionStates",
@@ -94,16 +95,14 @@ router.post(
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
-					let data = new CashierLedger();
-					data.amount = total;
+					let data = new DailyReport();
 					data.cashier_id = otpd._id;
-					data.trans_type = "CB";
-					let td = {
-						denomination,
-						note,
-					};
-					data.transaction_details = JSON.stringify(td);
-
+					data.created_at = new Date();
+					data.user = "Merchant Cashier";
+					data.opening_balance = otpd.opening_balance;
+					data.closing_balance = otpd.opening_balance + total;
+					data.cash_in_hand = otpd.cash_in_hand;
+					data.descripency =  total - otpd.cash_in_hand - otpd.opening_balance,
 					data.save((err) => {
 						if (err) {
 							console.log(err);
@@ -119,7 +118,7 @@ router.post(
 							MerchantPosition.findByIdAndUpdate(
 								otpd._id,
 								{
-									closing_balance: total,
+									closing_balance: otpd.opening_balance + total,
 									closing_time: new Date(),
 									is_closed: true,
 								},
