@@ -4,6 +4,7 @@ const CashierDailyReportSchema = new mongoose.Schema({
 	created_at: { type: Date, default: Date.now },
 	user: { type: String, required: true },
 	opening_balance: { type: Number, required: false, default: 0 },
+	closing_balance: { type: Number, required: false, default: 0 },
 	cash_in_hand: { type: Number, required: false, default: 0 },
 	paid_in_cash: { type: Number, required: false, default: 0 },
 	cash_received: { type: Number, required: false, default: 0 },
