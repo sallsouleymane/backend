@@ -265,6 +265,7 @@ router.post(
 				} else {
 					upd = {
 						is_closed: false,
+						opening_time: new Date(),
 					};
 					console.log(upd);
 
