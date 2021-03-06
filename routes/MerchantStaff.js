@@ -153,6 +153,7 @@ router.post(
 					data.opening_balance = otpd.opening_balance;
 					data.closing_balance = otpd.opening_balance + total;
 					data.cash_in_hand = otpd.cash_in_hand;
+					data.opening_time = otpd.opening_time;
 					data.descripency =  total - otpd.cash_in_hand - otpd.opening_balance,
 					data.save((err) => {
 						if (err) {
