@@ -28,6 +28,12 @@ router.post(
 );
 
 router.post(
+	"/merchantStaff/queryDailyReport",
+	jwtTokenAuth,
+	cashierCommonContrl.queryDailyReport
+);
+
+router.post(
 	"/merchantStaff/getClosingBalance",
 	jwtTokenAuth,
 	function (req, res) {
