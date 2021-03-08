@@ -26,6 +26,85 @@ const Tax = require("../models/merchant/Tax");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
 const Customer = require("../models/merchant/Customer");
 
+router.get("/merchant/listInvoiceGroups", jwtTokenAuth, (req, res) => {
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				InvoiceGroup.find({ merchant_id: merchant._id }, (err, groups) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Invoice Groups list",
+							groups: groups,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/merchant/createInvoiceGroup", jwtTokenAuth, (req, res) => {
+	let data = new InvoiceGroup();
+	const { code, name, description } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				data.code = code;
+				data.name = name;
+				data.description = description;
+				data.merchant_id = merchant._id;
+				data.save((err, group) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						return res.status(200).json({
+							status: 1,
+							message: "Invoice Category Created",
+							group: group,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+
 router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
@@ -1479,38 +1558,10 @@ router.post("/merchant/addPosition", jwtTokenAuth, (req, res) => {
 										if (result.status == 0) {
 											res.status(200).json(result);
 										} else {
-											if (type == "staff") {
-												let ig = new InvoiceGroup();
-												ig.code = "group-" + name;
-												ig.name = "default";
-												ig.description =
-													"Default invoice group for merchant Staff";
-												ig.position_id = position._id;
-												ig.save((err, group) => {
-													if (err) {
-														console.log(err);
-														var message = err;
-														if (err.message) {
-															message = err.message;
-														}
-														res.status(200).json({
-															status: 0,
-															message: message,
-														});
-													} else {
-														return res.status(200).json({
-															status: 1,
-															data: position,
-															group: group,
-														});
-													}
-												});
-											} else {
-												return res.status(200).json({
-													status: 1,
-													data: position,
-												});
-											}
+											return res.status(200).json({
+												status: 1,
+												data: position,
+											});	
 										}
 									}
 								);
