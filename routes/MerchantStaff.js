@@ -1336,7 +1336,7 @@ router.post("/merchantStaff/editInvoiceGroup", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.get("/merchantStaff/listInvoiceGroups", jwtTokenAuth, (req, res) => {
+router.post("/merchantStaff/listInvoiceGroups", jwtTokenAuth, (req, res) => {
 	const { merchant_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantPosition.findOne(
