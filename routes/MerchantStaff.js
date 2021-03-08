@@ -1463,7 +1463,7 @@ router.post("/merchantStaff/createInvoice", jwtTokenAuth, (req, res) => {
 				res.status(200).json(result);
 			} else {
 				InvoiceGroup.findOne(
-					{ _id: group_id, position_id: position._id },
+					{ _id: group_id },
 					async (err, group) => {
 						let result = errorMessage(err, group, "Group not found");
 						if (result.status == 0) {
@@ -1628,7 +1628,7 @@ router.post("/merchantStaff/uploadInvoices", jwtTokenAuth, (req, res) => {
 				res.status(200).json(result);
 			} else {
 				InvoiceGroup.findOne(
-					{ _id: group_id, position_id: position._id },
+					{ _id: group_id },
 					async (err, group) => {
 						let result = errorMessage(err, group, "Group not found");
 						if (result.status == 0) {
@@ -1879,7 +1879,7 @@ router.post("/merchantStaff/editInvoice", jwtTokenAuth, (req, res) => {
 				res.status(200).json(result);
 			} else {
 				InvoiceGroup.findOne(
-					{ _id: group_id, position_id: position._id },
+					{ _id: group_id },
 					async (err, group) => {
 						let result = errorMessage(err, group, "Group not found");
 						if (result.status == 0) {
@@ -2161,7 +2161,7 @@ router.post("/merchantStaff/listInvoices", jwtTokenAuth, (req, res) => {
 			} else {
 				if (position.counter_invoice_access) {
 					Invoice.find(
-						{ merchant_id: position.merchant_id },
+						{ merchant_id: position.merchant_id, group_id },
 						(err, invoices) => {
 							if (err) {
 								console.log(err);
