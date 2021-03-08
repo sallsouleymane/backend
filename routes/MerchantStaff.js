@@ -2050,6 +2050,54 @@ router.post("/merchantStaff/listInvoicesByDate", jwtTokenAuth, (req, res) => {
 	);
 });
 
+router.post("/merchantStaff/listInvoicesByPeriod", jwtTokenAuth, (req, res) => {
+	const { start_date, end_date } = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantPosition.findOne(
+		{
+			username: jwtusername,
+			type: "staff",
+			status: 1,
+		},
+		function (err, position) {
+			let result = errorMessage(err, position, "Position is blocked");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.find(
+					{ 	creator_id: position._id,
+						"bill_period.start_date":  {
+							$gte: start_date
+						},
+						"bill_period.end_date": {
+							$lte: end_date
+						},
+					},
+					(err, invoices) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								invoices: invoices,
+							});
+						}
+					}
+				);
+				
+			}
+		}
+	);
+});
+
 router.post("/merchantStaff/listInvoices", jwtTokenAuth, (req, res) => {
 	const { group_id } = req.body;
 	const jwtusername = req.sign_creds.username;
