@@ -1337,6 +1337,7 @@ router.post("/merchantStaff/editInvoiceGroup", jwtTokenAuth, (req, res) => {
 });
 
 router.get("/merchantStaff/listInvoiceGroups", jwtTokenAuth, (req, res) => {
+	const { merchant_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantPosition.findOne(
 		{
@@ -1349,7 +1350,7 @@ router.get("/merchantStaff/listInvoiceGroups", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				InvoiceGroup.find({ position_id: position._id }, (err, groups) => {
+				InvoiceGroup.find({ merchant_id: merchant_id }, (err, groups) => {
 					if (err) {
 						console.log(err);
 						var message = err;
