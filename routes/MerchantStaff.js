@@ -1217,7 +1217,10 @@ router.get(
 	}
 );
 
-router.get("/merchantStaff/staffDashStatus", jwtTokenAuth, function (req, res) {
+router.post("/merchantStaff/staffDashStatus", jwtTokenAuth, function (req, res) {
+	const startOfDay = new Date(new Date().setUTCHours(0, 0, 0, 0)).toISOString()
+	const endOfDay = new Date(new Date().setUTCHours(23, 59, 59, 999)).toISOString()
+	const { group_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantPosition.findOne(
 		{
@@ -1233,14 +1236,30 @@ router.get("/merchantStaff/staffDashStatus", jwtTokenAuth, function (req, res) {
 				try {
 					let bills_raised = await Invoice.countDocuments({
 						creator_id: position._id,
+						is_validated: 1,
+						created_at : {
+							$gte: startOfDay, 
+							$lt: endOfDay
+						},
+						group_id: group_id,
 					});
 					let bills_paid = await Invoice.countDocuments({
 						creator_id: position._id,
 						paid: 1,
+						created_at : {
+							$gte: startOfDay, 
+							$lt: endOfDay
+						},
+						group_id: group_id,
 					});
 					let counter_invoices = await Invoice.countDocuments({
 						creator_id: position._id,
 						is_counter: true,
+						created_at : {
+							$gte: startOfDay, 
+							$lt: endOfDay
+						},
+						group_id: group_id,
 					});
 					res.status(200).json({
 						status: 1,
