@@ -17,6 +17,7 @@ const Merchant = require("../../models/merchant/Merchant");
 const MerchantBranch = require("../../models/merchant/MerchantBranch");
 const MerchantPosition = require("../../models/merchant/Position");
 const getWalletIds = require("../utils/getWalletIds");
+const InvoiceGroup = require("../../models/merchant/InvoiceGroup");
 
 router.post("/bank/changeMerchantAcces", jwtTokenAuth, function (req, res) {
 	const { merchant_id, is_private } = req.body;
@@ -301,7 +302,7 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 								data.creator = 0;
 								data.wallet_ids.operational = wallet_ids.operational;
 
-								data.save((err) => {
+								data.save((err, merchant) => {
 									if (err) {
 										console.log(err);
 										res.status(200).json({
@@ -329,36 +330,53 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 														message: message,
 													});
 												} else {
-													let content =
-														"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-														config.mainIP +
-														"/merchant/" +
-														bank.name +
-														"'>http://" +
-														config.mainIP +
-														"/merchant/" +
-														bank.name +
-														"</a></p><p><p>Your username: " +
-														data.username +
-														"</p><p>Your password: " +
-														data.password +
-														"</p>";
-													sendMail(content, "Bank Merchant Created", email);
-													let content2 =
-														"You are added as a Merchant in E-Wallet application Login URL: http://" +
-														config.mainIP +
-														"/merchant/" +
-														bank.name +
-														" Your username: " +
-														data.username +
-														" Your password: " +
-														data.password;
-													sendSMS(content2, mobile);
-													res.status(200).json({
-														status: 1,
-														message: "Merchant created successfully",
-														blockchain_result: result,
+													const group = new InvoiceGroup();
+													group.merchant_id = merchant._id;
+													group.name = 'Default';
+													group.code = 'default';
+													group.description = 'default';
+													group.save((err) => {
+														if (err) {
+															console.log(err);
+															res.status(200).json({
+																status: 0,
+																message:
+																	"Error creating Invoice Group Category",
+															});
+														} else {
+															let content =
+															"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+															config.mainIP +
+															"/merchant/" +
+															bank.name +
+															"'>http://" +
+															config.mainIP +
+															"/merchant/" +
+															bank.name +
+															"</a></p><p><p>Your username: " +
+															data.username +
+															"</p><p>Your password: " +
+															data.password +
+															"</p>";
+															sendMail(content, "Bank Merchant Created", email);
+															let content2 =
+															"You are added as a Merchant in E-Wallet application Login URL: http://" +
+															config.mainIP +
+															"/merchant/" +
+															bank.name +
+															" Your username: " +
+															data.username +
+															" Your password: " +
+															data.password;
+															sendSMS(content2, mobile);
+															res.status(200).json({
+																status: 1,
+																message: "Merchant created successfully",
+																blockchain_result: result,
+															});
+														}
 													});
+													
 												}
 											}
 										);

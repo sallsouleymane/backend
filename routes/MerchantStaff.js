@@ -2166,6 +2166,8 @@ router.post("/merchantStaff/listInvoicesByDateRange", jwtTokenAuth, (req, res) =
 
 router.post("/merchantStaff/listInvoices", jwtTokenAuth, (req, res) => {
 	const { group_id } = req.body;
+	const startOfDay = new Date(new Date().setUTCHours(0, 0, 0, 0)).toISOString()
+	const endOfDay = new Date(new Date().setUTCHours(23, 59, 59, 999)).toISOString()
 	const jwtusername = req.sign_creds.username;
 	MerchantPosition.findOne(
 		{
@@ -2180,7 +2182,14 @@ router.post("/merchantStaff/listInvoices", jwtTokenAuth, (req, res) => {
 			} else {
 				if (position.counter_invoice_access) {
 					Invoice.find(
-						{ merchant_id: position.merchant_id, group_id },
+						{ 
+							merchant_id: position.merchant_id,
+							group_id,
+							created_at : {
+								$gte: startOfDay, 
+								$lt: endOfDay
+							},
+						},
 						(err, invoices) => {
 							if (err) {
 								console.log(err);
@@ -2202,7 +2211,14 @@ router.post("/merchantStaff/listInvoices", jwtTokenAuth, (req, res) => {
 					);
 				} else {
 					Invoice.find(
-						{ creator_id: position._id, group_id },
+						{ 
+							creator_id: position._id,
+							group_id,
+							created_at : {
+								$gte: startOfDay, 
+								$lt: endOfDay
+							},
+						},
 						(err, invoices) => {
 							if (err) {
 								console.log(err);
