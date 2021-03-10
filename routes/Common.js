@@ -11,6 +11,7 @@ const getTypeClass = require("./utils/getTypeClass");
 const makeotp = require("./utils/makeotp");
 const jwtsign = require("./utils/jwtsign");
 const { errorMessage, catchError } = require("./utils/errorHandler");
+const { queryTxStates } = require("../controllers/utils/common");
 
 const jwtTokenAuth = require("./JWTTokenAuth");
 
@@ -43,6 +44,8 @@ const PartnerBranch = require("../models/partner/Branch");
 const Invoice = require("../models/merchant/Invoice");
 const ClaimCode = require("../models/ClaimCode");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
+const DailyReport = require("../models/cashier/DailyReport");
+const MerchantPosition = require("../models/merchant/Position");
 
 router.get("/testGet", function (req, res) {
 	res.status(200).json({
@@ -65,7 +68,187 @@ router.get("/getClaimCode", function (req, res) {
 	);
 });
 
-router.post("/:user/listStaffInvoicesByDate", jwtTokenAuth, (req, res) => {
+router.post("/:user/getMerchantCashierDashStats", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { staff_id } = req.body;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "merchantStaff") {
+		User = getTypeClass("merchantPosition");
+	} else if (user == "merchantBranch") {
+		User = getTypeClass("merchantBranch");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				if(user === 'merchantBranch'){
+					MerchantPosition.findOne(
+						{
+							_id: staff_id,
+						},
+						function (err, user) {
+							let result = errorMessage(
+								err,
+								user,
+								"Token changed or user not valid. Try to login again or contact system administrator."
+							);
+							if (result.status == 0) {
+								res.status(200).json(result);
+							} else {
+								res.status(200).json({
+									status: 1,
+									openingBalance: user.opening_balance,
+									closingBalance: user.closing_balance,
+									cashInHand: user.cash_in_hand,
+									closingTime: user.closing_time,
+									openingTime: user.opening_time,
+									discrepancy: user.discrepancy,
+									branchId: user.branch_id,
+									isClosed: user.is_closed,
+								});
+							}
+						}
+					);
+				} else {
+					res.status(200).json({
+						status: 1,
+						openingBalance: data.opening_balance,
+						closingBalance: data.closing_balance,
+						cashInHand: data.cash_in_hand,
+						closingTime: data.closing_time,
+						openingTime: data.opening_time,
+						discrepancy: data.discrepancy,
+						branchId: data.branch_id,
+						isClosed: data.is_closed,
+					});
+				}
+			}
+		}
+	);
+});
+
+router.post("/:user/queryMerchantCashierTransactionStates", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const user = req.params.user;
+	const { bank_id, staff_id } = req.body;
+	var User = getTypeClass(user);
+	if (user == "merchantStaff") {
+		User = getTypeClass("merchantPosition");
+	} else if (user == "merchantBranch") {
+		User = getTypeClass("merchantBranch");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				queryTxStates(
+					bank_id,
+					user === 'merchantStaff' ? data._id : staff_id,
+					req,
+					function (err, txstates) {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							res.status(200).json({
+								status: 1,
+								transactions: txstates,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/:user/getMerchantCashierDailyReport", jwtTokenAuth, function (req, res) {
+	const { start, end, staff_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "merchantStaff") {
+		User = getTypeClass("merchantPosition");
+	} else if (user == "merchantBranch") {
+		User = getTypeClass("merchantBranch");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				DailyReport.find(
+					{ 	cashier_id: user==='merchantStaff' ? data._id : staff_id,
+						created_at: {
+						$gte: new Date(
+							start
+						),
+						$lte: new Date(
+							end
+						),
+					},
+					},
+					(err, reports) => {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							res.status(200).json({ status: 1, reports: reports });
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/:user/listMerchantStaffInvoicesByDate", jwtTokenAuth, (req, res) => {
 	const { date, staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
@@ -125,7 +308,7 @@ router.post("/:user/listStaffInvoicesByDate", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/:user/listStaffInvoicesByPeriod", jwtTokenAuth, (req, res) => {
+router.post("/:user/listMerchantStaffInvoicesByPeriod", jwtTokenAuth, (req, res) => {
 	const { start_date, end_date, staff_id} = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
@@ -190,7 +373,7 @@ router.post("/:user/listStaffInvoicesByPeriod", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/:user/listStaffInvoicesByDateRange", jwtTokenAuth, (req, res) => {
+router.post("/:user/listMerchantStaffInvoicesByDateRange", jwtTokenAuth, (req, res) => {
 	const { start_date, end_date, staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
