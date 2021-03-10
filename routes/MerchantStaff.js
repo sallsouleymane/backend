@@ -1538,6 +1538,7 @@ router.post("/merchantStaff/createInvoice", jwtTokenAuth, (req, res) => {
 								invoiceObj.amount = amount;
 								invoiceObj.merchant_id = position.merchant_id;
 								invoiceObj.bill_date = bill_date;
+								invoiceObj.branch_id = position.branch_id;
 								invoiceObj.bill_period = bill_period;
 								invoiceObj.due_date = due_date;
 								invoiceObj.description = description;

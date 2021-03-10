@@ -20,6 +20,7 @@ const InvoiceSchema = new mongoose.Schema({
 	mobile: { type: String, required: true },
 	ccode: { type: String, required: false },
 	creator_id: { type: String, required: true },
+	branch_id: { type: String, required: true },
 	paid: { type: Number, required: true, default: 0 },
 	paid_desc: { type: String, required: false, default: "0-not paid 1-paid" },
 	paid_by: { type: String, required: false },

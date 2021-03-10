@@ -198,28 +198,90 @@ router.post("/merchantBranch/getDashStats", jwtTokenAuth, function (req, res) {
 							},
 						},
 					],
-					async (e, post5) => {
-						let cin = 0;
-						let ob = 0;
-							if (
-								post5 != undefined &&
-								post5 != null &&
-								post5.length > 0
-							) {
-								cin = post5[0].total;
-								ob = post5[0].openingBalance;
-							}
-							var totalStaff = await MerchantPosition.countDocuments({branch_id: user._id, type: 'staff'});
-							var totalCashier = await MerchantPosition.countDocuments({ branch_id: user._id, type: 'cashier'});
-								
-								res.status(200).json({
-									status: 1,
-									cash_in_hand: cin,
-									opening_balance: ob,
-									total_cashier: totalCashier,
-									total_staff: totalStaff,
-								});
-					}
+					async (err, post5) => {
+						let result = errorMessage(
+							err,
+							post5,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Invoice.aggregate(
+								[
+									{ $match :
+										{
+											branch_id: String(user._id),
+										}
+									}, 
+									{
+										$group: {
+											_id: null,
+											totalPenalty: {
+												$sum: "$penalty",
+											},
+											totalAmount: {
+												$sum: "$amount",
+											},
+										},
+									},
+
+								],
+								async (err, post6) => {
+									let result = errorMessage(
+										err,
+										post6,
+										"Error."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										let cin = 0;
+										let ob = 0;
+										let pc = 0;
+										let ta = 0;
+										if (
+											post5 != undefined &&
+											post5 != null &&
+											post5.length > 0
+										) {
+											cin = post5[0].total;
+											ob = post5[0].openingBalance;
+										}
+										if (
+											post6 != undefined &&
+											post6 != null &&
+											post6.length > 0
+										) {
+											pc = post6[0].totalPenalty;
+											ta = post6[0].totalAmount;
+										}
+										var totalStaff = await MerchantPosition.countDocuments({branch_id: user._id, type: 'staff'});
+										var totalCashier = await MerchantPosition.countDocuments({ branch_id: user._id, type: 'cashier'});
+										var totalInvoice = await Invoice.countDocuments({branch_id: user._id});
+										res.status(200).json({
+											status: 1,
+											cash_in_hand: cin,
+											opening_balance: ob,
+											total_cashier: totalCashier,
+											total_staff: totalStaff,
+											penalty_collected: pc,
+											amount_collected: ta,
+											invoice_raised: totalInvoice,
+										});
+									}
+								}
+							)
+
+
+
+							
+
+
+
+
+						}
+					}	
 				);
 			}
 		}
