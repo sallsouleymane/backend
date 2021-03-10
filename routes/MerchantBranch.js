@@ -212,6 +212,7 @@ router.post("/merchantBranch/getDashStats", jwtTokenAuth, function (req, res) {
 									{ $match :
 										{
 											branch_id: String(user._id),
+											paid: 1,
 										}
 									}, 
 									{
@@ -272,13 +273,6 @@ router.post("/merchantBranch/getDashStats", jwtTokenAuth, function (req, res) {
 									}
 								}
 							)
-
-
-
-							
-
-
-
 
 						}
 					}	
