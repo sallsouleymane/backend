@@ -11,6 +11,181 @@ const MerchantPosition = require("../models/merchant/Position");
 const Invoice = require("../models/merchant/Invoice");
 
 router.post("/merchantBranch/listInvoicesByDate", jwtTokenAuth, (req, res) => {
+	const { date } = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantBranch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, branch) {
+			let result = errorMessage(err, branch, "Branch is blocked");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.find(
+					{ branch_id: branch._id, bill_date: date },
+					(err, invoices) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								invoices: invoices,
+							});
+						}
+					}
+				);
+				
+			}
+		}
+	);
+});
+
+router.post("/merchantBranch/listInvoicesByPeriod", jwtTokenAuth, (req, res) => {
+	const { start_date, end_date } = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantBranch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, branch) {
+			let result = errorMessage(err, branch, "Branch is blocked");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.find(
+					{ 	branch_id: branch._id,
+						"bill_period.start_date":  {
+							$gte: start_date
+						},
+						"bill_period.end_date": {
+							$lte: end_date
+						},
+					},
+					(err, invoices) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								invoices: invoices,
+							});
+						}
+					}
+				);
+				
+			}
+		}
+	);
+});
+
+router.post("/merchantBranch/listInvoicesByDateRange", jwtTokenAuth, (req, res) => {
+	const { start_date, end_date } = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantBranch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, branch) {
+			let result = errorMessage(err, branch, "Branch is blocked");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.find(
+					{ 	branch_id: branch._id,
+						created_at: {
+							$gte: start_date,
+							$lte: end_date,
+						},
+					},
+					(err, invoices) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								invoices: invoices,
+							});
+						}
+					}
+				);
+				
+			}
+		}
+	);
+});
+
+router.post("/merchantBranch/getSettings", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	MerchantBranch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, branch) {
+			let result = errorMessage(err, branch, "Branch is blocked");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				MerchantSettings.findOne(
+					{ merchant_id: branch.merchant_id },
+					(err, setting) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (!setting) {
+							res.status(200).json({
+								status: 0,
+								message: "Setting Not found",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								setting: setting,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/merchantBranch/listStaffInvoicesByDate", jwtTokenAuth, (req, res) => {
 	const { date, staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantBranch.findOne(
