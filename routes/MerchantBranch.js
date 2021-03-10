@@ -157,11 +157,8 @@ router.get("/merchantBranch/todaysStatus", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/merchantBranch/getDashStats", jwtTokenAuth, function (req, res) {
-	var today = new Date();
-	today = today.toISOString();
-	var s = today.split("T");
-	var start = s[0] + "T00:00:00.000Z";
-	var end = s[0] + "T23:59:59.999Z";
+	const startOfDay = new Date(new Date().setUTCHours(0, 0, 0, 0)).toISOString()
+	const endOfDay = new Date(new Date().setUTCHours(23, 59, 59, 999)).toISOString()
 
 	const jwtusername = req.sign_creds.username;
 	MerchantBranch.findOne(
@@ -213,6 +210,10 @@ router.post("/merchantBranch/getDashStats", jwtTokenAuth, function (req, res) {
 										{
 											branch_id: String(user._id),
 											paid: 1,
+											date_paid : {
+												$gte: startOfDay, 
+												$lt: endOfDay
+											},
 										}
 									}, 
 									{
