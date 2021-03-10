@@ -66,7 +66,7 @@ router.get("/getClaimCode", function (req, res) {
 });
 
 router.post("/:user/listInvoicesByDate", jwtTokenAuth, (req, res) => {
-	const { date } = req.body;
+	const { date, staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
 	var User = getTypeClass(user);
@@ -97,8 +97,7 @@ router.post("/:user/listInvoicesByDate", jwtTokenAuth, (req, res) => {
 			} else {
 				Invoice.find(
 					{ 
-						creator_id: user==='merchantStaff' ? data._id : null,
-						branch_id: user==='merchantBranch' ? data._id : null,
+						creator_id: user==='merchantStaff' ? data._id : staff_id,
 						bill_date: date
 					},
 					(err, invoices) => {
@@ -127,7 +126,7 @@ router.post("/:user/listInvoicesByDate", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/:user/listStaffInvoicesByPeriod", jwtTokenAuth, (req, res) => {
-	const { start_date, end_date } = req.body;
+	const { start_date, end_date, staff_id} = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
 	var User = getTypeClass(user);
@@ -158,8 +157,7 @@ router.post("/:user/listStaffInvoicesByPeriod", jwtTokenAuth, (req, res) => {
 			} else {
 				Invoice.find(
 					{ 	
-						creator_id: user==='merchantStaff' ? data._id : null,
-						branch_id: user==='merchantBranch' ? data._id : null,
+						creator_id: user==='merchantStaff' ? data._id : staff_id,
 						"bill_period.start_date":  {
 							$gte: start_date
 						},
@@ -193,7 +191,7 @@ router.post("/:user/listStaffInvoicesByPeriod", jwtTokenAuth, (req, res) => {
 });
 
 router.post("/:user/listStaffInvoicesByDateRange", jwtTokenAuth, (req, res) => {
-	const { start_date, end_date } = req.body;
+	const { start_date, end_date, staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
 	var User = getTypeClass(user);
@@ -223,8 +221,7 @@ router.post("/:user/listStaffInvoicesByDateRange", jwtTokenAuth, (req, res) => {
 				res.status(200).json(result);
 			} else {
 				Invoice.find(
-					{ 	creator_id: user==='merchantStaff' ? data._id : null,
-						branch_id: user==='merchantBranch' ? data._id : null,
+					{ 	creator_id: user==='merchantStaff' ? data._id : staff_id,
 						created_at: {
 							$gte: start_date,
 							$lte: end_date,
