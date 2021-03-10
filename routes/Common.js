@@ -65,7 +65,7 @@ router.get("/getClaimCode", function (req, res) {
 	);
 });
 
-router.post("/:user/listInvoicesByDate", jwtTokenAuth, (req, res) => {
+router.post("/:user/listStaffInvoicesByDate", jwtTokenAuth, (req, res) => {
 	const { date, staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
