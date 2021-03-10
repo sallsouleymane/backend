@@ -6,6 +6,7 @@ const { errorMessage, catchError } = require("./utils/errorHandler");
 
 //models
 const MerchantBranch = require("../models/merchant/MerchantBranch");
+const MerchantSettings = require("../models/merchant/MerchantSettings");
 const MerchantStaff = require("../models/merchant/Staff");
 const MerchantPosition = require("../models/merchant/Position");
 const Invoice = require("../models/merchant/Invoice");
