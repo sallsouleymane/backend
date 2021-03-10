@@ -202,12 +202,36 @@ router.post("/merchantBranch/login", (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				let sign_creds = { username: username, type: "merchantBranch" };
-				const token = jwtsign(sign_creds);
-				res.status(200).json({
-					status: 1,
-					details: branch,
-					token: token,
+				Merchant.findOne({ _id: branch.merchant_id }, (err, merchant) => {
+					var result = errorMessage(err, merchant, "Merchant is blocked");
+					if (result.status == 0) {
+						res.status(200).json(result);
+					} else {
+						Bank.findOne(
+							{
+								_id: merchant.bank_id,
+							},(err, bank) => {
+								var result = errorMessage(
+									err,
+									bank,
+									"No bank is assigned to the merchant"
+								);
+								if (result.status == 0) {
+									res.status(200).json(result);
+								} else {
+									let sign_creds = { username: username, type: "merchantBranch" };
+									const token = jwtsign(sign_creds);
+									res.status(200).json({
+									status: 1,
+									details: branch,
+									merchant: merchant,
+									bank: bank,
+									token: token,
+									});
+								}
+							}
+						);
+					}
 				});
 			}
 		}
