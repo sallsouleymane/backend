@@ -42,6 +42,7 @@ const Partner = require("../models/partner/Partner");
 const PartnerBranch = require("../models/partner/Branch");
 const Invoice = require("../models/merchant/Invoice");
 const ClaimCode = require("../models/ClaimCode");
+const MerchantSettings = require("../models/merchant/MerchantSettings");
 
 router.get("/testGet", function (req, res) {
 	res.status(200).json({
@@ -60,6 +61,256 @@ router.get("/getClaimCode", function (req, res) {
 		},
 		function (err, cc) {
 			res.send(cc);
+		}
+	);
+});
+
+router.post("/:user/listInvoicesByDate", jwtTokenAuth, (req, res) => {
+	const { date } = req.body;
+	const jwtusername = req.sign_creds.username;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "merchantStaff") {
+		User = getTypeClass("merchantPosition");
+	} else if (user == "merchantBranch") {
+		User = getTypeClass("merchantBranch");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.find(
+					{ 
+						creator_id: user==='merchantStaff' ? data._id : null,
+						branch_id: user==='merchantBranch' ? data._id : null,
+						bill_date: date
+					},
+					(err, invoices) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								invoices: invoices,
+							});
+						}
+					}
+				);
+				
+			}
+		}
+	);
+});
+
+router.post("/:user/listStaffInvoicesByPeriod", jwtTokenAuth, (req, res) => {
+	const { start_date, end_date } = req.body;
+	const jwtusername = req.sign_creds.username;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "merchantStaff") {
+		User = getTypeClass("merchantPosition");
+	} else if (user == "merchantBranch") {
+		User = getTypeClass("merchantBranch");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.find(
+					{ 	
+						creator_id: user==='merchantStaff' ? data._id : null,
+						branch_id: user==='merchantBranch' ? data._id : null,
+						"bill_period.start_date":  {
+							$gte: start_date
+						},
+						"bill_period.end_date": {
+							$lte: end_date
+						},
+					},
+					(err, invoices) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								invoices: invoices,
+							});
+						}
+					}
+				);
+				
+			}
+		}
+	);
+});
+
+router.post("/:user/listStaffInvoicesByDateRange", jwtTokenAuth, (req, res) => {
+	const { start_date, end_date } = req.body;
+	const jwtusername = req.sign_creds.username;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "merchantStaff") {
+		User = getTypeClass("merchantPosition");
+	} else if (user == "merchantBranch") {
+		User = getTypeClass("merchantBranch");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.find(
+					{ 	creator_id: user==='merchantStaff' ? data._id : null,
+						branch_id: user==='merchantBranch' ? data._id : null,
+						created_at: {
+							$gte: start_date,
+							$lte: end_date,
+						},
+					},
+					(err, invoices) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								invoices: invoices,
+							});
+						}
+					}
+				);
+				
+			}
+		}
+	);
+});
+
+router.post("/:user/getMerchantSettings", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "merchantStaff") {
+		User = getTypeClass("merchantPosition");
+	} else if (user == "merchantBranch") {
+		User = getTypeClass("merchantBranch");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				MerchantSettings.findOne(
+					{ merchant_id: data.merchant_id },
+					(err, setting) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (!setting) {
+							res.status(200).json({
+								status: 0,
+								message: "Setting Not found",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								setting: setting,
+							});
+						}
+					}
+				);
+			}
 		}
 	);
 });
