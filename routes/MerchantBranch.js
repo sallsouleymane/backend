@@ -11,28 +11,25 @@ const MerchantStaff = require("../models/merchant/Staff");
 const MerchantPosition = require("../models/merchant/Position");
 const Invoice = require("../models/merchant/Invoice");
 
-router.get(
-	"/merchantBranch/cashierStats",
-	jwtTokenAuth,
-	function (req, res) {
-		const jwtusername = req.sign_creds.username;
-		const { cashier_id } = req.body;
-		var today = new Date();
-		today = today.toISOString();
-		var s = today.split("T");
-		var start = s[0] + "T00:00:00.000Z";
-		var end = s[0] + "T23:59:59.999Z";
-		MerchantBranch.findOne(
-			{
-				username: jwtusername,
-				status: 1,
-			},
-			function (err, branch) {
-				let result = errorMessage(err, branch, "Merchant branch is not valid");
-				if (result.status == 0) {
-					res.status(200).json(result);
-				} else {
-					MerchantPosition.findOne(
+router.get("/merchantBranch/cashierStats",jwtTokenAuth,function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { cashier_id } = req.body;
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	MerchantBranch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, branch) {
+			let result = errorMessage(err, branch, "Merchant branch is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				MerchantPosition.findOne(
 					{
 						_id: cashier_id,
 						type: "cashier",
@@ -44,50 +41,50 @@ router.get(
 						} else {
 							try {
 								let status = await Invoice.aggregate([
-									{
-										$match: {
-											payer_id: position._id.toString(),
-											paid_by: "MC",
-											paid: 1,
-											date_paid: {
-												$gte: new Date(
-													start
-												),
-												$lte: new Date(
-													end
-												),
+										{
+											$match: {
+												payer_id: position._id.toString(),
+												paid_by: "MC",
+												paid: 1,
+												date_paid: {
+													$gte: new Date(
+														start
+													),
+													$lte: new Date(
+														end
+													),
+												},
 											},
 										},
-									},
-									{
-										$group: {
-											_id: null,
-											amount_collected: { $sum: "$amount" },
-											penalty_collected: { $sum: "$penalty" },
-											bills_paid: { $sum: 1 },
+										{
+											$group: {
+												_id: null,
+												amount_collected: { $sum: "$amount" },
+												penalty_collected: { $sum: "$penalty" },
+												bills_paid: { $sum: 1 },
+											},
 										},
-									},
 								]);
 								if (status.length > 0) {
-									res.status(200).json({
-										status: 1,
-										message: "Today's Status",
-										bills_paid: status[0].bills_paid,
-										amount_collected: status[0].amount_collected,
-										penalty_collected: status[0].penalty_collected,
-										cash_in_hand: position.cash_in_hand,
-										opening_balance: position.opening_balance,
-									});
+										res.status(200).json({
+											status: 1,
+											message: "Today's Status",
+											bills_paid: status[0].bills_paid,
+											amount_collected: status[0].amount_collected,
+											penalty_collected: status[0].penalty_collected,
+											cash_in_hand: position.cash_in_hand,
+											opening_balance: position.opening_balance,
+										});
 								} else {
-									res.status(200).json({
-										status: 1,
-										message: "Today's Status",
-										bills_paid: 0,
-										amount_collected: 0,
-										penalty_collected: 0,
-										cash_in_hand: position.cash_in_hand,
-										opening_balance: position.opening_balance,
-									});
+										res.status(200).json({
+											status: 1,
+											message: "Today's Status",
+											bills_paid: 0,
+											amount_collected: 0,
+											penalty_collected: 0,
+											cash_in_hand: position.cash_in_hand,
+											opening_balance: position.opening_balance,
+										});
 								}
 							} catch (err) {
 								res.status(200).json(catchError(err));
@@ -96,8 +93,9 @@ router.get(
 					}
 				);
 			}
-	}
-);
+		}
+		);
+});
 
 router.post("/merchantBranch/listInvoicesByDate", jwtTokenAuth, (req, res) => {
 	const { date } = req.body;
