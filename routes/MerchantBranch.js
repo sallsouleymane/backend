@@ -82,6 +82,7 @@ router.post("/merchantBranch/cashierStats",jwtTokenAuth,function (req, res) {
 											penalty_collected: 0,
 											cash_in_hand: position.cash_in_hand,
 											opening_balance: position.opening_balance,
+											opening_time: position.opening_time,
 										});
 								}
 							} catch (err) {
