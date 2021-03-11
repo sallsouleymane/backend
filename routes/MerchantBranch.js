@@ -816,6 +816,43 @@ router.post("/merchantBranch/assignStaff", jwtTokenAuth, (req, res) => {
 	);
 });
 
+router.post("/merchantBranch/disassignStaff", jwtTokenAuth, (req, res) => {
+	const { position_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantBranch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, branch) {
+			let result = errorMessage(err, branch, "Branch is blocked");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				MerchantPosition.findOneAndUpdate(
+					{ _id: position_id, branch_id: branch._id },
+					{ staff_id: null, username: null },
+					(err, position) => {
+						let result = errorMessage(
+							err,
+							position,
+							"Position not found or role does not match"
+					);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Disassigned staff from position",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/merchantBranch/blockPosition", jwtTokenAuth, (req, res) => {
 	const { position_id } = req.body;
 	const jwtusername = req.sign_creds.username;
