@@ -124,8 +124,8 @@ router.post("/merchantBranch/staffStats",jwtTokenAuth,function (req, res) {
 									creator_id: position._id,
 									is_validated: 1,
 									created_at : {
-										$gte: startOfDay, 
-										$lt: endOfDay
+										$gte: start, 
+										$lt: end
 									},
 									group_id: group_id,
 								});
@@ -133,8 +133,8 @@ router.post("/merchantBranch/staffStats",jwtTokenAuth,function (req, res) {
 									creator_id: position._id,
 									paid: 1,
 									created_at : {
-										$gte: startOfDay, 
-										$lt: endOfDay
+										$gte: start, 
+										$lt: end
 									},
 									group_id: group_id,
 								});
@@ -142,8 +142,8 @@ router.post("/merchantBranch/staffStats",jwtTokenAuth,function (req, res) {
 									creator_id: position._id,
 									is_counter: true,
 									created_at : {
-										$gte: startOfDay, 
-										$lt: endOfDay
+										$gte: start, 
+										$lt: end
 									},
 									group_id: group_id,
 								});
