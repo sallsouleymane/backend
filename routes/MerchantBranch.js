@@ -11,7 +11,7 @@ const MerchantStaff = require("../models/merchant/Staff");
 const MerchantPosition = require("../models/merchant/Position");
 const Invoice = require("../models/merchant/Invoice");
 
-router.get("/merchantBranch/cashierStats",jwtTokenAuth,function (req, res) {
+router.post("/merchantBranch/cashierStats",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { cashier_id } = req.body;
 	var today = new Date();
