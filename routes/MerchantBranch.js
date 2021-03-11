@@ -71,6 +71,7 @@ router.post("/merchantBranch/cashierStats",jwtTokenAuth,function (req, res) {
 											penalty_collected: status[0].penalty_collected,
 											cash_in_hand: position.cash_in_hand,
 											opening_balance: position.opening_balance,
+											opening_time: position.opening_time,
 										});
 								} else {
 										res.status(200).json({
