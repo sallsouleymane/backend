@@ -587,7 +587,23 @@ router.post("/merchantBranch/getDashStats", jwtTokenAuth, function (req, res) {
 										}
 										var totalStaff = await MerchantPosition.countDocuments({branch_id: user._id, type: 'staff'});
 										var totalCashier = await MerchantPosition.countDocuments({ branch_id: user._id, type: 'cashier'});
-										var totalInvoice = await Invoice.countDocuments({branch_id: user._id});
+										var totalInvoice = await Invoice.countDocuments(
+											{
+												branch_id: user._id,
+												created_at: {
+													$gte: startOfDay, 
+													$lt: endOfDay
+												},
+											});
+										var totalInvoicePaid = await Invoice.countDocuments(
+											{
+												branch_id: user._id,
+												created_at: {
+													$gte: startOfDay, 
+													$lt: endOfDay
+												},
+												paid:1,
+											});
 										res.status(200).json({
 											status: 1,
 											cash_in_hand: cin,
@@ -597,6 +613,7 @@ router.post("/merchantBranch/getDashStats", jwtTokenAuth, function (req, res) {
 											penalty_collected: pc,
 											amount_collected: ta,
 											invoice_raised: totalInvoice,
+											invoice_paid: totalInvoicePaid
 										});
 									}
 								}
