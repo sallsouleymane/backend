@@ -11,7 +11,7 @@ const getTypeClass = require("../../../routes/utils/getTypeClass");
 
 //transaction
 const execute = require("../services/execute.js");
-const qname = require("../queueName");
+const qname = require("../constants/queueName");
 
 module.exports = async function (transfer, bank, branch, rule1) {
 	try {
@@ -256,7 +256,7 @@ function getPart(txInfo, masterId, childIds, otherIds) {
 function getAllShares(transfer, rule) {
 	let exclusiveAmount = transfer.amount;
 	if (transfer.isInclusive) {
-		exclusiveAmount = amount - transfer.fee;
+		exclusiveAmount = transfer.amount - transfer.fee;
 	}
 	let claimerShare = 0;
 	if (transfer.fee > 0) {

@@ -107,7 +107,7 @@ async function sendFailureMail(transaction) {
 
 async function saveTxState(transaction, res) {
 	try {
-		//update transaction state
+		//update status of retried child transaction
 		let txstate = await TxState.findOneAndUpdate(
 			{
 				_id: transaction.master_code,
@@ -125,6 +125,8 @@ async function saveTxState(transaction, res) {
 				},
 			}
 		);
+
+		//update status new child transaction
 		if (txstate == null) {
 			await TxState.updateOne(
 				{

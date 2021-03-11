@@ -170,7 +170,7 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 																										.json(catchError(err));
 																								} else {
 																									txstate.waitingForCompletion(
-																										transfer.master_code
+																										master_code
 																									);
 																									res.status(200).json({
 																										status: 1,
@@ -181,14 +181,12 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 																							}
 																						);
 																					} else {
-																						txstate.failed(
-																							transfer.master_code
-																						);
+																						txstate.failed(master_code);
 																						res.status(200).json(result);
 																					}
 																				})
 																				.catch((err) => {
-																					txstate.failed(transfer.master_code);
+																					txstate.failed(master_code);
 																					res.status(200).json(catchError(err));
 																				});
 																		}
@@ -577,7 +575,7 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 																														catchError(err)
 																													);
 																											} else {
-																												txstate.reported(
+																												txstate.completed(
 																													master_code
 																												);
 																												res.status(200).json({
@@ -796,7 +794,7 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 																															catchError(err)
 																														);
 																												} else {
-																													txstate.reported(
+																													txstate.completed(
 																														master_code
 																													);
 																													res.status(200).json({
@@ -965,7 +963,7 @@ module.exports.cashierSendToOperational = async function (req, res) {
 																									.status(200)
 																									.json(catchError(err));
 																							} else {
-																								txstate.reported(master_code);
+																								txstate.completed(master_code);
 																								res.status(200).json({
 																									status: 1,
 																									message:
@@ -1163,7 +1161,7 @@ module.exports.partnerSendToOperational = async function (req, res) {
 																														catchError(err)
 																													);
 																											} else {
-																												txstate.reported(
+																												txstate.completed(
 																													master_code
 																												);
 																												res.status(200).json({

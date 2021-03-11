@@ -5,6 +5,8 @@ const { calculateShare } = require("../../../routes/utils/calculateShare");
 // transaction services
 const txstate = require("../services/states");
 const execute = require("../services/execute.js");
+const qname = require("../constants/queueName");
+const queueName = require("../constants/queueName");
 
 module.exports = async function (
 	transfer,
@@ -16,21 +18,22 @@ module.exports = async function (
 ) {
 	try {
 		transfer = getAllShares(transfer, rule);
-		
-		var balance = await blockchain.getBalance(branch.wallet_ids.operational);
+
 		//Check balance first
-		if (Number(balance) < transfer.exclusiveAmount + fee) {
+		var balance = await blockchain.getBalance(branch.wallet_ids.operational);
+		if (Number(balance) < transfer.exclusiveAmount + transfer.fee) {
 			return {
 				status: 0,
 				message: "Not enough balance in branch operational wallet",
 			};
 		}
 
+		// amount and fee transfer is a synchronous transaction
 		let trans = [
 			{
 				from: branch.wallet_ids.operational,
 				to: toBranch.wallet_ids.operational,
-				amount: amount,
+				amount: transfer.exclusiveAmount,
 				note: "Transfer to " + toBranch.name + " Operational Wallet",
 				email1: branch.email,
 				email2: toBranch.email,
@@ -40,27 +43,18 @@ module.exports = async function (
 				to_name: toBranch.name,
 				sender_id: "",
 				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code + "-s1",
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + "-s1",
 				created_at: new Date(),
 			},
 		];
-		let res = await execute(trans);
-		if (res.status == 0) {
-			return {
-				status: 0,
-				message: "Transaction failed!",
-				blockchain_message: res.message,
-			};
-		}
-		transfer.fee = fee;
-		var sendFee = 0;
-		if (fee > 0) {
-			let trans = [
+
+		if (transfer.fee > 0) {
+			trans.push([
 				{
 					from: branch.wallet_ids.operational,
 					to: bank.wallet_ids.operational,
-					amount: fee,
+					amount: transfer.fee,
 					note: "Cashier Send Fee Non Wallet to Operational Transaction",
 					email1: branch.email,
 					email2: bank.email,
@@ -70,60 +64,46 @@ module.exports = async function (
 					to_name: bank.name,
 					sender_id: "",
 					receiver_id: "",
-					master_code: master_code,
-					child_code: master_code + "-s2",
+					master_code: transfer.master_code,
+					child_code: transfer.master_code + "-s2",
 					created_at: new Date(),
 				},
-			];
-
-			res = await execute(trans);
-			if (res.status == 0) {
-				return {
-					status: 0,
-					message: "Transaction failed!",
-					blockchain_message: res.message,
-				};
-			}
-			sendFee = calculateShare(
-				transfer.senderType,
-				transfer.amount,
-				rule,
-				{},
-				transfer.senderCode
-			);
-			transfer.sendFee = sendFee;
+			]);
 		}
-		transfer.master_code = master_code;
-		distributeRevenue(transfer, infra, bank, branch, rule);
 
+		let res = await execute(trans);
+		if (res.status == 0) {
+			return {
+				status: 0,
+				message: "Transaction failed - " + res.message,
+			};
+		}
+
+		distributeRevenue(transfer, infra, bank, branch);
 		return {
 			status: 1,
 			message: "Transaction success!",
-			amount: amount,
-			fee: fee,
-			sendFee: sendFee,
+			amount: transfer.exclusiveAmount,
+			fee: transfer.fee,
+			sendFee: transfer.senderShare,
 		};
 	} catch (err) {
 		throw err;
 	}
 };
 
-async function distributeRevenue(transfer, infra, bank, branch, rule) {
+async function distributeRevenue(transfer, infra, bank, branch) {
 	const branchOpWallet = branch.wallet_ids.operational;
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 
-	var infraShare = calculateShare("infra", transfer.amount, rule);
 	let allTxSuccess = true;
-	transfer.infraShare = infraShare;
-	let master_code = transfer.master_code;
-
-	if (infraShare.percentage_amount > 0) {
+	if (transfer.infraShare.percentage_amount > 0) {
 		let trans = [
 			{
 				from: bankOpWallet,
 				to: infraOpWallet,
-				amount: infraShare.percentage_amount,
+				amount: transfer.infraShare.percentage_amount,
 				note: "Cashier Send percentage Infra Fee",
 				email1: bank.email,
 				email2: infra.email,
@@ -133,12 +113,12 @@ async function distributeRevenue(transfer, infra, bank, branch, rule) {
 				to_name: infra.name,
 				sender_id: "",
 				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code + "-s3",
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + "-s3",
 				created_at: new Date(),
 			},
 		];
-		let res = await execute(trans);
+		let res = await execute(trans, qname.infra_percent);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -164,7 +144,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule) {
 				created_at: new Date(),
 			},
 		];
-		let res = await execute(trans);
+		let res = await execute(trans, qname.infra_fixed);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -191,26 +171,14 @@ async function distributeRevenue(transfer, infra, bank, branch, rule) {
 			},
 		];
 
-		let res = await execute(trans);
+		let res = await execute(trans, qname.send_fee);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
 	}
 
 	if (allTxSuccess) {
-		txstate.nearCompletion(master_code);
-		let res = await transferToMasterWallets(transfer, infra, bank, branch);
-
-		if (res.status == 1) {
-			txstate.completed(master_code);
-		}
-		return res;
-	} else {
-		txstate.failed(master_code);
-		return {
-			status: 0,
-			message: "Not all transactions are success, please check",
-		};
+		transferToMasterWallets(transfer, infra, bank, branch);
 	}
 }
 
@@ -227,7 +195,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 
 		let infraPart =
 			transfer.infraShare.percentage_amount + transfer.infraShare.fixed_amount;
-		let sendBranchPart = transfer.sendFee;
+		let sendBranchPart = transfer.senderShare;
 		let bankPart =
 			transfer.fee - transfer.infraShare.percentage_amount - sendBranchPart;
 
@@ -250,7 +218,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 				created_at: new Date(),
 			},
 		];
-		let result = await execute(trans);
+		let result = await execute(trans, queueName.bank_master);
 		if (result.status == 0) {
 			txStatus = 0;
 		}
@@ -272,7 +240,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 				created_at: new Date(),
 			},
 		];
-		result = await execute(trans);
+		result = await execute(trans, queueName.infra_master);
 		if (result.status == 0) {
 			txStatus = 0;
 		}
@@ -294,7 +262,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 				created_at: new Date(),
 			},
 		];
-		result = await execute(trans);
+		result = await execute(trans, queueName.send_master);
 		if (result.status == 0) {
 			txStatus = 0;
 		}

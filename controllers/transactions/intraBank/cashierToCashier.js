@@ -3,7 +3,7 @@
 const blockchain = require("../../../services/Blockchain.js");
 const { calculateShare } = require("../../../routes/utils/calculateShare");
 const execute = require("../services/execute.js");
-const qname = require("../queueName");
+const qname = require("../constants/queueName");
 
 module.exports = async function (transfer, infra, bank, branch, rule) {
 	try {
@@ -140,7 +140,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 		execute(trans, qname.infra_fixed);
 	}
 
-	if (fee > 0) {
+	if (transfer.fee > 0) {
 		trans = [
 			{
 				from: bankOpWallet,

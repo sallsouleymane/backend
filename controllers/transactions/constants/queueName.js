@@ -10,6 +10,7 @@ const CLAIMMASTER = "CLAIMMASTER";
 const SENDMASTER = "SENDMASTER";
 const PARTNERSHARE = "PARTNERSHARE";
 const GENERAL = "GENERAL";
+const REVERT = "REVERT";
 
 module.exports = {
 	fee: FEE,
@@ -24,4 +25,5 @@ module.exports = {
 	send_master: SENDMASTER,
 	partner_share: PARTNERSHARE,
 	general: GENERAL,
+	revert: REVERT,
 };

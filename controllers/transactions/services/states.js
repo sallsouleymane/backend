@@ -1,7 +1,13 @@
 const TxState = require("../../../models/TxState");
-const blockchain = require("../../../services/Blockchain");
 
-module.exports.initiate = async function (bank_id, tx_type, payer_id = "", cash_in_hand = 0, amount = 0, description) {
+module.exports.initiate = async function (
+	bank_id,
+	tx_type,
+	payer_id = "",
+	cash_in_hand = 0,
+	amount = 0,
+	description
+) {
 	try {
 		console.log("Transaction initiated");
 		let tx = new TxState();
@@ -39,16 +45,6 @@ module.exports.waitingForCompletion = async function (master_code) {
 	}
 };
 
-module.exports.nearCompletion = async function (master_code) {
-	try {
-		console.log("Transaction near to completion");
-		let tx = { state: "NEAR" };
-		await TxState.updateOne({ _id: master_code }, tx);
-	} catch (err) {
-		throw err;
-	}
-};
-
 module.exports.failed = async function (master_code, cash_in_hand = 0) {
 	try {
 		console.log("Transaction failed");
@@ -59,20 +55,13 @@ module.exports.failed = async function (master_code, cash_in_hand = 0) {
 	}
 };
 
-module.exports.completed = async function completed(master_code, cash_in_hand = 0) {
+module.exports.completed = async function completed(
+	master_code,
+	cash_in_hand = 0
+) {
 	try {
 		console.log("Transaction Completed");
-		let tx = { state: "DONE", cash_in_hand: cash_in_hand };
-		await TxState.updateOne({ _id: master_code }, tx);
-	} catch (err) {
-		throw err;
-	}
-};
-
-module.exports.reported = async function reported(master_code) {
-	try {
-		console.log("Transaction Reported");
-		let tx = { state: "REPORTED" };
+		let tx = { state: "COMPLETED", cash_in_hand: cash_in_hand };
 		await TxState.updateOne({ _id: master_code }, tx);
 	} catch (err) {
 		throw err;
@@ -80,14 +69,14 @@ module.exports.reported = async function reported(master_code) {
 };
 
 module.exports.cancelled = async function (master_code) {
-	let tx = {
-		master_code: master_code,
-		state: "CANCEl",
-	};
-	TxState.updateById(master_code, tx, function (err, txstate) {
-		if (err) throw err;
-		txstate.transaction.amount = -txstate.transaction.amount;
-		txstate.transaction.note = "Reverted amount";
-		blockchain.initiateTransfer(txstate.transaction);
-	});
+	try {
+		console.log("Transaction Cancelled");
+		let tx = {
+			master_code: master_code,
+			state: "CANCELLED",
+		};
+		await TxState.updateOne({ _id: master_code }, tx);
+	} catch (err) {
+		throw err;
+	}
 };

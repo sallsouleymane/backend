@@ -287,11 +287,17 @@ module.exports.cashierClaimMoney = function (req, res) {
 																									}
 																								);
 																							} else {
+																								txstate.failed(
+																									sendRecord.master_code
+																								);
 																								console.log(result.toString());
 																								res.status(200).json(result);
 																							}
 																						})
 																						.catch((err) => {
+																							txstate.failed(
+																								sendRecord.master_code
+																							);
 																							console.log(err);
 																							res.status(200).json({
 																								status: 0,

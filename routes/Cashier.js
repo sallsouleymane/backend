@@ -36,7 +36,18 @@ const MerchantSettings = require("../models/merchant/MerchantSettings");
 //controllers
 const cashSendTransCntrl = require("../controllers/cashier/sendTransaction");
 const cashClaimTransCntrl = require("../controllers/cashier/claimTransaction");
+const cashCancelTransCntrl = require("../controllers/cashier/cancelTransaction");
 
+router.post(
+	"/cashier/sendCancelRequestForApproval",
+	jwtTokenAuth,
+	cashCancelTransCntrl.sendForApproval
+);
+router.post(
+	"/cashier/cancelTransaction",
+	jwtTokenAuth,
+	cashCancelTransCntrl.cashierCancelTransaction
+);
 router.post(
 	"/cashier/sendToOperational",
 	jwtTokenAuth,

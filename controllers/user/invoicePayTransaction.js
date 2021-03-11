@@ -123,7 +123,7 @@ module.exports = async (req, res) => {
 													throw new Error(status);
 												}
 
-												txstate.reported(master_code);
+												txstate.completed(master_code);
 												res.status(200).json(result);
 											} else {
 												res.status(200).json(result);

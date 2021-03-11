@@ -5,33 +5,28 @@ const {
 	calculateShare,
 } = require("../../../routes/utils/calculateShare");
 const execute = require("../services/execute.js");
+const queueName = require("../constants/queueName.js");
 
-module.exports = async function (transfer, infra, bank, sender, rule1) {
+module.exports = async function (transfer, infra, bank, sender, rule) {
 	try {
 		const senderWallet = sender.wallet_id;
 		const bankEsWallet = bank.wallet_ids.escrow;
+		const bankOpWallet = bank.wallet_ids.operational;
 
-		// first transaction
-		var amount = Number(transfer.amount);
-		var fee = calculateShare("bank", transfer.amount, rule1);
-		if (transfer.isInclusive) {
-			amount = amount - fee;
-		}
+		transfer = getAllShares(transfer, rule);
 
 		var balance = await blockchain.getBalance(senderWallet);
 
 		//Check balance first
-		if (Number(balance) < amount + fee) {
+		if (Number(balance) < transfer.exclusiveAmount + transfer.fee) {
 			throw new Error("Not enough balance in user's wallet");
 		}
 
-		let master_code = transfer.master_code;
-
-		let trans1 = [
+		let trans = [
 			{
 				from: senderWallet,
 				to: bankEsWallet,
-				amount: amount,
+				amount: transfer.amount,
 				note: "Transferred Money to " + transfer.receiverFamilyName,
 				email1: sender.email,
 				email2: bank.email,
@@ -41,12 +36,35 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 				to_name: bank.name,
 				sender_id: "",
 				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code + "-s1",
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + "-s1",
 				created_at: new Date(),
 			},
 		];
-		var result = await execute(trans1);
+
+		if (transfer.fee > 0) {
+			trans.push([
+				{
+					from: senderWallet,
+					to: bankOpWallet,
+					amount: transfer.fee,
+					note: "Bank Fee",
+					email1: sender.email,
+					email2: bank.email,
+					mobile1: sender.mobile,
+					mobile2: bank.mobile,
+					from_name: sender.name,
+					to_name: bank.name,
+					sender_id: "",
+					receiver_id: "",
+					master_code: transfer.master_code,
+					child_code: transfer.master_code + "-s2",
+					created_at: new Date(),
+				},
+			]);
+		}
+
+		var result = await execute(trans);
 
 		// return response
 		if (result.status == 0) {
@@ -57,60 +75,29 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 			};
 		}
 
-		transfer.fee = fee;
-		distributeRevenue(transfer, infra, bank, sender, rule1);
+		distributeRevenue(transfer, infra, bank);
 		return {
 			status: 1,
 			message: "Transaction success!",
 			balance: balance,
-			amount: amount,
-			fee: fee,
+			amount: transfer.exclusiveAmount,
+			fee: transfer.fee,
 		};
 	} catch (err) {
 		throw err;
 	}
 };
 
-async function distributeRevenue(transfer, infra, bank, sender, rule1) {
-	const senderWallet = sender.wallet_id;
+async function distributeRevenue(transfer, infra, bank) {
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 
-	let fee = transfer.fee;
-	var infraShare = calculateShare("infra", transfer.amount, rule1);
-	let allTxSuccess = true;
-
-	if (fee > 0) {
-		const trans2 = [
-			{
-				from: senderWallet,
-				to: bankOpWallet,
-				amount: fee,
-				note: "Bank Fee",
-				email1: sender.email,
-				email2: bank.email,
-				mobile1: sender.mobile,
-				mobile2: bank.mobile,
-				from_name: sender.name,
-				to_name: bank.name,
-				sender_id: "",
-				receiver_id: "",
-				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s2",
-				created_at: new Date(),
-			},
-		];
-		let res = await execute(trans2);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
-	}
-	if (infraShare.percentage_amount > 0) {
+	if (transfer.infraShare.percentage_amount > 0) {
 		let trans21 = [
 			{
 				from: bankOpWallet,
 				to: infraOpWallet,
-				amount: infraShare.percentage_amount,
+				amount: transfer.infraShare.percentage_amount,
 				note:
 					"Bank Send Infra Percentage amount for Inter Bank Wallet to Non Wallet transaction",
 				email1: bank.email,
@@ -126,18 +113,15 @@ async function distributeRevenue(transfer, infra, bank, sender, rule1) {
 				created_at: new Date(),
 			},
 		];
-		let res = await execute(trans21);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
+		execute(trans21, queueName.infra_percent);
 	}
 
-	if (infraShare.fixed_amount > 0) {
+	if (transfer.infraShare.fixed_amount > 0) {
 		let trans22 = [
 			{
 				from: bankOpWallet,
 				to: infraOpWallet,
-				amount: infraShare.fixed_amount,
+				amount: transfer.infraShare.fixed_amount,
 				note:
 					"Bank Send Infra Fixed amount for Inter Bank Non Wallet to Non Wallet transaction",
 				email1: bank.email,
@@ -153,14 +137,21 @@ async function distributeRevenue(transfer, infra, bank, sender, rule1) {
 				created_at: new Date(),
 			},
 		];
-		let res = await execute(trans22);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
+		execute(trans22, queueName.infra_fixed);
 	}
-	if (!allTxSuccess) {
-		txstate.failed(transfer.master_code);
-	} else {
-		txstate.waitingForCompletion(master_code);
+}
+
+function getAllShares(transfer, rule) {
+	let amount = transfer.amount;
+	let exclusiveAmount = amount;
+	var fee = calculateShare("bank", amount, rule);
+	if (transfer.isInclusive) {
+		exclusiveAmount = amount - fee;
 	}
+	let infraShare = calculateShare("infra", amount, rule);
+
+	transfer.exclusiveAmount = exclusiveAmount;
+	transfer.fee = fee;
+	transfer.infraShare = infraShare;
+	return transfer;
 }

@@ -195,10 +195,12 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 																				}
 																			);
 																		} else {
+																			txstate.failed(master_code);
 																			res.status(200).json(result);
 																		}
 																	})
 																	.catch((err) => {
+																		txstate.failed(master_code);
 																		console.log(err);
 																		res.status(200).json({
 																			status: 0,
@@ -319,7 +321,7 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 																.then(function (result) {
 																	console.log("Result: " + result);
 																	if (result.status == 1) {
-																		txstate.reported(master_code);
+																		txstate.completed(master_code);
 																		res.status(200).json({
 																			status: 1,
 																			message:

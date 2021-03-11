@@ -20,6 +20,7 @@ const TxStateSchema = new mongoose.Schema({
 			retry_at: { type: Date, required: false, default: Date.now },
 		},
 	],
+	cancel_approval: { type: String, required: false },
 	createdAt: { type: Date, required: true, default: Date.now },
 });
 module.exports = mongoose.model("TxState", TxStateSchema);

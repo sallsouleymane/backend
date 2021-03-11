@@ -57,7 +57,6 @@ module.exports = (req, res) => {
 								cashier.cash_in_hand,
 								total_amount,
 								description
-
 							);
 							MerchantRule.findOne(
 								{
@@ -147,7 +146,7 @@ module.exports = (req, res) => {
 													throw new Error(status);
 												}
 												//update cash in hand
-												txstate.reported(master_code);
+												txstate.completed(master_code);
 												res.status(200).json(result);
 											} else {
 												res.status(200).json(result);
