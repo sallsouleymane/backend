@@ -29,11 +29,8 @@ router.post("/merchantBranch/cashierStats",jwtTokenAuth,function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				MerchantPosition.findOne(
-					{
-						_id: cashier_id,
-						type: "cashier",
-					},
+				MerchantPosition.findById (
+					cashier_id,
 					async function (err, position) {
 						let result = errorMessage(err, position, "Position is not valid");
 						if (result.status == 0) {
