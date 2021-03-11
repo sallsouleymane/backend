@@ -127,7 +127,6 @@ router.post("/merchantBranch/staffStats",jwtTokenAuth,function (req, res) {
 										$gte: start, 
 										$lt: end
 									},
-									group_id: group_id,
 								});
 								let bills_paid = await Invoice.countDocuments({
 									creator_id: position._id,
@@ -136,7 +135,6 @@ router.post("/merchantBranch/staffStats",jwtTokenAuth,function (req, res) {
 										$gte: start, 
 										$lt: end
 									},
-									group_id: group_id,
 								});
 								let counter_invoices = await Invoice.countDocuments({
 									creator_id: position._id,
@@ -145,7 +143,6 @@ router.post("/merchantBranch/staffStats",jwtTokenAuth,function (req, res) {
 										$gte: start, 
 										$lt: end
 									},
-									group_id: group_id,
 								});
 								res.status(200).json({
 									status: 1,
