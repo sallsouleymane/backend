@@ -72,6 +72,9 @@ router.post("/merchantBranch/cashierStats",jwtTokenAuth,function (req, res) {
 											cash_in_hand: position.cash_in_hand,
 											opening_balance: position.opening_balance,
 											opening_time: position.opening_time,
+											closing_time: position.closing_time,
+											discrepancy: position.discrepancy,
+											closing_balance: position.closing_balance,
 										});
 								} else {
 										res.status(200).json({
@@ -83,6 +86,9 @@ router.post("/merchantBranch/cashierStats",jwtTokenAuth,function (req, res) {
 											cash_in_hand: position.cash_in_hand,
 											opening_balance: position.opening_balance,
 											opening_time: position.opening_time,
+											closing_time: position.closing_time,
+											discrepancy: position.discrepancy,
+											closing_balance: position.closing_balance,
 										});
 								}
 							} catch (err) {
@@ -122,13 +128,23 @@ router.post("/merchantBranch/staffStats",jwtTokenAuth,function (req, res) {
 							res.status(200).json(result);
 						} else {
 							try {
-								let bills_raised = await Invoice.countDocuments({
+								let bills_created = await Invoice.countDocuments({
 									creator_id: position._id,
 									is_validated: 1,
 									created_at : {
 										$gte: start, 
 										$lt: end
 									},
+									iis_created:1,
+								});
+								let bills_uploaded = await Invoice.countDocuments({
+									creator_id: position._id,
+									is_validated: 1,
+									created_at : {
+										$gte: start, 
+										$lt: end
+									},
+									iis_created:0,
 								});
 								let bills_paid = await Invoice.countDocuments({
 									creator_id: position._id,
@@ -150,8 +166,11 @@ router.post("/merchantBranch/staffStats",jwtTokenAuth,function (req, res) {
 									status: 1,
 									message: "Today's Status",
 									bills_paid: bills_paid,
-									bills_raised: bills_raised,
+									bills_created: bills_created,
+									bills_uploaded: bills_uploaded,
 									counter_invoices: counter_invoices,
+									opening_time: position.opening_time,
+									closing_time: position.closing_time,
 								});
 							} catch (err) {
 								res.status(200).json(catchError(err));
