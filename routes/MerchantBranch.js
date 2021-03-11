@@ -94,6 +94,77 @@ router.post("/merchantBranch/cashierStats",jwtTokenAuth,function (req, res) {
 		);
 });
 
+router.post("/merchantBranch/staffStats",jwtTokenAuth,function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { staff_id } = req.body;
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	MerchantBranch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, branch) {
+			let result = errorMessage(err, branch, "Merchant branch is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				MerchantPosition.findById(
+					staff_id,
+					async function (err, position) {
+						let result = errorMessage(err, position, "Position is not valid");
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							try {
+								let bills_raised = await Invoice.countDocuments({
+									creator_id: position._id,
+									is_validated: 1,
+									created_at : {
+										$gte: startOfDay, 
+										$lt: endOfDay
+									},
+									group_id: group_id,
+								});
+								let bills_paid = await Invoice.countDocuments({
+									creator_id: position._id,
+									paid: 1,
+									created_at : {
+										$gte: startOfDay, 
+										$lt: endOfDay
+									},
+									group_id: group_id,
+								});
+								let counter_invoices = await Invoice.countDocuments({
+									creator_id: position._id,
+									is_counter: true,
+									created_at : {
+										$gte: startOfDay, 
+										$lt: endOfDay
+									},
+									group_id: group_id,
+								});
+								res.status(200).json({
+									status: 1,
+									message: "Today's Status",
+									bills_paid: bills_paid,
+									bills_raised: bills_raised,
+									counter_invoices: counter_invoices,
+								});
+							} catch (err) {
+								res.status(200).json(catchError(err));
+							}
+						}
+					}
+				);
+			}
+		}
+		);
+});
+
 router.post("/merchantBranch/listInvoicesByDate", jwtTokenAuth, (req, res) => {
 	const { date } = req.body;
 	const jwtusername = req.sign_creds.username;
