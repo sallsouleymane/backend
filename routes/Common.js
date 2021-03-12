@@ -495,6 +495,324 @@ router.post("/:user/listMerchantBranchInvoicesByDate", jwtTokenAuth, (req, res) 
 	);
 });
 
+router.get("/:user/listMerchantStaff", jwtTokenAuth, (req, res) => {
+	const jwtusername = req.sign_creds.username;
+	const { branch_id } = req.body;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "merchantBranch") {
+		User = getTypeClass("merchantBranch");
+	} else if (user == "merchant") {
+		User = getTypeClass("merchant");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				MerchantStaff.find({
+					branch_id: user === 'merchantBranch' ? data._id : branch_id,
+				}, (err, staffs) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Staffs list",
+							staffs: staffs,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.get("/:user/listMerchantPosition", jwtTokenAuth, (req, res) => {
+	const jwtusername = req.sign_creds.username;
+	const { branch_id } = req.body;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "merchantBranch") {
+		User = getTypeClass("merchantBranch");
+	} else if (user == "merchant") {
+		User = getTypeClass("merchant");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				MerchantPosition.find({
+					branch_id: user === 'merchantBranch' ? data._id : branch_id,
+				}, (err, positions) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "ositions list",
+							positions: positions,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/:user/merchantCashierStats",jwtTokenAuth,function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { cashier_id } = req.body;
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "merchantBranch") {
+		User = getTypeClass("merchantBranch");
+	} else if (user == "merchant") {
+		User = getTypeClass("merchant");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				MerchantPosition.findById(
+					cashier_id,
+					async function (err, position) {
+						let result = errorMessage(err, position, "Position is not valid");
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							try {
+								let status = await Invoice.aggregate([
+										{
+											$match: {
+												payer_id: position._id.toString(),
+												paid_by: "MC",
+												paid: 1,
+												date_paid: {
+													$gte: new Date(
+														start
+													),
+													$lte: new Date(
+														end
+													),
+												},
+											},
+										},
+										{
+											$group: {
+												_id: null,
+												amount_collected: { $sum: "$amount" },
+												penalty_collected: { $sum: "$penalty" },
+												bills_paid: { $sum: 1 },
+											},
+										},
+								]);
+								if (status.length > 0) {
+										res.status(200).json({
+											status: 1,
+											message: "Today's Status",
+											bills_paid: status[0].bills_paid,
+											amount_collected: status[0].amount_collected,
+											penalty_collected: status[0].penalty_collected,
+											cash_in_hand: position.cash_in_hand,
+											opening_balance: position.opening_balance,
+											opening_time: position.opening_time,
+											closing_time: position.closing_time,
+											discrepancy: position.discrepancy,
+											closing_balance: position.closing_balance,
+										});
+								} else {
+										res.status(200).json({
+											status: 1,
+											message: "Today's Status",
+											bills_paid: 0,
+											amount_collected: 0,
+											penalty_collected: 0,
+											cash_in_hand: position.cash_in_hand,
+											opening_balance: position.opening_balance,
+											opening_time: position.opening_time,
+											closing_time: position.closing_time,
+											discrepancy: position.discrepancy,
+											closing_balance: position.closing_balance,
+										});
+								}
+							} catch (err) {
+								res.status(200).json(catchError(err));
+							}
+						}
+					}
+				);
+			}
+		}
+		);
+});
+
+router.post("/:user/merchantStaffStats",jwtTokenAuth,function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { staff_id } = req.body;
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "merchantBranch") {
+		User = getTypeClass("merchantBranch");
+	} else if (user == "merchant") {
+		User = getTypeClass("merchant");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				MerchantPosition.findById(
+					staff_id,
+					async function (err, position) {
+						let result = errorMessage(err, position, "Position is not valid");
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							try {
+								let bills_created = await Invoice.countDocuments({
+									creator_id: position._id,
+									is_validated: 1,
+									created_at : {
+										$gte: start, 
+										$lt: end
+									},
+									iis_created:1,
+								});
+								let bills_uploaded = await Invoice.countDocuments({
+									creator_id: position._id,
+									is_validated: 1,
+									created_at : {
+										$gte: start, 
+										$lt: end
+									},
+									iis_created:0,
+								});
+								let bills_paid = await Invoice.countDocuments({
+									creator_id: position._id,
+									paid: 1,
+									created_at : {
+										$gte: start, 
+										$lt: end
+									},
+								});
+								let counter_invoices = await Invoice.countDocuments({
+									creator_id: position._id,
+									is_counter: true,
+									created_at : {
+										$gte: start, 
+										$lt: end
+									},
+								});
+								res.status(200).json({
+									status: 1,
+									message: "Today's Status",
+									bills_paid: bills_paid,
+									bills_created: bills_created,
+									bills_uploaded: bills_uploaded,
+									counter_invoices: counter_invoices,
+									opening_time: position.opening_time,
+									closing_time: position.closing_time,
+								});
+							} catch (err) {
+								res.status(200).json(catchError(err));
+							}
+						}
+					}
+				);
+			}
+		}
+		);
+});
+
 router.post("/:user/listMerchantBranchInvoicesByPeriod", jwtTokenAuth, (req, res) => {
 	const { start_date, end_date, branch_id } = req.body;
 	const jwtusername = req.sign_creds.username;
