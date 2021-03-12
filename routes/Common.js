@@ -495,7 +495,7 @@ router.post("/:user/listMerchantBranchInvoicesByDate", jwtTokenAuth, (req, res) 
 	);
 });
 
-router.get("/:user/listMerchantStaff", jwtTokenAuth, (req, res) => {
+router.post("/:user/listMerchantStaff", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
 	const { branch_id } = req.body;
 	const user = req.params.user;
@@ -551,7 +551,7 @@ router.get("/:user/listMerchantStaff", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.get("/:user/listMerchantPosition", jwtTokenAuth, (req, res) => {
+router.post("/:user/listMerchantPosition", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
 	const { branch_id } = req.body;
 	const user = req.params.user;
