@@ -877,6 +877,169 @@ router.post("/:user/listMerchantBranchInvoicesByPeriod", jwtTokenAuth, (req, res
 	);
 });
 
+router.post("/:user/getMerchantBranchDashStats", jwtTokenAuth, function (req, res) {
+	const startOfDay = new Date(new Date().setUTCHours(0, 0, 0, 0)).toISOString()
+	const endOfDay = new Date(new Date().setUTCHours(23, 59, 59, 999)).toISOString()
+	const { branch_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "merchantBranch") {
+		User = getTypeClass("merchantBranch");
+	} else if (user == "merchant") {
+		User = getTypeClass("merchant");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				MerchantPosition.aggregate(
+					[
+						{ $match :
+							{
+								branch_id: user === 'merchantBranch' ? data._id : branch_id,
+								type: 'cashier'
+							}
+						}, 
+						{
+							$group: {
+								_id: null,
+								total: {
+									$sum: "$cash_in_hand",
+								},
+								openingBalance: {
+									$sum: "$opening_balance",
+								},
+							},
+						},
+					],
+					async (err, post5) => {
+						let result = errorMessage(
+							err,
+							post5,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Invoice.aggregate(
+								[
+									{ $match :
+										{
+											branch_id: user === 'merchantBranch' ? data._id : branch_id,
+											paid: 1,
+											date_paid : {
+												$gte: startOfDay, 
+												$lt: endOfDay
+											},
+										}
+									}, 
+									{
+										$group: {
+											_id: null,
+											totalPenalty: {
+												$sum: "$penalty",
+											},
+											totalAmount: {
+												$sum: "$amount",
+											},
+										},
+									},
+
+								],
+								async (err, post6) => {
+									let result = errorMessage(
+										err,
+										post6,
+										"Error."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										let cin = 0;
+										let ob = 0;
+										let pc = 0;
+										let ta = 0;
+										if (
+											post5 != undefined &&
+											post5 != null &&
+											post5.length > 0
+										) {
+											cin = post5[0].total;
+											ob = post5[0].openingBalance;
+										}
+										if (
+											post6 != undefined &&
+											post6 != null &&
+											post6.length > 0
+										) {
+											pc = post6[0].totalPenalty;
+											ta = post6[0].totalAmount;
+										}
+										var totalStaff = await MerchantPosition.countDocuments({
+												branch_id: user === 'merchantBranch' ? data._id : branch_id,
+												type: 'staff'
+											});
+										var totalCashier = await MerchantPosition.countDocuments({
+											branch_id: user === 'merchantBranch' ? data._id : branch_id,
+											type: 'cashier'
+										});
+										var totalInvoice = await Invoice.countDocuments(
+											{
+												branch_id: user === 'merchantBranch' ? data._id : branch_id,
+												created_at: {
+													$gte: startOfDay, 
+													$lt: endOfDay
+												},
+											});
+										var totalInvoicePaid = await Invoice.countDocuments(
+											{
+												branch_id: user === 'merchantBranch' ? data._id : branch_id,
+												created_at: {
+													$gte: startOfDay, 
+													$lt: endOfDay
+												},
+												paid:1,
+											});
+										res.status(200).json({
+											status: 1,
+											cash_in_hand: cin,
+											opening_balance: ob,
+											total_cashier: totalCashier,
+											total_staff: totalStaff,
+											penalty_collected: pc,
+											amount_collected: ta,
+											invoice_raised: totalInvoice,
+											invoice_paid: totalInvoicePaid
+										});
+									}
+								}
+							)
+
+						}
+					}	
+				);
+			}
+		}
+	);
+});
+
 router.post("/:user/listMerchantBranchInvoicesByDateRange", jwtTokenAuth, (req, res) => {
 	const { start_date, end_date, branch_id } = req.body;
 	const jwtusername = req.sign_creds.username;
