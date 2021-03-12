@@ -46,6 +46,7 @@ const ClaimCode = require("../models/ClaimCode");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
 const DailyReport = require("../models/cashier/DailyReport");
 const MerchantPosition = require("../models/merchant/Position");
+const MerchantStaff = require("../models/merchant/Staff");
 
 router.get("/testGet", function (req, res) {
 	res.status(200).json({
