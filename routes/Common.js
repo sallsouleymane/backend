@@ -646,7 +646,7 @@ router.post("/:user/merchantCashierStats",jwtTokenAuth,function (req, res) {
 				MerchantPosition.findById(
 					cashier_id,
 					async function (err, position) {
-						let result = errorMessage(err, position, "Position is not valid");
+						let result = errorMessage(err, position, "Cashier is not valid");
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
@@ -754,7 +754,7 @@ router.post("/:user/merchantStaffStats",jwtTokenAuth,function (req, res) {
 				MerchantPosition.findById(
 					staff_id,
 					async function (err, position) {
-						let result = errorMessage(err, position, "Position is not valid");
+						let result = errorMessage(err, position, "Staff is not valid");
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
