@@ -435,6 +435,192 @@ router.post("/:user/listMerchantStaffInvoicesByDateRange", jwtTokenAuth, (req, r
 	);
 });
 
+router.post("/:user/listMerchantBranchInvoicesByDate", jwtTokenAuth, (req, res) => {
+	const { date, branch_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "merchantBranch") {
+		User = getTypeClass("merchantBranch");
+	} else if (user == "merchant") {
+		User = getTypeClass("merchant");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.find(
+					{ 
+						branch_id:  user === 'merchantBranch' ? data._id : branch_id,
+						bill_date: date 
+					},
+					(err, invoices) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								invoices: invoices,
+							});
+						}
+					}
+				);
+				
+			}
+		}
+	);
+});
+
+router.post("/:user/listMerchantBranchInvoicesByPeriod", jwtTokenAuth, (req, res) => {
+	const { start_date, end_date, branch_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "merchantBranch") {
+		User = getTypeClass("merchantBranch");
+	} else if (user == "merchant") {
+		User = getTypeClass("merchant");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.find(
+					{ 	branch_id:  user === 'merchantBranch' ? data._id : branch_id,
+						"bill_period.start_date":  {
+							$gte: start_date
+						},
+						"bill_period.end_date": {
+							$lte: end_date
+						},
+					},
+					(err, invoices) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								invoices: invoices,
+							});
+						}
+					}
+				);
+				
+			}
+		}
+	);
+});
+
+router.post("/:user/listMerchantBranchInvoicesByDateRange", jwtTokenAuth, (req, res) => {
+	const { start_date, end_date, branch_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "merchantBranch") {
+		User = getTypeClass("merchantBranch");
+	} else if (user == "merchant") {
+		User = getTypeClass("merchant");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.find(
+					{ 	branch_id: user === 'merchantBranch' ? data._id : branch_id,
+						created_at: {
+							$gte: start_date,
+							$lte: end_date,
+						},
+					},
+					(err, invoices) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								invoices: invoices,
+							});
+						}
+					}
+				);
+				
+			}
+		}
+	);
+});
+
 router.post("/:user/getMerchantSettings", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
