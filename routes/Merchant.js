@@ -53,7 +53,7 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 							res.status(200).json(result);
 						} else {
 							try {
-								Invoice.aggregate(
+								await Invoice.aggregate(
 									[
 										{
 											$match: {
@@ -85,7 +85,7 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 										if (result.status == 0) {
 											res.status(200).json(result);
 										} else {
-											Invoice.aggregate(
+											await Invoice.aggregate(
 												[
 													{
 														$match: {
