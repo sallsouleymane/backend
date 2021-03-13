@@ -142,6 +142,8 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 															bill_generated: bg,
 															amount_paid: ap,
 															bill_paid: bp,
+															post7:post7,
+															post6:post6,
 														});
 													}
 												}
