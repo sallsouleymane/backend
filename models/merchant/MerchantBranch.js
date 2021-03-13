@@ -4,7 +4,7 @@ const MerchantBranchSchema = new mongoose.Schema({
 	name: { type: String, required: true, unique: true },
 	code: { type: String, required: true, unique: true },
 	subzone_id: { type: String, required: true },
-	zone_id: { type: String, required: false },
+	zone_id: { type: String, required: true },
 	username: { type: String, required: true, unique: true },
 	password: { type: String, required: true, select: false },
 	address1: { type: String, required: true },
