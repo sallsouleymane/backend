@@ -26,6 +26,121 @@ const Tax = require("../models/merchant/Tax");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
 const Customer = require("../models/merchant/Customer");
 
+router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { zone_id } = req.body;
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Zone.findById(
+					zone_id,
+					async function (err, zone) {
+						let result = errorMessage(err, zone, "Zone is not valid");
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							try {
+								Invoice.aggregate(
+									[
+										{
+											$match: {
+												zone_id: zone._id,
+												created_at: {
+													$gte: new Date(
+														start
+													),
+													$lte: new Date(
+														end
+													),
+												},
+											},
+										},
+										{
+											$group: {
+												_id: null,
+												amount_generated: { $sum: "$amount" },
+												bills_generated: { $sum: 1 },
+											},
+										},
+									],
+									[
+										{
+											$match: {
+												zone_id: zone._id,
+												date_paid: {
+													$gte: new Date(
+														start
+													),
+													$lte: new Date(
+														end
+													),
+												},
+											},
+										},
+										{
+											$group: {
+												_id: null,
+												amount_paid: { $sum: "$amount" },
+												bills_paid: { $sum: 1 },
+											},
+										},
+
+									],async (err, post6) => {
+										let result = errorMessage(
+											err,
+											post6,
+											"Error."
+										);
+										if (result.status == 0) {
+											res.status(200).json(result);
+										} else {
+											let ag = 0;
+											let bg = 0;
+											let ap = 0;
+											let bp = 0;
+											if (
+												post6 != undefined &&
+												post6 != null &&
+												post6.length > 0
+											) {
+												ag = post6[0].amount_generated;
+												bg = post5[0].bills_generated;
+												ap = post6[1].amount_paid;
+												bp = post6[1].bills_paid;
+											}
+											res.status(200).json({
+												status: 1,
+												amount_generated: ag,
+												bill_generated: bg,
+												amount_paid: ap,
+												bill_paid: bp,
+											});
+										}
+									}		
+								);
+							} catch (err) {
+								res.status(200).json(catchError(err));
+							}
+						}
+					}
+				);
+			}
+		}
+		);
+});
+
 router.get("/merchant/listInvoiceGroups", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
