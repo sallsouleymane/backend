@@ -1589,6 +1589,7 @@ router.post("/merchantStaff/createInvoice", jwtTokenAuth, (req, res) => {
 											res.status(200).json({
 												status: 1,
 												message: "Invoice created",
+												branch: branch,
 											});
 										} catch (err) {
 											console.log(err);
