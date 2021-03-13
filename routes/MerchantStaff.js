@@ -1599,7 +1599,7 @@ router.post("/merchantStaff/createInvoice", jwtTokenAuth, (req, res) => {
 											res.status(200).json({
 												status: 0,
 												message: message,
-												branch: branch.zone_id,
+												branch: branch,
 											});
 										}
 									}
