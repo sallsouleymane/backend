@@ -78,6 +78,8 @@ router.post("/:user/getMerchantCashierDashStats", jwtTokenAuth, function (req, r
 		User = getTypeClass("merchantPosition");
 	} else if (user == "merchantBranch") {
 		User = getTypeClass("merchantBranch");
+	} else if (user == "merchant") {
+		User = getTypeClass("merchant");
 	} else {
 		res.status(200).json({
 			status: 0,
@@ -99,7 +101,7 @@ router.post("/:user/getMerchantCashierDashStats", jwtTokenAuth, function (req, r
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				if(user === 'merchantBranch'){
+				if(user === 'merchantBranch' || user === 'merchant'){
 					MerchantPosition.findOne(
 						{
 							_id: staff_id,
@@ -154,6 +156,8 @@ router.post("/:user/queryMerchantCashierTransactionStates", jwtTokenAuth, functi
 		User = getTypeClass("merchantPosition");
 	} else if (user == "merchantBranch") {
 		User = getTypeClass("merchantBranch");
+	} else if (user == "merchant") {
+		User = getTypeClass("merchant");
 	} else {
 		res.status(200).json({
 			status: 0,
@@ -204,6 +208,8 @@ router.post("/:user/getMerchantCashierDailyReport", jwtTokenAuth, function (req,
 		User = getTypeClass("merchantPosition");
 	} else if (user == "merchantBranch") {
 		User = getTypeClass("merchantBranch");
+	} else if (user == "merchant") {
+		User = getTypeClass("merchant");
 	} else {
 		res.status(200).json({
 			status: 0,
@@ -258,6 +264,8 @@ router.post("/:user/listMerchantStaffInvoicesByDate", jwtTokenAuth, (req, res) =
 		User = getTypeClass("merchantPosition");
 	} else if (user == "merchantBranch") {
 		User = getTypeClass("merchantBranch");
+	} else if (user == "merchant") {
+		User = getTypeClass("merchant");
 	} else {
 		res.status(200).json({
 			status: 0,
@@ -318,6 +326,8 @@ router.post("/:user/listMerchantStaffInvoicesByPeriod", jwtTokenAuth, (req, res)
 		User = getTypeClass("merchantPosition");
 	} else if (user == "merchantBranch") {
 		User = getTypeClass("merchantBranch");
+	} else if (user == "merchant") {
+		User = getTypeClass("merchant");
 	} else {
 		res.status(200).json({
 			status: 0,
