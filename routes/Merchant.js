@@ -58,28 +58,6 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 										{
 											$match: {
 												zone_id: zone._id,
-												created_at: {
-													$gte: new Date(
-														start
-													),
-													$lte: new Date(
-														end
-													),
-												},
-											},
-										},
-										{
-											$group: {
-												_id: null,
-												amount_generated: { $sum: "$amount" },
-												bills_generated: { $sum: 1 },
-											},
-										},
-									],
-									[
-										{
-											$match: {
-												zone_id: zone._id,
 												date_paid: {
 													$gte: new Date(
 														start
@@ -107,27 +85,67 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 										if (result.status == 0) {
 											res.status(200).json(result);
 										} else {
-											let ag = 0;
-											let bg = 0;
-											let ap = 0;
-											let bp = 0;
-											if (
-												post6 != undefined &&
-												post6 != null &&
-												post6.length > 0
-											) {
-												ag = post6[0].amount_generated;
-												bg = post5[0].bills_generated;
-												ap = post6[1].amount_paid;
-												bp = post6[1].bills_paid;
-											}
-											res.status(200).json({
-												status: 1,
-												amount_generated: ag,
-												bill_generated: bg,
-												amount_paid: ap,
-												bill_paid: bp,
-											});
+											Invoice.aggregate(
+												[
+													{
+														$match: {
+															zone_id: zone._id,
+															created_at: {
+																$gte: new Date(
+																	start
+																),
+																$lte: new Date(
+																	end
+																),
+															},
+														},
+													},
+													{
+														$group: {
+															_id: null,
+															amount_generated: { $sum: "$amount" },
+															bills_generated: { $sum: 1 },
+														},
+													},
+												],async (err, post7) => {
+													let result = errorMessage(
+														err,
+														post7,
+														"Error."
+													);
+													if (result.status == 0) {
+														res.status(200).json(result);
+													} else {
+														let ag = 0;
+														let bg = 0;
+														let ap = 0;
+														let bp = 0;
+														if (
+															post6 != undefined &&
+															post6 != null &&
+															post6.length > 0
+														) {
+															ap = post6[0].amount_paid;
+															bp = post6[0].bills_paid;
+														}
+														if (
+															post7 != undefined &&
+															post7 != null &&
+															post7.length > 0
+														) {
+															ag = post7[0].amount_generated;
+															bg = post7[0].bills_generated;
+														}
+														res.status(200).json({
+															status: 1,
+															amount_generated: ag,
+															bill_generated: bg,
+															amount_paid: ap,
+															bill_paid: bp,
+														});
+													}
+												}
+											);
 										}
 									}		
 								);
