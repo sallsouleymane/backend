@@ -21,6 +21,7 @@ const MerchantPosition = require("../models/merchant/Position");
 const Zone = require("../models/merchant/Zone");
 const Subzone = require("../models/merchant/Subzone");
 const InvoiceGroup = require("../models/merchant/InvoiceGroup");
+const Invoice = require("../models/merchant/Invoice");
 const Offering = require("../models/merchant/Offering");
 const Tax = require("../models/merchant/Tax");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
