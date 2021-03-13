@@ -2169,6 +2169,7 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 				data.name = name;
 				data.code = code;
 				data.subzone_id = subzone_id;
+				data.zone_id = zone_id;
 				data.username = username;
 				data.address1 = address1;
 				data.state = state;
