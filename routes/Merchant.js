@@ -262,23 +262,72 @@ router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, merchant) {
+		async function (err, merchant) {
 			let result = errorMessage(err, merchant, "Merchant is not valid");
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
+				var paidByBank = await Invoice.countDocuments({
+					date_paid: {
+						$gte: new Date(
+							start
+						),
+						$lte: new Date(
+							end
+						),
+					},
+					paid_by:'BC'
+				});
+				var paidByPartner = await Invoice.countDocuments({
+					date_paid: {
+						$gte: new Date(
+							start
+						),
+						$lte: new Date(
+							end
+						),
+					},
+					paid_by:'PC'
+				});
+				var paidByMerchant = await Invoice.countDocuments({
+					date_paid: {
+						$gte: new Date(
+							start
+						),
+						$lte: new Date(
+							end
+						),
+					},
+					paid_by:'MC'
+				});
+				var paidByUser= await Invoice.countDocuments({
+					date_paid: {
+						$gte: new Date(
+							start
+						),
+						$lte: new Date(
+							end
+						),
+					},
+					paid_by:'Us'
+				});
 				res.status(200).json({
 					status: 1,
-					bills_paid: merchant.bills_paid,
-					bills_raised: merchant.bills_raised,
-					amount_collected: merchant.amount_collected,
-					amount_due: merchant.amount_due,
+					paid_by_partner: paidByPartner,
+					paid_by_bank: paidByBank,
+					paid_by_merchant: paidByMerchant,
+					paid_by_user: paidByUser,
 				});
 			}
 		}
