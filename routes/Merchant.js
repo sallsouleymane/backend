@@ -169,7 +169,7 @@ router.post("/merchant/getSubZoneStats",jwtTokenAuth,function (req, res) {
 					[
 						{
 							$match: {
-								zone_id: subzone_id,
+								subzone_id: subzone_id,
 								date_paid: {
 									$gte: new Date(
 										start
@@ -200,7 +200,7 @@ router.post("/merchant/getSubZoneStats",jwtTokenAuth,function (req, res) {
 								[
 									{
 										$match: {
-											zone_id: subzone_id,
+											subzone_id: subzone_id,
 											created_at: {
 												$gte: new Date(
 													start
