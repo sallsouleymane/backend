@@ -45,19 +45,12 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Zone.findById(
-					zone_id,
-					async function (err, zone) {
-						let result = errorMessage(err, zone, "Zone is not valid");
-						if (result.status == 0) {
-							res.status(200).json(result);
-						} else {
-							try {
+						try {
 								await Invoice.aggregate(
 									[
 										{
 											$match: {
-												zone_id: zone._id,
+												zone_id: zone_id,
 												date_paid: {
 													$gte: new Date(
 														start
@@ -89,7 +82,7 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 												[
 													{
 														$match: {
-															zone_id: zone._id,
+															zone_id: zone_id,
 															created_at: {
 																$gte: new Date(
 																	start
@@ -154,12 +147,12 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 							} catch (err) {
 								res.status(200).json(catchError(err));
 							}
-						}
-					}
-				);
+						
+					
+				
 			}
 		}
-		);
+	);
 });
 
 router.get("/merchant/listInvoiceGroups", jwtTokenAuth, (req, res) => {
