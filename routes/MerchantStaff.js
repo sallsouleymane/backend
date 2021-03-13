@@ -1481,150 +1481,130 @@ router.post("/merchantStaff/createInvoice", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				InvoiceGroup.findOne(
-					{ _id: group_id },
-					async (err, group) => {
-						let result = errorMessage(err, group, "Group not found");
+				MerchantBranch.findById(
+					position.branch_id,
+					async function (err, branch) {
+						let result = errorMessage(err, branch, "Branch not Found");
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
-							try {
-								if (is_counter) {
-									var referenceFound = await Invoice.findOne({
-										number: reference_invoice,
-										merchant_id: position.merchant_id,
-									});
-									if (!referenceFound) {
-										throw new Error("Referenced Invoice not found");
+							InvoiceGroup.findOne(
+								{ _id: group_id },
+								async (err, group) => {
+									let result = errorMessage(err, group, "Group not found");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										try {
+											if (is_counter) {
+												var referenceFound = await Invoice.findOne({
+													number: reference_invoice,
+													merchant_id: position.merchant_id,
+												});
+												if (!referenceFound) {
+													throw new Error("Referenced Invoice not found");
+												}
+											}
+											if (paid != 1) {
+												paid = 0;
+											}
+											var updatedItems = [];
+											for (const item of items) {
+												var { item_code, quantity, tax_code, total_amount } = item;
+												var item_desc = await Offering.findOne(
+													{ code: item_code, merchant_id: position.merchant_id },
+													"code name denomination unit_of_measure unit_price description"
+												);
+												if (item_desc == null) {
+													throw new Error("Item not found with code " + item_code);
+												}
+
+												var tax_desc = await Tax.findOne(
+													{
+														code: tax_code,
+														merchant_id: position.merchant_id,
+													},
+													"code value"
+												);
+												if (tax_desc == null) {
+													throw new Error("Tax not found with code " + tax_code);
+												}
+
+												updatedItems.push({
+													item_desc: item_desc,
+													quantity: quantity,
+													tax_desc: tax_desc,
+													total_amount: total_amount,
+												});
+											}
+											var invoiceObj = new Invoice();
+											invoiceObj.number = number;
+											invoiceObj.name = name;
+											invoiceObj.last_name = last_name;
+											invoiceObj.address = address;
+											invoiceObj.amount = amount;
+											invoiceObj.merchant_id = position.merchant_id;
+											invoiceObj.bill_date = bill_date;
+											invoiceObj.branch_id = position.branch_id;
+											invoiceObj.zone_id = branch.zone_id;
+											invoiceObj.subzone_id = branch.subzone_id;
+											invoiceObj.bill_period = bill_period;
+											invoiceObj.due_date = due_date;
+											invoiceObj.description = description;
+											invoiceObj.mobile = mobile;
+											invoiceObj.ccode = ccode;
+											invoiceObj.group_id = group_id;
+											invoiceObj.creator_id = position._id;
+											invoiceObj.paid = paid;
+											invoiceObj.is_created = 1;
+											invoiceObj.is_validated = is_validated;
+											invoiceObj.items = updatedItems;
+											invoiceObj.customer_code = customer_code;
+											invoiceObj.is_counter = is_counter;
+											invoiceObj.reference_invoice = reference_invoice;
+											invoiceObj.term = term;
+											await invoiceObj.save();
+
+											if (is_counter) {
+												await Invoice.updateOne(
+													{
+														_id: referenceFound._id,
+													},
+													{ has_counter_invoice: true }
+												);
+											}
+											var c = await MerchantPosition.findOneAndUpdate(
+												{ _id: position._id },
+												{
+													$inc: {
+														bills_raised: 1,
+													},
+												}
+											);
+											if (c == null) {
+												throw new Error(
+													"Can not update the Merchant Position status."
+												);
+											}
+											res.status(200).json({
+												status: 1,
+												message: "Invoice created",
+											});
+										} catch (err) {
+											console.log(err);
+											var message = err;
+											if (err && err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+											});
+										}
 									}
 								}
-								if (paid != 1) {
-									paid = 0;
-								}
-								var updatedItems = [];
-								for (const item of items) {
-									var { item_code, quantity, tax_code, total_amount } = item;
-									var item_desc = await Offering.findOne(
-										{ code: item_code, merchant_id: position.merchant_id },
-										"code name denomination unit_of_measure unit_price description"
-									);
-									if (item_desc == null) {
-										throw new Error("Item not found with code " + item_code);
-									}
+							);
 
-									var tax_desc = await Tax.findOne(
-										{
-											code: tax_code,
-											merchant_id: position.merchant_id,
-										},
-										"code value"
-									);
-									if (tax_desc == null) {
-										throw new Error("Tax not found with code " + tax_code);
-									}
-
-									updatedItems.push({
-										item_desc: item_desc,
-										quantity: quantity,
-										tax_desc: tax_desc,
-										total_amount: total_amount,
-									});
-								}
-								var invoiceObj = new Invoice();
-								invoiceObj.number = number;
-								invoiceObj.name = name;
-								invoiceObj.last_name = last_name;
-								invoiceObj.address = address;
-								invoiceObj.amount = amount;
-								invoiceObj.merchant_id = position.merchant_id;
-								invoiceObj.bill_date = bill_date;
-								invoiceObj.branch_id = position.branch_id;
-								invoiceObj.bill_period = bill_period;
-								invoiceObj.due_date = due_date;
-								invoiceObj.description = description;
-								invoiceObj.mobile = mobile;
-								invoiceObj.ccode = ccode;
-								invoiceObj.group_id = group_id;
-								invoiceObj.creator_id = position._id;
-								invoiceObj.paid = paid;
-								invoiceObj.is_created = 1;
-								invoiceObj.is_validated = is_validated;
-								invoiceObj.items = updatedItems;
-								invoiceObj.customer_code = customer_code;
-								invoiceObj.is_counter = is_counter;
-								invoiceObj.reference_invoice = reference_invoice;
-								invoiceObj.term = term;
-								await invoiceObj.save();
-
-								if (is_counter) {
-									await Invoice.updateOne(
-										{
-											_id: referenceFound._id,
-										},
-										{ has_counter_invoice: true }
-									);
-								}
-								var branch = await MerchantBranch.findOneAndUpdate(
-									{ _id: position.branch_id },
-									{ $inc: { bills_raised: 1, amount_due: amount } }
-								);
-								if (branch == null) {
-									throw new Error("Can not update the MerchantBranch status.");
-								}
-
-								var m = await Merchant.findOneAndUpdate(
-									{ _id: branch.merchant_id },
-									{
-										$inc: {
-											bills_raised: 1,
-											amount_due: amount,
-										},
-									}
-								);
-								if (m == null) {
-									throw new Error("Can not update the Merchant status.");
-								}
-
-								var g = await InvoiceGroup.findOneAndUpdate(
-									{ _id: group._id },
-									{
-										$inc: {
-											bills_raised: 1,
-										},
-									}
-								);
-								if (g == null) {
-									throw new Error("Can not update the Invoice Group status.");
-								}
-
-								var c = await MerchantPosition.findOneAndUpdate(
-									{ _id: position._id },
-									{
-										$inc: {
-											bills_raised: 1,
-										},
-									}
-								);
-								if (c == null) {
-									throw new Error(
-										"Can not update the Merchant Position status."
-									);
-								}
-								res.status(200).json({
-									status: 1,
-									message: "Invoice created",
-								});
-							} catch (err) {
-								console.log(err);
-								var message = err;
-								if (err && err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							}
 						}
 					}
 				);

@@ -21,6 +21,8 @@ const InvoiceSchema = new mongoose.Schema({
 	ccode: { type: String, required: false },
 	creator_id: { type: String, required: true },
 	branch_id: { type: String, required: true },
+	zone_id: { type: String, required: true },
+	subzone_id: { type: String, required: true },
 	paid: { type: Number, required: true, default: 0 },
 	paid_desc: { type: String, required: false, default: "0-not paid 1-paid" },
 	paid_by: { type: String, required: false },
