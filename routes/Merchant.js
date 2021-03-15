@@ -48,7 +48,7 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 					[
 						{
 							$match: {
-								merchant_id: merchant._id,
+								// merchant_id: merchant._id,
 								date_paid: {
 									$gte: new Date(
 										start
@@ -79,7 +79,7 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 								[
 									{
 										$match: {
-											merchant_id: merchant._id,
+											// merchant_id: merchant._id,
 											created_at: {
 												$gte: new Date(
 													start
