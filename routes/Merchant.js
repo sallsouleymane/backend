@@ -27,6 +27,101 @@ const Tax = require("../models/merchant/Tax");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
 const Customer = require("../models/merchant/Customer");
 
+router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, merchant) {
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.aggregate(
+					[
+						{
+							$match: {
+								merchant_id: merchant._id,
+								date_paid: {
+									$gte: new Date(
+										start
+									),
+									$lte: new Date(
+										end
+									),
+								},
+							},
+						},
+						{
+							$group: {
+								_id: "$paid_by",
+								amount_paid: { $sum: "$amount" },
+								bills_paid: { $sum: 1 },
+							},
+						},
+					],async (err, post6) => {
+						let result = errorMessage(
+							err,
+							post6,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Invoice.aggregate(
+								[
+									{
+										$match: {
+											merchant_id: merchant._id,
+											created_at: {
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
+										},
+									},
+									{
+										$group: {
+											_id: null,
+											amount_generated: { $sum: "$amount" },
+											bills_generated: { $sum: 1 },
+										},
+									},
+								],async (err, post7) => {
+									let result = errorMessage(
+										err,
+										post7,
+										"Error."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										res.status(200).json({
+											status: 1,
+											post7:post7,
+											post6:post6,
+										});
+									}
+								}
+							);
+						}
+					}		
+				);
+			}
+		}
+	);
+});
+
 router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { zone_id } = req.body;
@@ -646,78 +741,7 @@ router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
-	var today = new Date();
-	today = today.toISOString();
-	var s = today.split("T");
-	var start = s[0] + "T00:00:00.000Z";
-	var end = s[0] + "T23:59:59.999Z";
-	const jwtusername = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		async function (err, merchant) {
-			let result = errorMessage(err, merchant, "Merchant is not valid");
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				var paidByBank = await Invoice.countDocuments({
-					date_paid: {
-						$gte: new Date(
-							start
-						),
-						$lte: new Date(
-							end
-						),
-					},
-					paid_by:'BC'
-				});
-				var paidByPartner = await Invoice.countDocuments({
-					date_paid: {
-						$gte: new Date(
-							start
-						),
-						$lte: new Date(
-							end
-						),
-					},
-					paid_by:'PC'
-				});
-				var paidByMerchant = await Invoice.countDocuments({
-					date_paid: {
-						$gte: new Date(
-							start
-						),
-						$lte: new Date(
-							end
-						),
-					},
-					paid_by:'MC'
-				});
-				var paidByUser= await Invoice.countDocuments({
-					date_paid: {
-						$gte: new Date(
-							start
-						),
-						$lte: new Date(
-							end
-						),
-					},
-					paid_by:'Us'
-				});
-				res.status(200).json({
-					status: 1,
-					paid_by_partner: paidByPartner,
-					paid_by_bank: paidByBank,
-					paid_by_merchant: paidByMerchant,
-					paid_by_user: paidByUser,
-				});
-			}
-		}
-	);
-});
+
 
 router.post("/merchant/uploadCustomers", jwtTokenAuth, (req, res) => {
 	const { customers } = req.body;
