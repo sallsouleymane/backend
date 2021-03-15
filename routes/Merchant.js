@@ -186,9 +186,10 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 	);
 });
 
-router.post("/merchant/getZoneStatsBydate",jwtTokenAuth,function (req, res) {
+router.post("/merchant/:type/getStatsBydate",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
-	const { zone_id, date } = req.body;
+	const type = req.params.type;
+	const { id, date } = req.body;
 	var today = new Date(date);
 	today = today.toISOString();
 	var s = today.split("T");
@@ -208,7 +209,9 @@ router.post("/merchant/getZoneStatsBydate",jwtTokenAuth,function (req, res) {
 					[
 						{
 							$match: {
-								zone_id: zone_id,
+								zone_id: type === 'zone' ? id : null,
+								subzone_id: type === 'subzone' ? id : null,
+								branch_id: type === 'branch' ? id : null,
 								date_paid: {
 									$gte: new Date(
 										start
@@ -239,7 +242,9 @@ router.post("/merchant/getZoneStatsBydate",jwtTokenAuth,function (req, res) {
 								[
 									{
 										$match: {
-											zone_id: zone_id,
+											zone_id: type === 'zone' ? id : null,
+											subzone_id: type === 'subzone' ? id : null,
+											branch_id: type === 'branch' ? id : null,
 											created_at: {
 												$gte: new Date(
 													start
@@ -306,9 +311,10 @@ router.post("/merchant/getZoneStatsBydate",jwtTokenAuth,function (req, res) {
 	);
 });
 
-router.post("/merchant/getZoneStatsByPeriod",jwtTokenAuth,function (req, res) {
+router.post("/merchant/:type/getStatsByPeriod",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
-	const { zone_id, period_name } = req.body;
+	const type = req.params.type;
+	const { id, period_name } = req.body;
 	Merchant.findOne(
 		{
 			username: jwtusername,
@@ -323,7 +329,9 @@ router.post("/merchant/getZoneStatsByPeriod",jwtTokenAuth,function (req, res) {
 					[
 						{
 							$match: {
-								zone_id: zone_id,
+								zone_id: type === 'zone' ? id : null,
+								subzone_id: type === 'subzone' ? id : null,
+								branch_id: type === 'branch' ? id : null,
 								"bill_period.period_name": period_name,
 								paid: 1,
 							},
@@ -348,7 +356,9 @@ router.post("/merchant/getZoneStatsByPeriod",jwtTokenAuth,function (req, res) {
 								[
 									{
 										$match: {
-											zone_id: zone_id,
+											zone_id: type === 'zone' ? id : null,
+											subzone_id: type === 'subzone' ? id : null,
+											branch_id: type === 'branch' ? id : null,
 											"bill_period.period_name": period_name,
 										},
 									},
