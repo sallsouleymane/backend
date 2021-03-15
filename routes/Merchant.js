@@ -149,7 +149,12 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 
 router.post("/merchant/getZoneStatsBydate",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
-	const { zone_id, start, end } = req.body;
+	const { zone_id, date } = req.body;
+	var today = new Date(date);
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
 	Merchant.findOne(
 		{
 			username: jwtusername,
