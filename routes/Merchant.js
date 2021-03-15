@@ -47,6 +47,13 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 				Invoice.aggregate(
 					[
 						{
+							$group: {
+								_id: "$paid_by",
+								amount_paid: { $sum: "$amount" },
+								bills_paid: { $sum: 1 },
+							},
+						},
+						{
 							$match: {
 								// merchant_id: merchant._id,
 								date_paid: {
@@ -59,13 +66,7 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 								},
 							},
 						},
-						{
-							$group: {
-								_id: "$paid_by",
-								amount_paid: { $sum: "$amount" },
-								bills_paid: { $sum: 1 },
-							},
-						},
+						
 					],async (err, post6) => {
 						let result = errorMessage(
 							err,
