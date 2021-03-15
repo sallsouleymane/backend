@@ -224,6 +224,7 @@ router.post("/merchant/:type/getStatsBydate",jwtTokenAuth,function (req, res) {
 							$group: {
 								_id: null,
 								amount_paid: { $sum: "$amount" },
+								penalty: { $sum: "$penalty"},
 								bills_paid: { $sum: 1 },
 							},
 						},
@@ -276,7 +277,7 @@ router.post("/merchant/:type/getStatsBydate",jwtTokenAuth,function (req, res) {
 											post6 != null &&
 											post6.length > 0
 										) {
-											ap = post6[0].amount_paid;
+											ap = post6[0].amount_paid+post6[0].penalty;
 											bp = post6[0].bills_paid;
 										}
 										if (
@@ -335,6 +336,7 @@ router.post("/merchant/:type/getStatsByPeriod",jwtTokenAuth,function (req, res) 
 								_id: null,
 								amount_paid: { $sum: "$amount" },
 								bills_paid: { $sum: 1 },
+								penalty: { $sum: "$penalty"},
 							},
 						},
 					],async (err, post6) => {
@@ -379,7 +381,7 @@ router.post("/merchant/:type/getStatsByPeriod",jwtTokenAuth,function (req, res) 
 											post6 != null &&
 											post6.length > 0
 										) {
-											ap = post6[0].amount_paid;
+											ap = post6[0].amount_paid+post6[0].penalty;
 											bp = post6[0].bills_paid;
 										}
 										if (
