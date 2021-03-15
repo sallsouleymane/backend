@@ -168,7 +168,7 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 														amount_paid: ap,
 														bill_paid: bp,
 														amount_pending: apen,
-														bills_pending: bpen,
+														bill_pending: bpen,
 														post7:post7,
 														post6:post6,
 													});
