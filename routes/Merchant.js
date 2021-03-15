@@ -171,8 +171,12 @@ router.post("/merchant/getZoneStatsBydate",jwtTokenAuth,function (req, res) {
 							$match: {
 								zone_id: zone_id,
 								date_paid: {
-									$gte: start,
-									$lte: end,
+									$gte: new Date(
+										start
+									),
+									$lte: new Date(
+										end
+									),
 								},
 							},
 						},
@@ -198,8 +202,12 @@ router.post("/merchant/getZoneStatsBydate",jwtTokenAuth,function (req, res) {
 										$match: {
 											zone_id: zone_id,
 											created_at: {
-												$gte: start,
-												$lte: end,
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
 											},
 										},
 									},
