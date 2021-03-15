@@ -1824,7 +1824,7 @@ router.post("/merchant/editZone", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.get("/merchant/getZoneList", jwtTokenAuth, (req, res) => {
+router.get("/merchant/getzoneList", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -1854,7 +1854,85 @@ router.get("/merchant/getZoneList", jwtTokenAuth, (req, res) => {
 					} else {
 						res.status(200).json({
 							status: 1,
-							zones: zones,
+							list: zones,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.get("/merchant/getsubzoneList", jwtTokenAuth, (req, res) => {
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Subzone.find({ merchant_id: merchant._id }, async (err, subzones) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							list: subzones,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.get("/merchant/getbranchList", jwtTokenAuth, (req, res) => {
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			let result = errorMessage(
+				err,
+				merchant,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				MerchantBranch.find({ merchant_id: merchant._id }, async (err, branches) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							list: branches,
 						});
 					}
 				});
