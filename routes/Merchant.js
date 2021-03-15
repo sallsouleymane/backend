@@ -107,36 +107,75 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 									if (result.status == 0) {
 										res.status(200).json(result);
 									} else {
-										let ag = 0;
-										let bg = 0;
-										let ap = 0;
-										let bp = 0;
-										if (
-											post6 != undefined &&
-											post6 != null &&
-											post6.length > 0
-										) {
-											ap = post6[0].amount_paid;
-											bp = post6[0].bills_paid;
-										}
-										if (
-											post7 != undefined &&
-											post7 != null &&
-											post7.length > 0
-										) {
-											ag = post7[0].amount_generated;
-											bg = post7[0].bills_generated;
-										}
-										res.status(200).json({
-											status: 1,
-											amount_generated: ag,
-											bill_generated: bg,
-											amount_paid: ap,
-											bill_paid: bp,
-											post7:post7,
-											post6:post6,
-										});
-									}
+										Invoice.aggregate(
+											[
+												{
+													$match: {
+														zone_id: zone_id,
+														paid: 0,
+													},
+												},
+												{
+													$group: {
+														_id: null,
+														amount_pending: { $sum: "$amount" },
+														bills_pending: { $sum: 1 },
+													},
+												},
+											],async (err, post8) => {
+												let result = errorMessage(
+													err,
+													post8,
+													"Error."
+												);
+												if (result.status == 0) {
+													res.status(200).json(result);
+												} else {
+													let apen = 0;
+													let bpen = 0;
+													let ag = 0;
+													let bg = 0;
+													let ap = 0;
+													let bp = 0;
+													if (
+														post6 != undefined &&
+														post6 != null &&
+														post6.length > 0
+													) {
+														ap = post6[0].amount_paid;
+														bp = post6[0].bills_paid;
+													}
+													if (
+														post7 != undefined &&
+														post7 != null &&
+														post7.length > 0
+													) {
+														ag = post7[0].amount_generated;
+														bg = post7[0].bills_generated;
+													}
+													if (
+														post8 != undefined &&
+														post8 != null &&
+														post8.length > 0
+													) {
+														apen = post8[0].amount_pending;
+														bpen = post8[0].bills_pending;
+													}
+													res.status(200).json({
+														status: 1,
+														amount_generated: ag,
+														bill_generated: bg,
+														amount_paid: ap,
+														bill_paid: bp,
+														amount_pending: apen,
+														bills_pending: bpen,
+														post7:post7,
+														post6:post6,
+													});
+												}
+											}
+										);
+									}	
 								}
 							);
 						}
