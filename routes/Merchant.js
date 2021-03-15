@@ -147,6 +147,113 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 	);
 });
 
+router.post("/merchant/getZoneStatsBydate",jwtTokenAuth,function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { zone_id, start, end } = req.body;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.aggregate(
+					[
+						{
+							$match: {
+								zone_id: zone_id,
+								date_paid: {
+									$gte: start,
+									$lte: end,
+								},
+							},
+						},
+						{
+							$group: {
+								_id: null,
+								amount_paid: { $sum: "$amount" },
+								bills_paid: { $sum: 1 },
+							},
+						},
+					],async (err, post6) => {
+						let result = errorMessage(
+							err,
+							post6,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Invoice.aggregate(
+								[
+									{
+										$match: {
+											zone_id: zone_id,
+											created_at: {
+												$gte: start,
+												$lte: end,
+											},
+										},
+									},
+									{
+										$group: {
+											_id: null,
+											amount_generated: { $sum: "$amount" },
+											bills_generated: { $sum: 1 },
+										},
+									},
+								],async (err, post7) => {
+									let result = errorMessage(
+										err,
+										post7,
+										"Error."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										let ag = 0;
+										let bg = 0;
+										let ap = 0;
+										let bp = 0;
+										if (
+											post6 != undefined &&
+											post6 != null &&
+											post6.length > 0
+										) {
+											ap = post6[0].amount_paid;
+											bp = post6[0].bills_paid;
+										}
+										if (
+											post7 != undefined &&
+											post7 != null &&
+											post7.length > 0
+										) {
+											ag = post7[0].amount_generated;
+											bg = post7[0].bills_generated;
+										}
+										res.status(200).json({
+											status: 1,
+											amount_generated: ag,
+											bill_generated: bg,
+											amount_paid: ap,
+											bill_paid: bp,
+											post7:post7,
+											post6:post6,
+										});
+									}
+								}
+							);
+						}
+					}		
+				);
+			}
+		}
+	);
+});
+
 router.post("/merchant/getSubZoneStats",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { subzone_id } = req.body;
