@@ -891,8 +891,10 @@ router.post("/:user/listMerchantBranchInvoicesByPeriod", jwtTokenAuth, (req, res
 });
 
 router.post("/:user/getMerchantBranchDashStats", jwtTokenAuth, function (req, res) {
-	const startOfDay = new Date(new Date().setUTCHours(0, 0, 0, 0)).toISOString()
-	const endOfDay = new Date(new Date().setUTCHours(23, 59, 59, 999)).toISOString()
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
 	const { branch_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
@@ -958,8 +960,12 @@ router.post("/:user/getMerchantBranchDashStats", jwtTokenAuth, function (req, re
 											branch_id: user === 'merchantBranch' ? data._id : branch_id,
 											paid: 1,
 											date_paid : {
-												$gte: startOfDay, 
-												$lt: endOfDay
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
 											},
 										}
 									}, 
@@ -1017,16 +1023,24 @@ router.post("/:user/getMerchantBranchDashStats", jwtTokenAuth, function (req, re
 											{
 												branch_id: user === 'merchantBranch' ? data._id : branch_id,
 												created_at: {
-													$gte: startOfDay, 
-													$lt: endOfDay
+													$gte: new Date(
+														start
+													),
+													$lte: new Date(
+														end
+													),
 												},
 											});
 										var totalInvoicePaid = await Invoice.countDocuments(
 											{
 												branch_id: user === 'merchantBranch' ? data._id : branch_id,
 												created_at: {
-													$gte: startOfDay, 
-													$lt: endOfDay
+													$gte: new Date(
+														start
+													),
+													$lte: new Date(
+														end
+													),
 												},
 												paid:1,
 											});
