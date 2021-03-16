@@ -183,7 +183,7 @@ router.post("/merchant/getMerchantSubzoneListDashStats", jwtTokenAuth, function 
 					[
 						{
 							$match: {
-								subzone_id: subzone_id,
+								subzone_id: String(subzone_id),
 								date_paid: {
 									$gte: new Date(
 										start
