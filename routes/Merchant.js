@@ -162,6 +162,141 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/merchant/getMerchantSubzoneListDashStats", jwtTokenAuth, function (req, res) {
+	const { zone_id } = req.body;
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, merchant) {
+			let result = errorMessage(err, merchant, "Merchant is not valid");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.aggregate(
+					[
+						{
+							$match: {
+								zone_id: zone_id,
+								date_paid: {
+									$gte: new Date(
+										start
+									),
+									$lte: new Date(
+										end
+									),
+								},
+							},
+						},
+						{
+							$group: {
+								_id: "$paid_by",
+								amount_paid: { $sum: "$amount" },
+								bills_paid: { $sum: 1 },
+							},
+						},
+					],async (err, post6) => {
+						let result = errorMessage(
+							err,
+							post6,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Invoice.aggregate(
+								[
+									{
+										$match: {
+											zone_id: zone_id,
+											created_at: {
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
+										},
+									},
+									{
+										$group: {
+											_id: "$is_created",
+											amount_generated: { $sum: "$amount" },
+											bills_generated: { $sum: 1 },
+										},
+									},
+								],async (err, post7) => {
+									let result = errorMessage(
+										err,
+										post7,
+										"Error."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										Invoice.aggregate(
+											[
+												{
+													$match: {
+														zone_id: zone_id,
+														paid: 0,
+													},
+												},
+												{
+													$group: {
+														_id: null,
+														amount_pending: { $sum: "$amount" },
+														bills_pending: { $sum: 1 },
+													},
+												},
+											],async (err, post8) => {
+												let result = errorMessage(
+													err,
+													post8,
+													"Error."
+												);
+												if (result.status == 0) {
+													res.status(200).json(result);
+												} else {
+													let ap = 0;
+													let bp = 0;
+													if (
+														post8 != undefined &&
+														post8 != null &&
+														post8.length > 0
+													) {
+														ap = post8[0].amount_pending;
+														bp = post8[0].bills_pending;
+													}
+													res.status(200).json({
+														status: 1,
+														post6:post6,
+														post7:post7,
+														amount_pending: ap,
+														bills_pending: bp,
+													});
+												}
+											}
+										);
+									}
+								}
+							);
+						}
+					}		
+				);
+			}
+		}
+	);
+});
+
+router.post("/merchant/getMerchantBranchListDashStats", jwtTokenAuth, function (req, res) {
 	const { subzone_id } = req.body;
 	var today = new Date();
 	today = today.toISOString();
@@ -246,141 +381,6 @@ router.post("/merchant/getMerchantSubzoneListDashStats", jwtTokenAuth, function 
 												{
 													$match: {
 														subzone_id: subzone_id,
-														paid: 0,
-													},
-												},
-												{
-													$group: {
-														_id: null,
-														amount_pending: { $sum: "$amount" },
-														bills_pending: { $sum: 1 },
-													},
-												},
-											],async (err, post8) => {
-												let result = errorMessage(
-													err,
-													post8,
-													"Error."
-												);
-												if (result.status == 0) {
-													res.status(200).json(result);
-												} else {
-													let ap = 0;
-													let bp = 0;
-													if (
-														post8 != undefined &&
-														post8 != null &&
-														post8.length > 0
-													) {
-														ap = post8[0].amount_pending;
-														bp = post8[0].bills_pending;
-													}
-													res.status(200).json({
-														status: 1,
-														post6:post6,
-														post7:post7,
-														amount_pending: ap,
-														bills_pending: bp,
-													});
-												}
-											}
-										);
-									}
-								}
-							);
-						}
-					}		
-				);
-			}
-		}
-	);
-});
-
-router.post("/merchant/getMerchantBranchListDashStats", jwtTokenAuth, function (req, res) {
-	const { branch_id } = req.body;
-	var today = new Date();
-	today = today.toISOString();
-	var s = today.split("T");
-	var start = s[0] + "T00:00:00.000Z";
-	var end = s[0] + "T23:59:59.999Z";
-	const jwtusername = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		async function (err, merchant) {
-			let result = errorMessage(err, merchant, "Merchant is not valid");
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Invoice.aggregate(
-					[
-						{
-							$match: {
-								branch_id: branch_id,
-								date_paid: {
-									$gte: new Date(
-										start
-									),
-									$lte: new Date(
-										end
-									),
-								},
-							},
-						},
-						{
-							$group: {
-								_id: "$paid_by",
-								amount_paid: { $sum: "$amount" },
-								bills_paid: { $sum: 1 },
-							},
-						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
-							post6,
-							"Error."
-						);
-						if (result.status == 0) {
-							res.status(200).json(result);
-						} else {
-							Invoice.aggregate(
-								[
-									{
-										$match: {
-											branch_id: branch_id,
-											created_at: {
-												$gte: new Date(
-													start
-												),
-												$lte: new Date(
-													end
-												),
-											},
-										},
-									},
-									{
-										$group: {
-											_id: "$is_created",
-											amount_generated: { $sum: "$amount" },
-											bills_generated: { $sum: 1 },
-										},
-									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
-										post7,
-										"Error."
-									);
-									if (result.status == 0) {
-										res.status(200).json(result);
-									} else {
-										Invoice.aggregate(
-											[
-												{
-													$match: {
-														branch_id: branch_id,
 														paid: 0,
 													},
 												},
