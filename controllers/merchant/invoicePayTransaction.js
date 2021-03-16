@@ -95,6 +95,7 @@ module.exports = (req, res) => {
 												master_code: master_code,
 												paid_by: "MC",
 												payer_id: cashier._id,
+												payer_branch_id: cashier.branch_id,
 												merchant_id: merchant._id,
 												invoiceDetails: invoiceDetails,
 												invoices: invoices
