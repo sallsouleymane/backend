@@ -118,7 +118,7 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 													$group: {
 														_id: null,
 														amount_pending: { $sum: "$amount" },
-														bills_pendind: { $sum: 1 },
+														bills_pending: { $sum: 1 },
 													},
 												},
 											],async (err, post8) => {
@@ -148,7 +148,7 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 														post8.length > 0
 													) {
 														ap = post7[0].amount_pending;
-														bp = post7[0].bills_pendind;
+														bp = post7[0].bills_pending;
 													}
 													res.status(200).json({
 														status: 1,
