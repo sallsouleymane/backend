@@ -891,6 +891,7 @@ router.post("/:user/listMerchantBranchInvoicesByPeriod", jwtTokenAuth, (req, res
 });
 
 router.post("/:user/getMerchantBranchDashStats", jwtTokenAuth, function (req, res) {
+	var today = new Date();
 	today = today.toISOString();
 	var s = today.split("T");
 	var start = s[0] + "T00:00:00.000Z";
@@ -1053,7 +1054,7 @@ router.post("/:user/getMerchantBranchDashStats", jwtTokenAuth, function (req, re
 											penalty_collected: pc,
 											amount_collected: ta,
 											invoice_raised: totalInvoice,
-											invoice_paid: totalInvoicePaid
+											invoice_paid: totalInvoicePaid,
 										});
 									}
 								}
