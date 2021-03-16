@@ -393,6 +393,8 @@ router.post("/:user/listMerchantStaffInvoicesByDateRange", jwtTokenAuth, (req, r
 		User = getTypeClass("merchantPosition");
 	} else if (user == "merchantBranch") {
 		User = getTypeClass("merchantBranch");
+	} else if (user == "merchant") {
+		User = getTypeClass("merchant");
 	} else {
 		res.status(200).json({
 			status: 0,
