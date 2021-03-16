@@ -146,8 +146,6 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 														post7:post7,
 														amount_pending: ap,
 														bills_pending: bp,
-														amount_generated: ag,
-														bills_generated: bg,
 													});
 												}
 											}
