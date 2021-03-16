@@ -959,7 +959,6 @@ router.post("/:user/getMerchantBranchDashStats", jwtTokenAuth, function (req, re
 									{ $match :
 										{
 											branch_id: user === 'merchantBranch' ? data._id : branch_id,
-											paid: 1,
 											date_paid : {
 												$gte: new Date(
 													start
@@ -1035,7 +1034,7 @@ router.post("/:user/getMerchantBranchDashStats", jwtTokenAuth, function (req, re
 										var totalInvoicePaid = await Invoice.countDocuments(
 											{
 												branch_id: user === 'merchantBranch' ? data._id : branch_id,
-												created_at: {
+												date_paid: {
 													$gte: new Date(
 														start
 													),
@@ -1055,6 +1054,8 @@ router.post("/:user/getMerchantBranchDashStats", jwtTokenAuth, function (req, re
 											amount_collected: ta,
 											invoice_raised: totalInvoice,
 											invoice_paid: totalInvoicePaid,
+											post5:post5,
+											post6:post6,
 										});
 									}
 								}
