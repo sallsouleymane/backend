@@ -53,7 +53,7 @@ module.exports = async function (transfer, infra, bank, merchant, comm) {
 					status: 0,
 					message: "Transaction failed!",
 					blockchain_message: res.message,
-					transactionCode: master_code
+					transactionCode: master_code,
 				};
 			}
 		}
@@ -62,7 +62,7 @@ module.exports = async function (transfer, infra, bank, merchant, comm) {
 		return {
 			status: 1,
 			message: "Transaction success!",
-			transactionCode: master_code
+			transactionCode: master_code,
 		};
 	} catch (err) {
 		throw err;
@@ -77,7 +77,7 @@ async function distributeRevenue(transfer, infra, bank, comm) {
 	let master_code = transfer.master_code;
 
 	//second transaction
-	infraShare = calculateShare("infra", amount, comm);
+	infraShare = calculateShare("infra", transfer.amount, comm);
 	transfer.infraCommShare = infraShare;
 	if (infraShare.percentage_amount > 0) {
 		let trans21 = {
