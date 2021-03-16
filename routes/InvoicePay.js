@@ -513,6 +513,7 @@ router.post(
 																					paid: 1,
 																					paid_by: "PC",
 																					payer_id: cashier._id,
+																					payer_branch_id: cashier.branch_id,
 																				}
 																			);
 																			if (i == null) {
@@ -828,6 +829,7 @@ router.post("/cashier/interBank/payInvoice", jwtTokenAuth, (req, res) => {
 																			paid: 1,
 																			paid_by: "BC",
 																			payer_id: cashier._id,
+																			payer_branch_id: cashier.branch_id,
 																		}
 																	);
 																	if (i == null) {

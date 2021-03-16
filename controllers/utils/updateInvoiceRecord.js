@@ -9,7 +9,7 @@ const Invoice = require("../../models/merchant/Invoice");
 const InvoiceGroup = require("../../models/merchant/InvoiceGroup");
 
 module.exports = async function (otherData) {
-	const { invoices, total_amount, master_code, paid_by, payer_id, merchant_id } = otherData;
+	const { invoices, total_amount, master_code, paid_by, payer_id, merchant_id, payer_branch_id } = otherData;
 	var last_paid_at = new Date();
 	var m = await Merchant.updateOne(
 		{ _id: merchant_id },
@@ -36,6 +36,7 @@ module.exports = async function (otherData) {
 				paid_by: paid_by,
 				payer_id: payer_id,
 				penalty: penalty,
+				payer_branch_id: payer_branch_id,
 				transaction_code: master_code,
 				date_paid: new Date(),
 			}
