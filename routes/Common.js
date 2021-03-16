@@ -1031,6 +1031,11 @@ router.post("/:user/getMerchantBranchDashStats", jwtTokenAuth, function (req, re
 													),
 												},
 											});
+										var totalInvoicePending = await Invoice.countDocuments(
+												{
+													branch_id: user === 'merchantBranch' ? data._id : branch_id,
+													paid: 0,
+												});
 										var totalInvoicePaid = await Invoice.countDocuments(
 											{
 												payer_branch_id: user === 'merchantBranch' ? data._id : branch_id,
@@ -1054,6 +1059,7 @@ router.post("/:user/getMerchantBranchDashStats", jwtTokenAuth, function (req, re
 											amount_collected: ta,
 											invoice_raised: totalInvoice,
 											invoice_paid: totalInvoicePaid,
+											invoice_pending: totalInvoicePending,
 										});
 									}
 								}
