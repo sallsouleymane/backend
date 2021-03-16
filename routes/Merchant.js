@@ -147,8 +147,8 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 														post8 != null &&
 														post8.length > 0
 													) {
-														ap = post7[0].amount_pending;
-														bp = post7[0].bills_pending;
+														ap = post8[0].amount_pending;
+														bp = post8[0].bills_pending;
 													}
 													res.status(200).json({
 														status: 1,
