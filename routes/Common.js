@@ -776,7 +776,7 @@ router.post("/:user/merchantStaffStats",jwtTokenAuth,function (req, res) {
 										$gte: start, 
 										$lt: end
 									},
-									iis_created:1,
+									is_created:1,
 								});
 								let bills_uploaded = await Invoice.countDocuments({
 									creator_id: position._id,
@@ -785,7 +785,7 @@ router.post("/:user/merchantStaffStats",jwtTokenAuth,function (req, res) {
 										$gte: start, 
 										$lt: end
 									},
-									iis_created:0,
+									is_created:0,
 								});
 								let bills_paid = await Invoice.countDocuments({
 									creator_id: position._id,
