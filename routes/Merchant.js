@@ -92,7 +92,7 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 									},
 									{
 										$group: {
-											_id: null,
+											_id: "$is_created",
 											amount_generated: { $sum: "$amount" },
 											bills_generated: { $sum: 1 },
 										},
@@ -132,16 +132,6 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 												} else {
 													let ap = 0;
 													let bp = 0;
-													let ag = 0;
-													let bg = 0;
-													if (
-														post7 != undefined &&
-														post7 != null &&
-														post7.length > 0
-													) {
-														ag = post7[0].amount_generated;
-														bg = post7[0].bills_generated;
-													}
 													if (
 														post8 != undefined &&
 														post8 != null &&
@@ -153,6 +143,7 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 													res.status(200).json({
 														status: 1,
 														post6:post6,
+														post7:post7,
 														amount_pending: ap,
 														bills_pending: bp,
 														amount_generated: ag,
