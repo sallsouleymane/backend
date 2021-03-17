@@ -698,25 +698,33 @@ router.post("/merchant/:type/getStatsBydate",jwtTokenAuth,function (req, res) {
 											post6 != null &&
 											post6.length > 0
 										) {
-											const PaidByMC = await post6.filter((val)=>val._id==='MC');
-											const PaidByBC = await post6.filter((val)=>val._id==='BC');
-											const PaidByPC = await post6.filter((val)=>val._id==='PC');
-											const PaidByUS = await post6.filter((val)=>val._id==='US');
+											const PaidByMC = await post6.filter((val) => {
+												return val._id==='MC'
+											});
+											const PaidByBC = await post6.filter((val) => {
+												return val._id==='BC'
+											});
+											const PaidByPC = await post6.filter((val)=>{
+												return val._id==='PC'
+											});
+											const PaidByUS = await post6.filter((val)=>{
+												return val._id==='US'
+											});
 											if(PaidByMC.length > 0){
 												InvoicePaidByMC = PaidByMC[0].bills_paid;
-												AmountPaidByMC = PaidByMC[0].amount_paid + PaidByMC[0].penalty
+												AmountPaidByMC = PaidByMC[0].amount_paid + PaidByMC[0].penalty;
 											}
 											if(PaidByBC.length > 0){
 												InvoicePaidByBC = PaidByBC[0].bills_paid;
-												AmountPaidByBC = PaidByBC[0].amount_paid + PaidByBC[0].penalty
+												AmountPaidByBC = PaidByBC[0].amount_paid + PaidByBC[0].penalty;
 											}
 											if(PaidByPC.length > 0){
 												InvoicePaidByPC = PaidByPC[0].bills_paid;
-												AmountPaidByPC = PaidByPC[0].amount_paid + PaidByPC[0].penalty
+												AmountPaidByPC = PaidByPC[0].amount_paid + PaidByPC[0].penalty;
 											}
 											if(PaidByUS.length > 0){
 												InvoicePaidByUS = PaidByUS[0].bills_paid;
-												AmountPaidByUS = PaidByUS[0].amount_paid + PaidByUS[0].penalty
+												AmountPaidByUS = PaidByUS[0].amount_paid + PaidByUS[0].penalty;
 											}
 
 											InvoicePaid = await post6.reduce((a, b) => {
