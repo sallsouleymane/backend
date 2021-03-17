@@ -739,7 +739,7 @@ router.post("/merchant/:type/getStatsBydate",jwtTokenAuth,function (req, res) {
 											amount_paid_by_PC: AmountPaidByPC,
 											bill_paid_by_BC : InvoicePaidByBC,
 											amount_paid_by_BC: AmountPaidByBC,
-											bill_paid_by_US : InvoicePaidByUs,
+											bill_paid_by_US : InvoicePaidByUS,
 											amount_paid_by_US: AmountPaidByUS,
 											post7:post7,
 											post6:post6,
