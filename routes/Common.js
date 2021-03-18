@@ -291,7 +291,7 @@ router.post("/:user/listMerchantStaffInvoicesByDate", jwtTokenAuth, (req, res) =
 			} else {
 				Invoice.find(
 					{ 
-						creator_id: user==='merchantStaff' ? data._id : staff_id,
+						creator_id: user==='merchantPosition' ? data._id : staff_id,
 						bill_date: date
 					},
 					(err, invoices) => {
@@ -355,7 +355,7 @@ router.post("/:user/listMerchantStaffInvoicesByPeriod", jwtTokenAuth, (req, res)
 			} else {
 				Invoice.find(
 					{ 	
-						creator_id: user==='merchantStaff' ? data._id : staff_id,
+						creator_id: user==='merchantPosition' ? data._id : staff_id,
 						"bill_period.start_date":  {
 							$gte: start_date
 						},
@@ -424,7 +424,7 @@ router.post("/:user/listMerchantStaffInvoicesByDateRange", jwtTokenAuth, (req, r
 				res.status(200).json(result);
 			} else {
 				Invoice.find(
-					{ 	creator_id: user==='merchantStaff' ? data._id : staff_id,
+					{ 	creator_id: user==='merchantPosition' ? data._id : staff_id,
 						created_at: {
 							$gte: start_date,
 							$lte: end_date,
