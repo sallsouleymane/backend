@@ -349,45 +349,13 @@ router.post("/merchant/login", (req, res) => {
 								status: 0,
 								message: message,
 							});
-							return;
 						}else if (!admin || admin===null || admin === undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
-							return;
 						} else {
-							Merchant.findById(
-								admin.merchant_id,
-								(err, adminmerchant) => {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message,
-										});
-										return;
-									}else if (!adminmerchant || adminmerchant===null || adminmerchant === undefined){
-										res.status(200).json({
-											status: 0,
-											message: "Admin merchant not found",
-										});
-										return;
-									}else{
-										merchant = adminmerchant;
-										res.status(200).json({
-											status: 0,
-											message: "Admin merchant not found",
-											m: merchant, 
-										});
-										return;
-									}
-								}
-							);
+							merchant = Merchant.findById(admin.merchant_id);
 						}	
 					}
 				);	
