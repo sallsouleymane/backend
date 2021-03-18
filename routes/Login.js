@@ -355,7 +355,12 @@ router.post("/merchant/login", (req, res) => {
 								message: "User not found",
 							});
 						} else {
-							merchant = Merchant.findOne({ _id: admin.merchant_id });
+							const m = Merchant.findOne({ _id: admin.merchant_id });
+							res.status(200).json({
+								status: 0,
+								message: "User merchant found",
+								merchant: m,
+							});
 						}	
 					}
 				);	
