@@ -370,10 +370,15 @@ router.post("/merchant/login", (req, res) => {
 									}else if (!adminmerchant){
 										res.status(200).json({
 											status: 0,
-											message: "Admin merchantnot found",
+											message: "Admin merchant not found",
 										});
 									}else{
 										merchant = adminmerchant;
+										res.status(200).json({
+											status: 0,
+											message: "Admin merchant not found",
+											m: merchant, 
+										});
 									}
 								}
 							)
