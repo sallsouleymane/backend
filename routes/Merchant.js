@@ -1380,8 +1380,8 @@ router.post("/merchant/getSubZoneStats",jwtTokenAuth,function (req, res) {
 							);
 						}
 					}		
-				
-			}
+				);
+			
 		}
 	);
 });
