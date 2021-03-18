@@ -1150,10 +1150,10 @@ router.post(
 	jwtTokenAuth,
 	function (req, res) {
 		const { zone_id } = req.body;
-		const username = req.sign_creds.username;
+		const jwtusername = req.sign_creds.username;
 		Merchant.findOne(
 			{
-				username,
+				username: jwtusername,
 				status: 1,
 			},
 			function (err, merchant) {
@@ -1169,7 +1169,7 @@ router.post(
 				}else if (!merchant || merchant === null || merchant === undefined){
 					MerchantStaff.findOne(
 						{
-							username,
+							username: jwtusername,
 							role: "admin",
 						},
 						function (err, admin) {
