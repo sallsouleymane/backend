@@ -322,7 +322,7 @@ router.post("/merchant/login", (req, res) => {
 	Merchant.findOne(
 		{ username, password },
 		"-password",
-		function (err, merch) {
+		function (err, merchant) {
 			if (err) {
 				var message = err;
 				if (err.message) {
@@ -332,8 +332,7 @@ router.post("/merchant/login", (req, res) => {
 					status: 0,
 					message: message,
 				});
-				return;
-			}else if (!merch || merch === null || merch === undefined){
+			}else if (!merchant || merchant === null || merchant === undefined){
 				MerchantStaff.findOne(
 					{ username, password, role: "admin" },
 					"-password",
