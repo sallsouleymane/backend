@@ -266,6 +266,8 @@ router.post("/:user/listMerchantStaffInvoicesByDate", jwtTokenAuth, (req, res) =
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
+	} else if (user == "merchantStaff") {
+		User = getTypeClass("merchantStaff");
 	} else {
 		res.status(200).json({
 			status: 0,
@@ -517,6 +519,8 @@ router.post("/:user/listMerchantStaff", jwtTokenAuth, (req, res) => {
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
+	} else if (user == "merchantStaff") {
+		User = getTypeClass("merchantStaff");
 	} else {
 		res.status(200).json({
 			status: 0,
@@ -573,6 +577,8 @@ router.post("/:user/listMerchantPosition", jwtTokenAuth, (req, res) => {
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
+	} else if (user == "merchantStaff") {
+		User = getTypeClass("merchantStaff");
 	} else {
 		res.status(200).json({
 			status: 0,
@@ -634,6 +640,8 @@ router.post("/:user/merchantCashierStats",jwtTokenAuth,function (req, res) {
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
+	} else if (user == "merchantStaff") {
+		User = getTypeClass("merchantStaff");
 	} else {
 		res.status(200).json({
 			status: 0,
@@ -742,6 +750,8 @@ router.post("/:user/merchantStaffStats",jwtTokenAuth,function (req, res) {
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
+	} else if (user == "merchantStaff") {
+		User = getTypeClass("merchantStaff");
 	} else {
 		res.status(200).json({
 			status: 0,
@@ -904,6 +914,8 @@ router.post("/:user/getMerchantBranchDashStats", jwtTokenAuth, function (req, re
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
+	} else if (user == "merchantStaff") {
+		User = getTypeClass("merchantStaff");
 	} else {
 		res.status(200).json({
 			status: 0,
