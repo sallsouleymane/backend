@@ -1949,7 +1949,6 @@ router.post("/merchant/createInvoiceGroup", jwtTokenAuth, (req, res) => {
 	);
 });
 
-
 router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
@@ -1984,8 +1983,6 @@ router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
-
-
 
 router.post("/merchant/uploadCustomers", jwtTokenAuth, (req, res) => {
 	const { customers } = req.body;
