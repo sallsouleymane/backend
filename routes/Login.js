@@ -382,6 +382,7 @@ router.post("/merchant/login", (req, res) => {
 				);	
 			} else {
 				merchant = merch;
+			}
 				Bank.findOne(
 					{
 						_id: merchant.bank_id,
@@ -405,7 +406,6 @@ router.post("/merchant/login", (req, res) => {
 						}
 					}
 				);
-			}
 		}
 	);
 });
