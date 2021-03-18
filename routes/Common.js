@@ -330,6 +330,8 @@ router.post("/:user/listMerchantStaffInvoicesByPeriod", jwtTokenAuth, (req, res)
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
+	} else if (user == "merchantStaff") {
+		User = getTypeClass("merchantStaff");
 	} else {
 		res.status(200).json({
 			status: 0,
@@ -397,6 +399,8 @@ router.post("/:user/listMerchantStaffInvoicesByDateRange", jwtTokenAuth, (req, r
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
+	} else if (user == "merchantStaff") {
+		User = getTypeClass("merchantStaff");
 	} else {
 		res.status(200).json({
 			status: 0,
@@ -459,6 +463,8 @@ router.post("/:user/listMerchantBranchInvoicesByDate", jwtTokenAuth, (req, res) 
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
+	} else if (user == "merchantStaff") {
+		User = getTypeClass("merchantStaff");
 	} else {
 		res.status(200).json({
 			status: 0,
@@ -845,6 +851,8 @@ router.post("/:user/listMerchantBranchInvoicesByPeriod", jwtTokenAuth, (req, res
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
+	} else if (user == "merchantStaff") {
+		User = getTypeClass("merchantStaff");
 	} else {
 		res.status(200).json({
 			status: 0,
@@ -1095,6 +1103,8 @@ router.post("/:user/listMerchantBranchInvoicesByDateRange", jwtTokenAuth, (req, 
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
+	} else if (user == "merchantStaff") {
+		User = getTypeClass("merchantStaff");
 	} else {
 		res.status(200).json({
 			status: 0,
