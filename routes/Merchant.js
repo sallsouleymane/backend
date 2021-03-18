@@ -507,7 +507,6 @@ router.post("/merchant/getbranchList", jwtTokenAuth, (req, res) => {
 	);
 });
 
-
 router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { zone_id } = req.body;
@@ -701,6 +700,100 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 					}		
 				);
 			
+		}
+	);
+});
+
+router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
+	const username = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								} else {
+									Bank.findOne({ _id: adminmerchant.bank_id }, (err, bank) => {
+										let result = errorMessage(err, bank, "Bank not found");
+										if (result.status == 0) {
+											res.status(200).json(result);
+										} else {
+											const wallet_id = adminmerchant.wallet_ids.operational;
+											blockchain
+												.getBalance(wallet_id)
+												.then(function (result) {
+													res.status(200).json({
+														status: 1,
+														balance: result,
+													});
+												})
+												.catch((err) => {
+													res.status(200).json(catchError(err));
+												});
+										}
+									});
+								}
+							});
+						}	
+					}
+				);
+			} else {
+				Bank.findOne({ _id: merchant.bank_id }, (err, bank) => {
+					let result = errorMessage(err, bank, "Bank not found");
+					if (result.status == 0) {
+						res.status(200).json(result);
+					} else {
+						const wallet_id = merchant.wallet_ids.operational;
+						blockchain
+							.getBalance(wallet_id)
+							.then(function (result) {
+								res.status(200).json({
+									status: 1,
+									balance: result,
+								});
+							})
+							.catch((err) => {
+								res.status(200).json(catchError(err));
+							});
+					}
+				});
+			}
 		}
 	);
 });
@@ -3608,45 +3701,5 @@ router.post(
 		);
 	}
 );
-
-router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
-	const username = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username,
-			status: 1,
-		},
-		function (err, merchant) {
-			let result = errorMessage(
-				err,
-				merchant,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Bank.findOne({ _id: merchant.bank_id }, (err, bank) => {
-					let result = errorMessage(err, bank, "Bank not found");
-					if (result.status == 0) {
-						res.status(200).json(result);
-					} else {
-						const wallet_id = merchant.wallet_ids.operational;
-						blockchain
-							.getBalance(wallet_id)
-							.then(function (result) {
-								res.status(200).json({
-									status: 1,
-									balance: result,
-								});
-							})
-							.catch((err) => {
-								res.status(200).json(catchError(err));
-							});
-					}
-				});
-			}
-		}
-	);
-});
 
 module.exports = router;
