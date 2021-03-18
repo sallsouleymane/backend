@@ -69,6 +69,7 @@ router.get("/getClaimCode", function (req, res) {
 	);
 });
 
+
 router.post("/:user/getMerchantCashierDashStats", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { staff_id } = req.body;
