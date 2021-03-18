@@ -319,7 +319,6 @@ router.post("/merchantStaff/login", (req, res) => {
 
 router.post("/merchant/login", (req, res) => {
 	const { username, password } = req.body;
-	let merchant = {};
 	Merchant.findOne(
 		{ username, password },
 		"-password",
@@ -355,18 +354,42 @@ router.post("/merchant/login", (req, res) => {
 								message: "User not found",
 							});
 						} else {
-							const m = Merchant.findOne({ _id: admin.merchant_id });
-							res.status(200).json({
-								status: 0,
-								message: "User merchant found",
-								merchant: m,
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								} else {
+									Bank.findOne(
+										{
+											_id: adminmerchant.bank_id,
+										},(err, bank) => {
+											var result = errorMessage(
+												err,
+												bank,
+												"No bank is assigned to the merchant"
+											);
+											if (result.status == 0) {
+												res.status(200).json(
+													result
+												);
+											} else {
+												let sign_creds = { username: username, type: "merchantStaff" };
+												const token = jwtsign(sign_creds);
+												res.status(200).json({
+													status: 1,
+													details: adminmerchant,
+													bank:bank,
+													token: token,
+												});
+											}
+										}
+									);
+								}
 							});
 						}	
 					}
 				);	
 			} else {
-				merchant = merch;
-			}
 				Bank.findOne(
 					{
 						_id: merchant.bank_id,
@@ -393,6 +416,7 @@ router.post("/merchant/login", (req, res) => {
 						}
 					}
 				);
+			}
 		}
 	);
 });
