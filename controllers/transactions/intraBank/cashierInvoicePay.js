@@ -152,7 +152,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				created_at: new Date(),
 			},
 		];
-		let res = await execute(trans31, qname.infra_percent);
+		let res = await execute(trans31, qname.INFRA_PERCENT);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -178,7 +178,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				created_at: new Date(),
 			},
 		];
-		let res = await execute(trans32, qname.infra_fixed);
+		let res = await execute(trans32, qname.INFRA_FIXED);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -206,7 +206,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 			},
 		];
 
-		let res = await execute(trans4, qname.partner_share);
+		let res = await execute(trans4, qname.PARTNER_MASTER);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -233,7 +233,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 			},
 		];
 
-		let res = await execute(trans61, qname.infra_percentage);
+		let res = await execute(trans61, qname.INFRA_PERCENTage);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -259,7 +259,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 			},
 		];
 
-		let res = await execute(trans62, qname.infra_fixed);
+		let res = await execute(trans62, qname.INFRA_FIXED);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -287,7 +287,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 			},
 		];
 
-		let res = await execute(trans7, qname.partner_share);
+		let res = await execute(trans7, qname.PARTNER_MASTER);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -336,7 +336,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			created_at: new Date(),
 		},
 	];
-	execute(trans, qname.bank_master);
+	execute(trans, qname.BANK_MASTER);
 
 	trans = [
 		{
@@ -355,7 +355,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			created_at: new Date(),
 		},
 	];
-	execute(trans, qname.infra_master);
+	execute(trans, qname.INFRA_MASTER);
 
 	trans = [
 		{
@@ -374,7 +374,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			created_at: new Date(),
 		},
 	];
-	execute(trans, qname.send_master);
+	execute(trans, qname.SEND_MASTER);
 }
 
 function getAllShares(transfer, feeRule, commRule) {

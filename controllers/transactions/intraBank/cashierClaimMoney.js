@@ -152,7 +152,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 			created_at: new Date(),
 		},
 	];
-	execute(trans, qname.bank_master);
+	execute(trans, qname.BANK_MASTER);
 
 	trans = [
 		{
@@ -171,7 +171,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 			created_at: new Date(),
 		},
 	];
-	execute(trans, qname.infra_master);
+	execute(trans, qname.INFRA_MASTER);
 
 	if (sendBranchPart > 0) {
 		const sendBranchOpWallet = sendBranch.wallet_ids.operational;
@@ -193,7 +193,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 				created_at: new Date(),
 			},
 		];
-		execute(trans, qname.send_master);
+		execute(trans, qname.SEND_MASTER);
 	}
 
 	trans = [
@@ -213,7 +213,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 			created_at: new Date(),
 		},
 	];
-	execute(trans, qname.claim_master);
+	execute(trans, qname.CLAIM_MASTER);
 }
 
 function allTxSuccess(txInfo) {

@@ -147,21 +147,14 @@ module.exports.cashierClaimMoney = function (req, res) {
 						status: 1,
 					},
 					(err, cc) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (cc) {
-							res.status(200).json({
-								status: 0,
-								message: "Money is already claimed",
-							});
+						let errRes = errorMessage(
+							err,
+							cashier,
+							"Money is already claimed",
+							true
+						);
+						if (errRes.status == 0) {
+							res.status(200).json(errRes);
 						} else {
 							CashierSend.findOne(
 								{

@@ -47,9 +47,21 @@ module.exports = function (reqData, otherData, next) {
 		transactionCode,
 		ruleType,
 		masterCode,
+		bankId,
+		isInterBank,
+		interBankRuleType,
 	} = otherData;
 
 	let data = new CashierSend();
+	if (isInterBank) {
+		data.is_inter_bank = isInterBank;
+	}
+	if (interBankRuleType) {
+		data.inter_bank_rule_type = interBankRuleType;
+	}
+	if (bankId) {
+		data.sending_bank_id = bankId;
+	}
 	let temp = {
 		ccode: ccode,
 		mobile: mobile,

@@ -10,11 +10,11 @@ const cancelTransaction = require("../transactions/intraBank/cancelCashToCash");
 
 module.exports.cancelTransaction = async function (req, res, next) {
 	const { transaction_id } = req.body;
-	jwtAuthentication(req, function (err, bank) {
+	jwtAuthentication(req, function (err, user) {
 		if (err) {
 			res.status(200).json(err);
 		} else {
-			TxState.findById(transaction_id, (err, txstate) => {
+			TxState.findById(transaction_id, async (err, txstate) => {
 				let errMsg = errorMessage(err, txstate, "Transaction not found");
 				if (errMsg.status == 0) {
 					res.status(200).json(errMsg);
@@ -24,8 +24,42 @@ module.exports.cancelTransaction = async function (req, res, next) {
 						message:
 							"The money is already claimed. The transaction can not be cancelled.",
 					});
+				} else if (txstate.state == stateNames.CANCEL) {
+					res.status(200).json({
+						status: 0,
+						message: "The transaction is already cancelled.",
+					});
+				} else if (txstate.cancel_approval == 0) {
+					res.status(200).json({
+						status: 0,
+						message: "Transaction is not sent for approval",
+					});
+				} else if (txstate.cancel_approval == -1) {
+					res.status(200).json({
+						status: 0,
+						message: "Cancel request is rejected.",
+					});
+				} else if (txstate.cancel_approval == 2) {
+					res.status(200).json({
+						status: 0,
+						message: "The request is not approved yet.",
+					});
+				} else if (txstate.state == stateNames.WAIT) {
+					try {
+						let result = await cancelTransaction.revertOnlyAmount(txstate);
+						if (result.status == 1) {
+							stateUpd.cancelled(transaction_id);
+						}
+						res.status(200).json(result);
+					} catch (err) {
+						res.status(200).json(catchError(err));
+					}
 				} else {
-					cancelTransaction(transaction_id);
+					res.status(200).json({
+						status: 0,
+						message:
+							"The state in which transaction is in does not allow it to cancel. Please check with the administrator.",
+					});
 				}
 			});
 		}
@@ -41,7 +75,9 @@ module.exports.sendForApproval = async function (req, res, next) {
 			TxState.updateOne(
 				{ _id: transaction_id },
 				{
-					cancel_approval: 2,
+					$set: {
+						cancel: { approved: 2 },
+					},
 				},
 				(err) => {
 					if (err) {

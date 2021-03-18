@@ -7,24 +7,29 @@ const queue = require("./queue");
 //Models
 const TxState = require("../../../models/TxState");
 
-module.exports = async function (transactions, queue_name = "") {
-	try {
+//transactions
+const txstate = require("./states");
+
+//constants
+const categoryConst = require("../constants/category");
+
+module.exports = async function (transactions, category, queue_name = "") {
+	return new Promise(async (resolve, reject) => {
 		var res = await blockchain.initiateMultiTransfer(transactions);
 		for (transaction of transactions) {
-			await saveTxState(transaction, res);
+			await saveTxState(transaction, res, category);
 			if (res.status == 1) {
 				sendSuccessMail(transaction);
 			} else {
+				txstate.failed(category, transaction.master_code);
 				sendFailureMail(transaction);
 				if (queue_name != "") {
 					queue.send(queue_name, [transaction]);
 				}
 			}
 		}
-		return res;
-	} catch (err) {
-		throw err;
-	}
+		resolve(res);
+	});
 };
 
 async function sendSuccessMail(transaction) {
@@ -105,10 +110,10 @@ async function sendFailureMail(transaction) {
 	}
 }
 
-async function saveTxState(transaction, res) {
+async function saveTxState(transaction, res, category) {
 	try {
 		//update status of retried child transaction
-		let txstate = await TxState.findOneAndUpdate(
+		let txstateDoc = await TxState.findOneAndUpdate(
 			{
 				_id: transaction.master_code,
 				"childTx.transaction.child_code": transaction.child_code,
@@ -125,9 +130,10 @@ async function saveTxState(transaction, res) {
 				},
 			}
 		);
-
+		console.log(txstateDoc);
 		//update status new child transaction
-		if (txstate == null) {
+		if (txstateDoc == null) {
+			transaction.created_at = new Date();
 			await TxState.updateOne(
 				{
 					_id: transaction.master_code,
@@ -138,13 +144,25 @@ async function saveTxState(transaction, res) {
 							state: res.status,
 							transaction: transaction,
 							message: res.message,
+							category: category,
 						},
 					},
 				}
 			);
+		} else {
+			if (allTxSuccess(category, txstateDoc)) {
+				txstate.completed(category, transaction.master_code);
+				if (category == categoryConst.DISTRIBUTE) {
+					transferToMasterWallets(transaction.master_code, txstateDoc);
+				}
+			}
 		}
 	} catch (err) {
 		console.log(err);
 		// throw err;
 	}
 }
+
+function allTxSuccess(category, txstateDoc)
+
+function transferToMasterWallets(master_code) {}

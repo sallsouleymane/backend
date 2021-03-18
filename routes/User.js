@@ -26,6 +26,25 @@ const blockchain = require("../services/Blockchain");
 
 //controllers
 const userSendTransCntrl = require("../controllers/user/sendTransaction");
+const cancelTransCntrl = require("../controllers/cashier/cancelTransaction");
+
+router.post(
+	"/user/checkCancelReqStatus",
+	jwtTokenAuth,
+	cancelTransCntrl.checkApprovalStatus
+);
+
+router.post(
+	"/user/sendCancelReqForApproval",
+	jwtTokenAuth,
+	cancelTransCntrl.sendForApproval
+);
+
+router.post(
+	"/user/cancelTransaction",
+	jwtTokenAuth,
+	cancelTransCntrl.cashierCancelTransaction
+);
 
 router.post("/user/getFailedTransactions", jwtTokenAuth, function (req, res) {
 	const { bank_id } = req.body;

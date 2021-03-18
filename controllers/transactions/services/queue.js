@@ -2,7 +2,7 @@ var amqp = require("amqplib/callback_api");
 
 const connection_url = process.env.QUEUE_CONN_URL;
 
-module.exports.send = function (queue_name, transaction) {
+module.exports.send = function (queue_name, transaction, category) {
 	try {
 		amqp.connect(connection_url, function (error0, connection) {
 			if (error0) {
@@ -14,12 +14,13 @@ module.exports.send = function (queue_name, transaction) {
 					console.log(error1);
 				}
 				var queue = queue_name;
-				var msg = Buffer.from(JSON.stringify(transaction));
+				var content = { category: category, transaction: transaction };
+				var msg = Buffer.from(JSON.stringify(content));
 
 				channel.assertQueue(queue, {
-					durable: false,
+					durable: true,
 				});
-				channel.sendToQueue(queue, Buffer.from(msg));
+				channel.sendToQueue(queue, Buffer.from(msg), { persistent: true });
 
 				console.log(" [x] Sent %s to queue %s", msg, queue_name);
 				// connection.close();

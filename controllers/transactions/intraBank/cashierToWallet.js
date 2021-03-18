@@ -45,7 +45,6 @@ module.exports = async function (
 				receiver_id: "",
 				master_code: transfer.master_code,
 				child_code: transfer.master_code + "-s1",
-				created_at: new Date(),
 			},
 		];
 
@@ -66,7 +65,6 @@ module.exports = async function (
 					receiver_id: "",
 					master_code: transfer.master_code,
 					child_code: transfer.master_code + "-s2",
-					created_at: new Date(),
 				},
 			]);
 		}
@@ -118,21 +116,20 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				receiver_id: "",
 				master_code: transfer.master_code,
 				child_code: transfer.master_code + "-s3",
-				created_at: new Date(),
 			},
 		];
-		let res = await execute(trans21, qname.infra_percent);
+		let res = await execute(trans21, qname.INFRA_PERCENT);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
 	}
 
-	if (infraShare.fixed_amount > 0) {
+	if (transfer.infraShare.fixed_amount > 0) {
 		let trans22 = [
 			{
 				from: bankOpWallet,
 				to: infraOpWallet,
-				amount: infraShare.fixed_amount,
+				amount: transfer.infraShare.fixed_amount,
 				note: "Cashier Send fixed Infra Fee",
 				email1: bank.email,
 				email2: infra.email,
@@ -142,22 +139,21 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				to_name: infra.name,
 				sender_id: "",
 				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code + "-s4",
-				created_at: new Date(),
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + "-s4",
 			},
 		];
-		let res = await execute(trans22, qname.infra_fixed);
+		let res = await execute(trans22, qname.INFRA_FIXED);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
 	}
-	if (fee > 0) {
+	if (transfer.fee > 0) {
 		let trans4 = [
 			{
 				from: bankOpWallet,
 				to: branchOpWallet,
-				amount: transfer.sendFee,
+				amount: transfer.senderShare,
 				note: "Bank Send Revenue Branch for Sending money",
 				email1: bank.email,
 				email2: branch.email,
@@ -167,13 +163,12 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				to_name: branch.name,
 				sender_id: "",
 				receiver_id: transfer.cashierId,
-				master_code: master_code,
-				child_code: master_code + "-s5",
-				created_at: new Date(),
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + "-s5",
 			},
 		];
 
-		let res = await execute(trans4, qname.send_fee);
+		let res = await execute(trans4, qname.SEND_FEE);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -213,10 +208,9 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			receiver_id: "",
 			master_code: master_code,
 			child_code: master_code + "-m1",
-			created_at: new Date(),
 		},
 	];
-	execute(trans, qname.bank_master);
+	execute(trans, qname.BANK_MASTER);
 
 	trans = [
 		{
@@ -232,10 +226,9 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			receiver_id: "",
 			master_code: master_code,
 			child_code: master_code + "-m2",
-			created_at: new Date(),
 		},
 	];
-	execute(trans, qname.infra_master);
+	execute(trans, qname.INFRA_MASTER);
 
 	trans = [
 		{
@@ -251,10 +244,9 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			receiver_id: "",
 			master_code: master_code,
 			child_code: master_code + "-m3",
-			created_at: new Date(),
 		},
 	];
-	execute(trans, qname.send_master);
+	execute(trans, qname.SEND_MASTER);
 }
 
 function getAllShares(transfer, rule) {

@@ -73,10 +73,11 @@ router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
 										childTx.transaction.child_code == child_code &&
 										childTx.state == 0
 								);
+								console.log(childTrans);
 								let result = await execute(
-									childTrans.transaction,
-									"",
-									bank._id
+									[childTrans.transaction],
+									childTrans.category,
+									""
 								);
 
 								console.log(result);
@@ -959,7 +960,16 @@ router.post("/broadcastMessage", jwtTokenAuth, function (req, res) {
 					{
 						bank_id: user_id,
 					},
-					{$push: {messages: {message: message, message_title:message_title, from:user.name, logo:user.logo}}},
+					{
+						$push: {
+							messages: {
+								message: message,
+								message_title: message_title,
+								from: user.name,
+								logo: user.logo,
+							},
+						},
+					},
 					function (err, bank) {
 						if (err) {
 							console.log(err);

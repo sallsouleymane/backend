@@ -5,8 +5,10 @@ const { calculateShare } = require("../../../routes/utils/calculateShare");
 // transaction services
 const txstate = require("../services/states");
 const execute = require("../services/execute.js");
+
+//constants
 const qname = require("../constants/queueName");
-const queueName = require("../constants/queueName");
+const categoryConst = require("../constants/category");
 
 module.exports = async function (
 	transfer,
@@ -50,28 +52,26 @@ module.exports = async function (
 		];
 
 		if (transfer.fee > 0) {
-			trans.push([
-				{
-					from: branch.wallet_ids.operational,
-					to: bank.wallet_ids.operational,
-					amount: transfer.fee,
-					note: "Cashier Send Fee Non Wallet to Operational Transaction",
-					email1: branch.email,
-					email2: bank.email,
-					mobile1: branch.mobile,
-					mobile2: bank.mobile,
-					from_name: branch.name,
-					to_name: bank.name,
-					sender_id: "",
-					receiver_id: "",
-					master_code: transfer.master_code,
-					child_code: transfer.master_code + "-s2",
-					created_at: new Date(),
-				},
-			]);
+			trans.push({
+				from: branch.wallet_ids.operational,
+				to: bank.wallet_ids.operational,
+				amount: transfer.fee,
+				note: "Cashier Send Fee Non Wallet to Operational Transaction",
+				email1: branch.email,
+				email2: bank.email,
+				mobile1: branch.mobile,
+				mobile2: bank.mobile,
+				from_name: branch.name,
+				to_name: bank.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + "-s2",
+				created_at: new Date(),
+			});
 		}
 
-		let res = await execute(trans);
+		let res = await execute(trans, categoryConst.MAIN);
 		if (res.status == 0) {
 			return {
 				status: 0,
@@ -93,11 +93,14 @@ module.exports = async function (
 };
 
 async function distributeRevenue(transfer, infra, bank, branch) {
+	txstate.initiateSubTx(categoryConst.DISTRIBUTE, transfer.master_code);
 	const branchOpWallet = branch.wallet_ids.operational;
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 
-	let allTxSuccess = true;
+	let transPromises = [];
+	var promise;
+	// let allTxSuccess = true;
 	if (transfer.infraShare.percentage_amount > 0) {
 		let trans = [
 			{
@@ -118,18 +121,16 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				created_at: new Date(),
 			},
 		];
-		let res = await execute(trans, qname.infra_percent);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
+		promise = execute(trans, categoryConst.DISTRIBUTE, qname.INFRA_PERCENT);
+		transPromises.push(promise);
 	}
 
-	if (infraShare.fixed_amount > 0) {
+	if (transfer.infraShare.fixed_amount > 0) {
 		let trans = [
 			{
 				from: bankOpWallet,
 				to: infraOpWallet,
-				amount: infraShare.fixed_amount,
+				amount: transfer.infraShare.fixed_amount,
 				note: "Cashier Send fixed Infra Fee",
 				email1: bank.email,
 				email2: infra.email,
@@ -139,15 +140,13 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				to_name: infra.name,
 				sender_id: "",
 				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code + "-s4",
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + "-s4",
 				created_at: new Date(),
 			},
 		];
-		let res = await execute(trans, qname.infra_fixed);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
+		promise = execute(trans, categoryConst.DISTRIBUTE, qname.INFRA_FIXED);
+		transPromises.push(promise);
 	}
 
 	if (transfer.fee > 0) {
@@ -155,7 +154,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 			{
 				from: bankOpWallet,
 				to: branchOpWallet,
-				amount: transfer.sendFee,
+				amount: transfer.senderShare,
 				note: "Bank Send Revenue share to Branch for Sending money",
 				email1: bank.email,
 				email2: branch.email,
@@ -165,120 +164,124 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				to_name: branch.name,
 				sender_id: "",
 				receiver_id: transfer.cashierId,
-				master_code: master_code,
-				child_code: master_code + "s5",
-				created_at: new Date(),
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + "-s5",
 			},
 		];
 
-		let res = await execute(trans, qname.send_fee);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
+		promise = execute(trans, categoryConst.DISTRIBUTE, qname.SEND_FEE);
+		transPromises.push(promise);
 	}
 
-	if (allTxSuccess) {
-		transferToMasterWallets(transfer, infra, bank, branch);
-	}
+	Promise.all(transPromises).then((results) => {
+		let allTxSuccess = results.every((res) => {
+			if (res.status == 0) {
+				return false;
+			} else {
+				return true;
+			}
+		});
+		if (allTxSuccess) {
+			txstate.completed(categoryConst.DISTRIBUTE, transfer.master_code);
+			transferToMasterWallets(transfer, infra, bank, branch);
+		}
+	});
 }
 
 async function transferToMasterWallets(transfer, infra, bank, branch) {
-	try {
-		const bankOpWallet = bank.wallet_ids.operational;
-		const bankMasterWallet = bank.wallet_ids.master;
-		const infraOpWallet = bank.wallet_ids.infra_operational;
-		const infraMasterWallet = bank.wallet_ids.infra_master;
-		const branchOpWallet = branch.wallet_ids.operational;
-		const branchMasterWallet = branch.wallet_ids.master;
+	txstate.initiateSubTx(categoryConst.MASTER, transfer.master_code);
+	const bankOpWallet = bank.wallet_ids.operational;
+	const bankMasterWallet = bank.wallet_ids.master;
+	const infraOpWallet = bank.wallet_ids.infra_operational;
+	const infraMasterWallet = bank.wallet_ids.infra_master;
+	const branchOpWallet = branch.wallet_ids.operational;
+	const branchMasterWallet = branch.wallet_ids.master;
 
-		let master_code = transfer.master_code;
+	let master_code = transfer.master_code;
 
-		let infraPart =
-			transfer.infraShare.percentage_amount + transfer.infraShare.fixed_amount;
-		let sendBranchPart = transfer.senderShare;
-		let bankPart =
-			transfer.fee - transfer.infraShare.percentage_amount - sendBranchPart;
+	let infraPart =
+		transfer.infraShare.percentage_amount + transfer.infraShare.fixed_amount;
+	let sendBranchPart = transfer.senderShare;
+	let bankPart =
+		transfer.fee - transfer.infraShare.percentage_amount - sendBranchPart;
 
-		let txStatus = 1;
+	let transPromises = [];
+	var promise;
 
-		let trans = [
-			{
-				from: bankOpWallet,
-				to: bankMasterWallet,
-				amount: bankPart,
-				note: "Bank share to its Master Wallet",
-				email1: bank.email,
-				mobile1: bank.mobile,
-				from_name: bank.name,
-				to_name: bank.name,
-				sender_id: "",
-				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code + "-m1",
-				created_at: new Date(),
-			},
-		];
-		let result = await execute(trans, queueName.bank_master);
-		if (result.status == 0) {
-			txStatus = 0;
+	let trans = [
+		{
+			from: bankOpWallet,
+			to: bankMasterWallet,
+			amount: bankPart,
+			note: "Bank share to its Master Wallet",
+			email1: bank.email,
+			mobile1: bank.mobile,
+			from_name: bank.name,
+			to_name: bank.name,
+			sender_id: "",
+			receiver_id: "",
+			master_code: master_code,
+			child_code: master_code + "-m1",
+			created_at: new Date(),
+		},
+	];
+	promise = execute(trans, categoryConst.MASTER, qname.BANK_MASTER);
+	transPromises.push(promise);
+
+	trans = [
+		{
+			from: infraOpWallet,
+			to: infraMasterWallet,
+			amount: infraPart,
+			note: "Infra share to its Master Wallet",
+			email1: infra.email,
+			mobile1: infra.mobile,
+			from_name: infra.name,
+			to_name: infra.name,
+			sender_id: "",
+			receiver_id: "",
+			master_code: master_code,
+			child_code: master_code + "-m2",
+			created_at: new Date(),
+		},
+	];
+	promise = execute(trans, categoryConst.MASTER, qname.INFRA_MASTER);
+	transPromises.push(promise);
+
+	trans = [
+		{
+			from: branchOpWallet,
+			to: branchMasterWallet,
+			amount: sendBranchPart,
+			note: "Sending Branch share to its Master Wallet",
+			email1: branch.email,
+			mobile1: branch.mobile,
+			from_name: branch.name,
+			to_name: branch.name,
+			sender_id: "",
+			receiver_id: "",
+			master_code: master_code,
+			child_code: master_code + "-m3",
+			created_at: new Date(),
+		},
+	];
+	promise = execute(trans, categoryConst.MASTER, qname.SEND_MASTER);
+	transPromises.push(promise);
+
+	Promise.all(transPromises).then((results) => {
+		let allTxSuccess = results.every((res) => {
+			if (res.status == 0) {
+				return false;
+			} else {
+				return true;
+			}
+		});
+		if (allTxSuccess) {
+			txstate.completed(categoryConst.MASTER);
 		}
+	});
 
-		trans = [
-			{
-				from: infraOpWallet,
-				to: infraMasterWallet,
-				amount: infraPart,
-				note: "Infra share to its Master Wallet",
-				email1: infra.email,
-				mobile1: infra.mobile,
-				from_name: infra.name,
-				to_name: infra.name,
-				sender_id: "",
-				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code + "-m2",
-				created_at: new Date(),
-			},
-		];
-		result = await execute(trans, queueName.infra_master);
-		if (result.status == 0) {
-			txStatus = 0;
-		}
-
-		trans = [
-			{
-				from: branchOpWallet,
-				to: branchMasterWallet,
-				amount: sendBranchPart,
-				note: "Sending Branch share to its Master Wallet",
-				email1: branch.email,
-				mobile1: branch.mobile,
-				from_name: branch.name,
-				to_name: branch.name,
-				sender_id: "",
-				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code + "-m3",
-				created_at: new Date(),
-			},
-		];
-		result = await execute(trans, queueName.send_master);
-		if (result.status == 0) {
-			txStatus = 0;
-		}
-
-		if (txStatus == 0) {
-			txstate.failed(transfer.master_code);
-			return {
-				status: 0,
-				message: "Not all master wallet transfer is success",
-			};
-		} else {
-			return { status: 1 };
-		}
-	} catch (err) {
-		throw err;
-	}
+	txstate.completed(categoryConst.MASTER, transfer.master_code);
 }
 
 function getAllShares(transfer, rule) {

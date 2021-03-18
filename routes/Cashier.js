@@ -39,7 +39,13 @@ const cashClaimTransCntrl = require("../controllers/cashier/claimTransaction");
 const cashCancelTransCntrl = require("../controllers/cashier/cancelTransaction");
 
 router.post(
-	"/cashier/sendCancelRequestForApproval",
+	"/cashier/checkTransactionStatus",
+	jwtTokenAuth,
+	cashCancelTransCntrl.checkApprovalStatus
+);
+
+router.post(
+	"/cashier/sendCancelReqForApproval",
 	jwtTokenAuth,
 	cashCancelTransCntrl.sendForApproval
 );
