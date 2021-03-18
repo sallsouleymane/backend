@@ -724,7 +724,7 @@ router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 			}else if (!merchant || merchant === null || merchant === undefined){
 				MerchantStaff.findOne(
 					{
-						username: jwtusername,
+						username: username,
 						role: "admin",
 					},
 					function (err, admin) {
