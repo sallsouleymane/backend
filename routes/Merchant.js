@@ -40,9 +40,158 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		async function (err, merchant) {
-			let result = errorMessage(err, merchant, "Merchant is not valid");
-			if (result.status == 0) {
-				res.status(200).json(result);
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{ username, password, role: "admin" },
+					"-password",
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								} else {
+									Invoice.aggregate(
+										[
+											{
+												$match: {
+													merchant_id: String(adminmerchant._id),
+													date_paid: {
+														$gte: new Date(
+															start
+														),
+														$lte: new Date(
+															end
+														),
+													},
+												},
+											},
+											{
+												$group: {
+													_id: "$paid_by",
+													amount_paid: { $sum: "$amount" },
+													bills_paid: { $sum: 1 },
+												},
+											},
+										],async (err, post6) => {
+											let result = errorMessage(
+												err,
+												post6,
+												"Error."
+											);
+											if (result.status == 0) {
+												res.status(200).json(result);
+											} else {
+												Invoice.aggregate(
+													[
+														{
+															$match: {
+																merchant_id: String(adminmerchant._id),
+																created_at: {
+																	$gte: new Date(
+																		start
+																	),
+																	$lte: new Date(
+																		end
+																	),
+																},
+															},
+														},
+														{
+															$group: {
+																_id: "$is_created",
+																amount_generated: { $sum: "$amount" },
+																bills_generated: { $sum: 1 },
+															},
+														},
+													],async (err, post7) => {
+														let result = errorMessage(
+															err,
+															post7,
+															"Error."
+														);
+														if (result.status == 0) {
+															res.status(200).json(result);
+														} else {
+															Invoice.aggregate(
+																[
+																	{
+																		$match: {
+																			merchant_id: String(adminmerchant._id),
+																			paid: 0,
+																		},
+																	},
+																	{
+																		$group: {
+																			_id: null,
+																			amount_pending: { $sum: "$amount" },
+																			bills_pending: { $sum: 1 },
+																		},
+																	},
+																],async (err, post8) => {
+																	let result = errorMessage(
+																		err,
+																		post8,
+																		"Error."
+																	);
+																	if (result.status == 0) {
+																		res.status(200).json(result);
+																	} else {
+																		let ap = 0;
+																		let bp = 0;
+																		if (
+																			post8 != undefined &&
+																			post8 != null &&
+																			post8.length > 0
+																		) {
+																			ap = post8[0].amount_pending;
+																			bp = post8[0].bills_pending;
+																		}
+																		res.status(200).json({
+																			status: 1,
+																			post6:post6,
+																			post7:post7,
+																			amount_pending: ap,
+																			bills_pending: bp,
+																		});
+																	}
+																}
+															);
+														}
+													}
+												);
+											}
+										}		
+									);
+								}
+							});
+						}	
+					}
+				);	
 			} else {
 				Invoice.aggregate(
 					[
