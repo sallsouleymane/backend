@@ -398,7 +398,7 @@ router.post("/merchant/login", (req, res) => {
 							"No bank is assigned to the merchant"
 						);
 						if (result.status == 0) {
-							res.status(200).json(result);
+							res.status(200).json(result,merchant);
 						} else {
 							let sign_creds = { username: username, type: "merchant" };
 							const token = jwtsign(sign_creds);
