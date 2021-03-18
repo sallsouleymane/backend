@@ -319,18 +319,69 @@ router.post("/merchantStaff/login", (req, res) => {
 
 router.post("/merchant/login", (req, res) => {
 	const { username, password } = req.body;
+	let merchant = {};
 	Merchant.findOne(
 		{ username, password },
 		"-password",
-		function (err, merchant) {
-			var result = errorMessage(
-				err,
-				merchant,
-				"User account not found. Please signup"
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
+		function (err, merch) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merch){
+				MerchantStaff.findOne(
+					{ username, password, role: "admin" },
+					"-password",
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else{
+							Merchant.findById(
+								admin.merchant_id,
+								(err, adminmerchant) => {
+									if (err) {
+										console.log(err);
+										var message = err;
+										if (err.message) {
+											message = err.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message,
+										});
+									}else if (!adminmerchant){
+										res.status(200).json({
+											status: 0,
+											message: "Admin merchantnot found",
+										});
+									}else{
+										merchant = adminmerchant;
+									}
+								}
+							)
+						}	
+					}
+				);	
 			} else {
+				merchant = merch;
 				Bank.findOne(
 					{
 						_id: merchant.bank_id,
