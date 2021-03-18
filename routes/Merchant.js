@@ -53,7 +53,7 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
-						type: 'admin',
+						role: "admin",
 					},
 					function (err, admin) {
 						if (err) {
