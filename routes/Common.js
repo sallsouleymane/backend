@@ -454,6 +454,7 @@ router.post("/:user/listMerchantStaffInvoicesByDateRange", jwtTokenAuth, (req, r
 	);
 });
 
+
 router.post("/:user/listMerchantBranchInvoicesByDate", jwtTokenAuth, (req, res) => {
 	const { date, branch_id } = req.body;
 	const jwtusername = req.sign_creds.username;
