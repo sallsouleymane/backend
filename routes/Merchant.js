@@ -1169,7 +1169,7 @@ router.post(
 				}else if (!merchant || merchant === null || merchant === undefined){
 					MerchantStaff.findOne(
 						{
-							username: jwtusername,
+							username,
 							role: "admin",
 						},
 						function (err, admin) {
@@ -1220,7 +1220,6 @@ router.post(
 							}
 						}
 					);
-				
 			}
 		);
 	}
