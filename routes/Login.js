@@ -379,6 +379,7 @@ router.post("/merchant/login", (req, res) => {
 													details: adminmerchant,
 													bank:bank,
 													token: token,
+													admin: true,
 												});
 											}
 										}
@@ -411,6 +412,7 @@ router.post("/merchant/login", (req, res) => {
 								details: merchant,
 								bank:bank,
 								token: token,
+								admin: false,
 							});
 						}
 					}
