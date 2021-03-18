@@ -333,7 +333,7 @@ router.post("/merchant/login", (req, res) => {
 					status: 0,
 					message: message,
 				});
-			}else if (!merch){
+			}else if (!merch || merch===null || merch === undefined){
 				MerchantStaff.findOne(
 					{ username, password, role: "admin" },
 					"-password",
@@ -348,7 +348,7 @@ router.post("/merchant/login", (req, res) => {
 								status: 0,
 								message: message,
 							});
-						}else if (!admin){
+						}else if (!admin || admin===null || admin === undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
@@ -367,7 +367,7 @@ router.post("/merchant/login", (req, res) => {
 											status: 0,
 											message: message,
 										});
-									}else if (!adminmerchant){
+									}else if (!adminmerchant || adminmerchant===null || adminmerchant === undefined){
 										res.status(200).json({
 											status: 0,
 											message: "Admin merchant not found",
