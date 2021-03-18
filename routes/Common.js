@@ -388,6 +388,7 @@ router.post("/:user/listMerchantStaffInvoicesByPeriod", jwtTokenAuth, (req, res)
 	);
 });
 
+
 router.post("/:user/listMerchantStaffInvoicesByDateRange", jwtTokenAuth, (req, res) => {
 	const { start_date, end_date, staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
