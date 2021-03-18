@@ -260,7 +260,7 @@ router.post("/:user/listMerchantStaffInvoicesByDate", jwtTokenAuth, (req, res) =
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
 	var User = getTypeClass(user);
-	if (user == "merchantStaff") {
+	if (user == "merchantPosition") {
 		User = getTypeClass("merchantPosition");
 	} else if (user == "merchantBranch") {
 		User = getTypeClass("merchantBranch");
@@ -324,7 +324,7 @@ router.post("/:user/listMerchantStaffInvoicesByPeriod", jwtTokenAuth, (req, res)
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
 	var User = getTypeClass(user);
-	if (user == "merchantStaff") {
+	if (user == "merchantPosition") {
 		User = getTypeClass("merchantPosition");
 	} else if (user == "merchantBranch") {
 		User = getTypeClass("merchantBranch");
@@ -393,7 +393,7 @@ router.post("/:user/listMerchantStaffInvoicesByDateRange", jwtTokenAuth, (req, r
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
 	var User = getTypeClass(user);
-	if (user == "merchantStaff") {
+	if (user == "merchantPosition") {
 		User = getTypeClass("merchantPosition");
 	} else if (user == "merchantBranch") {
 		User = getTypeClass("merchantBranch");
