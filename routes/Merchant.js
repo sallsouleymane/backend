@@ -2223,7 +2223,6 @@ router.post("/merchant/listStaff", jwtTokenAuth, (req, res) => {
 			}
 				MerchantStaff.find(
 					{ merchant_id: merchant_id },
-					"-password",
 					(err, staffs) => {
 						if (err) {
 							console.log(err);
