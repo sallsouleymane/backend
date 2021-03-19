@@ -2170,6 +2170,84 @@ router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
 	);
 });
 
+router.get("/merchant/listStaff", jwtTokenAuth, (req, res) => {
+	const jwtusername = req.sign_creds.username;
+	const { merchant_id } = req.body;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+				MerchantStaff.find(
+					{ merchant_id: merchant_id },
+					"-password",
+					(err, staffs) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								staffs: staffs,
+							});
+						}
+					}
+				);
+			
+		}
+	);
+});
+
 router.post("/merchant/uploadCustomers", jwtTokenAuth, (req, res) => {
 	const { customers } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -3598,49 +3676,6 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 							res.status(200).json({
 								status: 1,
 								message: "Staff updated successfully",
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
-
-router.get("/merchant/listStaff", jwtTokenAuth, (req, res) => {
-	const jwtusername = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, merchant) {
-			let result = errorMessage(
-				err,
-				merchant,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				MerchantStaff.find(
-					{ merchant_id: merchant._id },
-					"-password",
-					(err, staffs) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								staffs: staffs,
 							});
 						}
 					}
