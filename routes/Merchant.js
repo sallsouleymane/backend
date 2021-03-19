@@ -2518,6 +2518,7 @@ router.post("/merchant/addBillPeriod", jwtTokenAuth, (req, res) => {
 	);
 });
 
+
 router.post("/merchant/setDefaultBillPeriod", jwtTokenAuth, (req, res) => {
 	const period = {
 		start_date: req.body.start_date,
