@@ -22,7 +22,10 @@ const TxStateSchema = new mongoose.Schema({
 			message: { type: String, required: true },
 			retry_count: { type: Number, required: false, default: 0 },
 			retry_at: { type: Date, required: false, default: Date.now },
-			category: { type: String, required: true },
+			category: {
+				name: { type: String, required: true },
+				type: { type: String, required: true },
+			},
 		},
 	],
 	cancel: {

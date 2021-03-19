@@ -9,6 +9,7 @@ const execute = require("../services/execute.js");
 //constants
 const qname = require("../constants/queueName");
 const categoryConst = require("../constants/category");
+const childType = require("../constants/childType");
 
 module.exports = async function (
 	transfer,
@@ -46,7 +47,7 @@ module.exports = async function (
 				sender_id: "",
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s1",
+				child_code: transfer.master_code + childType.AMOUNT,
 				created_at: new Date(),
 			},
 		];
@@ -66,7 +67,7 @@ module.exports = async function (
 				sender_id: "",
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s2",
+				child_code: transfer.master_code + childType.REVENUE,
 				created_at: new Date(),
 			});
 		}
@@ -117,7 +118,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				sender_id: "",
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s3",
+				child_code: transfer.master_code + childType.INFRA_PERCENT,
 				created_at: new Date(),
 			},
 		];
@@ -141,7 +142,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				sender_id: "",
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s4",
+				child_code: transfer.master_code + childType.INFRA_FIXED,
 				created_at: new Date(),
 			},
 		];
@@ -165,7 +166,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				sender_id: "",
 				receiver_id: transfer.cashierId,
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s5",
+				child_code: transfer.master_code + childType.SENDER,
 			},
 		];
 
@@ -221,7 +222,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			sender_id: "",
 			receiver_id: "",
 			master_code: master_code,
-			child_code: master_code + "-m1",
+			child_code: master_code + childType.BANK_MASTER,
 			created_at: new Date(),
 		},
 	];
@@ -241,7 +242,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			sender_id: "",
 			receiver_id: "",
 			master_code: master_code,
-			child_code: master_code + "-m2",
+			child_code: master_code + childType.INFRA_MASTER,
 			created_at: new Date(),
 		},
 	];
@@ -261,7 +262,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			sender_id: "",
 			receiver_id: "",
 			master_code: master_code,
-			child_code: master_code + "-m3",
+			child_code: master_code + childType.SEND_MASTER,
 			created_at: new Date(),
 		},
 	];
