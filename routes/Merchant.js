@@ -1747,7 +1747,7 @@ router.post("/merchant/:type/getStatsByPeriod",jwtTokenAuth,function (req, res) 
 						},
 						{
 							$group: {
-								_id: "$paid_by",
+								_id: "$paid_by", 
 								amount_paid: { $sum: "$amount" },
 								bills_paid: { $sum: 1 },
 								penalty: { $sum: "$penalty"},
