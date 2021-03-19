@@ -8,14 +8,13 @@ const Merchant = require("../../models/merchant/Merchant");
 const Invoice = require("../../models/merchant/Invoice");
 const InvoiceGroup = require("../../models/merchant/InvoiceGroup");
 
-module.exports = async function (otherData) {
+module.exports = async function (req, otherData) {
+	const { invoices, merchant_id } = req.body;
 	const {
-		invoices,
 		total_amount,
 		master_code,
 		paid_by,
 		payer_id,
-		merchant_id,
 		payer_branch_id,
 	} = otherData;
 	var last_paid_at = new Date();
