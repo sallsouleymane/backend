@@ -2290,7 +2290,7 @@ router.post("/merchant/listStaff", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
-
+ 
 router.post("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
