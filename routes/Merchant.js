@@ -2291,6 +2291,124 @@ router.post("/merchant/listStaff", jwtTokenAuth, (req, res) => {
 	);
 });
 
+router.post("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}else{
+									Bank.findOne(
+										{
+											_id: adminmerchant.bank_id,
+										},
+										function (err) {
+											if (err) {
+												console.log(err);
+												var message = err;
+												if (err.message) {
+													message = err.message;
+												}
+												res.status(200).json({
+													status: 0,
+													message: message,
+												});
+											} else {
+												const wallet = adminmerchant.wallet_ids.operational;
+												blockchain
+													.getStatement(wallet)
+													.then(function (history) {
+														res.status(200).json({
+															status: 1,
+															history: history,
+														});
+													})
+													.catch((err) => {
+														res.status(200).json(catchError(err));
+													});
+											}
+										}
+									);
+								}
+							});
+						}	
+					}
+				);
+			} else {
+				Bank.findOne(
+					{
+						_id: merchant.bank_id,
+					},
+					function (err) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							const wallet = merchant.wallet_ids.operational;
+							blockchain
+								.getStatement(wallet)
+								.then(function (history) {
+									res.status(200).json({
+										status: 1,
+										history: history,
+									});
+								})
+								.catch((err) => {
+									res.status(200).json(catchError(err));
+								});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/merchant/uploadCustomers", jwtTokenAuth, (req, res) => {
 	const { customers } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -3153,58 +3271,6 @@ router.get("/merchant/todaysStatus", jwtTokenAuth, function (req, res) {
 							bills_paid: merchant.bills_paid,
 							bills_raised: merchant.bills_raised,
 						});
-					}
-				);
-			}
-		}
-	);
-});
-
-router.get("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, merchant) {
-			let result = errorMessage(
-				err,
-				merchant,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Bank.findOne(
-					{
-						_id: merchant.bank_id,
-					},
-					function (err) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else {
-							const wallet = merchant.wallet_ids.operational;
-							blockchain
-								.getStatement(wallet)
-								.then(function (history) {
-									res.status(200).json({
-										status: 1,
-										history: history,
-									});
-								})
-								.catch((err) => {
-									res.status(200).json(catchError(err));
-								});
-						}
 					}
 				);
 			}
