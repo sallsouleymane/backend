@@ -2170,7 +2170,7 @@ router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.get("/merchant/listStaff", jwtTokenAuth, (req, res) => {
+router.post("/merchant/listStaff", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
 	const { merchant_id } = req.body;
 	Merchant.findOne(
