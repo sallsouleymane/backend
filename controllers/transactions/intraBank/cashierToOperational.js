@@ -278,11 +278,9 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			}
 		});
 		if (allTxSuccess) {
-			txstate.completed(categoryConst.MASTER);
+			txstate.completed(categoryConst.MASTER, transfer.master_code);
 		}
 	});
-
-	txstate.completed(categoryConst.MASTER, transfer.master_code);
 }
 
 function getAllShares(transfer, rule) {

@@ -8,7 +8,11 @@ const {
 // transaction services
 const txstate = require("../services/states");
 const execute = require("../services/execute.js");
-const queueName = require("../constants/queueName.js");
+
+//constants
+const qname = require("../constants/queueName");
+const categoryConst = require("../constants/category");
+const childType = require("../constants/childType");
 
 module.exports = async function (
 	transfer,
@@ -51,55 +55,52 @@ module.exports = async function (
 				sender_id: "",
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-p1",
+				child_code: transfer.master_code + childType.AMOUNT,
 				created_at: new Date(),
 			},
 		];
 
 		if (transfer.bankFee > 0) {
-			trans.push([
-				{
-					from: userWallet,
-					to: bankOpWallet,
-					amount: transfer.bankFee,
-					note: "Bank fee on paid bill",
-					email1: user.email,
-					email2: bank.email,
-					mobile1: user.mobile,
-					mobile2: bank.mobile,
-					from_name: user.name,
-					to_name: bank.name,
-					sender_id: "",
-					receiver_id: "",
-					master_code: transfer.master_code,
-					child_code: transfer.master_code + "-p2",
-					created_at: new Date(),
-				},
-			]);
+			trans.push({
+				from: userWallet,
+				to: bankOpWallet,
+				amount: transfer.bankFee,
+				note: "Bank fee on paid bill",
+				email1: user.email,
+				email2: bank.email,
+				mobile1: user.mobile,
+				mobile2: bank.mobile,
+				from_name: user.name,
+				to_name: bank.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + childType.REVENUE + "1",
+				created_at: new Date(),
+			});
 		}
 
 		if (transfer.bankComm > 0) {
-			trans.push([
-				{
-					from: merchantOpWallet,
-					to: bankOpWallet,
-					amount: transfer.bankComm,
-					note: "Bank commission on paid bill",
-					email1: merchant.email,
-					email2: bank.email,
-					mobile1: merchant.mobile,
-					mobile2: bank.mobile,
-					from_name: merchant.name,
-					to_name: bank.name,
-					sender_id: "",
-					receiver_id: "",
-					master_code: transfer.master_code,
-					child_code: transfer.master_code + "-p5",
-					created_at: new Date(),
-				},
-			]);
+			trans.push({
+				from: merchantOpWallet,
+				to: bankOpWallet,
+				amount: transfer.bankComm,
+				note: "Bank commission on paid bill",
+				email1: merchant.email,
+				email2: bank.email,
+				mobile1: merchant.mobile,
+				mobile2: bank.mobile,
+				from_name: merchant.name,
+				to_name: bank.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + childType.REVENUE + "2",
+				created_at: new Date(),
+			});
 		}
 
+		let res = await execute(trans, categoryConst.MAIN);
 		// return response
 		if (res.status == 0) {
 			return {
@@ -109,7 +110,7 @@ module.exports = async function (
 			};
 		}
 
-		distributeRevenue(transfer, infra, bank, fee, comm);
+		distributeRevenue(transfer, infra, bank);
 
 		return {
 			status: 1,
@@ -120,11 +121,13 @@ module.exports = async function (
 	}
 };
 
-async function distributeRevenue(transfer, infra, bank, fee, comm) {
+async function distributeRevenue(transfer, infra, bank) {
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 
-	let allTxSuccess = true;
+	let transPromises = [];
+	var promise;
+	// let allTxSuccess = true;
 
 	if (transfer.infraFeeShare.percentage_amount) {
 		let trans31 = [
@@ -142,15 +145,13 @@ async function distributeRevenue(transfer, infra, bank, fee, comm) {
 				sender_id: "",
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-p3",
+				child_code: transfer.master_code + childType.INFRA_PERCENT + "1",
 				created_at: new Date(),
 			},
 		];
 
-		let res = await execute(trans31, queueName.infra_percent);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
+		promise = execute(trans31, categoryConst.DISTRIBUTE, qname.INFRA_PERCENT);
+		transPromises.push(promise);
 	}
 
 	if (transfer.infraFeeShare.fixed_amount > 0) {
@@ -169,15 +170,13 @@ async function distributeRevenue(transfer, infra, bank, fee, comm) {
 				sender_id: "",
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-p4",
+				child_code: transfer.master_code + childType.INFRA_FIXED + "1",
 				created_at: new Date(),
 			},
 		];
 
-		let res = await execute(trans32, queueName.infra_fixed);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
+		promise = execute(trans32, categoryConst.DISTRIBUTE, qname.INFRA_FIXED);
+		transPromises.push(promise);
 	}
 
 	if (transfer.infraCommShare.percentage_amount > 0) {
@@ -196,15 +195,13 @@ async function distributeRevenue(transfer, infra, bank, fee, comm) {
 				sender_id: "",
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-p6",
+				child_code: transfer.master_code + childType.INFRA_PERCENT + "2",
 				created_at: new Date(),
 			},
 		];
 
-		let res = await execute(trans6, queueName.infra_percent);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
+		promise = execute(trans6, categoryConst.DISTRIBUTE, qname.INFRA_PERCENT);
+		transPromises.push(promise);
 	}
 	if (transfer.infraCommShare.fixed_amount > 0) {
 		let trans6 = [
@@ -222,20 +219,28 @@ async function distributeRevenue(transfer, infra, bank, fee, comm) {
 				sender_id: "",
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-p7",
+				child_code: transfer.master_code + childType.INFRA_FIXED + "2",
 				created_at: new Date(),
 			},
 		];
 
-		let res = await execute(trans6, queueName.infra_fixed);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
+		promise = execute(trans6, categoryConst.DISTRIBUTE, qname.INFRA_FIXED);
+		transPromises.push(promise);
 	}
 
-	if (allTxSuccess) {
-		transferToMasterWallets(transfer, infra, bank);
-	}
+	Promise.all(transPromises).then((results) => {
+		let allTxSuccess = results.every((res) => {
+			if (res.status == 0) {
+				return false;
+			} else {
+				return true;
+			}
+		});
+		if (allTxSuccess) {
+			txstate.completed(categoryConst.DISTRIBUTE, transfer.master_code);
+			transferToMasterWallets(transfer, infra, bank);
+		}
+	});
 }
 
 async function transferToMasterWallets(transfer, infra, bank) {
@@ -257,6 +262,9 @@ async function transferToMasterWallets(transfer, infra, bank) {
 		transfer.infraFeeShare.percentage_amount -
 		transfer.infraCommShare.percentage_amount;
 
+	let transPromises = [];
+	var promise;
+
 	let trans = [
 		{
 			from: bankOpWallet,
@@ -270,11 +278,12 @@ async function transferToMasterWallets(transfer, infra, bank) {
 			sender_id: "",
 			receiver_id: "",
 			master_code: master_code,
-			child_code: master_code + "-m1",
+			child_code: master_code + childType.BANK_MASTER,
 			created_at: new Date(),
 		},
 	];
-	execute(trans, queueName.bank_master);
+	promise = execute(trans, categoryConst.MASTER, qname.BANK_MASTER);
+	transPromises.push(promise);
 
 	trans = [
 		{
@@ -289,11 +298,24 @@ async function transferToMasterWallets(transfer, infra, bank) {
 			sender_id: "",
 			receiver_id: "",
 			master_code: master_code,
-			child_code: master_code + "-m2",
+			child_code: master_code + childType.INFRA_MASTER,
 			created_at: new Date(),
 		},
 	];
-	execute(trans, queueName.infra_master);
+	promise = execute(trans, categoryConst.MASTER, qname.INFRA_MASTER);
+	transPromises.push(promise);
+	Promise.all(transPromises).then((results) => {
+		let allTxSuccess = results.every((res) => {
+			if (res.status == 0) {
+				return false;
+			} else {
+				return true;
+			}
+		});
+		if (allTxSuccess) {
+			txstate.completed(categoryConst.MASTER, transfer.master_code);
+		}
+	});
 }
 
 function getAllShares(transfer, feeRule, commRule) {
