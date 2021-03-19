@@ -8,8 +8,8 @@ const Merchant = require("../../models/merchant/Merchant");
 const Invoice = require("../../models/merchant/Invoice");
 const InvoiceGroup = require("../../models/merchant/InvoiceGroup");
 
-module.exports = async function (req, otherData) {
-	const { invoices, merchant_id } = req.body;
+module.exports = async function (reqData, otherData) {
+	const { invoices, merchant_id } = reqData;
 	const {
 		total_amount,
 		master_code,
