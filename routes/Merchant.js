@@ -88,7 +88,7 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 						{
 							$match: {
 								merchant_id: String(merchant_id),
-								date_paid: {
+								created_at: {
 									$gte: new Date(
 										start
 									),
@@ -96,6 +96,7 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 										end
 									),
 								},
+								paid:1,
 							},
 						},
 						{
@@ -860,7 +861,7 @@ router.post("/merchant/getMerchantSubzoneListDashStats", jwtTokenAuth, function 
 						{
 							$match: {
 								zone_id: zone_id,
-								date_paid: {
+								created_at: {
 									$gte: new Date(
 										start
 									),
@@ -868,6 +869,7 @@ router.post("/merchant/getMerchantSubzoneListDashStats", jwtTokenAuth, function 
 										end
 									),
 								},
+								paid:1,
 							},
 						},
 						{
@@ -1033,7 +1035,7 @@ router.post("/merchant/getMerchantBranchListDashStats", jwtTokenAuth, function (
 						{
 							$match: {
 								subzone_id: subzone_id,
-								date_paid: {
+								created_at: {
 									$gte: new Date(
 										start
 									),
@@ -1041,6 +1043,7 @@ router.post("/merchant/getMerchantBranchListDashStats", jwtTokenAuth, function (
 										end
 									),
 								},
+								paid:1,
 							},
 						},
 						{
