@@ -8,17 +8,24 @@ const Merchant = require("../../models/merchant/Merchant");
 const Invoice = require("../../models/merchant/Invoice");
 const InvoiceGroup = require("../../models/merchant/InvoiceGroup");
 
-module.exports = async function (reqData, otherData) {
-	const { invoices, merchant_id } = reqData;
-	const { total_amount, master_code, paid_by, payer_id } = otherData;
+module.exports = async function (req, otherData) {
+	const { invoices, merchant_id } = req.body;
+	const {
+		total_amount,
+		master_code,
+		paid_by,
+		payer_id,
+		payer_branch_id,
+	} = otherData;
 	var last_paid_at = new Date();
+	console.log(total_amount);
 	var m = await Merchant.updateOne(
 		{ _id: merchant_id },
 		{
 			last_paid_at: last_paid_at,
 			$inc: {
 				amount_collected: total_amount,
-				amount_due: -total_amount,
+				amount_due: Number(-total_amount),
 				bills_paid: invoices.length,
 			},
 		}
@@ -26,33 +33,6 @@ module.exports = async function (reqData, otherData) {
 	if (m == null) {
 		throw new Error("Merchant status can not be updated");
 	}
-
-	// var ms = await MerchantPosition.updateOne(
-	// 	{ _id: i.creator_id },
-	// 	{
-	// 		last_paid_at: last_paid_at,
-	// 	}
-	// );
-	// if (ms == null) {
-	// 	status_update_feedback =
-	// 		"Merchant Staff status can not be updated";
-	// }
-
-	// var mb = await MerchantBranch.updateOne(
-	// 	{ _id: ms.branch_id },
-	// 	{
-	// 		last_paid_at: last_paid_at,
-	// 		$inc: {
-	// 			amount_collected: total_amount,
-	// 			amount_due: -total_amount,
-	// 			bills_paid: invoices.length,
-	// 		},
-	// 	}
-	// );
-	// if (mb == null) {
-	// 	status_update_feedback =
-	// 		"Merchant branch status can not be findOneAndupdated";
-	// }
 
 	for (invoice of invoices) {
 		let { id, penalty } = invoice;
@@ -63,6 +43,7 @@ module.exports = async function (reqData, otherData) {
 				paid_by: paid_by,
 				payer_id: payer_id,
 				penalty: penalty,
+				payer_branch_id: payer_branch_id,
 				transaction_code: master_code,
 				date_paid: new Date(),
 			}

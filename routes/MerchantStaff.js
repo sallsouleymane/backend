@@ -19,11 +19,63 @@ const MerchantSettings = require("../models/merchant/MerchantSettings");
 const Customer = require("../models/merchant/Customer");
 const CashierLedger = require("../models/CashierLedger");
 const CashierTransfer = require("../models/CashierTransfer");
+const DailyReport = require("../models/cashier/DailyReport");
 
 router.post(
 	"/merchantStaff/queryTransactionStates",
 	jwtTokenAuth,
 	cashierCommonContrl.queryTransactionStates
+);
+
+router.post(
+	"/merchantStaff/queryDailyReport",
+	jwtTokenAuth,
+	cashierCommonContrl.queryDailyReport
+);
+
+router.post(
+	"/merchantStaff/getDailyReport",
+	jwtTokenAuth,
+	function (req, res) {
+		const { start, end } = req.body;
+		const jwtusername = req.sign_creds.username;
+		MerchantPosition.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, user) {
+				let result = errorMessage(
+					err,
+					user,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					DailyReport.find(
+						{ 	cashier_id: user._id,
+							created_at: {
+								$gte: new Date(
+									start
+								),
+								$lte: new Date(
+									end
+								),
+							},
+						},
+						(err, reports) => {
+							if (err) {
+								res.status(200).json(catchError(err));
+							} else {
+								res.status(200).json({ status: 1, reports: reports });
+							}
+						}
+					);
+				}
+			}
+		);
+	}
 );
 
 router.post(
@@ -94,16 +146,16 @@ router.post(
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
-					let data = new CashierLedger();
-					data.amount = total;
+					let data = new DailyReport();
 					data.cashier_id = otpd._id;
-					data.trans_type = "CB";
-					let td = {
-						denomination,
-						note,
-					};
-					data.transaction_details = JSON.stringify(td);
-
+					data.created_at = new Date();
+					data.user = "Merchant Cashier";
+					data.opening_balance = otpd.opening_balance;
+					data.closing_balance = otpd.opening_balance + total;
+					data.cash_in_hand = otpd.cash_in_hand;
+					data.opening_time = otpd.opening_time;
+					data.closing_time = new Date();
+					data.descripency =  total - otpd.cash_in_hand - otpd.opening_balance,
 					data.save((err) => {
 						if (err) {
 							console.log(err);
@@ -119,7 +171,7 @@ router.post(
 							MerchantPosition.findByIdAndUpdate(
 								otpd._id,
 								{
-									closing_balance: total,
+									closing_balance: otpd.opening_balance + total,
 									closing_time: new Date(),
 									is_closed: true,
 								},
@@ -157,15 +209,13 @@ router.post(
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
-					var bal =
-						Number(ba.closing_balance) > 0
-							? ba.closing_balance
-							: ba.opening_balance;
+					var bal = ba.closing_balance;
 					upd = {
+						cash_in_hand: bal,
 						opening_balance: bal,
 						closing_balance: 0,
+						opening_time: new Date(),
 						closing_time: null,
-						transaction_started: true,
 						is_closed: false,
 					};
 					console.log(upd);
@@ -184,7 +234,7 @@ router.post(
 						} else {
 							res.status(200).json({
 								status: 1,
-								message: "Cashier account is open now",
+								message: "Cashier is open now",
 							});
 						}
 					});
@@ -215,6 +265,7 @@ router.post(
 				} else {
 					upd = {
 						is_closed: false,
+						opening_time: new Date(),
 					};
 					console.log(upd);
 
@@ -650,7 +701,8 @@ router.post(
 						closingBalance: user.closing_balance,
 						cashInHand: user.cash_in_hand,
 						closingTime: user.closing_time,
-						transactionStarted: user.transaction_started,
+						openingTime: user.opening_time,
+						discrepancy: user.discrepancy,
 						branchId: user.branch_id,
 						isClosed: user.is_closed,
 					});
@@ -1165,7 +1217,10 @@ router.get(
 	}
 );
 
-router.get("/merchantStaff/staffDashStatus", jwtTokenAuth, function (req, res) {
+router.post("/merchantStaff/staffDashStatus", jwtTokenAuth, function (req, res) {
+	const startOfDay = new Date(new Date().setUTCHours(0, 0, 0, 0)).toISOString()
+	const endOfDay = new Date(new Date().setUTCHours(23, 59, 59, 999)).toISOString()
+	const { group_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantPosition.findOne(
 		{
@@ -1181,14 +1236,30 @@ router.get("/merchantStaff/staffDashStatus", jwtTokenAuth, function (req, res) {
 				try {
 					let bills_raised = await Invoice.countDocuments({
 						creator_id: position._id,
+						is_validated: 1,
+						created_at : {
+							$gte: startOfDay, 
+							$lt: endOfDay
+						},
+						group_id: group_id,
 					});
 					let bills_paid = await Invoice.countDocuments({
 						creator_id: position._id,
 						paid: 1,
+						created_at : {
+							$gte: startOfDay, 
+							$lt: endOfDay
+						},
+						group_id: group_id,
 					});
 					let counter_invoices = await Invoice.countDocuments({
 						creator_id: position._id,
 						is_counter: true,
+						created_at : {
+							$gte: startOfDay, 
+							$lt: endOfDay
+						},
+						group_id: group_id,
 					});
 					res.status(200).json({
 						status: 1,
@@ -1197,6 +1268,7 @@ router.get("/merchantStaff/staffDashStatus", jwtTokenAuth, function (req, res) {
 						bills_raised: bills_raised,
 						counter_invoices: counter_invoices,
 						is_closed:position.is_closed,
+						opening_time: position.opening_time,
 					});
 				} catch (err) {
 					res.status(200).json(catchError(err));
@@ -1283,7 +1355,8 @@ router.post("/merchantStaff/editInvoiceGroup", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.get("/merchantStaff/listInvoiceGroups", jwtTokenAuth, (req, res) => {
+router.post("/merchantStaff/listInvoiceGroups", jwtTokenAuth, (req, res) => {
+	const { merchant_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	MerchantPosition.findOne(
 		{
@@ -1296,7 +1369,7 @@ router.get("/merchantStaff/listInvoiceGroups", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				InvoiceGroup.find({ position_id: position._id }, (err, groups) => {
+				InvoiceGroup.find({ merchant_id: merchant_id }, (err, groups) => {
 					if (err) {
 						console.log(err);
 						var message = err;
@@ -1408,149 +1481,132 @@ router.post("/merchantStaff/createInvoice", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				InvoiceGroup.findOne(
-					{ _id: group_id, position_id: position._id },
-					async (err, group) => {
-						let result = errorMessage(err, group, "Group not found");
+				MerchantBranch.findById(
+					position.branch_id,
+					async function (err, branch) {
+						let result = errorMessage(err, branch, "Branch not Found");
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
-							try {
-								if (is_counter) {
-									var referenceFound = await Invoice.findOne({
-										number: reference_invoice,
-										merchant_id: position.merchant_id,
-									});
-									if (!referenceFound) {
-										throw new Error("Referenced Invoice not found");
+							InvoiceGroup.findOne(
+								{ _id: group_id },
+								async (err, group) => {
+									let result = errorMessage(err, group, "Group not found");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										try {
+											if (is_counter) {
+												var referenceFound = await Invoice.findOne({
+													number: reference_invoice,
+													merchant_id: position.merchant_id,
+												});
+												if (!referenceFound) {
+													throw new Error("Referenced Invoice not found");
+												}
+											}
+											if (paid != 1) {
+												paid = 0;
+											}
+											var updatedItems = [];
+											for (const item of items) {
+												var { item_code, quantity, tax_code, total_amount } = item;
+												var item_desc = await Offering.findOne(
+													{ code: item_code, merchant_id: position.merchant_id },
+													"code name denomination unit_of_measure unit_price description"
+												);
+												if (item_desc == null) {
+													throw new Error("Item not found with code " + item_code);
+												}
+
+												var tax_desc = await Tax.findOne(
+													{
+														code: tax_code,
+														merchant_id: position.merchant_id,
+													},
+													"code value"
+												);
+												if (tax_desc == null) {
+													throw new Error("Tax not found with code " + tax_code);
+												}
+
+												updatedItems.push({
+													item_desc: item_desc,
+													quantity: quantity,
+													tax_desc: tax_desc,
+													total_amount: total_amount,
+												});
+											}
+											var invoiceObj = new Invoice();
+											invoiceObj.number = number;
+											invoiceObj.name = name;
+											invoiceObj.last_name = last_name;
+											invoiceObj.address = address;
+											invoiceObj.amount = amount;
+											invoiceObj.merchant_id = position.merchant_id;
+											invoiceObj.bill_date = bill_date;
+											invoiceObj.branch_id = position.branch_id;
+											invoiceObj.zone_id = branch.zone_id;
+											invoiceObj.subzone_id = branch.subzone_id;
+											invoiceObj.bill_period = bill_period;
+											invoiceObj.due_date = due_date;
+											invoiceObj.description = description;
+											invoiceObj.mobile = mobile;
+											invoiceObj.ccode = ccode;
+											invoiceObj.group_id = group_id;
+											invoiceObj.creator_id = position._id;
+											invoiceObj.paid = paid;
+											invoiceObj.is_created = 1;
+											invoiceObj.is_validated = is_validated;
+											invoiceObj.items = updatedItems;
+											invoiceObj.customer_code = customer_code;
+											invoiceObj.is_counter = is_counter;
+											invoiceObj.reference_invoice = reference_invoice;
+											invoiceObj.term = term;
+											await invoiceObj.save();
+
+											if (is_counter) {
+												await Invoice.updateOne(
+													{
+														_id: referenceFound._id,
+													},
+													{ has_counter_invoice: true }
+												);
+											}
+											var c = await MerchantPosition.findOneAndUpdate(
+												{ _id: position._id },
+												{
+													$inc: {
+														bills_raised: 1,
+													},
+												}
+											);
+											if (c == null) {
+												throw new Error(
+													"Can not update the Merchant Position status."
+												);
+											}
+											res.status(200).json({
+												status: 1,
+												message: "Invoice created",
+												branch: branch,
+											});
+										} catch (err) {
+											console.log(err);
+											var message = err;
+											if (err && err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+												branch: branch,
+											});
+										}
 									}
 								}
-								if (paid != 1) {
-									paid = 0;
-								}
-								var updatedItems = [];
-								for (const item of items) {
-									var { item_code, quantity, tax_code, total_amount } = item;
-									var item_desc = await Offering.findOne(
-										{ code: item_code, merchant_id: position.merchant_id },
-										"code name denomination unit_of_measure unit_price description"
-									);
-									if (item_desc == null) {
-										throw new Error("Item not found with code " + item_code);
-									}
+							);
 
-									var tax_desc = await Tax.findOne(
-										{
-											code: tax_code,
-											merchant_id: position.merchant_id,
-										},
-										"code value"
-									);
-									if (tax_desc == null) {
-										throw new Error("Tax not found with code " + tax_code);
-									}
-
-									updatedItems.push({
-										item_desc: item_desc,
-										quantity: quantity,
-										tax_desc: tax_desc,
-										total_amount: total_amount,
-									});
-								}
-								var invoiceObj = new Invoice();
-								invoiceObj.number = number;
-								invoiceObj.name = name;
-								invoiceObj.last_name = last_name;
-								invoiceObj.address = address;
-								invoiceObj.amount = amount;
-								invoiceObj.merchant_id = position.merchant_id;
-								invoiceObj.bill_date = bill_date;
-								invoiceObj.bill_period = bill_period;
-								invoiceObj.due_date = due_date;
-								invoiceObj.description = description;
-								invoiceObj.mobile = mobile;
-								invoiceObj.ccode = ccode;
-								invoiceObj.group_id = group_id;
-								invoiceObj.creator_id = position._id;
-								invoiceObj.paid = paid;
-								invoiceObj.is_created = 1;
-								invoiceObj.is_validated = is_validated;
-								invoiceObj.items = updatedItems;
-								invoiceObj.customer_code = customer_code;
-								invoiceObj.is_counter = is_counter;
-								invoiceObj.reference_invoice = reference_invoice;
-								invoiceObj.term = term;
-								await invoiceObj.save();
-
-								if (is_counter) {
-									await Invoice.updateOne(
-										{
-											_id: referenceFound._id,
-										},
-										{ has_counter_invoice: true }
-									);
-								}
-								var branch = await MerchantBranch.findOneAndUpdate(
-									{ _id: position.branch_id },
-									{ $inc: { bills_raised: 1, amount_due: amount } }
-								);
-								if (branch == null) {
-									throw new Error("Can not update the MerchantBranch status.");
-								}
-
-								var m = await Merchant.findOneAndUpdate(
-									{ _id: branch.merchant_id },
-									{
-										$inc: {
-											bills_raised: 1,
-											amount_due: amount,
-										},
-									}
-								);
-								if (m == null) {
-									throw new Error("Can not update the Merchant status.");
-								}
-
-								var g = await InvoiceGroup.findOneAndUpdate(
-									{ _id: group._id },
-									{
-										$inc: {
-											bills_raised: 1,
-										},
-									}
-								);
-								if (g == null) {
-									throw new Error("Can not update the Invoice Group status.");
-								}
-
-								var c = await MerchantPosition.findOneAndUpdate(
-									{ _id: position._id },
-									{
-										$inc: {
-											bills_raised: 1,
-										},
-									}
-								);
-								if (c == null) {
-									throw new Error(
-										"Can not update the Merchant Position status."
-									);
-								}
-								res.status(200).json({
-									status: 1,
-									message: "Invoice created",
-								});
-							} catch (err) {
-								console.log(err);
-								var message = err;
-								if (err && err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							}
 						}
 					}
 				);
@@ -1574,7 +1630,7 @@ router.post("/merchantStaff/uploadInvoices", jwtTokenAuth, (req, res) => {
 				res.status(200).json(result);
 			} else {
 				InvoiceGroup.findOne(
-					{ _id: group_id, position_id: position._id },
+					{ _id: group_id },
 					async (err, group) => {
 						let result = errorMessage(err, group, "Group not found");
 						if (result.status == 0) {
@@ -1825,7 +1881,7 @@ router.post("/merchantStaff/editInvoice", jwtTokenAuth, (req, res) => {
 				res.status(200).json(result);
 			} else {
 				InvoiceGroup.findOne(
-					{ _id: group_id, position_id: position._id },
+					{ _id: group_id },
 					async (err, group) => {
 						let result = errorMessage(err, group, "Group not found");
 						if (result.status == 0) {
@@ -1997,8 +2053,104 @@ router.post("/merchantStaff/listInvoicesByDate", jwtTokenAuth, (req, res) => {
 	);
 });
 
+router.post("/merchantStaff/listInvoicesByPeriod", jwtTokenAuth, (req, res) => {
+	const { start_date, end_date } = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantPosition.findOne(
+		{
+			username: jwtusername,
+			type: "staff",
+			status: 1,
+		},
+		function (err, position) {
+			let result = errorMessage(err, position, "Position is blocked");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.find(
+					{ 	creator_id: position._id,
+						"bill_period.start_date":  {
+							$gte: start_date
+						},
+						"bill_period.end_date": {
+							$lte: end_date
+						},
+					},
+					(err, invoices) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								invoices: invoices,
+							});
+						}
+					}
+				);
+				
+			}
+		}
+	);
+});
+
+router.post("/merchantStaff/listInvoicesByDateRange", jwtTokenAuth, (req, res) => {
+	const { start_date, end_date } = req.body;
+	const jwtusername = req.sign_creds.username;
+	MerchantPosition.findOne(
+		{
+			username: jwtusername,
+			type: "staff",
+			status: 1,
+		},
+		function (err, position) {
+			let result = errorMessage(err, position, "Position is blocked");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.find(
+					{ 	creator_id: position._id,
+						created_at: {
+							$gte: start_date,
+							$lte: end_date,
+						},
+					},
+					(err, invoices) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								invoices: invoices,
+							});
+						}
+					}
+				);
+				
+			}
+		}
+	);
+});
+
 router.post("/merchantStaff/listInvoices", jwtTokenAuth, (req, res) => {
 	const { group_id } = req.body;
+	const startOfDay = new Date(new Date().setUTCHours(0, 0, 0, 0)).toISOString()
+	const endOfDay = new Date(new Date().setUTCHours(23, 59, 59, 999)).toISOString()
 	const jwtusername = req.sign_creds.username;
 	MerchantPosition.findOne(
 		{
@@ -2013,7 +2165,14 @@ router.post("/merchantStaff/listInvoices", jwtTokenAuth, (req, res) => {
 			} else {
 				if (position.counter_invoice_access) {
 					Invoice.find(
-						{ merchant_id: position.merchant_id },
+						{ 
+							merchant_id: position.merchant_id,
+							group_id,
+							created_at : {
+								$gte: startOfDay, 
+								$lt: endOfDay
+							},
+						},
 						(err, invoices) => {
 							if (err) {
 								console.log(err);
@@ -2035,7 +2194,14 @@ router.post("/merchantStaff/listInvoices", jwtTokenAuth, (req, res) => {
 					);
 				} else {
 					Invoice.find(
-						{ creator_id: position._id, group_id },
+						{ 
+							creator_id: position._id,
+							group_id,
+							created_at : {
+								$gte: startOfDay, 
+								$lt: endOfDay
+							},
+						},
 						(err, invoices) => {
 							if (err) {
 								console.log(err);

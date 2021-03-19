@@ -154,6 +154,7 @@ module.exports.cashierInvoicePay = async (req, res) => {
 													master_code: master_code,
 													paid_by: "BC",
 													payer_id: cashier._id,
+													payer_branch_id: cashier.branch_id,
 												};
 
 												let status = await updateInvoiceRecord(
@@ -325,6 +326,7 @@ module.exports.partnerInvoicePay = async (req, res) => {
 													master_code: master_code,
 													paid_by: "PC",
 													payer_id: cashier._id,
+													payer_branch_id: cashier.branch_id,
 												};
 
 												let status = await updateInvoiceRecord(

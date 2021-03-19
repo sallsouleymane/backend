@@ -6,9 +6,7 @@ module.exports.initiate = async function (
 	bank_id,
 	tx_type,
 	payer_id = "",
-	cash_in_hand = 0,
-	amount = 0,
-	description
+	cash_in_hand = 0
 ) {
 	try {
 		console.log(category + " transaction initiated");
@@ -18,8 +16,6 @@ module.exports.initiate = async function (
 		tx.txType = tx_type;
 		tx.payerId = payer_id;
 		tx.cash_in_hand = cash_in_hand;
-		tx.amount = amount;
-		tx.description = description;
 		let txstate = await tx.save();
 		return txstate._id;
 	} catch (err) {
@@ -48,11 +44,16 @@ module.exports.updateClaimer = async function (master_code, receiver_id) {
 	}
 };
 
-module.exports.waitingForCompletion = async function (category, master_code) {
+module.exports.waitingForCompletion = async function (
+	category,
+	master_code,
+	transaction = {}
+) {
 	try {
 		console.log(category + " transaction waiting for completion");
 		let tx = {};
 		tx["state." + category] = stateConst.WAIT;
+		tx.transaction = transaction;
 		await TxState.updateOne({ _id: master_code }, tx);
 	} catch (err) {
 		throw err;

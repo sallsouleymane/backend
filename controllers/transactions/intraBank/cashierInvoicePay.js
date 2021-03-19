@@ -129,6 +129,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 	const branchOpWallet = branch.wallet_ids.operational;
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
+	const merchantOpWallet = merchant.wallet_ids.operational;
 
 	let allTxSuccess = true;
 

@@ -11,6 +11,7 @@ const TxStateSchema = new mongoose.Schema({
 	cashier_id: { type: String, required: false },
 	payerId: { type: String, required: false },
 	receiverId: { type: String, required: false },
+	transaction: { type: Object, required: false },
 	cash_in_hand: { type: Number, required: false, default: 0 },
 	amount: { type: Number, required: false, default: 0 },
 	description: { type: String, required: false },
