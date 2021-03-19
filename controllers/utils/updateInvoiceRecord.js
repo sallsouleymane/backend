@@ -9,15 +9,24 @@ const Invoice = require("../../models/merchant/Invoice");
 const InvoiceGroup = require("../../models/merchant/InvoiceGroup");
 
 module.exports = async function (otherData) {
-	const { invoices, total_amount, master_code, paid_by, payer_id, merchant_id, payer_branch_id } = otherData;
+	const {
+		invoices,
+		total_amount,
+		master_code,
+		paid_by,
+		payer_id,
+		merchant_id,
+		payer_branch_id,
+	} = otherData;
 	var last_paid_at = new Date();
+	console.log(total_amount);
 	var m = await Merchant.updateOne(
 		{ _id: merchant_id },
 		{
 			last_paid_at: last_paid_at,
 			$inc: {
 				amount_collected: total_amount,
-				amount_due: -total_amount,
+				amount_due: Number(-total_amount),
 				bills_paid: invoices.length,
 			},
 		}
@@ -25,7 +34,6 @@ module.exports = async function (otherData) {
 	if (m == null) {
 		throw new Error("Merchant status can not be updated");
 	}
-
 
 	for (invoice of invoices) {
 		let { id, penalty } = invoice;
