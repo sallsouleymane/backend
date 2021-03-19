@@ -2,11 +2,11 @@ var amqp = require("amqplib/callback_api");
 const execute = require("./controllers/transactions/services/execute");
 const TxState = require("./models/TxState");
 
-const queue_name = process.argv[2];
-const connection_url = process.argv[3];
+// const queue_name = process.argv[2];
+// const connection_url = process.argv[3];
 
-// const queue_name = process.env.QUEUE_NAME;
-// const connection_url = process.env.QUEUE_CONN_URL;
+const queue_name = process.env.QUEUE_NAME;
+const connection_url = process.env.QUEUE_CONN_URL;
 
 amqp.connect(connection_url, function (error0, connection) {
 	try {

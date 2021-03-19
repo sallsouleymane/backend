@@ -7,7 +7,6 @@ const updateInvoiceRecord = require("../utils/updateInvoiceRecord");
 const merchantInvoicePay = require("../transactions/intraBank/merchantInvoicePay");
 const Invoice = require("../../models/merchant/Invoice");
 
-
 // transactions
 const txstate = require("../transactions/services/states");
 
@@ -52,14 +51,7 @@ module.exports = (req, res) => {
 								merchant.bank_id,
 								" Merchant cashier to Merchant",
 								cashier._id,
-<<<<<<< HEAD
-								cashier.cash_in_hand,
-								total_amount,
-								description
-=======
 								cashier.cash_in_hand
-
->>>>>>> master
 							);
 							MerchantRule.findOne(
 								{
@@ -95,7 +87,9 @@ module.exports = (req, res) => {
 												invoices,
 												merchant._id
 											);
-											const invoiceDetails = await Invoice.findOne({ _id: invoices[0].id })
+											const invoiceDetails = await Invoice.findOne({
+												_id: invoices[0].id,
+											});
 											let otherInfo = {
 												total_amount: total_amount,
 												master_code: master_code,
@@ -104,7 +98,7 @@ module.exports = (req, res) => {
 												payer_branch_id: cashier.branch_id,
 												merchant_id: merchant._id,
 												invoiceDetails: invoiceDetails,
-												invoices: invoices
+												invoices: invoices,
 											};
 											txstate.waitingForCompletion(master_code, otherInfo);
 
@@ -145,11 +139,7 @@ module.exports = (req, res) => {
 													);
 												}
 
-
-												let status = await updateInvoiceRecord(
-
-													otherInfo
-												);
+												let status = await updateInvoiceRecord(otherInfo);
 												if (status != null) {
 													throw new Error(status);
 												}

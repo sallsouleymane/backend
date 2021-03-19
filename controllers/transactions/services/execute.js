@@ -131,7 +131,6 @@ async function saveTxState(transaction, res, category) {
 				},
 			}
 		);
-		console.log(txstateDoc);
 		//update status new child transaction
 		if (txstateDoc == null) {
 			transaction.created_at = new Date();
