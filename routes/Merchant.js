@@ -569,7 +569,7 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 						{
 							$match: {
 								zone_id: zone_id,
-								date_paid: {
+								created_at: {
 									$gte: new Date(
 										start
 									),
@@ -577,6 +577,7 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 										end
 									),
 								},
+								paid: 1,
 							},
 						},
 						{
@@ -1291,7 +1292,7 @@ router.post("/merchant/getSubZoneStats",jwtTokenAuth,function (req, res) {
 						{
 							$match: {
 								subzone_id: subzone_id,
-								date_paid: {
+								created_at: {
 									$gte: new Date(
 										start
 									),
@@ -1299,6 +1300,7 @@ router.post("/merchant/getSubZoneStats",jwtTokenAuth,function (req, res) {
 										end
 									),
 								},
+								paid: 1,
 							},
 						},
 						{
@@ -1745,7 +1747,7 @@ router.post("/merchant/:type/getStatsByPeriod",jwtTokenAuth,function (req, res) 
 						},
 						{
 							$group: {
-								_id: null,
+								_id: "$paid_by",
 								amount_paid: { $sum: "$amount" },
 								bills_paid: { $sum: 1 },
 								penalty: { $sum: "$penalty"},
