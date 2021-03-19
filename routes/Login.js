@@ -376,6 +376,7 @@ router.post("/merchant/login", (req, res) => {
 												const token = jwtsign(sign_creds);
 												res.status(200).json({
 													status: 1,
+													adminuser: admin,
 													details: adminmerchant,
 													bank:bank,
 													token: token,
