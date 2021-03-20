@@ -4120,6 +4120,7 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 		code,
 		zone_id,
 		subzone_id,
+		read_only,
 		username,
 		address1,
 		state,
@@ -4156,6 +4157,7 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 				data.address1 = address1;
 				data.state = state;
 				data.country = country;
+				data.read_only = read_only;
 				data.zip = zip;
 				data.ccode = ccode;
 				data.mobile = mobile;
@@ -4277,6 +4279,7 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 		branch_id,
 		name,
 		username,
+		read_only,
 		bcode,
 		address1,
 		state,
@@ -4310,6 +4313,7 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 						address1: address1,
 						state: state,
 						zip: zip,
+						read_only: read_only,
 						ccode: ccode,
 						bcode: bcode,
 						country: country,
