@@ -11,7 +11,6 @@ const TxState = require("../../../models/TxState");
 const txstate = require("./states");
 
 //constants
-const categoryConst = require("../constants/category");
 const childType = require("../constants/childType");
 
 module.exports = async function (transactions, category, queue_name = "") {

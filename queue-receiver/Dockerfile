@@ -5,8 +5,8 @@ WORKDIR /usr/src/app
 COPY ./config.json .
 COPY ./dbConfig.js .
 COPY ./receive.js .
-COPY ./controllers/transactions/services/execute.js ./controllers/transactions/services/
-COPY ./controllers/transactions/services/queue.js ./controllers/transactions/services/
+COPY ./controllers/transactions/constants/ ./controllers/transactions/constants/
+COPY ./controllers/transactions/services/ ./controllers/transactions/services/
 COPY ./models/TxState.js ./models/
 COPY ./services/Blockchain.js ./services/
 COPY ./routes/utils/sendSMS.js ./routes/utils/

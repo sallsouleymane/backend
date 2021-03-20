@@ -9,6 +9,12 @@ const {
 const txstate = require("../services/states");
 const execute = require("../services/execute.js");
 const queueName = require("../constants/queueName.js");
+const childType = require("../constants/childType.js");
+
+//constants
+const qname = require("../constants/queueName");
+const categoryConst = require("../constants/category");
+const childType = require("../constants/childType");
 
 module.exports = async function (transfer, infra, bank, merchant, comm) {
 	try {
@@ -43,11 +49,11 @@ module.exports = async function (transfer, infra, bank, merchant, comm) {
 					sender_id: "",
 					receiver_id: "",
 					master_code: transfer.master_code,
-					child_code: transfer.master_code + "-p1",
+					child_code: transfer.master_code + childType.REVENUE,
 				},
 			];
 
-			let res = await execute(trans1);
+			let res = await execute(trans1, categoryConst.MAIN);
 			// return response
 			if (res.status == 0) {
 				return {
@@ -92,11 +98,11 @@ async function distributeRevenue(transfer, infra, bank) {
 				sender_id: "",
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-p2",
+				child_code: transfer.master_code + childType.INFRA_PERCENT,
 			},
 		];
 
-		let res = await execute(trans21, queueName.infra_percent);
+		let res = await execute(trans21, categoryConst.DI);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
