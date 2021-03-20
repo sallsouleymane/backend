@@ -9,7 +9,6 @@ const {
 const txstate = require("../services/states");
 const execute = require("../services/execute.js");
 const queueName = require("../constants/queueName.js");
-const childType = require("../constants/childType.js");
 
 //constants
 const qname = require("../constants/queueName");
