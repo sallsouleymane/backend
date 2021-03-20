@@ -3815,6 +3815,7 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 		email,
 		ccode,
 		mobile,
+		read_only,
 		username,
 		password,
 		branch_id,
@@ -3837,6 +3838,7 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 				data.role = role;
 				data.code = code;
 				data.name = name;
+				data.read_only = read_only;
 				data.email = email;
 				data.mobile = mobile;
 				data.username = username;
@@ -3901,6 +3903,7 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 		email,
 		ccode,
 		code,
+		read_only,
 		mobile,
 		username,
 		branch_id,
@@ -3930,6 +3933,7 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 					{
 						name: name,
 						role: role,
+						read_only : read_only,
 						email: email,
 						code: code,
 						ccode: ccode,
