@@ -1454,6 +1454,7 @@ router.post("/merchantStaff/createInvoice", jwtTokenAuth, (req, res) => {
 		name,
 		last_name,
 		address,
+		email,
 		amount,
 		bill_date,
 		bill_period,
@@ -1541,6 +1542,7 @@ router.post("/merchantStaff/createInvoice", jwtTokenAuth, (req, res) => {
 											invoiceObj.number = number;
 											invoiceObj.name = name;
 											invoiceObj.last_name = last_name;
+											invoiceObj.email = email;
 											invoiceObj.address = address;
 											invoiceObj.amount = amount;
 											invoiceObj.merchant_id = position.merchant_id;

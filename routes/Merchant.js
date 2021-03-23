@@ -4306,7 +4306,7 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 				res.status(200).json(result);
 			} else {
 				MerchantBranch.findOneAndUpdate(
-					{ _id: branch_id, merchant_id: merchant._id },
+					{ _id: branch_id },
 					{
 						name: name,
 						username: username,
