@@ -94,6 +94,7 @@ module.exports = async function (transfer, infra, bank, sender, rule) {
 };
 
 async function distributeRevenue(transfer, infra, bank) {
+	txstate.initiateSubTx(categoryConst.DISTRIBUTE, transfer.master_code);
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 

@@ -120,6 +120,7 @@ async function distributeRevenue(transfer, bank, branch) {
 }
 
 async function transferToMasterWallets(transfer, bank, branch, txInfo) {
+	txstate.initiateSubTx(categoryConst.MASTER, transfer.master_code);
 	let master_code = transfer.master_code;
 	let infra = await Infra.findOne({ _id: bank.user_id });
 	let sendBranchPart = 0;

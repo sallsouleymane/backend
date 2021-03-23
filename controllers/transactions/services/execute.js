@@ -177,10 +177,7 @@ function allTxSuccess(category, txstateDoc) {
 
 function transferToMasterWallets(master_code, txstateDoc) {
 	let share = getShares(txstateDoc);
-	let wallet_id = getWalletIds(txstateDoc);
-	for (childtx of txstateDoc.childTx) {
-		trans = getMasterTransaction(childtx);
-	}
+	// calling a function to start master wallet transaction pending...
 }
 
 function getShares() {
@@ -199,115 +196,12 @@ function getShares() {
 		}
 		if (ctype == childType.INFRA_PERCENT) {
 			infra_per += childtx.amount;
-			bank_rev += childtx.amount;
 		}
 		if (ctype == childType.INFRA_FIXED) {
 			infra_fx += childtx.amount;
 		}
 		if (ctype == childType.SENDER) {
 			sender_share += childtx.amount;
-		}
-		if (ctype == childType.CLAIMER) {
-			claimer_share += childtx.amount;
-		}
-		if (ctype == childType.PARTNER_SHARE) {
-			partner_share += childtx.amount;
-		}
-		if (ctype == childType.OTHER_BANK_SHARE) {
-			other_bank_share += childtx.amount;
-		}
-	}
-
-	let bank_share =
-		bank_rev -
-		infra_per -
-		sender_share -
-		partner_share -
-		claimer_share -
-		other_bank_share;
-	let infra_share = infra_per + infra_fx;
-	return {
-		bank_share: bank_share,
-		infra_share: infra_share,
-		sender_share: sender_share,
-		claimer_share: claimer_share,
-		partner_share: partner_share,
-		other_bank_share: other_bank_share,
-	};
-}
-
-function getMasterTransactions(shares) {
-	let bankFound = false;
-	let infraFound = false;
-	let senderFound = false;
-	let claimerFound = false;
-	let partnerFound = false;
-	let otherBankFound = false;
-
-	for (childtx of txstateDoc.childTx) {
-		ctype = fetchChildType(childtx.child_code);
-		if (ctype == childType.REVENUE) {
-			bank_rev += childtx.amount;
-			if (!bankFound) {
-				trans.push({
-					from: childtx.to,
-					to: getMasterId(childtx.to),
-					amount: 0,
-					note: "Bank Share",
-					email1: childtx.email,
-					mobile1: childtx.mobile,
-					from_name: childtx.to_name,
-					to_name: childtx.to_name,
-					sender_id: childtx.receiver_id,
-					receiver_id: childtx.receiver_id,
-					master_code: childtx.master_code,
-					child_code: childtx.master_code + childType.BANK_MASTER,
-				});
-				bankFound = true;
-			}
-		}
-		if (ctype == childType.INFRA_PERCENT) {
-			infra_per += childtx.amount;
-			bank_rev += childtx.amount;
-			if (!infraFound) {
-				trans.push({
-					from: childtx.to,
-					to: getMasterId(childtx.to),
-					amount: 0,
-					note: "Infra Share",
-					email1: childtx.email,
-					mobile1: childtx.mobile,
-					from_name: childtx.to_name,
-					to_name: childtx.to_name,
-					sender_id: childtx.receiver_id,
-					receiver_id: childtx.receiver_id,
-					master_code: childtx.master_code,
-					child_code: childtx.master_code + childType.BANK_MASTER,
-				});
-				infraFound = true;
-			}
-		}
-		if (ctype == childType.INFRA_FIXED) {
-			infra_fx += childtx.amount;
-			if (!infraFound) {
-				infra.wallet_id = childtx.to;
-				infra.email = childtx.email2;
-				infra.mobile = childtx.mobile2;
-				infra.id = childtx.receiver_id;
-				infra.name = childtx.to_name;
-				infraFound = true;
-			}
-		}
-		if (ctype == childType.SENDER) {
-			sender_share += childtx.amount;
-			if (!senderFound) {
-				sender.wallet_id = childtx.to;
-				sender.email = childtx.email2;
-				sender.mobile = childtx.mobile2;
-				sender.id = childtx.receiver_id;
-				sender.name = childtx.to_name;
-				senderFound = true;
-			}
 		}
 		if (ctype == childType.CLAIMER) {
 			claimer_share += childtx.amount;
