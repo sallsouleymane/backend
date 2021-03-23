@@ -9,7 +9,8 @@ const blockchain = require("../../../services/Blockchain.js");
 const { calculateShare } = require("../../../routes/utils/calculateShare");
 const getTypeClass = require("../../../routes/utils/getTypeClass");
 
-//transaction
+// transaction services
+const txstate = require("../services/states");
 const execute = require("../services/execute.js");
 
 //constants
@@ -62,7 +63,7 @@ module.exports = async function (transfer, bank, branch, rule1) {
 				sender_id: bank._id,
 				receiver_id: transfer.cashierId,
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + childType.AMOUNT,
+				child_code: transfer.master_code + childType.AMOUNT + "2",
 				created_at: new Date(),
 			},
 		];
@@ -82,7 +83,7 @@ module.exports = async function (transfer, bank, branch, rule1) {
 				sender_id: bank._id,
 				receiver_id: transfer.cashierId,
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + childType.REVENUE,
+				child_code: transfer.master_code + childType.CLAIMER,
 				created_at: new Date(),
 			});
 		}
@@ -101,8 +102,8 @@ module.exports = async function (transfer, bank, branch, rule1) {
 		return {
 			status: 1,
 			message: "Transaction success!",
-			amount: amount,
-			claimFee: claimFee,
+			amount: transfer.exclusiveAmount,
+			claimFee: transfer.claimerShare,
 		};
 	} catch (err) {
 		throw err;
@@ -113,6 +114,7 @@ async function distributeRevenue(transfer, bank, branch) {
 	let txInfo = await TxState.findById(transfer.master_code);
 	let alltxsuccess = allTxSuccess(txInfo);
 	if (alltxsuccess) {
+		txstate.completed(categoryConst.DISTRIBUTE, transfer.master_code);
 		transferToMasterWallets(transfer, bank, branch, txInfo);
 	}
 }
@@ -125,7 +127,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 	if (transfer.sendBranchType && transfer.sendBranchType != "") {
 		const BranchType = getTypeClass(transfer.sendBranchType);
 		sendBranch = await BranchType.findOne({ _id: transfer.sendBranchId });
-		sendBranchPart = getPart(txInfo, master_code, ["s5"], []);
+		sendBranchPart = getPart(txInfo, master_code, [childType.SENDER], []);
 	}
 
 	const bankOpWallet = bank.wallet_ids.operational;
@@ -135,9 +137,19 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 	const branchOpWallet = branch.wallet_ids.operational;
 	const branchMasterWallet = branch.wallet_ids.master;
 
-	let infraPart = getPart(txInfo, master_code, ["s3", "s4"], []);
-	let claimBranchPart = getPart(txInfo, master_code, ["c2"], []);
-	let bankPart = getPart(txInfo, master_code, ["s2"], ["s3", "s5", "c2"]);
+	let infraPart = getPart(
+		txInfo,
+		master_code,
+		[childType.INFRA_PERCENT, childType.INFRA_FIXED],
+		[]
+	);
+	let claimBranchPart = getPart(txInfo, master_code, [childType.CLAIMER], []);
+	let bankPart = getPart(
+		txInfo,
+		master_code,
+		[childType.REVENUE],
+		[childType.INFRA_PERCENT, childType.SENDER, childType.CLAIMER]
+	);
 
 	let transPromises = [];
 	var promise;

@@ -4,6 +4,9 @@ const {
 	getTransactionCode,
 	calculateShare,
 } = require("../../../routes/utils/calculateShare");
+
+// transaction services
+const txstate = require("../services/states");
 const execute = require("../services/execute.js");
 
 //constants
@@ -154,8 +157,10 @@ async function distributeRevenue(transfer, infra, bank) {
 				}
 			});
 			if (allTxSuccess) {
-				txstate.completed(categoryConst.DISTRIBUTE, transfer.master_code);
-				transferToMasterWallets(transfer, infra, bank, branch);
+				txstate.waitingForCompletion(
+					categoryConst.DISTRIBUTE,
+					transfer.master_code
+				);
 			}
 		});
 	}

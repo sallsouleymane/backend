@@ -19,12 +19,7 @@ module.exports = async function (
 		const branchOpWallet = branch.wallet_ids.operational;
 		const bankOpWallet = bank.wallet_ids.operational;
 
-		var amount = Number(transfer.amount);
-		var fee = calculateShare("bank", transfer.amount, rule1);
-		if (transfer.isInclusive) {
-			amount = amount - fee;
-		}
-
+		transfer = getAllShares(transfer, rule1, rule2);
 		let master_code = transfer.master_code;
 
 		let trans = [
@@ -189,4 +184,28 @@ async function distributeRevenue(transfer, sendingBank, bank, branch, rule1) {
 		];
 		await execute(trans3);
 	}
+}
+
+function getAllShares(transfer, rule1, rule2) {
+	let amount = transfer.amount;
+	let exclusiveAmount = amount;
+	var fee = calculateShare("bank", amount, rule1);
+	if (transfer.isInclusive) {
+		exclusiveAmount = amount - fee;
+	}
+	let claimerShare = 0;
+	if (fee > 0) {
+		claimerShare = calculateShare(
+			transfer.claimerType,
+			transfer.amount,
+			rule1,
+			rule2,
+			transfer.claimerCode
+		);
+	}
+
+	transfer.exclusiveAmount = exclusiveAmount;
+	transfer.fee = fee;
+	transfer.claimerShare = claimerShare;
+	return transfer;
 }

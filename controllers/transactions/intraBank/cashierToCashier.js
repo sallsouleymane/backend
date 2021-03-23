@@ -2,8 +2,15 @@
 // const state = require("./transactions/state");
 const blockchain = require("../../../services/Blockchain.js");
 const { calculateShare } = require("../../../routes/utils/calculateShare");
+
+// transaction services
+const txstate = require("../services/states");
 const execute = require("../services/execute.js");
+
+//constants
 const qname = require("../constants/queueName");
+const categoryConst = require("../constants/category");
+const childType = require("../constants/childType");
 
 module.exports = async function (transfer, infra, bank, branch, rule) {
 	try {
@@ -40,7 +47,7 @@ module.exports = async function (transfer, infra, bank, branch, rule) {
 			sender_id: transfer.cashierId,
 			receiver_id: bank._id,
 			master_code: transfer.master_code,
-			child_code: transfer.master_code + "-s1",
+			child_code: transfer.master_code + childType.AMOUNT,
 			created_at: new Date(),
 		});
 
@@ -59,12 +66,12 @@ module.exports = async function (transfer, infra, bank, branch, rule) {
 				sender_id: transfer.cashierId,
 				receiver_id: bank._id,
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s2",
+				child_code: transfer.master_code + childType.REVENUE,
 				created_at: new Date(),
 			});
 		}
 
-		let res = await execute(trans);
+		let res = await execute(trans, categoryConst.MAIN);
 
 		// return failure response
 		if (res.status == 0) {
@@ -92,6 +99,9 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 
+	let transPromises = [];
+	var promise;
+
 	if (transfer.infraShare.percentage_amount > 0) {
 		trans = [
 			{
@@ -109,11 +119,12 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				sender_id: bank._id,
 				receiver_id: infra._id,
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s3",
+				child_code: transfer.master_code + childType.INFRA_PERCENT,
 				created_at: new Date(),
 			},
 		];
-		execute(trans, qname.INFRA_PERCENT);
+		promise = execute(trans, categoryConst.DISTRIBUTE, qname.INFRA_PERCENT);
+		transPromises.push(promise);
 	}
 
 	if (transfer.infraShare.fixed_amount > 0) {
@@ -133,11 +144,12 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				sender_id: bank._id,
 				receiver_id: infra._id,
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s4",
+				child_code: transfer.master_code + childType.INFRA_FIXED,
 				created_at: new Date(),
 			},
 		];
-		execute(trans, qname.INFRA_FIXED);
+		promise = execute(trans, categoryConst.DISTRIBUTE, qname.INFRA_FIXED);
+		transPromises.push(promise);
 	}
 
 	if (transfer.fee > 0) {
@@ -157,13 +169,30 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				sender_id: bank._id,
 				receiver_id: transfer.cashierId,
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s5",
+				child_code: transfer.master_code + childType.SENDER,
 				created_at: new Date(),
 			},
 		];
 
-		execute(trans, qname.SEND_FEE);
+		promise = execute(trans, categoryConst.DISTRIBUTE, qname.SEND_FEE);
+		transPromises.push(promise);
 	}
+
+	Promise.all(transPromises).then((results) => {
+		let allTxSuccess = results.every((res) => {
+			if (res.status == 0) {
+				return false;
+			} else {
+				return true;
+			}
+		});
+		if (allTxSuccess) {
+			txstate.waitingForCompletion(
+				categoryConst.DISTRIBUTE,
+				transfer.master_code
+			);
+		}
+	});
 }
 
 function getAllShares(transfer, rule) {

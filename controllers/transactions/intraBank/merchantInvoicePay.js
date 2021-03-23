@@ -8,7 +8,6 @@ const {
 // transaction services
 const txstate = require("../services/states");
 const execute = require("../services/execute.js");
-const queueName = require("../constants/queueName.js");
 
 //constants
 const qname = require("../constants/queueName");
@@ -101,7 +100,11 @@ async function distributeRevenue(transfer, infra, bank) {
 			},
 		];
 
-		let res = await execute(trans21, categoryConst.DI);
+		let res = await execute(
+			trans21,
+			categoryConst.DISTRIBUTE,
+			qname.INFRA_PERCENT
+		);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -122,7 +125,7 @@ async function distributeRevenue(transfer, infra, bank) {
 				sender_id: "",
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-p3",
+				child_code: transfer.master_code + childType.INFRA_FIXED,
 			},
 		];
 
@@ -161,7 +164,7 @@ async function transferToMasterWallets(transfer, infra, bank) {
 			sender_id: "",
 			receiver_id: "",
 			master_code: transfer.master_code,
-			child_code: transfer.master_code + "-m1",
+			child_code: transfer.master_code + childType.BANK_MASTER,
 			created_at: new Date(),
 		},
 	];
@@ -180,7 +183,7 @@ async function transferToMasterWallets(transfer, infra, bank) {
 			sender_id: "",
 			receiver_id: "",
 			master_code: transfer.master_code,
-			child_code: transfer.master_code + "-m2",
+			child_code: transfer.master_code + childType.INFRA_MASTER,
 			created_at: new Date(),
 		},
 	];

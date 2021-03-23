@@ -5,7 +5,11 @@ const { calculateShare } = require("../../../routes/utils/calculateShare");
 // transaction services
 const txstate = require("../services/states");
 const execute = require("../services/execute.js");
+
+//constants
 const qname = require("../constants/queueName");
+const categoryConst = require("../constants/category");
+const childType = require("../constants/childType");
 
 module.exports = async function (
 	transfer,
@@ -44,32 +48,30 @@ module.exports = async function (
 				sender_id: transfer.cashierId,
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s1",
+				child_code: transfer.master_code + childType.AMOUNT,
 			},
 		];
 
 		if (transfer.fee > 0) {
-			trans.push([
-				{
-					from: branchOpWallet,
-					to: bankOpWallet,
-					amount: transfer.fee,
-					note: "Cashier Send Bank Fee",
-					email1: branch.email,
-					email2: bank.email,
-					mobile1: branch.mobile,
-					mobile2: bank.mobile,
-					from_name: branch.name,
-					to_name: bank.name,
-					sender_id: transfer.cashierId,
-					receiver_id: "",
-					master_code: transfer.master_code,
-					child_code: transfer.master_code + "-s2",
-				},
-			]);
+			trans.push({
+				from: branchOpWallet,
+				to: bankOpWallet,
+				amount: transfer.fee,
+				note: "Cashier Send Bank Fee",
+				email1: branch.email,
+				email2: bank.email,
+				mobile1: branch.mobile,
+				mobile2: bank.mobile,
+				from_name: branch.name,
+				to_name: bank.name,
+				sender_id: transfer.cashierId,
+				receiver_id: "",
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + childType.REVENUE,
+			});
 		}
 
-		let res = await execute(trans);
+		let res = await execute(trans, categoryConst.MAIN);
 
 		// return response
 		if (res.status == 0) {
@@ -84,9 +86,9 @@ module.exports = async function (
 		return {
 			status: 1,
 			message: "Transaction success!",
-			amount: amount,
-			fee: fee,
-			sendFee: sendFee,
+			amount: transfer.exclusiveAmount,
+			fee: transfer.fee,
+			sendFee: transfer.senderShare,
 		};
 	} catch (err) {
 		throw err;
@@ -115,10 +117,14 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				sender_id: "",
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s3",
+				child_code: transfer.master_code + childType.INFRA_PERCENT,
 			},
 		];
-		let res = await execute(trans21, qname.INFRA_PERCENT);
+		let res = await execute(
+			trans21,
+			categoryConst.DISTRIBUTE,
+			qname.INFRA_PERCENT
+		);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -140,10 +146,14 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				sender_id: "",
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s4",
+				child_code: transfer.master_code + childType.INFRA_FIXED,
 			},
 		];
-		let res = await execute(trans22, qname.INFRA_FIXED);
+		let res = await execute(
+			trans22,
+			categoryConst.DISTRIBUTE,
+			qname.INFRA_FIXED
+		);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -164,11 +174,11 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				sender_id: "",
 				receiver_id: transfer.cashierId,
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s5",
+				child_code: transfer.master_code + childType.SENDER,
 			},
 		];
 
-		let res = await execute(trans4, qname.SEND_FEE);
+		let res = await execute(trans4, categoryConst.DISTRIBUTE, qname.SEND_FEE);
 		if (res.status == 0) {
 			allTxSuccess = false;
 		}
@@ -207,10 +217,10 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			sender_id: "",
 			receiver_id: "",
 			master_code: master_code,
-			child_code: master_code + "-m1",
+			child_code: master_code + childType.BANK_MASTER,
 		},
 	];
-	execute(trans, qname.BANK_MASTER);
+	execute(trans, categoryConst.MASTER, qname.BANK_MASTER);
 
 	trans = [
 		{
@@ -225,10 +235,10 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			sender_id: "",
 			receiver_id: "",
 			master_code: master_code,
-			child_code: master_code + "-m2",
+			child_code: master_code + childType.INFRA_MASTER,
 		},
 	];
-	execute(trans, qname.INFRA_MASTER);
+	execute(trans, categoryConst.MASTER, qname.INFRA_MASTER);
 
 	trans = [
 		{
@@ -243,10 +253,10 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			sender_id: "",
 			receiver_id: "",
 			master_code: master_code,
-			child_code: master_code + "-m3",
+			child_code: master_code + childType.SEND_MASTER,
 		},
 	];
-	execute(trans, qname.SEND_MASTER);
+	execute(trans, categoryConst.MASTER, qname.SEND_MASTER);
 }
 
 function getAllShares(transfer, rule) {

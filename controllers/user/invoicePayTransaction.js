@@ -16,6 +16,9 @@ const MerchantRule = require("../../models/merchant/MerchantRule");
 const Merchant = require("../../models/merchant/Merchant");
 const User = require("../../models/User");
 
+//constants
+const categoryConst = require("../transactions/constants/category");
+
 module.exports = async (req, res) => {
 	const today = new Date();
 	const { invoices, merchant_id } = req.body;
@@ -32,6 +35,7 @@ module.exports = async (req, res) => {
 			} else {
 				// Initiate transaction state
 				const master_code = await txstate.initiate(
+					categoryConst.MAIN,
 					user.bank_id,
 					"Wallet to Merchant"
 				);
@@ -123,12 +127,14 @@ module.exports = async (req, res) => {
 													throw new Error(status);
 												}
 
-												txstate.completed(master_code);
+												txstate.completed(categoryConst.MAIN, master_code);
 												res.status(200).json(result);
 											} else {
+												txstate.failed(categoryConst.MAIN, master_code);
 												res.status(200).json(result);
 											}
 										} catch (err) {
+											txstate.failed(categoryConst.MAIN, master_code);
 											res.status(200).json(catchError(err));
 										}
 									}
