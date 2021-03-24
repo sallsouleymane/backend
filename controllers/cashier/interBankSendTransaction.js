@@ -23,6 +23,9 @@ const txstate = require("../transactions/services/states");
 const cashierToCashier = require("../transactions/interBank/cashierToCashier");
 // const cashierToWallet = require("../transactions/interBank/cashierToWallet");
 
+//constants
+const categoryConst = require("../transactions/constants/category");
+
 module.exports.cashierSendMoney = async function (req, res) {
 	const {
 		receiverMobile,

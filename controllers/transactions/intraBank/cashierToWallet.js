@@ -101,7 +101,9 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 
-	let allTxSuccess = true;
+	let transPromises = [];
+	var promise;
+
 	if (transfer.infraShare.percentage_amount > 0) {
 		let trans21 = [
 			{
@@ -121,14 +123,12 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				child_code: transfer.master_code + childType.INFRA_PERCENT,
 			},
 		];
-		let res = await execute(
+		promise = await execute(
 			trans21,
 			categoryConst.DISTRIBUTE,
 			qname.INFRA_PERCENT
 		);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
+		transPromises.push(promise);
 	}
 
 	if (transfer.infraShare.fixed_amount > 0) {
@@ -150,14 +150,12 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				child_code: transfer.master_code + childType.INFRA_FIXED,
 			},
 		];
-		let res = await execute(
+		promise = await execute(
 			trans22,
 			categoryConst.DISTRIBUTE,
 			qname.INFRA_FIXED
 		);
-		if (res.status == 0) {
-			allTxSuccess = false;
-		}
+		transPromises.push(promise);
 	}
 	if (transfer.fee > 0) {
 		let trans4 = [
@@ -179,14 +177,22 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 			},
 		];
 
-		let res = await execute(trans4, categoryConst.DISTRIBUTE, qname.SEND_FEE);
-		if (res.status == 0) {
-			allTxSuccess = false;
+		promise = await execute(trans4, categoryConst.DISTRIBUTE, qname.SEND_FEE);
+		transPromises.push(promise);
+	}
+	Promise.all(transPromises).then((results) => {
+		let allTxSuccess = results.every((res) => {
+			if (res.status == 0) {
+				return false;
+			} else {
+				return true;
+			}
+		});
+		if (allTxSuccess) {
+			txstate.completed(categoryConst.DISTRIBUTE, transfer.master_code);
+			transferToMasterWallets(transfer, infra, bank, branch);
 		}
-	}
-	if (allTxSuccess) {
-		transferToMasterWallets(transfer, infra, bank, branch);
-	}
+	});
 }
 
 async function transferToMasterWallets(transfer, infra, bank, branch) {
@@ -206,6 +212,9 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 	let bankPart =
 		transfer.fee - transfer.infraShare.percentage_amount - sendBranchPart;
 
+	let transPromises = [];
+	var promise;
+
 	let trans = [
 		{
 			from: bankOpWallet,
@@ -222,7 +231,8 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			child_code: master_code + childType.BANK_MASTER,
 		},
 	];
-	execute(trans, categoryConst.MASTER, qname.BANK_MASTER);
+	promise = execute(trans, categoryConst.MASTER, qname.BANK_MASTER);
+	transPromises.push(promise);
 
 	trans = [
 		{
@@ -241,6 +251,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 		},
 	];
 	execute(trans, categoryConst.MASTER, qname.INFRA_MASTER);
+	transPromises.push(promise);
 
 	trans = [
 		{
@@ -259,6 +270,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 		},
 	];
 	execute(trans, categoryConst.MASTER, qname.SEND_MASTER);
+	transPromises.push(promise);
 }
 
 function getAllShares(transfer, rule) {

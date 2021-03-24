@@ -20,6 +20,9 @@ const Partner = require("../../models/partner/Partner");
 const PartnerCashier = require("../../models/partner/Cashier");
 const PartnerBranch = require("../../models/partner/Branch");
 
+//constants
+const categoryConst = require("../transactions/constants/category");
+
 module.exports.cashierInvoicePay = async (req, res) => {
 	const today = new Date();
 

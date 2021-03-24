@@ -22,6 +22,9 @@ const PartnerCashier = require("../../models/partner/Cashier");
 const txstate = require("../transactions/services/states");
 const cashierClaimMoney = require("../transactions/intraBank/cashierClaimMoney");
 
+//constants
+const categoryConst = require("../transactions/constants/category");
+
 function addClaimRecord(reqData, otherData, next) {
 	const {
 		transferCode,

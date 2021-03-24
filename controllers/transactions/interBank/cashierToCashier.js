@@ -22,7 +22,7 @@ module.exports = async function (transfer, infra, bank, branch, rule1, rule2) {
 		var balance = await blockchain.getBalance(branchOpWallet);
 
 		//Check balance first
-		if (Number(balance) < transfer.exclusiveAmount + fee) {
+		if (Number(balance) < transfer.exclusiveAmount + transfer.fee) {
 			return {
 				status: 0,
 				message: "Not enough balance in branch operational wallet",

@@ -20,13 +20,12 @@ module.exports = async function (
 		const bankOpWallet = bank.wallet_ids.operational;
 
 		transfer = getAllShares(transfer, rule1, rule2);
-		let master_code = transfer.master_code;
 
 		let trans = [
 			{
 				from: senderBankEsWallet,
 				to: bankOpWallet,
-				amount: amount,
+				amount: transfer.exclusiveAmount,
 				note: "Cashier claim Money for Inter Bank transaction",
 				email1: sendingBank.email,
 				email2: bank.email,
@@ -36,8 +35,8 @@ module.exports = async function (
 				to_name: bank.name,
 				sender_id: "",
 				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code,
+				master_code: transfer.master_code,
+				child_code: transfer.master_code,
 			},
 		];
 
@@ -66,8 +65,8 @@ module.exports = async function (
 				to_name: branch.name,
 				sender_id: "",
 				receiver_id: transfer.cashierId,
-				master_code: master_code,
-				child_code: master_code,
+				master_code: transfer.master_code,
+				child_code: transfer.master_code,
 			},
 		];
 
