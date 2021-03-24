@@ -44,7 +44,7 @@ module.exports = async function (transfer, infra, bank, sender, rule) {
 				sender_id: "",
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s1",
+				child_code: transfer.master_code + childType.AMOUNT,
 				created_at: new Date(),
 			},
 		];
@@ -64,7 +64,7 @@ module.exports = async function (transfer, infra, bank, sender, rule) {
 				sender_id: "",
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + "-s2",
+				child_code: transfer.master_code + childType.REVENUE,
 				created_at: new Date(),
 			});
 		}

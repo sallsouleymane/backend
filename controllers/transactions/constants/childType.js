@@ -12,6 +12,7 @@ const CLAIM_MASTER = "-CLMA"; //claimer master
 const SEND_MASTER = "-SEMA"; // sender master
 const PARTNER_SHARE = "-PASH"; //Partner share
 const OTHER_BANK_SHARE = "-OTBA";
+const REVERT = "-RVRT";
 
 module.exports = {
 	AMOUNT: AMOUNT,
@@ -26,4 +27,5 @@ module.exports = {
 	SEND_MASTER: SEND_MASTER,
 	PARTNER_SHARE: PARTNER_SHARE,
 	OTHER_BANK_SHARE: OTHER_BANK_SHARE,
+	REVERT: REVERT,
 };

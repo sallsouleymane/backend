@@ -1,13 +1,15 @@
 //services
 const execute = require("../services/execute.js");
-const qname = require("../constants/queueName");
 const TxState = require("../../../models/TxState.js");
-const { stateNames } = require("../constants/stateNames");
-const category = require("../constants/category.js");
+
+//constants
+const qname = require("../constants/queueName");
+const categoryConst = require("../constants/category.js");
+const childType = require("../constants/childType");
 
 module.exports.revertOnlyAmount = async function (txstate) {
 	try {
-		revertTxId = txstate._id + "-s1";
+		revertTxId = txstate._id + childType.AMOUNT;
 
 		var txFound = false;
 		var res;
@@ -28,8 +30,8 @@ module.exports.revertOnlyAmount = async function (txstate) {
 				cancelTx.sender_id = waitTx.receiver_id;
 				cancelTx.receiver_id = waitTx.sender_id;
 				cancelTx.note = "Transaction cancelled. Reverting the amount";
-				cancelTx.child_code = waitTx.master_code + "-r1";
-				res = await execute([cancelTx]);
+				cancelTx.child_code = waitTx.master_code + childType.REVERT;
+				res = await execute([cancelTx], categoryConst.REVERT);
 				txFound = true;
 				break;
 			}
@@ -61,21 +63,36 @@ module.exports.revertAll = async function (txstate) {
 				trans.from = tx.to;
 				trans.to = tx.from;
 				trans.note = "Transaction cancelled. Reverting the amount";
-				trans.child_code = tx.master_code + "-r" + id++;
-				res = await execute([trans]);
+				trans.child_code = tx.master_code + childType.REVERT + id++;
+				promise = execute([trans], txstate.childTx[i].REVERT, qname.REVERT);
+				transPromises.push(promise);
 				txFound = true;
 			}
 		}
+
 		if (txFound == false) {
 			return { status: 0, message: "No transaction found to revert." };
-		} else if (res.status == 0) {
-			return { status: 0, message: "Transaction Failed - " + res.message };
-		} else {
-			return {
-				status: 1,
-				message: "Transaction success!",
-			};
 		}
+
+		Promise.all(transPromises).then((results) => {
+			let allTxSuccess = results.every((res) => {
+				if (res.status == 0) {
+					return false;
+				} else {
+					return true;
+				}
+			});
+			if (allTxSuccess) {
+				txstate.completed(categoryConst.REVERT, transfer.master_code);
+				return {
+					status: 1,
+					message: "Transaction success!",
+				};
+			} else {
+				txstate.failed(categoryConst.REVERT, transfer.master_code);
+				return { status: 0, message: "Transaction Failed ", results: results };
+			}
+		});
 	} catch (err) {
 		throw err;
 	}
