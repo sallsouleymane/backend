@@ -18,7 +18,7 @@ const qname = require("../constants/queueName");
 const categoryConst = require("../constants/category");
 const childType = require("../constants/childType");
 
-module.exports = async function (transfer, bank, branch, rule1) {
+module.exports = async function (transfer, bank, branch, rule) {
 	try {
 		const bankEsWallet = bank.wallet_ids.escrow;
 		const branchOpWallet = branch.wallet_ids.operational;
