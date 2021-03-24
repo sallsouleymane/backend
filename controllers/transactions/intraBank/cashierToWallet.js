@@ -17,7 +17,7 @@ module.exports = async function (
 	bank,
 	branch,
 	receiver,
-	rule1
+	rule
 ) {
 	try {
 		const bankOpWallet = bank.wallet_ids.operational;

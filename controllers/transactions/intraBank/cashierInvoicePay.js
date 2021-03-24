@@ -17,8 +17,8 @@ module.exports = async function (
 	bank,
 	branch,
 	merchant,
-	fee,
-	comm
+	feeRule,
+	commRule
 ) {
 	try {
 		// receiver's wallet names
