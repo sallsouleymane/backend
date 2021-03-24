@@ -15,6 +15,7 @@ const CashierSend = require("../models/CashierSend");
 const Merchant = require("../models/merchant/Merchant");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
 const Invoice = require("../models/merchant/Invoice");
+const TxState = require("../models/TxState");
 
 //utils
 const sendSMS = require("./utils/sendSMS");
@@ -23,11 +24,59 @@ const makeid = require("./utils/idGenerator");
 const makeotp = require("./utils/makeotp");
 const blockchain = require("../services/Blockchain");
 
-const walletToWallet = require("./transactions/intraBank/walletToWallet");
-const walletToCashier = require("./transactions/intraBank/walletToCashier");
-
 //controllers
 const userSendTransCntrl = require("../controllers/user/sendTransaction");
+const cancelTransCntrl = require("../controllers/cashier/cancelTransaction");
+
+router.post(
+	"/user/checkCancelReqStatus",
+	jwtTokenAuth,
+	cancelTransCntrl.checkApprovalStatus
+);
+
+router.post(
+	"/user/sendCancelReqForApproval",
+	jwtTokenAuth,
+	cancelTransCntrl.sendForApproval
+);
+
+router.post(
+	"/user/cancelTransaction",
+	jwtTokenAuth,
+	cancelTransCntrl.cashierCancelTransaction
+);
+
+router.post("/user/getFailedTransactions", jwtTokenAuth, function (req, res) {
+	const { bank_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			let errMsg = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errMsg.status == 0) {
+				res.status(200).json(errMsg);
+			} else {
+				TxState.find({ bankId: bank_id }, (err, txstates) => {
+					if (err) {
+						res.status(200).json(catchError(err));
+					} else {
+						res.status(200).json({
+							status: 1,
+							transactions: txstates,
+						});
+					}
+				});
+			}
+		}
+	);
+});
 
 router.post("/user/getMerchantPenaltyRule", jwtTokenAuth, function (req, res) {
 	const { merchant_id } = req.body;
@@ -688,6 +737,30 @@ router.get("/user/getBanks", jwtTokenAuth, function (req, res) {
 						}
 					}
 				);
+			}
+		}
+	);
+});
+
+router.get("/user/getMessages", jwtTokenAuth, function (req, res) {
+	const username = req.sign_creds.username;
+	User.findOne(
+		{
+			username,
+		},
+		function (err, user) {
+			let result = errorMessage(
+				err,
+				user,
+				"You are either not authorised or not logged in."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				res.status(200).json({
+					status: 1,
+					user: user,
+				});
 			}
 		}
 	);

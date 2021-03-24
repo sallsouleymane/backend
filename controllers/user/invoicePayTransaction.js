@@ -16,9 +16,10 @@ const MerchantRule = require("../../models/merchant/MerchantRule");
 const Merchant = require("../../models/merchant/Merchant");
 const User = require("../../models/User");
 
+//constants
+const categoryConst = require("../transactions/constants/category");
+
 module.exports = async (req, res) => {
-	// Initiate transaction state
-	const master_code = await txstate.initiate();
 	const today = new Date();
 	const { invoices, merchant_id } = req.body;
 	const username = req.sign_creds.username;
@@ -27,11 +28,17 @@ module.exports = async (req, res) => {
 			username,
 			status: 1,
 		},
-		function (err, user) {
+		async function (err, user) {
 			let errRes = errorMessage(err, user, "User is not valid");
 			if (errRes.status == 0) {
 				res.status(200).json(errRes);
 			} else {
+				// Initiate transaction state
+				const master_code = await txstate.initiate(
+					categoryConst.MAIN,
+					user.bank_id,
+					"Wallet to Merchant"
+				);
 				MerchantRule.findOne(
 					{ merchant_id: merchant_id, type: "WM-F", status: 1, active: 1 },
 					(err, fee) => {
@@ -120,12 +127,14 @@ module.exports = async (req, res) => {
 													throw new Error(status);
 												}
 
-												txstate.reported(master_code);
+												txstate.completed(categoryConst.MAIN, master_code);
 												res.status(200).json(result);
 											} else {
+												txstate.failed(categoryConst.MAIN, master_code);
 												res.status(200).json(result);
 											}
 										} catch (err) {
+											txstate.failed(categoryConst.MAIN, master_code);
 											res.status(200).json(catchError(err));
 										}
 									}

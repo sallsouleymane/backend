@@ -19,6 +19,27 @@ const BranchSend = require("../models/BranchSend");
 const BranchClaim = require("../models/BranchClaim");
 const BranchLedger = require("../models/BranchLedger");
 
+//controllers
+const cancelTransCntrl = require("../controllers/branch/cancelTransaction");
+
+router.post(
+	"/branch/cancelTransaction",
+	jwtTokenAuth,
+	cancelTransCntrl.cancelTransaction
+);
+
+router.post(
+	"/branch/approveCancelTxReq",
+	jwtTokenAuth,
+	cancelTransCntrl.approveCancelRequest
+);
+
+router.post(
+	"/branch/rejectCancelTxReq",
+	jwtTokenAuth,
+	cancelTransCntrl.rejectCancelRequest
+);
+
 router.post("/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	var today = new Date();
 	today = today.toISOString();
@@ -79,6 +100,7 @@ router.post("/getBranchDashStats", jwtTokenAuth, function (req, res) {
 
 										Cashier.aggregate(
 											[
+												{ $match: { branch_id: String(user._id) } },
 												{
 													$group: {
 														_id: null,
@@ -99,6 +121,9 @@ router.post("/getBranchDashStats", jwtTokenAuth, function (req, res) {
 											],
 											async (e, post5) => {
 												let cin = 0;
+												let fg = 0;
+												let cg = 0;
+												let ob = 0;
 												if (
 													post5 != undefined &&
 													post5 != null &&
@@ -109,9 +134,15 @@ router.post("/getBranchDashStats", jwtTokenAuth, function (req, res) {
 													cg = post5[0].totalCommission;
 													ob = post5[0].openingBalance;
 												}
-												var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, branch_id: user._id});
-												var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, branch_id: user._id});
-												var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, branch_id: user._id});
+												var totalPendingTransfers = await CashierTransfer.countDocuments(
+													{ status: 0, branch_id: user._id }
+												);
+												var totalAcceptedTransfers = await CashierTransfer.countDocuments(
+													{ status: 1, branch_id: user._id }
+												);
+												var totalcancelledTransfers = await CashierTransfer.countDocuments(
+													{ status: -1, branch_id: user._id }
+												);
 
 												res.status(200).json({
 													status: 1,
@@ -119,7 +150,7 @@ router.post("/getBranchDashStats", jwtTokenAuth, function (req, res) {
 													cashPaid: paid == null ? 0 : paid,
 													cashReceived: received == null ? 0 : received,
 													cashInHand: cin,
-													feeGenerated : fg,
+													feeGenerated: fg,
 													commissionGenerated: cg,
 													openingBalance: ob,
 													cancelled: totalcancelledTransfers,
@@ -287,6 +318,7 @@ router.post("/getBranchInfo", jwtTokenAuth, function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
+		"-password",
 		function (err, branch) {
 			let result = errorMessage(
 				err,
@@ -300,6 +332,7 @@ router.post("/getBranchInfo", jwtTokenAuth, function (req, res) {
 					{
 						branch_id: branch._id,
 					},
+					"-password",
 					function (err, users) {
 						res.status(200).json({
 							status: 1,
@@ -468,7 +501,7 @@ router.post("/updateCashierTransferStatus", jwtTokenAuth, function (req, res) {
 						} else {
 							Cashier.findByIdAndUpdate(
 								cashier_id,
-								{ $inc: {pending_trans: -1}},
+								{ $inc: { pending_trans: -1 } },
 								function (err, cashier) {
 									let result = errorMessage(err, cashier, "Cashier not found");
 									if (result.status == 0) {
@@ -484,6 +517,55 @@ router.post("/updateCashierTransferStatus", jwtTokenAuth, function (req, res) {
 						}
 					}
 				);
+			}
+		}
+	);
+});
+
+router.post("/getCashierDetails", jwtTokenAuth, function (req, res) {
+	const { cashier_id } = req.body;
+
+	const jwtusername = req.sign_creds.username;
+	Branch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, f) {
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Cashier.findById(cashier_id, async (err, cashier) => {
+					let result = errorMessage(err, cashier, "Cashier not found");
+					if (result.status == 0) {
+						res.status(200).json(result);
+					} else {
+						var totalPendingTransfers = await CashierTransfer.countDocuments({
+							status: 0,
+							cashier_id: cashier_id,
+						});
+						var totalAcceptedTransfers = await CashierTransfer.countDocuments({
+							status: 1,
+							cashier_id: cashier_id,
+						});
+						var totalcancelledTransfers = await CashierTransfer.countDocuments({
+							status: -1,
+							cashier_id: cashier_id,
+						});
+						res.status(200).json({
+							status: 1,
+							cashier: cashier,
+							pending: totalPendingTransfers,
+							accepted: totalAcceptedTransfers,
+							cancelled: totalcancelledTransfers,
+						});
+					}
+				});
 			}
 		}
 	);

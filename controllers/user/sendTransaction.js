@@ -24,10 +24,10 @@ const txstate = require("../transactions/services/states");
 const walletToWallet = require("../transactions/intraBank/walletToWallet");
 const walletToCashier = require("../transactions/intraBank/walletToCashier");
 
-module.exports.sendMoneyToNonWallet = async function (req, res) {
-	// Initiate transaction state
-	const master_code = await txstate.initiate();
+//constants
+const categoryConst = require("../transactions/constants/category");
 
+module.exports.sendMoneyToNonWallet = async function (req, res) {
 	const username = req.sign_creds.username;
 	const transactionCode = makeid(8);
 
@@ -51,11 +51,17 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 				contact_list: receiverMobile,
 			},
 		},
-		function (err, sender) {
+		async function (err, sender) {
 			let result = errorMessage(err, sender, "Sender not found");
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
+				// Initiate transaction state
+				const master_code = await txstate.initiate(
+					categoryConst.MAIN,
+					sender.bank_id,
+					"Wallet To Non Wallet"
+				);
 				receiver = {
 					name: receiverGivenName,
 					last_name: receiverFamilyName,
@@ -133,6 +139,7 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 																	amount: receiverIdentificationAmount,
 																	is_inclusive: isInclusive,
 																	master_code: master_code,
+																	receiverFamilyName: receiverFamilyName,
 																};
 																walletToCashier(
 																	transfer,
@@ -169,7 +176,6 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 																				{
 																					status: 1,
 																					fee: result.fee,
-																					master_code: result.master_code,
 																				},
 																				(err) => {
 																					if (err) {
@@ -178,6 +184,7 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 																							.json(catchError(err));
 																					} else {
 																						txstate.waitingForCompletion(
+																							categoryConst.MAIN,
 																							master_code
 																						);
 																						res.status(200).json({
@@ -193,10 +200,18 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 																				}
 																			);
 																		} else {
+																			txstate.failed(
+																				categoryConst.MAIN,
+																				master_code
+																			);
 																			res.status(200).json(result);
 																		}
 																	})
 																	.catch((err) => {
+																		txstate.failed(
+																			categoryConst.MAIN,
+																			master_code
+																		);
 																		console.log(err);
 																		res.status(200).json({
 																			status: 0,
@@ -222,9 +237,6 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 };
 
 module.exports.sendMoneyToWallet = async function (req, res) {
-	// Initiate transaction state
-	const master_code = await txstate.initiate();
-
 	const username = req.sign_creds.username;
 
 	const { receiverMobile, sending_amount, isInclusive } = req.body;
@@ -248,6 +260,12 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
+				// Initiate transaction state
+				const master_code = await txstate.initiate(
+					categoryConst.MAIN,
+					sender.bank_id,
+					"Wallet to Wallet"
+				);
 				User.findOne(
 					{
 						mobile: receiverMobile,
@@ -315,7 +333,10 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 																.then(function (result) {
 																	console.log("Result: " + result);
 																	if (result.status == 1) {
-																		txstate.reported(master_code);
+																		txstate.completed(
+																			categoryConst.MAIN,
+																			master_code
+																		);
 																		res.status(200).json({
 																			status: 1,
 																			message:
@@ -327,10 +348,18 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 																				(result.amount + result.fee),
 																		});
 																	} else {
+																		txstate.failed(
+																			categoryConst.MAIN,
+																			master_code
+																		);
 																		res.status(200).json(result);
 																	}
 																})
 																.catch((err) => {
+																	txstate.failed(
+																		categoryConst.MAIN,
+																		master_code
+																	);
 																	res.status(200).json(catchError(err));
 																});
 														}

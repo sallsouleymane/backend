@@ -11,11 +11,13 @@ const getTypeClass = require("./utils/getTypeClass");
 const getWalletIds = require("./utils/getWalletIds");
 const jwtTokenAuth = require("./JWTTokenAuth");
 const { errorMessage, catchError } = require("./utils/errorHandler");
+const cashierCommonContrl = require("../controllers/cashier/common");
 
 //services
 const blockchain = require("../services/Blockchain.js");
 
 const Infra = require("../models/Infra");
+const TxState = require("../models/TxState");
 const Fee = require("../models/Fee");
 const User = require("../models/User");
 const Bank = require("../models/Bank");
@@ -30,22 +32,50 @@ const CashierLedger = require("../models/CashierLedger");
 const CashierTransfer = require("../models/CashierTransfer");
 const Merchant = require("../models/merchant/Merchant");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
-const cashierToOperational = require("./transactions/intraBank/cashierToOperational");
-
-// transactions
-const txstate = require("./transactions/states");
-const cashierToCashier = require("./transactions/intraBank/cashierToCashier");
-const cashierToWallet = require("./transactions/intraBank/cashierToWallet");
-const cashierClaimMoney = require("./transactions/intraBank/cashierClaimMoney");
 
 //controllers
 const cashSendTransCntrl = require("../controllers/cashier/sendTransaction");
 const cashClaimTransCntrl = require("../controllers/cashier/claimTransaction");
+const cashCancelTransCntrl = require("../controllers/cashier/cancelTransaction");
 
+router.post(
+	"/cashier/checkTransactionStatus",
+	jwtTokenAuth,
+	cashCancelTransCntrl.checkApprovalStatus
+);
+
+router.post(
+	"/cashier/sendCancelReqForApproval",
+	jwtTokenAuth,
+	cashCancelTransCntrl.sendForApproval
+);
+router.post(
+	"/cashier/cancelTransaction",
+	jwtTokenAuth,
+	cashCancelTransCntrl.cashierCancelTransaction
+);
 router.post(
 	"/cashier/sendToOperational",
 	jwtTokenAuth,
 	cashSendTransCntrl.cashierSendToOperational
+);
+
+router.post(
+	"/cashier/queryTransactionStates",
+	jwtTokenAuth,
+	cashierCommonContrl.queryTransactionStates
+);
+
+router.post(
+	"/cashier/addDailyReport",
+	jwtTokenAuth,
+	cashierCommonContrl.addDailyReport
+);
+
+router.post(
+	"/cashier/queryDailyReport",
+	jwtTokenAuth,
+	cashierCommonContrl.queryDailyReport
 );
 
 router.post(
@@ -1154,6 +1184,7 @@ router.post("/cashierSendMoneyPending", jwtTokenAuth, function (req, res) {
 		email,
 		mobile,
 		livefee,
+		transferCode,
 		withoutID,
 		requireOTP,
 		receiverMobile,
@@ -1195,6 +1226,7 @@ router.post("/cashierSendMoneyPending", jwtTokenAuth, function (req, res) {
 					senderIdentificationValidTill,
 					address1,
 					state,
+					transferCode,
 					zip,
 					ccode,
 					country,

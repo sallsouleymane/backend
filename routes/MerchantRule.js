@@ -13,6 +13,7 @@ const MerchantRule = require("../models/merchant/MerchantRule");
 const IBMerchantRule = require("../models/merchant/InterBankRule");
 const Merchant = require("../models/merchant/Merchant");
 const MerchantPosition = require("../models/merchant/Position");
+const MerchantStaff = require("../models/merchant/Staff");
 const Cashier = require("../models/Cashier");
 const User = require("../models/User");
 const PartnerCashier = require("../models/partner/Cashier");
@@ -988,7 +989,7 @@ router.post(
 );
 
 router.post("/merchant/interBank/getRules", jwtTokenAuth, function (req, res) {
-	const { page } = req.body;
+	const { page, merchant_id } = req.body;
 	var query = [];
 	if (page == "fee") {
 		query = [{ type: "IBNWM-F" }, { type: "IBWM-F" }];
@@ -1009,7 +1010,6 @@ router.post("/merchant/interBank/getRules", jwtTokenAuth, function (req, res) {
 		},
 		function (err, merchant) {
 			if (err) {
-				console.log(err);
 				var message = err;
 				if (err.message) {
 					message = err.message;
@@ -1018,18 +1018,44 @@ router.post("/merchant/interBank/getRules", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
 				var excludeFields =
 					"-infra_approve_status -infra_share_edit_status -infra_share.fixed -infra_share.percentage -edited.infra_share.fixed -edited.infra_share.percentage";
 				IBMerchantRule.find(
 					{
-						merchant_id: merchant._id,
+						merchant_id: merchant_id,
 						$or: query,
 					},
 					excludeFields,
@@ -1053,10 +1079,110 @@ router.post("/merchant/interBank/getRules", jwtTokenAuth, function (req, res) {
 						}
 					}
 				);
-			}
+			
 		}
 	);
 });
+
+router.post("/merchant/getRules", jwtTokenAuth, function (req, res) {
+	const { page, merchant_id } = req.body;
+	var query = [];
+	if (page == "fee") {
+		query = [{ type: "NWM-F" }, { type: "WM-F" }, { type: "M-F" }];
+	} else if (page == "commission") {
+		query = [{ type: "NWM-C" }, { type: "WM-C" }, { type: "M-C" }];
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "Page not found",
+		});
+		return;
+	}
+	const username = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: username,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+			
+			
+
+				var excludeFields =
+					"-infra_approve_status -infra_share_edit_status -infra_share.fixed -infra_share.percentage -edited.infra_share.fixed -edited.infra_share.percentage";
+				MerchantRule.find(
+					{
+						merchant_id: merchant_id,
+						$or: query,
+					},
+					excludeFields,
+					(err, rules) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Merchant Rules",
+								rules: rules,
+							});
+						}
+					}
+				);
+			
+		}
+	);
+});
+
 
 router.post(
 	"/bank/merchantRule/interBank/editInfraShare",
@@ -2125,77 +2251,6 @@ router.post("/bank/merchantRule/editInfraShare", jwtTokenAuth, (req, res) => {
 									rule.name +
 									" infra share edited successfully",
 								rule: rule,
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
-
-router.post("/merchant/getRules", jwtTokenAuth, function (req, res) {
-	const { page } = req.body;
-	var query = [];
-	if (page == "fee") {
-		query = [{ type: "NWM-F" }, { type: "WM-F" }, { type: "M-F" }];
-	} else if (page == "commission") {
-		query = [{ type: "NWM-C" }, { type: "WM-C" }, { type: "M-C" }];
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "Page not found",
-		});
-		return;
-	}
-	const username = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username: username,
-			status: 1,
-		},
-		function (err, merchant) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (merchant == null) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				var excludeFields =
-					"-infra_approve_status -infra_share_edit_status -infra_share.fixed -infra_share.percentage -edited.infra_share.fixed -edited.infra_share.percentage";
-				MerchantRule.find(
-					{
-						merchant_id: merchant._id,
-						$or: query,
-					},
-					excludeFields,
-					(err, rules) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								message: "Merchant Rules",
-								rules: rules,
 							});
 						}
 					}

@@ -26,8 +26,22 @@ const UserSchema = new mongoose.Schema({
 		},
 	],
 	status: { type: Number, required: true, default: null },
-	status_desc: { type: String, required: false, default: "0:Created 1:Active 2:Waiting for cashier approval 3:Go to the nearest branch and get docs uploaded" },
+	status_desc: {
+		type: String,
+		required: false,
+		default:
+			"0:Created 1:Active 2:Waiting for cashier approval 3:Go to the nearest branch and get docs uploaded",
+	},
 	contact_list: { type: [String], required: false, default: null },
 	wallet_id: { type: String, required: false },
+	messages: [
+		{
+			logo: { type: String, required: false },
+			message_title: { type: String, required: false },
+			message: { type: String, required: false },
+			date: { type: Date, default: Date.now },
+			from: { type: String, required: false },
+		},
+	],
 });
 module.exports = mongoose.model("User", UserSchema);

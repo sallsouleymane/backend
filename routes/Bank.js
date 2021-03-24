@@ -11,6 +11,7 @@ const getWalletIds = require("./utils/getWalletIds");
 const jwtTokenAuth = require("./JWTTokenAuth");
 const { errorMessage, catchError } = require("./utils/errorHandler");
 const execute = require("../controllers/transactions/services/execute");
+const bankCommonContrl = require("../controllers/bank/common");
 
 //services
 const {
@@ -24,6 +25,7 @@ const Bank = require("../models/Bank");
 const OTP = require("../models/OTP");
 const Branch = require("../models/Branch");
 const BankUser = require("../models/BankUser");
+const User = require("../models/User");
 const Cashier = require("../models/Cashier");
 const Fee = require("../models/Fee");
 const CashierLedger = require("../models/CashierLedger");
@@ -67,12 +69,15 @@ router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
 							try {
 								let txArr = tx.childTx;
 								var childTrans = txArr.find(
-									(childTx) => childTx.transaction.child_code == child_code
+									(childTx) =>
+										childTx.transaction.child_code == child_code &&
+										childTx.state == 0
 								);
+								console.log(childTrans);
 								let result = await execute(
-									childTrans.transaction,
-									"",
-									bank._id
+									[childTrans.transaction],
+									childTrans.category,
+									""
 								);
 
 								console.log(result);
@@ -80,12 +85,12 @@ router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
 								if (result.status == 0) {
 									res.status(200).json({
 										status: 0,
-										message: "Transaction failed! - " + res.message,
+										message: "Transaction failed! - " + result.message,
 									});
 								} else {
 									res.status(200).json({
-										status: 0,
-										message: "Transaction Success !! " + res.message,
+										status: 1,
+										message: "Transaction Success !! " + result.message,
 									});
 								}
 							} catch (err) {
@@ -100,36 +105,11 @@ router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/bank/getFailedTransactions", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	Bank.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, bank) {
-			let errMsg = errorMessage(
-				err,
-				bank,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (errMsg.status == 0) {
-				res.status(200).json(result);
-			} else {
-				TxState.find({ bankId: bank._id }, (err, queues) => {
-					if (err) {
-						res.status(200).json(catchError(err));
-					} else {
-						res.status(200).json({
-							status: 1,
-							transactions: queues,
-						});
-					}
-				});
-			}
-		}
-	);
-});
+router.post(
+	"/bank/queryTransactionStates",
+	jwtTokenAuth,
+	bankCommonContrl.queryTransactionStates
+);
 
 router.post("/bank/getBranchWalletBalance", jwtTokenAuth, function (req, res) {
 	const { branch_id, wallet_type } = req.body;
@@ -414,7 +394,7 @@ router.post(
 			} else if (type == "IBNWO") {
 				ib_type = "Non Wallet to Operational";
 			} else {
-				res.status(200).json({
+				return res.status(200).json({
 					status: 0,
 					message: "Interbank rule type not supported.",
 				});
@@ -904,6 +884,107 @@ router.post("/getBankUsers", jwtTokenAuth, function (req, res) {
 							res.status(200).json({
 								status: 1,
 								users: bank,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/listEndUsers", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, user) {
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				const user_id = user._id;
+				User.find(
+					{
+						bank_id: user_id,
+					},
+					function (err, bank) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								users: bank,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/broadcastMessage", jwtTokenAuth, function (req, res) {
+	const { message, message_title } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, user) {
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				const user_id = user._id;
+				User.updateMany(
+					{
+						bank_id: user_id,
+					},
+					{
+						$push: {
+							messages: {
+								message: message,
+								message_title: message_title,
+								from: user.name,
+								logo: user.logo,
+							},
+						},
+					},
+					function (err, bank) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Message Broadcasted Successfully",
 							});
 						}
 					}

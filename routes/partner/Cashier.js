@@ -4,22 +4,11 @@ const router = express.Router();
 const jwtTokenAuth = require("../JWTTokenAuth");
 
 //utils
-const sendSMS = require("../utils/sendSMS");
-const sendMail = require("../utils/sendMail");
-const makeid = require("../utils/idGenerator");
-const makeotp = require("../utils/makeotp");
-const getTypeClass = require("../utils/getTypeClass");
 const { errorMessage, catchError } = require("../utils/errorHandler");
 const blockchain = require("../../services/Blockchain");
 
-const partnerCashierToOperational = require("../transactions/intraBank/partnerCashierToOperational");
-const partnerCashierToCashier = require("../transactions/intraBank/partnerCashierToCashier");
-const partnerCashierToWallet = require("../transactions/intraBank/partnerCashierToWallet");
-const partnerCashierClaimMoney = require("../transactions/intraBank/partnerCashierClaimMoney");
-
 //models
-const Infra = require("../../models/Infra");
-const Bank = require("../../models/Bank");
+const TxState = require("../../models/TxState");
 const Partner = require("../../models/partner/Partner");
 const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
@@ -43,6 +32,42 @@ router.post(
 	"/partnerCashier/sendToOperational",
 	jwtTokenAuth,
 	cashSendTransCntrl.partnerSendToOperational
+);
+
+router.post(
+	"/partnerCashier/getFailedTransactions",
+	jwtTokenAuth,
+	function (req, res) {
+		const { bank_id } = req.body;
+		const jwtusername = req.sign_creds.username;
+		PartnerCashier.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, cashier) {
+				let errMsg = errorMessage(
+					err,
+					cashier,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (errMsg.status == 0) {
+					res.status(200).json(errMsg);
+				} else {
+					TxState.find({ bankId: bank_id }, (err, txstates) => {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							res.status(200).json({
+								status: 1,
+								transactions: txstates,
+							});
+						}
+					});
+				}
+			}
+		);
+	}
 );
 
 router.post(
@@ -833,7 +858,10 @@ router.post(
 	jwtTokenAuth,
 	function (req, res) {
 		const {
+			type,
+			interbank,
 			givenname,
+			transferCode,
 			familyname,
 			note,
 			senderIdentificationCountry,
@@ -890,6 +918,7 @@ router.post(
 						address1,
 						state,
 						zip,
+						transferCode,
 						ccode,
 						country,
 						email,
@@ -914,6 +943,8 @@ router.post(
 					data.amount = receiverIdentificationAmount;
 					data.transaction_details = JSON.stringify(temp);
 					data.cashier_id = cashier._id;
+					data.trans_type = type;
+					data.interbank = interbank;
 
 					let pending = Number(cashier.pending_trans) + 1;
 
@@ -1045,20 +1076,34 @@ router.post("/partnerCashier/getHistory", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				PartnerBranch.findOne({ _id: cashier.branch_id }, (err, branch) => {
-					const wallet = branch.wallet_ids[from];
-					blockchain
-						.getStatement(wallet)
-						.then(function (history) {
-							res.status(200).json({
-								status: 1,
-								history: history,
-							});
-						})
-						.catch((err) => {
-							res.status(200).json(catchError(err));
-						});
-				});
+				CashierPending.find(
+					{ cashier_id: cashier._id },
+					async (err, pending) => {
+						let errMsg = errorMessage(err, pending, "History not found.");
+						if (errMsg.status == 0) {
+							res.status(200).json(errMsg);
+						} else {
+							PartnerBranch.findOne(
+								{ _id: cashier.branch_id },
+								(err, branch) => {
+									const wallet = branch.wallet_ids[from];
+									blockchain
+										.getStatement(wallet)
+										.then(function (history) {
+											res.status(200).json({
+												status: 1,
+												history: history,
+												pending: pending,
+											});
+										})
+										.catch((err) => {
+											res.status(200).json(catchError(err));
+										});
+								}
+							);
+						}
+					}
+				);
 			}
 		}
 	);

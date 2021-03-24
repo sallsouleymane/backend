@@ -12,6 +12,50 @@ const blockchain = require("../../services/Blockchain");
 const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
 const CashierTransfer = require("../../models/CashierTransfer");
+const CashierPending = require("../../models/CashierPending");
+
+router.post("/partnerBranch/getCashierDetails", jwtTokenAuth, function (req, res) {
+	const { cashier_id } = req.body;
+
+	const jwtusername = req.sign_creds.username;
+	PartnerBranch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, f) {
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				PartnerCashier.findById(
+					cashier_id,
+					async(err, cashier) => {
+						let result = errorMessage(err, cashier, "Cashier not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, cashier_id: cashier_id});
+							var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, cashier_id: cashier_id});
+							var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, cashier_id: cashier_id});
+							res.status(200).json({
+								status: 1,
+								cashier: cashier,
+								pending: totalPendingTransfers,
+								accepted: totalAcceptedTransfers,
+								cancelled: totalcancelledTransfers
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
 
 router.post("/partnerBranch/SetupUpdate", jwtTokenAuth, function (req, res) {
 	const { password } = req.body;
@@ -61,6 +105,64 @@ router.post("/partnerBranch/SetupUpdate", jwtTokenAuth, function (req, res) {
 								status: 1,
 								message: "Updated successfully",
 							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/partnerBranch/updateCashierTransferStatus", jwtTokenAuth, function (req, res) {
+	const { transfer_id, cashier_id, status } = req.body;
+
+	const jwtusername = req.sign_creds.username;
+	PartnerBranch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, branch) {
+			if (err) {
+				console.log(err);
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			} else if (!branch) {
+				res.status(200).json({
+					status: 0,
+					message:
+						"Token changed or user not valid. Try to login again or contact system administrator.",
+				});
+			} else {
+				CashierPending.findByIdAndUpdate(
+					transfer_id,
+					{ status: status },
+					function (err, d) {
+						let result = errorMessage(err, d, "History not found");
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							PartnerCashier.findByIdAndUpdate(
+								cashier_id,
+								{ $inc: {pending_trans: -1}},
+								function (err, cashier) {
+									let result = errorMessage(err, cashier, "Cashier not found");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										res.status(200).json({
+											status: 1,
+											message: "Updated successfully",
+										});
+									}
+								}
+							);
 						}
 					}
 				);
@@ -336,6 +438,7 @@ router.post("/partnerBranch/getDashStats", jwtTokenAuth, function (req, res) {
 						}
 						PartnerCashier.aggregate(
 							[
+								{ $match : {branch_id: String(branch._id)}},
 								{
 									$group: {
 										_id: null,

@@ -4,6 +4,7 @@ const {
 	getTransactionCode,
 	calculateShare,
 } = require("../../utils/calculateShare");
+const execute = require("../../../controllers/transactions/services/execute");
 
 module.exports = async function (
 	transfer,
@@ -24,25 +25,28 @@ module.exports = async function (
 			amount = amount - fee;
 		}
 
-		let master_code = getTransactionCode(sendingBank.mobile, branch.mobile);
+		let master_code = transfer.master_code;
 
-		let trans = {
-			from: senderBankEsWallet,
-			to: bankOpWallet,
-			amount: amount,
-			note: "Cashier claim Money for Inter Bank transaction",
-			email1: sendingBank.email,
-			email2: bank.email,
-			mobile1: sendingBank.mobile,
-			mobile2: bank.mobile,
-			from_name: sendingBank.name,
-			to_name: bank.name,
-			user_id: "",
-			master_code: master_code,
-			child_code: master_code,
-		};
+		let trans = [
+			{
+				from: senderBankEsWallet,
+				to: bankOpWallet,
+				amount: amount,
+				note: "Cashier claim Money for Inter Bank transaction",
+				email1: sendingBank.email,
+				email2: bank.email,
+				mobile1: sendingBank.mobile,
+				mobile2: bank.mobile,
+				from_name: sendingBank.name,
+				to_name: bank.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code,
+			},
+		];
 
-		let result = await blockchain.initiateTransfer(trans);
+		let result = await execute(trans);
 
 		// return response
 		if (result.status == 0) {
@@ -53,23 +57,26 @@ module.exports = async function (
 			};
 		}
 
-		trans = {
-			from: bankOpWallet,
-			to: branchOpWallet,
-			amount: amount,
-			note: "Cashier claim Money for Inter Bank transaction",
-			email1: bank.email,
-			email2: branch.email,
-			mobile1: bank.mobile,
-			mobile2: branch.mobile,
-			from_name: bank.name,
-			to_name: branch.name,
-			user_id: "",
-			master_code: master_code,
-			child_code: master_code,
-		};
+		trans = [
+			{
+				from: bankOpWallet,
+				to: branchOpWallet,
+				amount: amount,
+				note: "Cashier claim Money for Inter Bank transaction",
+				email1: bank.email,
+				email2: branch.email,
+				mobile1: bank.mobile,
+				mobile2: branch.mobile,
+				from_name: bank.name,
+				to_name: branch.name,
+				sender_id: "",
+				receiver_id: transfer.cashierId,
+				master_code: master_code,
+				child_code: master_code,
+			},
+		];
 
-		result = await blockchain.initiateTransfer(trans);
+		result = await execute(trans);
 
 		// return response
 		if (result.status == 0) {
@@ -115,61 +122,70 @@ async function distributeRevenue(transfer, sendingBank, bank, branch, rule1) {
 	let master_code = transfer.master_code;
 
 	if (claimerBankShare.percentage_amount > 0) {
-		let trans2 = {
-			from: senderBankOpWallet,
-			to: bankOpWallet,
-			amount: claimerBankShare.percentage_amount,
-			note: "Claiming Bank's Share for Inter Bank transaction",
-			email1: sendingBank.email,
-			email2: bank.email,
-			mobile1: sendingBank.mobile,
-			mobile2: bank.mobile,
-			from_name: sendingBank.name,
-			to_name: bank.name,
-			user_id: "",
-			master_code: master_code,
-			child_code: master_code + "1.1",
-		};
+		let trans2 = [
+			{
+				from: senderBankOpWallet,
+				to: bankOpWallet,
+				amount: claimerBankShare.percentage_amount,
+				note: "Claiming Bank's Share for Inter Bank transaction",
+				email1: sendingBank.email,
+				email2: bank.email,
+				mobile1: sendingBank.mobile,
+				mobile2: bank.mobile,
+				from_name: sendingBank.name,
+				to_name: bank.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code + "1.1",
+			},
+		];
 
-		await blockchain.initiateTransfer(trans2);
+		await execute(trans2);
 	}
 
 	if (claimerBankShare.fixed_amount > 0) {
-		let trans2 = {
-			from: senderBankOpWallet,
-			to: bankOpWallet,
-			amount: claimerBankShare.fixed_amount,
-			note: "Claiming Bank's Share for Inter Bank transaction",
-			email1: sendingBank.email,
-			email2: bank.email,
-			mobile1: sendingBank.mobile,
-			mobile2: bank.mobile,
-			from_name: sendingBank.name,
-			to_name: bank.name,
-			user_id: "",
-			master_code: master_code,
-			child_code: master_code + "1.2",
-		};
+		let trans2 = [
+			{
+				from: senderBankOpWallet,
+				to: bankOpWallet,
+				amount: claimerBankShare.fixed_amount,
+				note: "Claiming Bank's Share for Inter Bank transaction",
+				email1: sendingBank.email,
+				email2: bank.email,
+				mobile1: sendingBank.mobile,
+				mobile2: bank.mobile,
+				from_name: sendingBank.name,
+				to_name: bank.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code + "1.2",
+			},
+		];
 
-		await blockchain.initiateTransfer(trans2);
+		await execute(trans2);
 	}
 
 	if (fee > 0) {
-		let trans3 = {
-			from: bankOpWallet,
-			to: branchOpWallet,
-			amount: transfer.claimerBranchShare,
-			note: "Claim Revenue for Inter Bank transaction",
-			email1: bank.email,
-			email2: branch.email,
-			mobile1: bank.mobile,
-			mobile2: branch.mobile,
-			from_name: bank.name,
-			to_name: branch.name,
-			user_id: "",
-			master_code: master_code,
-			child_code: master_code + "2",
-		};
-		await blockchain.initiateTransfer(trans3);
+		let trans3 = [
+			{
+				from: bankOpWallet,
+				to: branchOpWallet,
+				amount: transfer.claimerBranchShare,
+				note: "Claim Revenue for Inter Bank transaction",
+				email1: bank.email,
+				email2: branch.email,
+				mobile1: bank.mobile,
+				mobile2: branch.mobile,
+				from_name: bank.name,
+				to_name: branch.name,
+				sender_id: "",
+				receiver_id: transfer.cashierId,
+				master_code: master_code,
+				child_code: master_code + "2",
+			},
+		];
+		await execute(trans3);
 	}
 }

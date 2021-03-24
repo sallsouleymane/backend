@@ -1,13 +1,21 @@
 const TxState = require("../../../models/TxState");
-const blockchain = require("../../../services/Blockchain");
+const stateConst = require("../constants/stateNames");
 
-module.exports.initiate = async function (bank_id, tx_type) {
+module.exports.initiate = async function (
+	category,
+	bank_id,
+	tx_type,
+	payer_id = "",
+	cash_in_hand = 0
+) {
 	try {
-		console.log("Transaction initiated");
+		console.log(category + " transaction initiated");
 		let tx = new TxState();
-		tx.state = "INIT";
+		tx.state[category] = stateConst.INIT;
 		tx.bankId = bank_id;
 		tx.txType = tx_type;
+		tx.payerId = payer_id;
+		tx.cash_in_hand = cash_in_hand;
 		let txstate = await tx.save();
 		return txstate._id;
 	} catch (err) {
@@ -15,65 +23,83 @@ module.exports.initiate = async function (bank_id, tx_type) {
 	}
 };
 
-module.exports.waitingForCompletion = async function (master_code) {
+module.exports.initiateSubTx = async function (category, master_code) {
 	try {
-		console.log("Transaction waiting for completion");
-		let tx = { state: "WAITING" };
+		console.log(category + " transaction initiated");
+		var tx = {};
+		tx["state." + category] = stateConst.INIT;
+		await TxState.updateOne({ _id: master_code }, { $set: tx });
+	} catch (err) {
+		throw err;
+	}
+};
+
+module.exports.updateClaimer = async function (master_code, receiver_id) {
+	try {
+		console.log("Updated claimer id");
+		let tx = { receiverId: receiver_id };
 		await TxState.updateOne({ _id: master_code }, tx);
 	} catch (err) {
 		throw err;
 	}
 };
 
-module.exports.nearCompletion = async function (master_code) {
+module.exports.waitingForCompletion = async function (
+	category,
+	master_code,
+	transaction = {}
+) {
 	try {
-		console.log("Transaction near to completion");
-		let tx = { state: "NEAR" };
+		console.log(category + " transaction waiting for completion");
+		let tx = {};
+		tx["state." + category] = stateConst.WAIT;
+		tx.transaction = transaction;
 		await TxState.updateOne({ _id: master_code }, tx);
 	} catch (err) {
 		throw err;
 	}
 };
 
-module.exports.failed = async function (master_code) {
+module.exports.failed = async function (
+	category,
+	master_code,
+	cash_in_hand = 0
+) {
 	try {
-		console.log("Transaction failed");
-		let tx = { state: "FAILED" };
-		await TxState.updateOne({ _id: master_code }, tx);
+		console.log(category + " transaction failed");
+		let tx = {};
+		tx["state." + category] = stateConst.FAIL;
+		tx.cash_in_hand = cash_in_hand;
+		await TxState.updateOne({ _id: master_code }, { $set: tx });
 	} catch (err) {
 		throw err;
 	}
 };
 
-module.exports.completed = async function completed(master_code) {
+module.exports.completed = async function completed(
+	category,
+	master_code,
+	cash_in_hand = 0
+) {
 	try {
-		console.log("Transaction Completed");
-		let tx = { state: "DONE" };
-		await TxState.updateOne({ _id: master_code }, tx);
-	} catch (err) {
-		throw err;
-	}
-};
-
-module.exports.reported = async function reported(master_code) {
-	try {
-		console.log("Transaction Reported");
-		let tx = { state: "REPORTED" };
-		await TxState.updateOne({ _id: master_code }, tx);
+		console.log(category + " transaction Completed");
+		let tx = {};
+		tx["state." + category] = stateConst.DONE;
+		tx.cash_in_hand = cash_in_hand;
+		console.log(tx);
+		await TxState.updateOne({ _id: master_code }, { $set: tx });
 	} catch (err) {
 		throw err;
 	}
 };
 
 module.exports.cancelled = async function (master_code) {
-	let tx = {
-		master_code: master_code,
-		state: "CANCEl",
-	};
-	TxState.updateById(master_code, tx, function (err, txstate) {
-		if (err) throw err;
-		txstate.transaction.amount = -txstate.transaction.amount;
-		txstate.transaction.note = "Reverted amount";
-		blockchain.initiateTransfer(txstate.transaction);
-	});
+	try {
+		console.log(category + " transaction Cancelled");
+		let tx = { state: {} };
+		tx["state." + category] = stateConst.CANCEL;
+		await TxState.updateOne({ _id: master_code }, tx);
+	} catch (err) {
+		throw err;
+	}
 };

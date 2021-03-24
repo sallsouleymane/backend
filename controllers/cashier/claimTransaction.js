@@ -147,21 +147,14 @@ module.exports.cashierClaimMoney = function (req, res) {
 						status: 1,
 					},
 					(err, cc) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (cc) {
-							res.status(200).json({
-								status: 0,
-								message: "Money is already claimed",
-							});
+						let errRes = errorMessage(
+							err,
+							cc,
+							"Money is already claimed",
+							true
+						);
+						if (errRes.status == 0) {
+							res.status(200).json(errRes);
 						} else {
 							CashierSend.findOne(
 								{
@@ -217,6 +210,13 @@ module.exports.cashierClaimMoney = function (req, res) {
 																	if (errRes.status == 0) {
 																		res.status(200).json(errRes);
 																	} else {
+																		// update calimer id
+																		txstate.updateClaimer(
+																			sendRecord.master_code,
+																			cashier._id
+																		);
+
+																		// add a cashier claimer record
 																		var otherInfo = {
 																			cashierId: cashier._id,
 																			sendRecord: sendRecord,
@@ -242,6 +242,7 @@ module.exports.cashierClaimMoney = function (req, res) {
 																						cashierId: cashier._id,
 																					};
 
+																					// perform claim transaction
 																					cashierClaimMoney(
 																						transfer,
 																						bank,
@@ -257,6 +258,7 @@ module.exports.cashierClaimMoney = function (req, res) {
 																								otherInfo.claimFee =
 																									result.claimFee;
 
+																								//update claimer record
 																								updateClaimRecord(
 																									"cashier",
 																									otherInfo,
@@ -266,7 +268,7 @@ module.exports.cashierClaimMoney = function (req, res) {
 																												.status(200)
 																												.json(catchError(err));
 																										} else {
-																											txstate.reported(
+																											txstate.completed(
 																												sendRecord.master_code
 																											);
 																											res.status(200).json({
@@ -278,11 +280,17 @@ module.exports.cashierClaimMoney = function (req, res) {
 																									}
 																								);
 																							} else {
+																								txstate.failed(
+																									sendRecord.master_code
+																								);
 																								console.log(result.toString());
 																								res.status(200).json(result);
 																							}
 																						})
 																						.catch((err) => {
+																							txstate.failed(
+																								sendRecord.master_code
+																							);
 																							console.log(err);
 																							res.status(200).json({
 																								status: 0,
@@ -435,6 +443,7 @@ module.exports.partnerClaimMoney = function (req, res) {
 																									sendRecord.send_branch_type,
 																								sendBranchId:
 																									sendRecord.send_branch_id,
+																								cashierId: cashier._id,
 																							};
 																							cashierClaimMoney(
 																								transfer,
@@ -462,6 +471,9 @@ module.exports.partnerClaimMoney = function (req, res) {
 																															catchError(err)
 																														);
 																												} else {
+																													txstate.completed(
+																														sendRecord.master_code
+																													);
 																													res.status(200).json({
 																														status: 1,
 																														message:

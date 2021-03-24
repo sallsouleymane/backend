@@ -4,6 +4,7 @@ const {
 	getTransactionCode,
 	calculateShare,
 } = require("../../utils/calculateShare");
+const execute = require("../../../controllers/transactions/services/execute");
 
 module.exports = async function (
 	transfer,
@@ -35,25 +36,28 @@ module.exports = async function (
 			throw new Error("Not enough balance in branch operational wallet");
 		}
 
-		let master_code = getTransactionCode(branch.mobile, receiver.mobile);
+		let master_code = transfer.master_code;
 
-		let trans = {
-			from: branchOpWallet,
-			to: bankOpWallet,
-			amount: amount,
-			note: "Cashier Send Money",
-			email1: branch.email,
-			email2: bank.email,
-			mobile1: branch.mobile,
-			mobile2: bank.mobile,
-			from_name: branch.name,
-			to_name: bank.name,
-			user_id: transfer.cashierId,
-			master_code: master_code,
-			child_code: master_code + "1",
-		};
+		let trans = [
+			{
+				from: branchOpWallet,
+				to: bankOpWallet,
+				amount: amount,
+				note: "Cashier Send Money",
+				email1: branch.email,
+				email2: bank.email,
+				mobile1: branch.mobile,
+				mobile2: bank.mobile,
+				from_name: branch.name,
+				to_name: bank.name,
+				sender_id: transfer.cashierId,
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code + "1",
+			},
+		];
 
-		let result = await blockchain.initiateTransfer(trans);
+		let result = await execute(trans);
 
 		// return response
 		if (result.status == 0) {
@@ -64,23 +68,26 @@ module.exports = async function (
 			};
 		}
 
-		trans = {
-			from: bankOpWallet,
-			to: receiverBankOpWallet,
-			amount: amount,
-			note: "Sender's Bank transfer Money",
-			email1: bank.email,
-			email2: receiverBank.email,
-			mobile1: bank.mobile,
-			mobile2: receiverBank.mobile,
-			from_name: bank.name,
-			to_name: receiverBank.name,
-			user_id: "",
-			master_code: master_code,
-			child_code: master_code + "1",
-		};
+		trans = [
+			{
+				from: bankOpWallet,
+				to: receiverBankOpWallet,
+				amount: amount,
+				note: "Sender's Bank transfer Money",
+				email1: bank.email,
+				email2: receiverBank.email,
+				mobile1: bank.mobile,
+				mobile2: receiverBank.mobile,
+				from_name: bank.name,
+				to_name: receiverBank.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code + "1",
+			},
+		];
 
-		result = await blockchain.initiateTransfer(trans);
+		result = await execute(trans);
 
 		// return response
 		if (result.status == 0) {
@@ -102,12 +109,13 @@ module.exports = async function (
 			mobile2: receiver.mobile,
 			from_name: receiverBank.name,
 			to_name: receiver.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: master_code,
 			child_code: master_code + "1",
 		};
 
-		result = await blockchain.initiateTransfer(trans);
+		result = await execute(trans);
 
 		// return response
 		if (result.status == 0) {
@@ -173,12 +181,13 @@ async function distributeRevenue(
 			mobile2: bank.mobile,
 			from_name: branch.name,
 			to_name: bank.name,
-			user_id: transfer.cashierId,
+			sender_id: transfer.cashierId,
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "2",
 		};
 
-		await blockchain.initiateTransfer(trans2);
+		await execute(trans2);
 	}
 	var infraShare = calculateShare("infra", transfer.amount, rule1);
 
@@ -194,11 +203,12 @@ async function distributeRevenue(
 			mobile2: infra.mobile,
 			from_name: bank.name,
 			to_name: infra.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "3.1",
 		};
-		await blockchain.initiateTransfer(trans21);
+		await execute(trans21);
 	}
 
 	if (infraShare.fixed_amount > 0) {
@@ -213,11 +223,12 @@ async function distributeRevenue(
 			mobile2: infra.mobile,
 			from_name: bank.name,
 			to_name: infra.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "3.2",
 		};
-		await blockchain.initiateTransfer(trans22);
+		await execute(trans22);
 	}
 
 	claimerBankShare = calculateShare("claimBank", transfer.amount, rule1);
@@ -233,12 +244,13 @@ async function distributeRevenue(
 			mobile2: receiverBank.mobile,
 			from_name: bank.name,
 			to_name: receiverBank.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "4.1",
 		};
 
-		await blockchain.initiateTransfer(trans2);
+		await execute(trans2);
 	}
 
 	if (claimerBankShare.fixed_amount > 0) {
@@ -253,12 +265,13 @@ async function distributeRevenue(
 			mobile2: receiverBank.mobile,
 			from_name: bank.name,
 			to_name: receiverBank.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: "",
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "4.2",
 		};
 
-		await blockchain.initiateTransfer(trans2);
+		await execute(trans2);
 	}
 
 	if (fee > 0) {
@@ -273,11 +286,12 @@ async function distributeRevenue(
 			mobile2: branch.mobile,
 			from_name: bank.name,
 			to_name: branch.name,
-			user_id: "",
+			sender_id: "",
+			receiver_id: transfer.cashierId,
 			master_code: transfer.master_code,
 			child_code: transfer.master_code + "5",
 		};
 
-		await blockchain.initiateTransfer(trans4);
+		await execute(trans4);
 	}
 }

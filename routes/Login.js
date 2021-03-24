@@ -86,6 +86,7 @@ router.post("/partnerCashier/login", function (req, res) {
 												branch_id: cashier.branch_id,
 												partner_name:partner.name,
 												branch_name:branch.name,
+												max_trans_amt:cashier.max_trans_amt,
 												id: user._id,
 											});
 										}	
@@ -201,12 +202,36 @@ router.post("/merchantBranch/login", (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				let sign_creds = { username: username, type: "merchantBranch" };
-				const token = jwtsign(sign_creds);
-				res.status(200).json({
-					status: 1,
-					details: branch,
-					token: token,
+				Merchant.findOne({ _id: branch.merchant_id }, (err, merchant) => {
+					var result = errorMessage(err, merchant, "Merchant is blocked");
+					if (result.status == 0) {
+						res.status(200).json(result);
+					} else {
+						Bank.findOne(
+							{
+								_id: merchant.bank_id,
+							},(err, bank) => {
+								var result = errorMessage(
+									err,
+									bank,
+									"No bank is assigned to the merchant"
+								);
+								if (result.status == 0) {
+									res.status(200).json(result);
+								} else {
+									let sign_creds = { username: username, type: "merchantBranch" };
+									const token = jwtsign(sign_creds);
+									res.status(200).json({
+									status: 1,
+									details: branch,
+									merchant: merchant,
+									bank: bank,
+									token: token,
+									});
+								}
+							}
+						);
+					}
 				});
 			}
 		}
@@ -250,19 +275,35 @@ router.post("/merchantStaff/login", (req, res) => {
 											if (result.status == 0) {
 												res.status(200).json(result);
 											} else {
-												let sign_creds = {
-													username: username,
-													type: "merchantCashier",
-												};
-												const token = jwtsign(sign_creds);
-												res.status(200).json({
-													status: 1,
-													token: token,
-													position: position,
-													staff: staff,
-													branch: branch,
-													merchant: merchant,
-												});
+												Bank.findOne(
+													{
+														_id: merchant.bank_id,
+													},(err, bank) => {
+														var result = errorMessage(
+															err,
+															bank,
+															"No bank is assigned to the merchant"
+														);
+														if (result.status == 0) {
+															res.status(200).json(result);
+														} else {
+															let sign_creds = {
+																username: username,
+																type: "merchantCashier",
+															};
+															const token = jwtsign(sign_creds);
+															res.status(200).json({
+																status: 1,
+																token: token,
+																position: position,
+																staff: staff,
+																branch: branch,
+																merchant: merchant,
+																bank:bank,
+															});
+														
+														}
+													});
 											}
 										}
 									);
@@ -282,21 +323,101 @@ router.post("/merchant/login", (req, res) => {
 		{ username, password },
 		"-password",
 		function (err, merchant) {
-			var result = errorMessage(
-				err,
-				merchant,
-				"User account not found. Please signup"
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				let sign_creds = { username: username, type: "merchant" };
-				const token = jwtsign(sign_creds);
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
-					status: 1,
-					details: merchant,
-					token: token,
+					status: 0,
+					message: message,
 				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{ username, password, role: "admin" },
+					"-password",
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								} else {
+									Bank.findOne(
+										{
+											_id: adminmerchant.bank_id,
+										},(err, bank) => {
+											var result = errorMessage(
+												err,
+												bank,
+												"No bank is assigned to the merchant"
+											);
+											if (result.status == 0) {
+												res.status(200).json(
+													result
+												);
+											} else {
+												let sign_creds = { username: username, type: "merchantStaff" };
+												const token = jwtsign(sign_creds);
+												res.status(200).json({
+													status: 1,
+													adminuser: admin,
+													details: adminmerchant,
+													bank:bank,
+													token: token,
+													admin: true,
+												});
+											}
+										}
+									);
+								}
+							});
+						}	
+					}
+				);	
+			} else {
+				Bank.findOne(
+					{
+						_id: merchant.bank_id,
+					},(err, bank) => {
+						var result = errorMessage(
+							err,
+							bank,
+							"No bank is assigned to the merchant"
+						);
+						if (result.status == 0) {
+							res.status(200).json({
+								result:result,
+								merchant:merchant,
+							});
+						} else {
+							let sign_creds = { username: username, type: "merchant" };
+							const token = jwtsign(sign_creds);
+							res.status(200).json({
+								status: 1,
+								details: merchant,
+								bank:bank,
+								token: token,
+								admin: false,
+							});
+						}
+					}
+				);
 			}
 		}
 	);

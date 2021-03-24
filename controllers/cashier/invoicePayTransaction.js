@@ -21,8 +21,6 @@ const PartnerCashier = require("../../models/partner/Cashier");
 const PartnerBranch = require("../../models/partner/Branch");
 
 module.exports.cashierInvoicePay = async (req, res) => {
-	// Initiate transaction state
-	const master_code = await txstate.initiate();
 	const today = new Date();
 
 	const { invoices, merchant_id } = req.body;
@@ -32,7 +30,7 @@ module.exports.cashierInvoicePay = async (req, res) => {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, cashier) {
+		async function (err, cashier) {
 			let errRes = errorMessage(
 				err,
 				cashier,
@@ -41,6 +39,11 @@ module.exports.cashierInvoicePay = async (req, res) => {
 			if (errRes.status == 0) {
 				res.status(200).json(errRes);
 			} else {
+				// Initiate transaction state
+				const master_code = await txstate.initiate(
+					cashier.bank_id,
+					"Non Wallet to Merchant"
+				);
 				MerchantRule.findOne(
 					{ merchant_id: merchant_id, type: "NWM-F", status: 1, active: 1 },
 					(err, fee) => {
@@ -106,7 +109,7 @@ module.exports.cashierInvoicePay = async (req, res) => {
 												},
 												{ amount_collected: 0 }
 											);
-											let total_amount = await calculateTotalAmount(
+											let total_amount = await invoicesTotalAmount(
 												invoices,
 												merchant_id
 											);
@@ -115,6 +118,7 @@ module.exports.cashierInvoicePay = async (req, res) => {
 												master_code: master_code,
 												payerCode: branch.bcode,
 												payerType: "branch",
+												cashierId: cashier._id,
 											};
 
 											var result = await cashierInvoicePay(
@@ -150,6 +154,7 @@ module.exports.cashierInvoicePay = async (req, res) => {
 													master_code: master_code,
 													paid_by: "BC",
 													payer_id: cashier._id,
+													payer_branch_id: cashier.branch_id,
 												};
 
 												let status = await updateInvoiceRecord(
@@ -160,12 +165,14 @@ module.exports.cashierInvoicePay = async (req, res) => {
 													throw new Error(status);
 												}
 
-												txstate.reported(master_code);
+												txstate.completed(master_code);
 												res.status(200).json(result);
 											} else {
+												txstate.failed(master_code);
 												res.status(200).json(result);
 											}
 										} catch (err) {
+											txstate.failed(master_code);
 											res.status(200).json(catchError(err));
 										}
 									}
@@ -180,8 +187,6 @@ module.exports.cashierInvoicePay = async (req, res) => {
 };
 
 module.exports.partnerInvoicePay = async (req, res) => {
-	// Initiate transaction state
-	const master_code = await txstate.initiate();
 	const today = new Date();
 
 	const { invoices, merchant_id } = req.body;
@@ -191,7 +196,7 @@ module.exports.partnerInvoicePay = async (req, res) => {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, cashier) {
+		async function (err, cashier) {
 			let errRes = errorMessage(
 				err,
 				cashier,
@@ -200,6 +205,11 @@ module.exports.partnerInvoicePay = async (req, res) => {
 			if (errRes.status == 0) {
 				res.status(200).json(errRes);
 			} else {
+				// Initiate transaction state
+				const master_code = await txstate.initiate(
+					cashier.bank_id,
+					"Non Wallet to Merchant"
+				);
 				MerchantRule.findOne(
 					{ merchant_id: merchant_id, type: "NWM-F", status: 1, active: 1 },
 					(err, fee) => {
@@ -281,6 +291,7 @@ module.exports.partnerInvoicePay = async (req, res) => {
 												master_code: master_code,
 												payeCode: partner.code,
 												payerType: "partner",
+												cashierId: cashier._id,
 											};
 
 											var result = await cashierInvoicePay(
@@ -315,6 +326,7 @@ module.exports.partnerInvoicePay = async (req, res) => {
 													master_code: master_code,
 													paid_by: "PC",
 													payer_id: cashier._id,
+													payer_branch_id: cashier.branch_id,
 												};
 
 												let status = await updateInvoiceRecord(
@@ -325,7 +337,7 @@ module.exports.partnerInvoicePay = async (req, res) => {
 													throw new Error(status);
 												}
 
-												txstate.reported(master_code);
+												txstate.completed(master_code);
 												res.status(200).json(result);
 											} else {
 												res.status(200).json(result);

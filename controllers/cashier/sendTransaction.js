@@ -23,6 +23,9 @@ const cashierToOperational = require("../transactions/intraBank/cashierToOperati
 const cashierToCashier = require("../transactions/intraBank/cashierToCashier");
 const cashierToWallet = require("../transactions/intraBank/cashierToWallet");
 
+//constants
+const categoryConst = require("../transactions/constants/category");
+
 module.exports.cashierSendMoney = async function (req, res, next) {
 	try {
 		const {
@@ -52,8 +55,10 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 					// Initiate transaction state
 					const master_code = await txstate.initiate(
 						cashier.bank_id,
-						"Non Wallet To Non Wallet"
+						"Non Wallet To Non Wallet",
+						cashier._id
 					);
+
 					Branch.findOne(
 						{
 							_id: cashier.branch_id,
@@ -121,7 +126,6 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 																				master_code: master_code,
 																				senderType: "sendBranch",
 																				senderCode: branch.bcode,
-																				isInterBank: 0,
 																				cashierId: cashier._id,
 																			};
 																			cashierToCashier(
@@ -168,6 +172,9 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 																										.status(200)
 																										.json(catchError(err));
 																								} else {
+																									txstate.waitingForCompletion(
+																										master_code
+																									);
 																									res.status(200).json({
 																										status: 1,
 																										message:
@@ -177,12 +184,13 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 																							}
 																						);
 																					} else {
+																						txstate.failed(master_code);
 																						res.status(200).json(result);
 																					}
 																				})
 																				.catch((err) => {
-																					let errMsg = catchError(err);
-																					res.status(200).json(errMsg);
+																					txstate.failed(master_code);
+																					res.status(200).json(catchError(err));
 																				});
 																		}
 																	}
@@ -208,9 +216,6 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 
 module.exports.partnerSendMoney = async function (req, res) {
 	try {
-		// Initiate transaction state
-		const master_code = await txstate.initiate();
-
 		const {
 			receiverMobile,
 			receiverEmail,
@@ -226,7 +231,7 @@ module.exports.partnerSendMoney = async function (req, res) {
 				username: jwtusername,
 				status: 1,
 			},
-			function (err, cashier) {
+			async function (err, cashier) {
 				let result = errorMessage(
 					err,
 					cashier,
@@ -235,6 +240,13 @@ module.exports.partnerSendMoney = async function (req, res) {
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
+					// Initiate transaction state
+					const master_code = await txstate.initiate(
+						cashier.bank_id,
+						"Non Wallet To Non Wallet",
+						cashier._id,
+						""
+					);
 					Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
 						let result = errorMessage(err, partner, "Partner not found");
 						if (result.status == 0) {
@@ -307,6 +319,7 @@ module.exports.partnerSendMoney = async function (req, res) {
 																						senderType: "sendPartner",
 																						senderCode: partner.code,
 																						master_code: master_code,
+																						cashierId: cashier._id,
 																					};
 																					cashierToCashier(
 																						transfer,
@@ -368,10 +381,16 @@ module.exports.partnerSendMoney = async function (req, res) {
 																									}
 																								);
 																							} else {
+																								txstate.failed(
+																									transfer.master_code
+																								);
 																								res.status(200).json(result);
 																							}
 																						})
 																						.catch((err) => {
+																							txstate.failed(
+																								transfer.master_code
+																							);
 																							res.status.json(catchError(err));
 																						});
 																				}
@@ -400,8 +419,6 @@ module.exports.partnerSendMoney = async function (req, res) {
 
 module.exports.cashierSendMoneyToWallet = async function (req, res) {
 	try {
-		// Initiate transaction state
-		const master_code = await txstate.initiate();
 		const {
 			receiverMobile,
 			receiverIdentificationAmount,
@@ -414,7 +431,7 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 				username: jwtusername,
 				status: 1,
 			},
-			function (err, cashier) {
+			async function (err, cashier) {
 				let result = errorMessage(
 					err,
 					cashier,
@@ -423,6 +440,13 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
+					// Initiate transaction state
+					const master_code = await txstate.initiate(
+						cashier.bank_id,
+						"Non Wallet to Wallet",
+						cashier._id,
+						""
+					);
 					User.findOne(
 						{
 							mobile: receiverMobile,
@@ -521,6 +545,7 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 																							master_code: master_code,
 																							senderType: "sendBranch",
 																							senderCode: branch.bcode,
+																							cashierId: cashier._id,
 																						};
 																						cashierToWallet(
 																							transfer,
@@ -553,7 +578,7 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 																														catchError(err)
 																													);
 																											} else {
-																												txstate.reported(
+																												txstate.completed(
 																													master_code
 																												);
 																												res.status(200).json({
@@ -565,11 +590,13 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 																										}
 																									);
 																								} else {
+																									txstate.failed(master_code);
 																									res.status(200).json(result);
 																								}
 																							})
 																							.catch((err) => {
 																								console.log(err);
+																								txstate.failed(master_code);
 																								res.status(200).json({
 																									status: 0,
 																									message: err.message,
@@ -601,9 +628,6 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 };
 
 module.exports.partnerSendMoneyToWallet = async function (req, res) {
-	// Initiate transaction state
-	const master_code = await txstate.initiate();
-
 	const {
 		receiverMobile,
 		receiverIdentificationAmount,
@@ -616,7 +640,7 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, cashier) {
+		async function (err, cashier) {
 			let result = errorMessage(
 				err,
 				cashier,
@@ -625,6 +649,13 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
+				// Initiate transaction state
+				const master_code = await txstate.initiate(
+					cashier.bank_id,
+					"Non Wallet to Wallet",
+					cashier._id,
+					""
+				);
 				Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
 					let result = errorMessage(err, partner, "Partner Not Found");
 					if (result.status == 0) {
@@ -733,6 +764,7 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 																								master_code: master_code,
 																								senderType: "sendPartner",
 																								senderCode: partner.code,
+																								cashierId: cashier._id,
 																							};
 																							cashierToWallet(
 																								transfer,
@@ -765,7 +797,7 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 																															catchError(err)
 																														);
 																												} else {
-																													txstate.reported(
+																													txstate.completed(
 																														master_code
 																													);
 																													res.status(200).json({
@@ -814,9 +846,6 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 };
 
 module.exports.cashierSendToOperational = async function (req, res) {
-	// Initiate transaction state
-	const master_code = await txstate.initiate();
-
 	const { walletId, receiverIdentificationAmount, isInclusive } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
@@ -824,7 +853,7 @@ module.exports.cashierSendToOperational = async function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, cashier) {
+		async function (err, cashier) {
 			let result = errorMessage(
 				err,
 				cashier,
@@ -833,6 +862,14 @@ module.exports.cashierSendToOperational = async function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
+				// Initiate transaction state
+				const master_code = await txstate.initiate(
+					"main",
+					cashier.bank_id,
+					"Non Wallet to Operational",
+					cashier._id,
+					""
+				);
 				Branch.findOne({ _id: cashier.branch_id }, (err, branch) => {
 					let result = errorMessage(err, branch, "Branch not found");
 					if (result.status == 0) {
@@ -904,6 +941,7 @@ module.exports.cashierSendToOperational = async function (req, res) {
 																			master_code: master_code,
 																			senderType: "sendBranch",
 																			senderCode: branch.bcode,
+																			cashierId: cashier._id,
 																		};
 																		cashierToOperational(
 																			transfer,
@@ -929,7 +967,10 @@ module.exports.cashierSendToOperational = async function (req, res) {
 																									.status(200)
 																									.json(catchError(err));
 																							} else {
-																								txstate.reported(master_code);
+																								txstate.completed(
+																									categoryConst.MAIN,
+																									master_code
+																								);
 																								res.status(200).json({
 																									status: 1,
 																									message:
@@ -940,10 +981,18 @@ module.exports.cashierSendToOperational = async function (req, res) {
 																						}
 																					);
 																				} else {
+																					txstate.failed(
+																						categoryConst.MAIN,
+																						master_code
+																					);
 																					res.status(200).json(result);
 																				}
 																			})
 																			.catch((err) => {
+																				txstate.failed(
+																					categoryConst.MAIN,
+																					master_code
+																				);
 																				console.log(err);
 																				res.status(200).json({
 																					status: 0,
@@ -985,7 +1034,7 @@ module.exports.partnerSendToOperational = async function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, cashier) {
+		async function (err, cashier) {
 			let result = errorMessage(
 				err,
 				cashier,
@@ -994,6 +1043,13 @@ module.exports.partnerSendToOperational = async function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
+				// Initiate transaction state
+				const master_code = await txstate.initiate(
+					cashier.bank_id,
+					"Non Wallet to Operational",
+					cashier._id,
+					""
+				);
 				Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
 					let result = errorMessage(err, partner, "Partner Not Found");
 					if (result.status == 0) {
@@ -1090,6 +1146,7 @@ module.exports.partnerSendToOperational = async function (req, res) {
 																							master_code: master_code,
 																							senderType: "sendPartner",
 																							senderCode: partner.code,
+																							cashierId: cashier._id,
 																						};
 																						cashierToOperational(
 																							transfer,
@@ -1119,7 +1176,7 @@ module.exports.partnerSendToOperational = async function (req, res) {
 																														catchError(err)
 																													);
 																											} else {
-																												txstate.reported(
+																												txstate.completed(
 																													master_code
 																												);
 																												res.status(200).json({

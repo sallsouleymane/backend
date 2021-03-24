@@ -21,12 +21,2248 @@ const MerchantPosition = require("../models/merchant/Position");
 const Zone = require("../models/merchant/Zone");
 const Subzone = require("../models/merchant/Subzone");
 const InvoiceGroup = require("../models/merchant/InvoiceGroup");
+const Invoice = require("../models/merchant/Invoice");
 const Offering = require("../models/merchant/Offering");
 const Tax = require("../models/merchant/Tax");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
 const Customer = require("../models/merchant/Customer");
 
-router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
+router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
+	const { merchant_id } = req.body;
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+			Invoice.aggregate(
+					[
+						{
+							$match: {
+								merchant_id: String(merchant_id),
+								created_at: {
+									$gte: new Date(
+										start
+									),
+									$lte: new Date(
+										end
+									),
+								},
+								paid:1,
+							},
+						},
+						{
+							$group: {
+								_id: "$paid_by",
+								amount_paid: { $sum: "$amount" },
+								bills_paid: { $sum: 1 },
+							},
+						},
+					],async (err, post6) => {
+						let result = errorMessage(
+							err,
+							post6,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Invoice.aggregate(
+								[
+									{
+										$match: {
+											merchant_id: String(merchant_id),
+											created_at: {
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
+										},
+									},
+									{
+										$group: {
+											_id: "$is_created",
+											amount_generated: { $sum: "$amount" },
+											bills_generated: { $sum: 1 },
+										},
+									},
+								],async (err, post7) => {
+									let result = errorMessage(
+										err,
+										post7,
+										"Error."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										Invoice.aggregate(
+											[
+												{
+													$match: {
+														merchant_id: String(merchant_id),
+														paid: 0,
+													},
+												},
+												{
+													$group: {
+														_id: null,
+														amount_pending: { $sum: "$amount" },
+														bills_pending: { $sum: 1 },
+													},
+												},
+											],async (err, post8) => {
+												let result = errorMessage(
+													err,
+													post8,
+													"Error."
+												);
+												if (result.status == 0) {
+													res.status(200).json(result);
+												} else {
+													let ap = 0;
+													let bp = 0;
+													if (
+														post8 != undefined &&
+														post8 != null &&
+														post8.length > 0
+													) {
+														ap = post8[0].amount_pending;
+														bp = post8[0].bills_pending;
+													}
+													res.status(200).json({
+														status: 1,
+														post6:post6,
+														post7:post7,
+														amount_pending: ap,
+														bills_pending: bp,
+													});
+												}
+											}
+										);
+									}
+								}
+							);
+						}
+					}		
+			);
+
+		}
+	);
+});
+
+router.post("/merchant/getSettings", jwtTokenAuth, function (req, res) {
+	const { merchant_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+
+				MerchantSettings.findOne(
+					{ merchant_id: merchant_id },
+					(err, setting) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else if (!setting) {
+							res.status(200).json({
+								status: 0,
+								message: "Setting Not found",
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								setting: setting,
+							});
+						}
+					}
+				);
+
+		}
+	);
+});
+
+router.post("/merchant/getzoneList", jwtTokenAuth, (req, res) => {
+	const { merchant_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+		
+			Zone.find({ merchant_id: merchant_id }, async (err, zones) => {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else {
+					res.status(200).json({
+						status: 1,
+						list: zones,
+					});
+				}
+			});
+			
+		}
+	);
+});
+
+router.post("/merchant/getsubzoneList", jwtTokenAuth, (req, res) => {
+	const { merchant_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+			
+			Subzone.find({ merchant_id: merchant_id }, async (err, subzones) => {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else {
+					res.status(200).json({
+						status: 1,
+						list: subzones,
+					});
+				}
+			});
+			
+		}
+	);
+});
+
+router.post("/merchant/getbranchList", jwtTokenAuth, (req, res) => {
+	const { merchant_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+			MerchantBranch.find({ merchant_id: merchant_id }, async (err, branches) => {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else {
+					res.status(200).json({
+						status: 1,
+						list: branches,
+					});
+				}
+			});
+			
+		}
+	);
+});
+
+router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { zone_id } = req.body;
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+				Invoice.aggregate(
+					[
+						{
+							$match: {
+								zone_id: zone_id,
+								created_at: {
+									$gte: new Date(
+										start
+									),
+									$lte: new Date(
+										end
+									),
+								},
+								paid: 1,
+							},
+						},
+						{
+							$group: {
+								_id: null,
+								amount_paid: { $sum: "$amount" },
+								bills_paid: { $sum: 1 },
+							},
+						},
+					],async (err, post6) => {
+						let result = errorMessage(
+							err,
+							post6,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Invoice.aggregate(
+								[
+									{
+										$match: {
+											zone_id: zone_id,
+											created_at: {
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
+										},
+									},
+									{
+										$group: {
+											_id: null,
+											amount_generated: { $sum: "$amount" },
+											bills_generated: { $sum: 1 },
+										},
+									},
+								],async (err, post7) => {
+									let result = errorMessage(
+										err,
+										post7,
+										"Error."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										Invoice.aggregate(
+											[
+												{
+													$match: {
+														zone_id: zone_id,
+														paid: 0,
+													},
+												},
+												{
+													$group: {
+														_id: null,
+														amount_pending: { $sum: "$amount" },
+														bills_pending: { $sum: 1 },
+													},
+												},
+											],async (err, post8) => {
+												let result = errorMessage(
+													err,
+													post8,
+													"Error."
+												);
+												if (result.status == 0) {
+													res.status(200).json(result);
+												} else {
+													let apen = 0;
+													let bpen = 0;
+													let ag = 0;
+													let bg = 0;
+													let ap = 0;
+													let bp = 0;
+													if (
+														post6 != undefined &&
+														post6 != null &&
+														post6.length > 0
+													) {
+														ap = post6[0].amount_paid;
+														bp = post6[0].bills_paid;
+													}
+													if (
+														post7 != undefined &&
+														post7 != null &&
+														post7.length > 0
+													) {
+														ag = post7[0].amount_generated;
+														bg = post7[0].bills_generated;
+													}
+													if (
+														post8 != undefined &&
+														post8 != null &&
+														post8.length > 0
+													) {
+														apen = post8[0].amount_pending;
+														bpen = post8[0].bills_pending;
+													}
+													res.status(200).json({
+														status: 1,
+														amount_generated: ag,
+														bill_generated: bg,
+														amount_paid: ap,
+														bill_paid: bp,
+														amount_pending: apen,
+														bill_pending: bpen,
+														post7:post7,
+														post6:post6,
+													});
+												}
+											}
+										);
+									}	
+								}
+							);
+						}
+					}		
+				);
+			
+		}
+	);
+});
+
+router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
+	const username = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: username,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								} else {
+									Bank.findOne({ _id: adminmerchant.bank_id }, (err, bank) => {
+										let result = errorMessage(err, bank, "Bank not found");
+										if (result.status == 0) {
+											res.status(200).json(result);
+										} else {
+											const wallet_id = adminmerchant.wallet_ids.operational;
+											blockchain
+												.getBalance(wallet_id)
+												.then(function (result) {
+													res.status(200).json({
+														status: 1,
+														balance: result,
+													});
+												})
+												.catch((err) => {
+													res.status(200).json(catchError(err));
+												});
+										}
+									});
+								}
+							});
+						}	
+					}
+				);
+			} else {
+				Bank.findOne({ _id: merchant.bank_id }, (err, bank) => {
+					let result = errorMessage(err, bank, "Bank not found");
+					if (result.status == 0) {
+						res.status(200).json(result);
+					} else {
+						const wallet_id = merchant.wallet_ids.operational;
+						blockchain
+							.getBalance(wallet_id)
+							.then(function (result) {
+								res.status(200).json({
+									status: 1,
+									balance: result,
+								});
+							})
+							.catch((err) => {
+								res.status(200).json(catchError(err));
+							});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/merchant/getMerchantSubzoneListDashStats", jwtTokenAuth, function (req, res) {
+	const { zone_id } = req.body;
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+	
+				Invoice.aggregate(
+					[
+						{
+							$match: {
+								zone_id: zone_id,
+								created_at: {
+									$gte: new Date(
+										start
+									),
+									$lte: new Date(
+										end
+									),
+								},
+								paid:1,
+							},
+						},
+						{
+							$group: {
+								_id: "$paid_by",
+								amount_paid: { $sum: "$amount" },
+								bills_paid: { $sum: 1 },
+							},
+						},
+					],async (err, post6) => {
+						let result = errorMessage(
+							err,
+							post6,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Invoice.aggregate(
+								[
+									{
+										$match: {
+											zone_id: zone_id,
+											created_at: {
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
+										},
+									},
+									{
+										$group: {
+											_id: "$is_created",
+											amount_generated: { $sum: "$amount" },
+											bills_generated: { $sum: 1 },
+										},
+									},
+								],async (err, post7) => {
+									let result = errorMessage(
+										err,
+										post7,
+										"Error."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										Invoice.aggregate(
+											[
+												{
+													$match: {
+														zone_id: zone_id,
+														paid: 0,
+													},
+												},
+												{
+													$group: {
+														_id: null,
+														amount_pending: { $sum: "$amount" },
+														bills_pending: { $sum: 1 },
+													},
+												},
+											],async (err, post8) => {
+												let result = errorMessage(
+													err,
+													post8,
+													"Error."
+												);
+												if (result.status == 0) {
+													res.status(200).json(result);
+												} else {
+													let ap = 0;
+													let bp = 0;
+													if (
+														post8 != undefined &&
+														post8 != null &&
+														post8.length > 0
+													) {
+														ap = post8[0].amount_pending;
+														bp = post8[0].bills_pending;
+													}
+													res.status(200).json({
+														status: 1,
+														post6:post6,
+														post7:post7,
+														amount_pending: ap,
+														bills_pending: bp,
+													});
+												}
+											}
+										);
+									}
+								}
+							);
+						}
+					}		
+				);
+			
+		}
+	);
+});
+
+router.post("/merchant/getMerchantBranchListDashStats", jwtTokenAuth, function (req, res) {
+	const { subzone_id } = req.body;
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+				Invoice.aggregate(
+					[
+						{
+							$match: {
+								subzone_id: subzone_id,
+								created_at: {
+									$gte: new Date(
+										start
+									),
+									$lte: new Date(
+										end
+									),
+								},
+								paid:1,
+							},
+						},
+						{
+							$group: {
+								_id: "$paid_by",
+								amount_paid: { $sum: "$amount" },
+								bills_paid: { $sum: 1 },
+							},
+						},
+					],async (err, post6) => {
+						let result = errorMessage(
+							err,
+							post6,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Invoice.aggregate(
+								[
+									{
+										$match: {
+											subzone_id: subzone_id,
+											created_at: {
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
+										},
+									},
+									{
+										$group: {
+											_id: "$is_created",
+											amount_generated: { $sum: "$amount" },
+											bills_generated: { $sum: 1 },
+										},
+									},
+								],async (err, post7) => {
+									let result = errorMessage(
+										err,
+										post7,
+										"Error."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										Invoice.aggregate(
+											[
+												{
+													$match: {
+														subzone_id: subzone_id,
+														paid: 0,
+													},
+												},
+												{
+													$group: {
+														_id: null,
+														amount_pending: { $sum: "$amount" },
+														bills_pending: { $sum: 1 },
+													},
+												},
+											],async (err, post8) => {
+												let result = errorMessage(
+													err,
+													post8,
+													"Error."
+												);
+												if (result.status == 0) {
+													res.status(200).json(result);
+												} else {
+													let ap = 0;
+													let bp = 0;
+													if (
+														post8 != undefined &&
+														post8 != null &&
+														post8.length > 0
+													) {
+														ap = post8[0].amount_pending;
+														bp = post8[0].bills_pending;
+													}
+													res.status(200).json({
+														status: 1,
+														post6:post6,
+														post7:post7,
+														amount_pending: ap,
+														bills_pending: bp,
+													});
+												}
+											}
+										);
+									}
+								}
+							);
+						}
+					}		
+				);
+			
+		}
+	);
+});
+
+router.post(
+	"/merchant/listSubzonesByZoneId",
+	jwtTokenAuth,
+	function (req, res) {
+		const { zone_id } = req.body;
+		const jwtusername = req.sign_creds.username;
+		Merchant.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, merchant) {
+				if (err) {
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				}else if (!merchant || merchant === null || merchant === undefined){
+					MerchantStaff.findOne(
+						{
+							username: jwtusername,
+							role: "admin",
+						},
+						function (err, admin) {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							}else if (!admin || admin===null || admin === undefined){
+								res.status(200).json({
+									status: 0,
+									message: "User not found",
+								});
+							} else {
+								Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+									var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									}
+								});
+							}	
+						}
+					);
+				}
+					Subzone.find(
+						{ zone_id: zone_id },
+						function (err, subzone) {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else {
+								res.status(200).json({
+									status: 1,
+									subzones: subzone,
+								});
+							}
+						}
+					);
+			}
+		);
+	}
+);
+
+router.post("/merchant/getSubZoneStats",jwtTokenAuth,function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { subzone_id } = req.body;
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+			
+
+				Invoice.aggregate(
+					[
+						{
+							$match: {
+								subzone_id: subzone_id,
+								created_at: {
+									$gte: new Date(
+										start
+									),
+									$lte: new Date(
+										end
+									),
+								},
+								paid: 1,
+							},
+						},
+						{
+							$group: {
+								_id: null,
+								amount_paid: { $sum: "$amount" },
+								bills_paid: { $sum: 1 },
+							},
+						},
+					],async (err, post6) => {
+						let result = errorMessage(
+							err,
+							post6,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Invoice.aggregate(
+								[
+									{
+										$match: {
+											subzone_id: subzone_id,
+											created_at: {
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
+										},
+									},
+									{
+										$group: {
+											_id: null,
+											amount_generated: { $sum: "$amount" },
+											bills_generated: { $sum: 1 },
+										},
+									},
+								],async (err, post7) => {
+									let result = errorMessage(
+										err,
+										post7,
+										"Error."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										let ag = 0;
+										let bg = 0;
+										let ap = 0;
+										let bp = 0;
+										if (
+											post6 != undefined &&
+											post6 != null &&
+											post6.length > 0
+										) {
+											ap = post6[0].amount_paid;
+											bp = post6[0].bills_paid;
+										}
+										if (
+											post7 != undefined &&
+											post7 != null &&
+											post7.length > 0
+										) {
+											ag = post7[0].amount_generated;
+											bg = post7[0].bills_generated;
+										}
+										res.status(200).json({
+											status: 1,
+											amount_generated: ag,
+											bill_generated: bg,
+											amount_paid: ap,
+											bill_paid: bp,
+											post7:post7,
+											post6:post6,
+										});
+									}
+								}
+							);
+						}
+					}		
+				);
+			
+		}
+	);
+});
+
+router.post("/merchant/getBranchStats",jwtTokenAuth,function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { branch_id } = req.body;
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+			
+
+				Invoice.aggregate(
+					[
+						{
+							$match: {
+								branch_id: branch_id,
+								created_at: {
+									$gte: new Date(
+										start
+									),
+									$lte: new Date(
+										end
+									),
+								},
+								paid: 1,
+							},
+						},
+						{
+							$group: {
+								_id: null,
+								amount_paid: { $sum: "$amount" },
+								bills_paid: { $sum: 1 },
+							},
+						},
+					],async (err, post6) => {
+						let result = errorMessage(
+							err,
+							post6,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Invoice.aggregate(
+								[
+									{
+										$match: {
+											branch_id: branch_id,
+											created_at: {
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
+										},
+									},
+									{
+										$group: {
+											_id: null,
+											amount_generated: { $sum: "$amount" },
+											bills_generated: { $sum: 1 },
+										},
+									},
+								],async (err, post7) => {
+									let result = errorMessage(
+										err,
+										post7,
+										"Error."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										let ag = 0;
+										let bg = 0;
+										let ap = 0;
+										let bp = 0;
+										if (
+											post6 != undefined &&
+											post6 != null &&
+											post6.length > 0
+										) {
+											ap = post6[0].amount_paid;
+											bp = post6[0].bills_paid;
+										}
+										if (
+											post7 != undefined &&
+											post7 != null &&
+											post7.length > 0
+										) {
+											ag = post7[0].amount_generated;
+											bg = post7[0].bills_generated;
+										}
+										res.status(200).json({
+											status: 1,
+											amount_generated: ag,
+											bill_generated: bg,
+											amount_paid: ap,
+											bill_paid: bp,
+											post7:post7,
+											post6:post6,
+										});
+									}
+								}
+							);
+						}
+					}		
+				);
+			
+		}
+	);
+});
+
+router.post(
+	"/merchant/listBranchesBySubzoneId",
+	jwtTokenAuth,
+	function (req, res) {
+		const { subzone_id } = req.body;
+		const jwtusername = req.sign_creds.username;
+		Merchant.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, merchant) {
+				if (err) {
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				}else if (!merchant || merchant === null || merchant === undefined){
+					MerchantStaff.findOne(
+						{
+							username: jwtusername,
+							role: "admin",
+						},
+						function (err, admin) {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							}else if (!admin || admin===null || admin === undefined){
+								res.status(200).json({
+									status: 0,
+									message: "User not found",
+								});
+							} else {
+								Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+									var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									}
+								});
+							}	
+						}
+					);
+				}
+					MerchantBranch.find(
+						{  subzone_id: subzone_id },
+						function (err, branch) {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							} else {
+								res.status(200).json({
+									status: 1,
+									branches: branch,
+								});
+							}
+						}
+					);
+				
+			}
+		);
+	}
+);
+
+router.post("/merchant/:type/getStatsBydate",jwtTokenAuth,function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const type = req.params.type;
+	const { id, date } = req.body;
+	var today = new Date(date);
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+
+				Invoice.aggregate(
+					[
+						{
+							$match: {
+								[`${type}_id`] : id,
+								created_at: {
+									$gte: new Date(
+										start
+									),
+									$lte: new Date(
+										end
+									),
+								},
+								paid:1,
+							},
+						},
+						{
+							$group: {
+								_id: "$paid_by",
+								amount_paid: { $sum: "$amount" },
+								penalty: { $sum: "$penalty"},
+								bills_paid: { $sum: 1 },
+							},
+						},
+					],async (err, post6) => {
+						let result = errorMessage(
+							err,
+							post6,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Invoice.aggregate(
+								[
+									{
+										$match: {
+											[`${type}_id`] : id,
+											created_at: {
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
+										},
+									},
+									{
+										$group: {
+											_id: null,
+											amount_generated: { $sum: "$amount" },
+											bills_generated: { $sum: 1 },
+										},
+									},
+								],async (err, post7) => {
+									let result = errorMessage(
+										err,
+										post7,
+										"Error."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										let ag = 0;
+										let bg = 0;
+										let InvoicePaidByMC = 0;
+										let InvoicePaidByBC = 0;
+										let InvoicePaidByPC = 0;
+										let InvoicePaidByUS = 0;
+										let AmountPaidByMC = 0;
+										let AmountPaidByBC = 0;
+										let AmountPaidByPC = 0;
+										let AmountPaidByUS = 0;
+										let InvoicePaid = 0;
+										let AmountPaid = 0;
+										if (
+											post7 != undefined &&
+											post7 != null &&
+											post7.length > 0
+										) {
+											ag = post7[0].amount_generated;
+											bg = post7[0].bills_generated;
+										}
+										if (
+											post6 != undefined &&
+											post6 != null &&
+											post6.length > 0
+										) {
+											const PaidByMC = await post6.filter((val) => {
+												return val._id==='MC'
+											});
+											const PaidByBC = await post6.filter((val) => {
+												return val._id==='BC'
+											});
+											const PaidByPC = await post6.filter((val)=>{
+												return val._id==='PC'
+											});
+											const PaidByUS = await post6.filter((val)=>{
+												return val._id==='US'
+											});
+											if(PaidByMC.length > 0){
+												InvoicePaidByMC = PaidByMC[0].bills_paid;
+												AmountPaidByMC = PaidByMC[0].amount_paid + PaidByMC[0].penalty;
+											}
+											if(PaidByBC.length > 0){
+												InvoicePaidByBC = PaidByBC[0].bills_paid;
+												AmountPaidByBC = PaidByBC[0].amount_paid + PaidByBC[0].penalty;
+											}
+											if(PaidByPC.length > 0){
+												InvoicePaidByPC = PaidByPC[0].bills_paid;
+												AmountPaidByPC = PaidByPC[0].amount_paid + PaidByPC[0].penalty;
+											}
+											if(PaidByUS.length > 0){
+												InvoicePaidByUS = PaidByUS[0].bills_paid;
+												AmountPaidByUS = PaidByUS[0].amount_paid + PaidByUS[0].penalty;
+											}
+
+											InvoicePaid = await post6.reduce((a, b) => {
+												return a + b.bills_paid;
+											}, 0);
+											
+											AmountPaid = await post6.reduce((a, b) => {
+												return a + b.amount_paid;
+											}, 0);
+										}
+										res.status(200).json({
+											status: 1,
+											amount_generated: ag,
+											bill_generated: bg,
+											amount_paid: AmountPaid,
+											bill_paid: InvoicePaid,
+											bill_paid_by_MC : InvoicePaidByMC,
+											amount_paid_by_MC: AmountPaidByMC,
+											bill_paid_by_PC : InvoicePaidByPC,
+											amount_paid_by_PC: AmountPaidByPC,
+											bill_paid_by_BC : InvoicePaidByBC,
+											amount_paid_by_BC: AmountPaidByBC,
+											bill_paid_by_US : InvoicePaidByUS,
+											amount_paid_by_US: AmountPaidByUS,
+											post7:post7,
+											post6:post6,
+										});
+									}
+								}
+							);
+						}
+					}		
+				);
+			
+		}
+	);
+});
+
+router.post("/merchant/:type/getStatsByPeriod",jwtTokenAuth,function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const type = req.params.type;
+	const { id, period_name } = req.body;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+			
+				Invoice.aggregate(
+					[
+						{
+							$match: {
+								[`${type}_id`] : id,
+								"bill_period.period_name": period_name,
+								paid: 1,
+							},
+						},
+						{
+							$group: {
+								_id: "$paid_by", 
+								amount_paid: { $sum: "$amount" },
+								bills_paid: { $sum: 1 },
+								penalty: { $sum: "$penalty"},
+							},
+						},
+					],async (err, post6) => {
+						let result = errorMessage(
+							err,
+							post6,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Invoice.aggregate(
+								[
+									{
+										$match: {
+											[`${type}_id`] : id,
+											"bill_period.period_name": period_name,
+										},
+									},
+									{
+										$group: {
+											_id: null,
+											amount_generated: { $sum: "$amount" },
+											bills_generated: { $sum: 1 },
+										},
+									},
+								],async (err, post7) => {
+									let result = errorMessage(
+										err,
+										post7,
+										"Error."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										let ag = 0;
+										let bg = 0;
+										let InvoicePaidByMC = 0;
+										let InvoicePaidByBC = 0;
+										let InvoicePaidByPC = 0;
+										let InvoicePaidByUS = 0;
+										let AmountPaidByMC = 0;
+										let AmountPaidByBC = 0;
+										let AmountPaidByPC = 0;
+										let AmountPaidByUS = 0;
+										let InvoicePaid = 0;
+										let AmountPaid = 0;
+										if (
+											post7 != undefined &&
+											post7 != null &&
+											post7.length > 0
+										) {
+											ag = post7[0].amount_generated;
+											bg = post7[0].bills_generated;
+										}
+										if (
+											post6 != undefined &&
+											post6 != null &&
+											post6.length > 0
+										) {
+											const PaidByMC = await post6.filter((val) => {
+												return val._id==='MC'
+											});
+											const PaidByBC = await post6.filter((val) => {
+												return val._id==='BC'
+											});
+											const PaidByPC = await post6.filter((val)=>{
+												return val._id==='PC'
+											});
+											const PaidByUS = await post6.filter((val)=>{
+												return val._id==='US'
+											});
+											if(PaidByMC.length > 0){
+												InvoicePaidByMC = PaidByMC[0].bills_paid;
+												AmountPaidByMC = PaidByMC[0].amount_paid + PaidByMC[0].penalty;
+											}
+											if(PaidByBC.length > 0){
+												InvoicePaidByBC = PaidByBC[0].bills_paid;
+												AmountPaidByBC = PaidByBC[0].amount_paid + PaidByBC[0].penalty;
+											}
+											if(PaidByPC.length > 0){
+												InvoicePaidByPC = PaidByPC[0].bills_paid;
+												AmountPaidByPC = PaidByPC[0].amount_paid + PaidByPC[0].penalty;
+											}
+											if(PaidByUS.length > 0){
+												InvoicePaidByUS = PaidByUS[0].bills_paid;
+												AmountPaidByUS = PaidByUS[0].amount_paid + PaidByUS[0].penalty;
+											}
+
+											InvoicePaid = await post6.reduce((a, b) => {
+												return a + b.bills_paid;
+											}, 0);
+											
+											AmountPaid = await post6.reduce((a, b) => {
+												return a + b.amount_paid;
+											}, 0);
+										}
+										res.status(200).json({
+											status: 1,
+											amount_generated: ag,
+											bill_generated: bg,
+											amount_paid: AmountPaid,
+											bill_paid: InvoicePaid,
+											bill_paid_by_MC : InvoicePaidByMC,
+											amount_paid_by_MC: AmountPaidByMC,
+											bill_paid_by_PC : InvoicePaidByPC,
+											amount_paid_by_PC: AmountPaidByPC,
+											bill_paid_by_BC : InvoicePaidByBC,
+											amount_paid_by_BC: AmountPaidByBC,
+											bill_paid_by_US : InvoicePaidByUS,
+											amount_paid_by_US: AmountPaidByUS,
+											post7:post7,
+											post6:post6,
+										});
+									}
+								}
+							);
+						}
+					}		
+				);
+			
+		}
+	);
+});
+
+router.post("/merchant/listOfferings", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { merchant_id } = req.body;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+		
+				Offering.find({ merchant_id: merchant_id }, (err, offerings) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							offerings: offerings,
+						});
+					}
+				});
+			
+		}
+	);
+});
+
+router.post("/merchant/listTaxes", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { merchant_id } = req.body;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+				Tax.find({ merchant_id: merchant_id }, (err, taxes) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							taxes: taxes,
+						});
+					}
+				});
+		}
+	);
+});
+
+router.post("/merchant/listInvoiceGroups", jwtTokenAuth, (req, res) => {
+	const { merchant_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+				InvoiceGroup.find({ merchant_id: merchant_id }, (err, groups) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Invoice Groups list",
+							groups: groups,
+						});
+					}
+				});
+			
+		}
+	);
+});
+
+router.post("/merchant/createInvoiceGroup", jwtTokenAuth, (req, res) => {
+	let data = new InvoiceGroup();
+	const { code, name, description } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -38,7 +2274,86 @@ router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Customer.find({ merchant_id: merchant._id }, (err, customers) => {
+				data.code = code;
+				data.name = name;
+				data.description = description;
+				data.merchant_id = merchant._id;
+				data.save((err, group) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						return res.status(200).json({
+							status: 1,
+							message: "Invoice Category Created",
+							group: group,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { merchant_id } = req.body;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+				Customer.find({ merchant_id: merchant_id }, (err, customers) => {
 					if (err) {
 						console.log(err);
 						var message = err;
@@ -56,12 +2371,88 @@ router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
 						});
 					}
 				});
-			}
 		}
 	);
 });
 
-router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
+router.post("/merchant/listStaff", jwtTokenAuth, (req, res) => {
+	const jwtusername = req.sign_creds.username;
+	const { merchant_id } = req.body;
+	Merchant.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, merchant) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+				MerchantStaff.find(
+					{ merchant_id: merchant_id },
+					(err, staffs) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								staffs: staffs,
+							});
+						}
+					}
+				);
+			
+		}
+	);
+});
+ 
+router.post("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	Merchant.findOne(
 		{
@@ -69,17 +2460,111 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, merchant) {
-			let result = errorMessage(err, merchant, "Merchant is not valid");
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
-					status: 1,
-					bills_paid: merchant.bills_paid,
-					bills_raised: merchant.bills_raised,
-					amount_collected: merchant.amount_collected,
-					amount_due: merchant.amount_due,
+					status: 0,
+					message: message,
 				});
+			}else if (!merchant || merchant === null || merchant === undefined){
+				MerchantStaff.findOne(
+					{
+						username: jwtusername,
+						role: "admin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
+								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}else{
+									Bank.findOne(
+										{
+											_id: adminmerchant.bank_id,
+										},
+										function (err) {
+											if (err) {
+												console.log(err);
+												var message = err;
+												if (err.message) {
+													message = err.message;
+												}
+												res.status(200).json({
+													status: 0,
+													message: message,
+												});
+											} else {
+												const wallet = adminmerchant.wallet_ids.operational;
+												blockchain
+													.getStatement(wallet)
+													.then(function (history) {
+														res.status(200).json({
+															status: 1,
+															history: history,
+														});
+													})
+													.catch((err) => {
+														res.status(200).json(catchError(err));
+													});
+											}
+										}
+									);
+								}
+							});
+						}	
+					}
+				);
+			} else {
+				Bank.findOne(
+					{
+						_id: merchant.bank_id,
+					},
+					function (err) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							const wallet = merchant.wallet_ids.operational;
+							blockchain
+								.getStatement(wallet)
+								.then(function (history) {
+									res.status(200).json({
+										status: 1,
+										history: history,
+									});
+								})
+								.catch((err) => {
+									res.status(200).json(catchError(err));
+								});
+						}
+					}
+				);
 			}
 		}
 	);
@@ -433,6 +2918,7 @@ router.post("/merchant/addBillPeriod", jwtTokenAuth, (req, res) => {
 	);
 });
 
+
 router.post("/merchant/setDefaultBillPeriod", jwtTokenAuth, (req, res) => {
 	const period = {
 		start_date: req.body.start_date,
@@ -604,84 +3090,6 @@ router.post("/merchant/addBillTerm", jwtTokenAuth, (req, res) => {
 						}
 					}
 				);
-			}
-		}
-	);
-});
-
-router.post("/merchant/getSettings", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, merchant) {
-			let result = errorMessage(err, merchant, "Merchant is not valid");
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				MerchantSettings.findOne(
-					{ merchant_id: merchant._id },
-					(err, setting) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (!setting) {
-							res.status(200).json({
-								status: 0,
-								message: "Setting Not found",
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								setting: setting,
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
-
-router.post("/merchant/listTaxes", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, merchant) {
-			let result = errorMessage(err, merchant, "Merchant is not valid");
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Tax.find({ merchant_id: merchant._id }, (err, taxes) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							taxes: taxes,
-						});
-					}
-				});
 			}
 		}
 	);
@@ -916,41 +3324,6 @@ router.post("/merchant/editOffering", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/merchant/listOfferings", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, merchant) {
-			let result = errorMessage(err, merchant, "Merchant is not valid");
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Offering.find({ merchant_id: merchant._id }, (err, offerings) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							offerings: offerings,
-						});
-					}
-				});
-			}
-		}
-	);
-});
-
 router.post("/merchant/uploadOfferings", jwtTokenAuth, function (req, res) {
 	const { offerings } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -1066,58 +3439,6 @@ router.get("/merchant/todaysStatus", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.get("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, merchant) {
-			let result = errorMessage(
-				err,
-				merchant,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Bank.findOne(
-					{
-						_id: merchant.bank_id,
-					},
-					function (err) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else {
-							const wallet = merchant.wallet_ids.operational;
-							blockchain
-								.getStatement(wallet)
-								.then(function (history) {
-									res.status(200).json({
-										status: 1,
-										history: history,
-									});
-								})
-								.catch((err) => {
-									res.status(200).json(catchError(err));
-								});
-						}
-					}
-				);
-			}
-		}
-	);
-});
-
 router.post("/merchant/editDetails", jwtTokenAuth, function (req, res) {
 	var { username, name, logo, description, document_hash, email } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -1192,45 +3513,6 @@ router.post("/merchant/editZone", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.get("/merchant/getZoneList", jwtTokenAuth, (req, res) => {
-	const jwtusername = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, merchant) {
-			let result = errorMessage(
-				err,
-				merchant,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Zone.find({ merchant_id: merchant._id }, (err, zones) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							zones: zones,
-						});
-					}
-				});
-			}
-		}
-	);
-});
-
 router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 	let data = new Zone();
 	const { code, name, description, type } = req.body;
@@ -1254,6 +3536,8 @@ router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 				data.description = description;
 				data.merchant_id = merchant._id;
 				data.type = type;
+				data.branch_count = 0,
+				data.subzone_count = 0,
 				data.save((err, zone) => {
 					if (err) {
 						console.log(err);
@@ -1313,65 +3597,35 @@ router.post("/merchant/createSubzone", jwtTokenAuth, (req, res) => {
 								message: message,
 							});
 						} else {
-							return res.status(200).json({
-								status: 1,
-								message: "Subzone Created",
-								subzone: subzone,
-							});
+							Zone.updateOne(
+								{ _id: zone_id },
+								{ $inc: { subzone_count: 1 } },
+								function (err, zone) {
+									let result = errorMessage(
+										err,
+										zone,
+										"Zone not found"
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										return res.status(200).json({
+											status: 1,
+											message: "Subzone Created",
+											subzone: subzone,
+										});
+										
+									}
+
+								}
+							);
+							
 						}
 					});
 			}
 		}
 	);
 });
-
-router.post(
-	"/merchant/listSubzonesByZoneId",
-	jwtTokenAuth,
-	function (req, res) {
-		const { zone_id } = req.body;
-		const username = req.sign_creds.username;
-		Merchant.findOne(
-			{
-				username,
-				status: 1,
-			},
-			function (err, merchant) {
-				let result = errorMessage(
-					err,
-					merchant,
-					"Token changed or user not valid. Try to login again or contact system administrator."
-				);
-				if (result.status == 0) {
-					res.status(200).json(result);
-				} else {
-					Subzone.find(
-						{ merchant_id: merchant._id, zone_id: zone_id },
-						"-password",
-						function (err, subzone) {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else {
-								res.status(200).json({
-									status: 1,
-									subzones: subzone,
-								});
-							}
-						}
-					);
-				}
-			}
-		);
-	}
-);
 
 router.post("/merchant/editSubzone", jwtTokenAuth, (req, res) => {
 	const { subzone_id, code, name, type, description } = req.body;
@@ -1459,38 +3713,10 @@ router.post("/merchant/addPosition", jwtTokenAuth, (req, res) => {
 										if (result.status == 0) {
 											res.status(200).json(result);
 										} else {
-											if (type == "staff") {
-												let ig = new InvoiceGroup();
-												ig.code = "group-" + name;
-												ig.name = "default";
-												ig.description =
-													"Default invoice group for merchant Staff";
-												ig.position_id = position._id;
-												ig.save((err, group) => {
-													if (err) {
-														console.log(err);
-														var message = err;
-														if (err.message) {
-															message = err.message;
-														}
-														res.status(200).json({
-															status: 0,
-															message: message,
-														});
-													} else {
-														return res.status(200).json({
-															status: 1,
-															data: position,
-															group: group,
-														});
-													}
-												});
-											} else {
-												return res.status(200).json({
-													status: 1,
-													data: position,
-												});
-											}
+											return res.status(200).json({
+												status: 1,
+												data: position,
+											});	
 										}
 									}
 								);
@@ -1589,6 +3815,7 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 		email,
 		ccode,
 		mobile,
+		read_only,
 		username,
 		password,
 		branch_id,
@@ -1611,6 +3838,7 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 				data.role = role;
 				data.code = code;
 				data.name = name;
+				data.read_only = read_only;
 				data.email = email;
 				data.mobile = mobile;
 				data.username = username;
@@ -1675,6 +3903,7 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 		email,
 		ccode,
 		code,
+		read_only,
 		mobile,
 		username,
 		branch_id,
@@ -1704,6 +3933,7 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 					{
 						name: name,
 						role: role,
+						read_only : read_only,
 						email: email,
 						code: code,
 						ccode: ccode,
@@ -1720,49 +3950,6 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 							res.status(200).json({
 								status: 1,
 								message: "Staff updated successfully",
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
-
-router.get("/merchant/listStaff", jwtTokenAuth, (req, res) => {
-	const jwtusername = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, merchant) {
-			let result = errorMessage(
-				err,
-				merchant,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				MerchantStaff.find(
-					{ merchant_id: merchant._id },
-					"-password",
-					(err, staffs) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								staffs: staffs,
 							});
 						}
 					}
@@ -1931,7 +4118,9 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 	const {
 		name,
 		code,
+		zone_id,
 		subzone_id,
+		read_only,
 		username,
 		address1,
 		state,
@@ -1963,10 +4152,12 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 				data.name = name;
 				data.code = code;
 				data.subzone_id = subzone_id;
+				data.zone_id = zone_id;
 				data.username = username;
 				data.address1 = address1;
 				data.state = state;
 				data.country = country;
+				data.read_only = read_only;
 				data.zip = zip;
 				data.ccode = ccode;
 				data.mobile = mobile;
@@ -2013,40 +4204,59 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 										if (result.status == 0) {
 											res.status(200).json(result);
 										} else {
-											let content =
-												"<p>You are added as a branch for merchant " +
-												merchant.name +
-												" in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-												config.mainIP +
-												"/merchant/branch/" +
-												name +
-												"'>http://" +
-												config.mainIP +
-												"/merchant/branch/" +
-												name +
-												"</a></p><p><p>Your username: " +
-												username +
-												"</p><p>Your password: " +
-												data.password +
-												"</p>";
-											sendMail(content, "Merchant Branch Created", email);
-											let content2 =
-												"You are added as a branch for merchant " +
-												merchant.name +
-												" in E-Wallet application Login URL: http://" +
-												config.mainIP +
-												"/merchant/branch/" +
-												name +
-												" Your username: " +
-												username +
-												" Your password: " +
-												data.password;
-											sendSMS(content2, mobile);
-											res.status(200).json({
-												status: 1,
-												message: "Branch Created",
-												branch: branch,
-											});
+											Zone.updateOne(
+												{ _id: zone_id },
+												{ $inc: { branch_count: 1 } },
+												function (err, zone) {
+													let result = errorMessage(
+														err,
+														zone,
+														"Zone not found"
+													);
+													if (result.status == 0) {
+														res.status(200).json(result);
+													} else {
+														let content =
+														"<p>You are added as a branch for merchant " +
+														merchant.name +
+														" in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+														config.mainIP +
+														"/merchant/branch/" +
+														name +
+														"'>http://" +
+														config.mainIP +
+														"/merchant/branch/" +
+														name +
+														"</a></p><p><p>Your username: " +
+														username +
+														"</p><p>Your password: " +
+														data.password +
+														"</p>";
+													sendMail(content, "Merchant Branch Created", email);
+														let content2 =
+														"You are added as a branch for merchant " +
+														merchant.name +
+														" in E-Wallet application Login URL: http://" +
+														config.mainIP +
+														"/merchant/branch/" +
+														name +
+														" Your username: " +
+														username +
+														" Your password: " +
+														data.password;
+														sendSMS(content2, mobile);
+														res.status(200).json({
+															status: 1,
+															message: "Branch Created",
+															branch: branch,
+															zone:zone,
+														});
+
+													}
+
+												}
+											);
+											
 										}
 									}
 								);
@@ -2069,6 +4279,7 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 		branch_id,
 		name,
 		username,
+		read_only,
 		bcode,
 		address1,
 		state,
@@ -2095,13 +4306,14 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 				res.status(200).json(result);
 			} else {
 				MerchantBranch.findOneAndUpdate(
-					{ _id: branch_id, merchant_id: merchant._id },
+					{ _id: branch_id },
 					{
 						name: name,
 						username: username,
 						address1: address1,
 						state: state,
 						zip: zip,
+						read_only: read_only,
 						ccode: ccode,
 						bcode: bcode,
 						country: country,
@@ -2172,94 +4384,6 @@ router.get("/merchant/listBranches", jwtTokenAuth, function (req, res) {
 						}
 					}
 				);
-			}
-		}
-	);
-});
-
-router.post(
-	"/merchant/listBranchesBySubzoneId",
-	jwtTokenAuth,
-	function (req, res) {
-		const { subzone_id } = req.body;
-		const username = req.sign_creds.username;
-		Merchant.findOne(
-			{
-				username,
-				status: 1,
-			},
-			function (err, merchant) {
-				let result = errorMessage(
-					err,
-					merchant,
-					"Token changed or user not valid. Try to login again or contact system administrator."
-				);
-				if (result.status == 0) {
-					res.status(200).json(result);
-				} else {
-					MerchantBranch.find(
-						{ merchant_id: merchant._id, subzone_id: subzone_id },
-						"-password",
-						function (err, branch) {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message,
-								});
-							} else {
-								res.status(200).json({
-									status: 1,
-									branches: branch,
-								});
-							}
-						}
-					);
-				}
-			}
-		);
-	}
-);
-
-router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
-	const username = req.sign_creds.username;
-	Merchant.findOne(
-		{
-			username,
-			status: 1,
-		},
-		function (err, merchant) {
-			let result = errorMessage(
-				err,
-				merchant,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Bank.findOne({ _id: merchant.bank_id }, (err, bank) => {
-					let result = errorMessage(err, bank, "Bank not found");
-					if (result.status == 0) {
-						res.status(200).json(result);
-					} else {
-						const wallet_id = merchant.wallet_ids.operational;
-						blockchain
-							.getBalance(wallet_id)
-							.then(function (result) {
-								res.status(200).json({
-									status: 1,
-									balance: result,
-								});
-							})
-							.catch((err) => {
-								res.status(200).json(catchError(err));
-							});
-					}
-				});
 			}
 		}
 	);

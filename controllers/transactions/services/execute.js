@@ -2,27 +2,34 @@ const blockchain = require("../../../services/Blockchain.js");
 
 const sendSMS = require("../../../routes/utils/sendSMS");
 const sendMail = require("../../../routes/utils/sendMail");
+const queue = require("./queue");
 
 //Models
-const RetryQueue = require("../../../models/RetryQueue");
 const TxState = require("../../../models/TxState");
-const {
-	getTransactionCode,
-} = require("../../../routes/utils/calculateShare.js");
 
-module.exports = async function (transaction, queue = "", bank_id) {
-	try {
-		var res = await blockchain.initiateTransfer(transaction);
-		await saveTxState(transaction, res, bank_id);
-		if (res.status == 1) {
-			sendSuccessMail(transaction);
-		} else {
-			sendFailureMail(transaction);
+//transactions
+const txstate = require("./states");
+
+//constants
+const childType = require("../constants/childType");
+
+module.exports = async function (transactions, category, queue_name = "") {
+	return new Promise(async (resolve, reject) => {
+		var res = await blockchain.initiateMultiTransfer(transactions);
+		for (transaction of transactions) {
+			await saveTxState(transaction, res, category);
+			if (res.status == 1) {
+				sendSuccessMail(transaction);
+			} else {
+				txstate.failed(category, transaction.master_code);
+				sendFailureMail(transaction);
+				if (queue_name != "") {
+					queue.send(queue_name, [transaction]);
+				}
+			}
 		}
-		return res;
-	} catch (err) {
-		throw err;
-	}
+		resolve(res);
+	});
 };
 
 async function sendSuccessMail(transaction) {
@@ -103,24 +110,29 @@ async function sendFailureMail(transaction) {
 	}
 }
 
-async function saveTxState(transaction, res, bank_id) {
+async function saveTxState(transaction, res, category) {
 	try {
-		//update transaction state
-		let txstate = await TxState.findOneAndUpdate(
+		//update status of retried child transaction
+		let txstateDoc = await TxState.findOneAndUpdate(
 			{
 				_id: transaction.master_code,
 				"childTx.transaction.child_code": transaction.child_code,
 			},
 			{
 				$set: {
-					bankId: bank_id,
 					"childTx.$.state": res.status,
 					"childTx.$.message": res.message,
 					"childTx.$.transaction": transaction,
+					"childTx.$.retry_at": Date.now(),
+				},
+				$inc: {
+					"childTx.$.retry_count": 1,
 				},
 			}
 		);
-		if (txstate == null) {
+		//update status new child transaction
+		if (txstateDoc == null) {
+			transaction.created_at = new Date();
 			await TxState.updateOne(
 				{
 					_id: transaction.master_code,
@@ -131,10 +143,18 @@ async function saveTxState(transaction, res, bank_id) {
 							state: res.status,
 							transaction: transaction,
 							message: res.message,
+							category: category,
 						},
 					},
 				}
 			);
+		} else {
+			if (allTxSuccess(category, txstateDoc)) {
+				txstate.completed(category, transaction.master_code);
+				// if (category == categoryConst.DISTRIBUTE) {
+				// 	transferToMasterWallets(transaction.master_code, txstateDoc);
+				// }
+			}
 		}
 	} catch (err) {
 		console.log(err);
@@ -142,47 +162,77 @@ async function saveTxState(transaction, res, bank_id) {
 	}
 }
 
-async function appendToQueue(transaction, queue, bank_id, response) {
-	console.log("Append to queue: ", queue);
-	RetryQueue.findOne({ queue_id: queue, bank_id: bank_id }, (err, rq) => {
-		if (err) {
-			throw err;
-		} else if (rq == null) {
-			let data = new RetryQueue();
-			data.queue_id = queue;
-			data.bank_id = bank_id;
-			data.transactions = [
-				{
-					transaction: transaction,
-					failure_reason: response,
-				},
-			];
-			data.save((err) => {
-				if (err) {
-					throw err;
-				} else {
-					return true;
-				}
-			});
-		} else {
-			RetryQueue.updateOne(
-				{ queue_id: queue, bank_id: bank_id },
-				{
-					$addToSet: {
-						transactions: {
-							transaction: transaction,
-							failure_reason: response,
-						},
-					},
-				},
-				(err) => {
-					if (err) {
-						throw err;
-					} else {
-						return true;
-					}
-				}
-			);
+function allTxSuccess(category, txstateDoc) {
+	try {
+		for (childtx of txstateDoc.childTx) {
+			if (childtx.category == category && childtx.state == 0) {
+				return false;
+			}
 		}
-	});
+		return true;
+	} catch (err) {
+		throw err;
+	}
+}
+
+function transferToMasterWallets(master_code, txstateDoc) {
+	let share = getShares(txstateDoc);
+	// calling a function to start master wallet transaction pending...
+}
+
+function getShares() {
+	let bank_rev = 0;
+	let infra_per = 0;
+	let infra_fx = 0;
+	let sender_share = 0;
+	let claimer_share = 0;
+	let partner_share = 0;
+	let other_bank_share = 0;
+
+	for (childtx of txstateDoc.childTx) {
+		ctype = fetchChildType(childtx.child_code);
+		if (ctype == childType.REVENUE) {
+			bank_rev += childtx.amount;
+		}
+		if (ctype == childType.INFRA_PERCENT) {
+			infra_per += childtx.amount;
+		}
+		if (ctype == childType.INFRA_FIXED) {
+			infra_fx += childtx.amount;
+		}
+		if (ctype == childType.SENDER) {
+			sender_share += childtx.amount;
+		}
+		if (ctype == childType.CLAIMER) {
+			claimer_share += childtx.amount;
+		}
+		if (ctype == childType.PARTNER_SHARE) {
+			partner_share += childtx.amount;
+		}
+		if (ctype == childType.OTHER_BANK_SHARE) {
+			other_bank_share += childtx.amount;
+		}
+	}
+
+	let bank_share =
+		bank_rev -
+		infra_per -
+		sender_share -
+		partner_share -
+		claimer_share -
+		other_bank_share;
+	let infra_share = infra_per + infra_fx;
+	return {
+		bank_share: bank_share,
+		infra_share: infra_share,
+		sender_share: sender_share,
+		claimer_share: claimer_share,
+		partner_share: partner_share,
+		other_bank_share: other_bank_share,
+	};
+}
+
+function fetchChildType(code) {
+	let subCode = code.substring(str.indexOf("-") + 1, 4);
+	return subCode;
 }
