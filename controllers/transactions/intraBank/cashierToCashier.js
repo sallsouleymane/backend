@@ -95,105 +95,111 @@ module.exports = async function (transfer, infra, bank, branch, rule) {
 };
 
 async function distributeRevenue(transfer, infra, bank, branch) {
-	txstate.initiateSubTx(categoryConst.DISTRIBUTE, transfer.master_code);
-	const branchOpWallet = branch.wallet_ids.operational;
-	const bankOpWallet = bank.wallet_ids.operational;
-	const infraOpWallet = bank.wallet_ids.infra_operational;
+	try {
+		txstate.initiateSubTx(categoryConst.DISTRIBUTE, transfer.master_code);
+		const branchOpWallet = branch.wallet_ids.operational;
+		const bankOpWallet = bank.wallet_ids.operational;
+		const infraOpWallet = bank.wallet_ids.infra_operational;
 
-	let transPromises = [];
-	var promise;
+		let transPromises = [];
+		var promise;
 
-	if (transfer.infraShare.percentage_amount > 0) {
-		trans = [
-			{
-				from: bankOpWallet,
-				to: infraOpWallet,
-				amount: transfer.infraShare.percentage_amount,
-				note:
-					"Bank Send Infra Percentage amount for Non Wallet to Non Wallet transaction",
-				email1: bank.email,
-				email2: infra.email,
-				mobile1: bank.mobile,
-				mobile2: infra.mobile,
-				from_name: bank.name,
-				to_name: infra.name,
-				sender_id: bank._id,
-				receiver_id: infra._id,
-				master_code: transfer.master_code,
-				child_code: transfer.master_code + childType.INFRA_PERCENT,
-				created_at: new Date(),
-			},
-		];
-		promise = execute(trans, categoryConst.DISTRIBUTE, qname.INFRA_PERCENT);
-		transPromises.push(promise);
-	}
+		if (transfer.infraShare.percentage_amount > 0) {
+			trans = [
+				{
+					from: bankOpWallet,
+					to: infraOpWallet,
+					amount: transfer.infraShare.percentage_amount,
+					note:
+						"Bank Send Infra Percentage amount for Non Wallet to Non Wallet transaction",
+					email1: bank.email,
+					email2: infra.email,
+					mobile1: bank.mobile,
+					mobile2: infra.mobile,
+					from_name: bank.name,
+					to_name: infra.name,
+					sender_id: bank._id,
+					receiver_id: infra._id,
+					master_code: transfer.master_code,
+					child_code: transfer.master_code + childType.INFRA_PERCENT,
+					created_at: new Date(),
+				},
+			];
+			promise = execute(trans, categoryConst.DISTRIBUTE, qname.INFRA_PERCENT);
+			transPromises.push(promise);
+		}
 
-	if (transfer.infraShare.fixed_amount > 0) {
-		trans = [
-			{
-				from: bankOpWallet,
-				to: infraOpWallet,
-				amount: transfer.infraShare.fixed_amount,
-				note:
-					"Bank Send Infra Fixed amount for Inter Bank Wallet to Non Wallet transaction",
-				email1: bank.email,
-				email2: infra.email,
-				mobile1: bank.mobile,
-				mobile2: infra.mobile,
-				from_name: bank.name,
-				to_name: infra.name,
-				sender_id: bank._id,
-				receiver_id: infra._id,
-				master_code: transfer.master_code,
-				child_code: transfer.master_code + childType.INFRA_FIXED,
-				created_at: new Date(),
-			},
-		];
-		promise = execute(trans, categoryConst.DISTRIBUTE, qname.INFRA_FIXED);
-		transPromises.push(promise);
-	}
+		if (transfer.infraShare.fixed_amount > 0) {
+			trans = [
+				{
+					from: bankOpWallet,
+					to: infraOpWallet,
+					amount: transfer.infraShare.fixed_amount,
+					note:
+						"Bank Send Infra Fixed amount for Inter Bank Wallet to Non Wallet transaction",
+					email1: bank.email,
+					email2: infra.email,
+					mobile1: bank.mobile,
+					mobile2: infra.mobile,
+					from_name: bank.name,
+					to_name: infra.name,
+					sender_id: bank._id,
+					receiver_id: infra._id,
+					master_code: transfer.master_code,
+					child_code: transfer.master_code + childType.INFRA_FIXED,
+					created_at: new Date(),
+				},
+			];
+			promise = execute(trans, categoryConst.DISTRIBUTE, qname.INFRA_FIXED);
+			transPromises.push(promise);
+		}
 
-	if (transfer.fee > 0) {
-		trans = [
-			{
-				from: bankOpWallet,
-				to: branchOpWallet,
-				amount: transfer.senderShare,
-				note:
-					"Bank Send Revenue Share for Sending Money for Inter Bank Non Wallet to Non Wallet transaction",
-				email1: bank.email,
-				email2: branch.email,
-				mobile1: bank.mobile,
-				mobile2: branch.mobile,
-				from_name: bank.name,
-				to_name: branch.name,
-				sender_id: bank._id,
-				receiver_id: transfer.cashierId,
-				master_code: transfer.master_code,
-				child_code: transfer.master_code + childType.SENDER,
-				created_at: new Date(),
-			},
-		];
+		if (transfer.fee > 0) {
+			trans = [
+				{
+					from: bankOpWallet,
+					to: branchOpWallet,
+					amount: transfer.senderShare,
+					note:
+						"Bank Send Revenue Share for Sending Money for Inter Bank Non Wallet to Non Wallet transaction",
+					email1: bank.email,
+					email2: branch.email,
+					mobile1: bank.mobile,
+					mobile2: branch.mobile,
+					from_name: bank.name,
+					to_name: branch.name,
+					sender_id: bank._id,
+					receiver_id: transfer.cashierId,
+					master_code: transfer.master_code,
+					child_code: transfer.master_code + childType.SENDER,
+					created_at: new Date(),
+				},
+			];
 
-		promise = execute(trans, categoryConst.DISTRIBUTE, qname.SEND_FEE);
-		transPromises.push(promise);
-	}
+			promise = execute(trans, categoryConst.DISTRIBUTE, qname.SEND_FEE);
+			transPromises.push(promise);
+		}
 
-	Promise.all(transPromises).then((results) => {
-		let allTxSuccess = results.every((res) => {
-			if (res.status == 0) {
-				return false;
+		Promise.all(transPromises).then((results) => {
+			let allTxSuccess = results.every((res) => {
+				if (res.status == 0) {
+					return false;
+				} else {
+					return true;
+				}
+			});
+			if (allTxSuccess) {
+				txstate.waitingForCompletion(
+					categoryConst.DISTRIBUTE,
+					transfer.master_code
+				);
 			} else {
-				return true;
+				txstate.failed(categoryConst.DISTRIBUTE, transfer.master_code);
 			}
 		});
-		if (allTxSuccess) {
-			txstate.waitingForCompletion(
-				categoryConst.DISTRIBUTE,
-				transfer.master_code
-			);
-		}
-	});
+	} catch (err) {
+		txstate.failed(categoryConst.DISTRIBUTE, transfer.master_code);
+	}
 }
 
 function getAllShares(transfer, rule) {

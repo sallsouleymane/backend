@@ -111,146 +111,158 @@ module.exports = async function (transfer, bank, branch, rule) {
 };
 
 async function distributeRevenue(transfer, bank, branch) {
-	let txInfo = await TxState.findById(transfer.master_code);
-	let alltxsuccess = allTxSuccess(txInfo);
-	if (alltxsuccess) {
-		txstate.completed(categoryConst.DISTRIBUTE, transfer.master_code);
-		transferToMasterWallets(transfer, bank, branch, txInfo);
+	try {
+		let txInfo = await TxState.findById(transfer.master_code);
+		let alltxsuccess = allTxSuccess(txInfo);
+		if (alltxsuccess) {
+			txstate.completed(categoryConst.DISTRIBUTE, transfer.master_code);
+			transferToMasterWallets(transfer, bank, branch, txInfo);
+		} else {
+			txstate.failed(categoryConst.DISTRIBUTE, transfer.master_code);
+		}
+	} catch (err) {
+		txstate.failed(categoryConst.DISTRIBUTE, transfer.master_code);
 	}
 }
 
 async function transferToMasterWallets(transfer, bank, branch, txInfo) {
-	txstate.initiateSubTx(categoryConst.MASTER, transfer.master_code);
-	let master_code = transfer.master_code;
-	let infra = await Infra.findOne({ _id: bank.user_id });
-	let sendBranchPart = 0;
-	let sendBranch = {};
-	if (transfer.sendBranchType && transfer.sendBranchType != "") {
-		const BranchType = getTypeClass(transfer.sendBranchType);
-		sendBranch = await BranchType.findOne({ _id: transfer.sendBranchId });
-		sendBranchPart = getPart(txInfo, master_code, [childType.SENDER], []);
-	}
+	try {
+		txstate.initiateSubTx(categoryConst.MASTER, transfer.master_code);
+		let master_code = transfer.master_code;
+		let infra = await Infra.findOne({ _id: bank.user_id });
+		let sendBranchPart = 0;
+		let sendBranch = {};
+		if (transfer.sendBranchType && transfer.sendBranchType != "") {
+			const BranchType = getTypeClass(transfer.sendBranchType);
+			sendBranch = await BranchType.findOne({ _id: transfer.sendBranchId });
+			sendBranchPart = getPart(txInfo, master_code, [childType.SENDER], []);
+		}
 
-	const bankOpWallet = bank.wallet_ids.operational;
-	const bankMasterWallet = bank.wallet_ids.master;
-	const infraOpWallet = bank.wallet_ids.infra_operational;
-	const infraMasterWallet = bank.wallet_ids.infra_master;
-	const branchOpWallet = branch.wallet_ids.operational;
-	const branchMasterWallet = branch.wallet_ids.master;
+		const bankOpWallet = bank.wallet_ids.operational;
+		const bankMasterWallet = bank.wallet_ids.master;
+		const infraOpWallet = bank.wallet_ids.infra_operational;
+		const infraMasterWallet = bank.wallet_ids.infra_master;
+		const branchOpWallet = branch.wallet_ids.operational;
+		const branchMasterWallet = branch.wallet_ids.master;
 
-	let infraPart = getPart(
-		txInfo,
-		master_code,
-		[childType.INFRA_PERCENT, childType.INFRA_FIXED],
-		[]
-	);
-	let claimBranchPart = getPart(txInfo, master_code, [childType.CLAIMER], []);
-	let bankPart = getPart(
-		txInfo,
-		master_code,
-		[childType.REVENUE],
-		[childType.INFRA_PERCENT, childType.SENDER, childType.CLAIMER]
-	);
+		let infraPart = getPart(
+			txInfo,
+			master_code,
+			[childType.INFRA_PERCENT, childType.INFRA_FIXED],
+			[]
+		);
+		let claimBranchPart = getPart(txInfo, master_code, [childType.CLAIMER], []);
+		let bankPart = getPart(
+			txInfo,
+			master_code,
+			[childType.REVENUE],
+			[childType.INFRA_PERCENT, childType.SENDER, childType.CLAIMER]
+		);
 
-	let transPromises = [];
-	var promise;
+		let transPromises = [];
+		var promise;
 
-	let trans = [
-		{
-			from: bankOpWallet,
-			to: bankMasterWallet,
-			amount: bankPart,
-			note: "Bank share",
-			email1: bank.email,
-			mobile1: bank.mobile,
-			from_name: bank.name,
-			to_name: bank.name,
-			sender_id: bank._id,
-			receiver_id: bank._id,
-			master_code: master_code,
-			child_code: master_code + childType.BANK_MASTER,
-			created_at: new Date(),
-		},
-	];
-	promise = execute(trans, categoryConst.MASTER, qname.BANK_MASTER);
-	transPromises.push(promise);
-
-	trans = [
-		{
-			from: infraOpWallet,
-			to: infraMasterWallet,
-			amount: infraPart,
-			note: "Infra share",
-			email1: infra.email,
-			mobile1: infra.mobile,
-			from_name: infra.name,
-			to_name: infra.name,
-			sender_id: infra._id,
-			receiver_id: infra._id,
-			master_code: master_code,
-			child_code: master_code + childType.INFRA_MASTER,
-			created_at: new Date(),
-		},
-	];
-	promise = execute(trans, categoryConst.MASTER, qname.INFRA_MASTER);
-	transPromises.push(promise);
-
-	if (sendBranchPart > 0) {
-		const sendBranchOpWallet = sendBranch.wallet_ids.operational;
-		const sendBranchMasterWallet = sendBranch.wallet_ids.master;
-		trans = [
+		let trans = [
 			{
-				from: sendBranchOpWallet,
-				to: sendBranchMasterWallet,
-				amount: sendBranchPart,
-				note: "Sending Branch share",
-				email1: sendBranch.email,
-				mobile1: sendBranch.mobile,
-				from_name: sendBranch.name,
-				to_name: sendBranch.name,
-				sender_id: sendBranch._id,
-				receiver_id: sendBranch._id,
+				from: bankOpWallet,
+				to: bankMasterWallet,
+				amount: bankPart,
+				note: "Bank share",
+				email1: bank.email,
+				mobile1: bank.mobile,
+				from_name: bank.name,
+				to_name: bank.name,
+				sender_id: bank._id,
+				receiver_id: bank._id,
 				master_code: master_code,
-				child_code: master_code + childType.SEND_MASTER,
+				child_code: master_code + childType.BANK_MASTER,
 				created_at: new Date(),
 			},
 		];
-		promise = execute(trans, categoryConst.MASTER, qname.SEND_MASTER);
+		promise = execute(trans, categoryConst.MASTER, qname.BANK_MASTER);
 		transPromises.push(promise);
-	}
 
-	trans = [
-		{
-			from: branchOpWallet,
-			to: branchMasterWallet,
-			amount: claimBranchPart,
-			note: "Claiming Branch share",
-			email1: branch.email,
-			mobile1: branch.mobile,
-			from_name: branch.name,
-			to_name: branch.name,
-			sender_id: branch._id,
-			receiver_id: branch._id,
-			master_code: master_code,
-			child_code: master_code + childType.CLAIM_MASTER,
-			created_at: new Date(),
-		},
-	];
-	promise = execute(trans, categoryConst.MASTER, qname.CLAIM_MASTER);
-	transPromises.push(promise);
+		trans = [
+			{
+				from: infraOpWallet,
+				to: infraMasterWallet,
+				amount: infraPart,
+				note: "Infra share",
+				email1: infra.email,
+				mobile1: infra.mobile,
+				from_name: infra.name,
+				to_name: infra.name,
+				sender_id: infra._id,
+				receiver_id: infra._id,
+				master_code: master_code,
+				child_code: master_code + childType.INFRA_MASTER,
+				created_at: new Date(),
+			},
+		];
+		promise = execute(trans, categoryConst.MASTER, qname.INFRA_MASTER);
+		transPromises.push(promise);
 
-	Promise.all(transPromises).then((results) => {
-		let allTxSucc = results.every((res) => {
-			if (res.status == 0) {
-				return false;
+		if (sendBranchPart > 0) {
+			const sendBranchOpWallet = sendBranch.wallet_ids.operational;
+			const sendBranchMasterWallet = sendBranch.wallet_ids.master;
+			trans = [
+				{
+					from: sendBranchOpWallet,
+					to: sendBranchMasterWallet,
+					amount: sendBranchPart,
+					note: "Sending Branch share",
+					email1: sendBranch.email,
+					mobile1: sendBranch.mobile,
+					from_name: sendBranch.name,
+					to_name: sendBranch.name,
+					sender_id: sendBranch._id,
+					receiver_id: sendBranch._id,
+					master_code: master_code,
+					child_code: master_code + childType.SEND_MASTER,
+					created_at: new Date(),
+				},
+			];
+			promise = execute(trans, categoryConst.MASTER, qname.SEND_MASTER);
+			transPromises.push(promise);
+		}
+
+		trans = [
+			{
+				from: branchOpWallet,
+				to: branchMasterWallet,
+				amount: claimBranchPart,
+				note: "Claiming Branch share",
+				email1: branch.email,
+				mobile1: branch.mobile,
+				from_name: branch.name,
+				to_name: branch.name,
+				sender_id: branch._id,
+				receiver_id: branch._id,
+				master_code: master_code,
+				child_code: master_code + childType.CLAIM_MASTER,
+				created_at: new Date(),
+			},
+		];
+		promise = execute(trans, categoryConst.MASTER, qname.CLAIM_MASTER);
+		transPromises.push(promise);
+
+		Promise.all(transPromises).then((results) => {
+			let allTxSucc = results.every((res) => {
+				if (res.status == 0) {
+					return false;
+				} else {
+					return true;
+				}
+			});
+			if (allTxSucc) {
+				txstate.completed(categoryConst.MASTER, transfer.master_code);
 			} else {
-				return true;
+				txstate.failed(categoryConst.MASTER, transfer.master_code);
 			}
 		});
-		if (allTxSucc) {
-			txstate.completed(categoryConst.MASTER, transfer.master_code);
-		}
-	});
+	} catch (err) {
+		txstate.failed(categoryConst.MASTER, transfer.master_code);
+	}
 }
 
 function allTxSuccess(txInfo) {
