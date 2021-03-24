@@ -72,7 +72,7 @@ module.exports = async function (transfer, bank, branch, rule) {
 			trans.push({
 				from: bankOpWallet,
 				to: branchOpWallet,
-				amount: transfer.claimFee,
+				amount: transfer.claimerShare,
 				note: "Claim Revenue",
 				email1: bank.email,
 				email2: branch.email,
@@ -291,15 +291,17 @@ function getPart(txInfo, masterId, childIds, otherIds) {
 }
 
 function getAllShares(transfer, rule) {
-	let exclusiveAmount = transfer.amount;
+	let amount = transfer.amount;
+	let exclusiveAmount = amount;
+	let fee = calculateShare("bank", amount, rule);
 	if (transfer.isInclusive) {
-		exclusiveAmount = transfer.amount - transfer.fee;
+		exclusiveAmount = amount - fee;
 	}
 	let claimerShare = 0;
-	if (transfer.fee > 0) {
+	if (fee > 0) {
 		claimerShare = calculateShare(
 			transfer.claimerType,
-			transfer.amount,
+			amount,
 			rule,
 			{},
 			transfer.claimerCode
