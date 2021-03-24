@@ -59,6 +59,7 @@ module.exports = async function (
 
 		if (transfer.fee > 0) {
 			trans.push({
+				transaction_type: 'Wallet to Wallet',
 				from: senderWallet,
 				to: bankOpWallet,
 				amount: transfer.fee,
