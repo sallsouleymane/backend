@@ -1160,6 +1160,11 @@ router.get(
 	"/merchantStaff/cashierDashStatus",
 	jwtTokenAuth,
 	function (req, res) {
+		var today = new Date();
+		today = today.toISOString();
+		var s = today.split("T");
+		var start = s[0] + "T00:00:00.000Z";
+		var end = s[0] + "T23:59:59.999Z";
 		const jwtusername = req.sign_creds.username;
 		MerchantPosition.findOne(
 			{
@@ -1179,6 +1184,14 @@ router.get(
 									payer_id: position._id.toString(),
 									paid_by: "MC",
 									paid: 1,
+									date_paid: {
+										$gte: new Date(
+											start
+										),
+										$lte: new Date(
+											end
+										),
+									},
 								},
 							},
 							{
@@ -1454,6 +1467,7 @@ router.post("/merchantStaff/createInvoice", jwtTokenAuth, (req, res) => {
 		name,
 		last_name,
 		address,
+		email,
 		amount,
 		bill_date,
 		bill_period,
@@ -1541,6 +1555,7 @@ router.post("/merchantStaff/createInvoice", jwtTokenAuth, (req, res) => {
 											invoiceObj.number = number;
 											invoiceObj.name = name;
 											invoiceObj.last_name = last_name;
+											invoiceObj.email = email;
 											invoiceObj.address = address;
 											invoiceObj.amount = amount;
 											invoiceObj.merchant_id = position.merchant_id;
