@@ -403,10 +403,10 @@ module.exports.partnerSendMoney = async function (req, res) {
 																							}
 																						})
 																						.catch((err) => {
-																							categoryConst.MAIN,
-																								txstate.failed(
-																									transfer.master_code
-																								);
+																							txstate.failed(
+																								categoryConst.MAIN,
+																								transfer.master_code
+																							);
 																							res.status.json(catchError(err));
 																						});
 																				}
@@ -596,6 +596,7 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 																													);
 																											} else {
 																												txstate.completed(
+																													categoryConst.MAIN,
 																													master_code
 																												);
 																												res.status(200).json({
@@ -607,13 +608,19 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 																										}
 																									);
 																								} else {
-																									txstate.failed(master_code);
+																									txstate.failed(
+																										categoryConst.MAIN,
+																										master_code
+																									);
 																									res.status(200).json(result);
 																								}
 																							})
 																							.catch((err) => {
 																								console.log(err);
-																								txstate.failed(master_code);
+																								txstate.failed(
+																									categoryConst.MAIN,
+																									master_code
+																								);
 																								res.status(200).json({
 																									status: 0,
 																									message: err.message,
@@ -668,6 +675,7 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 			} else {
 				// Initiate transaction state
 				const master_code = await txstate.initiate(
+					categoryConst.MAIN,
 					cashier.bank_id,
 					"Non Wallet to Wallet",
 					cashier._id,
@@ -815,6 +823,7 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 																														);
 																												} else {
 																													txstate.completed(
+																														categoryConst.MAIN,
 																														master_code
 																													);
 																													res.status(200).json({
@@ -881,6 +890,7 @@ module.exports.cashierSendToOperational = async function (req, res) {
 			} else {
 				// Initiate transaction state
 				const master_code = await txstate.initiate(
+					categoryConst.MAIN,
 					cashier.bank_id,
 					"Non Wallet to Operational",
 					cashier._id,
@@ -983,7 +993,10 @@ module.exports.cashierSendToOperational = async function (req, res) {
 																									.status(200)
 																									.json(catchError(err));
 																							} else {
-																								txstate.completed(master_code);
+																								txstate.completed(
+																									categoryConst.MAIN,
+																									master_code
+																								);
 																								res.status(200).json({
 																									status: 1,
 																									message:
@@ -1050,6 +1063,7 @@ module.exports.partnerSendToOperational = async function (req, res) {
 			} else {
 				// Initiate transaction state
 				const master_code = await txstate.initiate(
+					categoryConst.MAIN,
 					cashier.bank_id,
 					"Non Wallet to Operational",
 					cashier._id,
@@ -1182,6 +1196,7 @@ module.exports.partnerSendToOperational = async function (req, res) {
 																													);
 																											} else {
 																												txstate.completed(
+																													categoryConst.MAIN,
 																													master_code
 																												);
 																												res.status(200).json({

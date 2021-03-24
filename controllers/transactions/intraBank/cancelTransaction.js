@@ -3,6 +3,7 @@ const execute = require("../services/execute.js");
 const qname = require("../constants/queueName");
 const TxState = require("../../../models/TxState.js");
 const { stateNames } = require("../constants/stateNames");
+const category = require("../constants/category.js");
 
 module.exports.revertOnlyAmount = async function (txstate) {
 	try {

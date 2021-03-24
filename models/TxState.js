@@ -2,7 +2,7 @@
 const mongoose = require("mongoose");
 const TxStateSchema = new mongoose.Schema({
 	state: {
-		main: { type: String, required: false, default: "INIT" },
+		main: { type: String, required: false, default: "INITIATED" },
 		distribute: { type: String, required: false },
 		master: { type: String, required: false },
 	},
