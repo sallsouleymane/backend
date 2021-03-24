@@ -149,7 +149,7 @@ module.exports.cashierClaimMoney = function (req, res) {
 					(err, cc) => {
 						let errRes = errorMessage(
 							err,
-							cashier,
+							cc,
 							"Money is already claimed",
 							true
 						);
