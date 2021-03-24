@@ -250,7 +250,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			child_code: master_code + childType.INFRA_MASTER,
 		},
 	];
-	execute(trans, categoryConst.MASTER, qname.INFRA_MASTER);
+	promise = execute(trans, categoryConst.MASTER, qname.INFRA_MASTER);
 	transPromises.push(promise);
 
 	trans = [
@@ -269,8 +269,21 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			child_code: master_code + childType.SEND_MASTER,
 		},
 	];
-	execute(trans, categoryConst.MASTER, qname.SEND_MASTER);
+	promise = execute(trans, categoryConst.MASTER, qname.SEND_MASTER);
 	transPromises.push(promise);
+
+	Promise.all(transPromises).then((results) => {
+		let allTxSuccess = results.every((res) => {
+			if (res.status == 0) {
+				return false;
+			} else {
+				return true;
+			}
+		});
+		if (allTxSuccess) {
+			txstate.completed(categoryConst.MASTER, transfer.master_code);
+		}
+	});
 }
 
 function getAllShares(transfer, rule) {

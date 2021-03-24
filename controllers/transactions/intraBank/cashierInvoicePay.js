@@ -354,8 +354,8 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			to_name: bank.name,
 			sender_id: "",
 			receiver_id: "",
-			master_code: master_code,
-			child_code: master_code + childType.BANK_MASTER,
+			master_code: transfer.master_code,
+			child_code: transfer.master_code + childType.BANK_MASTER,
 			created_at: new Date(),
 		},
 	];
@@ -374,8 +374,8 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			to_name: infra.name,
 			sender_id: "",
 			receiver_id: "",
-			master_code: master_code,
-			child_code: master_code + childType.INFRA_MASTER,
+			master_code: transfer.master_code,
+			child_code: transfer.master_code + childType.INFRA_MASTER,
 			created_at: new Date(),
 		},
 	];
@@ -394,8 +394,8 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 			to_name: branch.name,
 			sender_id: transfer.cashierId,
 			receiver_id: "",
-			master_code: master_code,
-			child_code: master_code + childType.SEND_MASTER,
+			master_code: transfer.master_code,
+			child_code: transfer.master_code + childType.SEND_MASTER,
 			created_at: new Date(),
 		},
 	];

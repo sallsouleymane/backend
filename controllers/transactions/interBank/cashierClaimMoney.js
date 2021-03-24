@@ -6,6 +6,11 @@ const {
 } = require("../../utils/calculateShare");
 const execute = require("../../../controllers/transactions/services/execute");
 
+//constants
+const qname = require("../constants/queueName");
+const categoryConst = require("../constants/category");
+const childType = require("../constants/childType");
+
 module.exports = async function (
 	transfer,
 	sendingBank,
