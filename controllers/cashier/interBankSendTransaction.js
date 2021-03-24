@@ -39,6 +39,7 @@ module.exports.cashierSendMoney = async function (req, res) {
 		} else {
 			// Initiate transaction
 			const master_code = await txstate.initiate(
+				categoryConst.MAIN,
 				cashier.bank_id,
 				"Inter Bank Non Wallet To Non Wallet",
 				cashier._id
@@ -169,6 +170,7 @@ module.exports.cashierSendMoney = async function (req, res) {
 																										.json(catchError(err));
 																								} else {
 																									txstate.waitingForCompletion(
+																										categoryConst.MAIN,
 																										master_code
 																									);
 																									res.status(200).json({
@@ -180,10 +182,18 @@ module.exports.cashierSendMoney = async function (req, res) {
 																							}
 																						);
 																					} else {
+																						txstate.failed(
+																							categoryConst.MAIN,
+																							master_code
+																						);
 																						res.status(200).json(result);
 																					}
 																				})
 																				.catch((err) => {
+																					txstate.failed(
+																						categoryConst.MAIN,
+																						master_code
+																					);
 																					console.log(err);
 																					res.status(200).json({
 																						status: 0,
@@ -238,6 +248,7 @@ module.exports.partnerSendMoney = async function (req, res) {
 				} else {
 					// Initiate transaction state
 					const master_code = await txstate.initiate(
+						categoryConst.MAIN,
 						cashier.bank_id,
 						"Non Wallet To Non Wallet",
 						cashier._id,
@@ -368,6 +379,10 @@ module.exports.partnerSendMoney = async function (req, res) {
 																												.status(200)
 																												.json(catchError(err));
 																										} else {
+																											txstate.waitingForCompletion(
+																												categoryConst.MAIN,
+																												transfer.master_code
+																											);
 																											res.status(200).json({
 																												status: 1,
 																												message:
@@ -378,15 +393,17 @@ module.exports.partnerSendMoney = async function (req, res) {
 																								);
 																							} else {
 																								txstate.failed(
+																									categoryConst.MAIN,
 																									transfer.master_code
 																								);
 																								res.status(200).json(result);
 																							}
 																						})
 																						.catch((err) => {
-																							txstate.failed(
-																								transfer.master_code
-																							);
+																							categoryConst.MAIN,
+																								txstate.failed(
+																									transfer.master_code
+																								);
 																							res.status.json(catchError(err));
 																						});
 																				}
@@ -438,6 +455,7 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 				} else {
 					// Initiate transaction state
 					const master_code = await txstate.initiate(
+						categoryConst.MAIN,
 						cashier.bank_id,
 						"Non Wallet to Wallet",
 						cashier._id,

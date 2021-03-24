@@ -25,6 +25,9 @@ const PartnerCashier = require("../../models/partner/Cashier");
 const txstate = require("../transactions/services/states");
 const cashierClaimMoney = require("../transactions/interBank/cashierClaimMoney");
 
+//constants
+const categoryConst = require("../transactions/constants/category");
+
 module.exports.cashierClaimMoney = function (req, res) {
 	var today = new Date();
 	today = today.toISOString();
@@ -195,6 +198,7 @@ module.exports.cashierClaimMoney = function (req, res) {
 																																		);
 																																} else {
 																																	txstate.completed(
+																																		categoryConst.MAIN,
 																																		sendRecord.master_code
 																																	);
 																																	res
@@ -208,6 +212,10 @@ module.exports.cashierClaimMoney = function (req, res) {
 																															}
 																														);
 																													} else {
+																														txstate.failed(
+																															categoryConst.MAIN,
+																															sendRecord.master_code
+																														);
 																														console.log(
 																															result.toString()
 																														);
@@ -217,6 +225,10 @@ module.exports.cashierClaimMoney = function (req, res) {
 																													}
 																												})
 																												.catch((err) => {
+																													txstate.failed(
+																														categoryConst.MAIN,
+																														sendRecord.master_code
+																													);
 																													console.log(
 																														err.toString()
 																													);
@@ -596,6 +608,7 @@ module.exports.partnerClaimMoney = function (req, res) {
 																																										c
 																																									) {
 																																										await txstate.completed(
+																																											categoryConst.MAIN,
 																																											master_code
 																																										);
 																																										res

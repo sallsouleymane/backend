@@ -269,6 +269,7 @@ module.exports.cashierClaimMoney = function (req, res) {
 																												.json(catchError(err));
 																										} else {
 																											txstate.completed(
+																												categoryConst.MAIN,
 																												sendRecord.master_code
 																											);
 																											res.status(200).json({
@@ -281,6 +282,7 @@ module.exports.cashierClaimMoney = function (req, res) {
 																								);
 																							} else {
 																								txstate.failed(
+																									categoryConst.MAIN,
 																									sendRecord.master_code
 																								);
 																								console.log(result.toString());
@@ -289,6 +291,7 @@ module.exports.cashierClaimMoney = function (req, res) {
 																						})
 																						.catch((err) => {
 																							txstate.failed(
+																								categoryConst.MAIN,
 																								sendRecord.master_code
 																							);
 																							console.log(err);
@@ -472,6 +475,7 @@ module.exports.partnerClaimMoney = function (req, res) {
 																														);
 																												} else {
 																													txstate.completed(
+																														categoryConst.MAIN,
 																														sendRecord.master_code
 																													);
 																													res.status(200).json({

@@ -54,6 +54,7 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 				} else {
 					// Initiate transaction state
 					const master_code = await txstate.initiate(
+						categoryConst.MAIN,
 						cashier.bank_id,
 						"Non Wallet To Non Wallet",
 						cashier._id
@@ -173,6 +174,7 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 																										.json(catchError(err));
 																								} else {
 																									txstate.waitingForCompletion(
+																										categoryConst.MAIN,
 																										master_code
 																									);
 																									res.status(200).json({
@@ -184,12 +186,18 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 																							}
 																						);
 																					} else {
-																						txstate.failed(master_code);
+																						txstate.failed(
+																							categoryConst.MAIN,
+																							master_code
+																						);
 																						res.status(200).json(result);
 																					}
 																				})
 																				.catch((err) => {
-																					txstate.failed(master_code);
+																					txstate.failed(
+																						categoryConst.MAIN,
+																						master_code
+																					);
 																					res.status(200).json(catchError(err));
 																				});
 																		}

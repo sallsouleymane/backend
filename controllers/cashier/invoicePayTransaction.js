@@ -41,6 +41,7 @@ module.exports.cashierInvoicePay = async (req, res) => {
 			} else {
 				// Initiate transaction state
 				const master_code = await txstate.initiate(
+					categoryConst.MAIN,
 					cashier.bank_id,
 					"Non Wallet to Merchant"
 				);
@@ -165,14 +166,14 @@ module.exports.cashierInvoicePay = async (req, res) => {
 													throw new Error(status);
 												}
 
-												txstate.completed(master_code);
+												txstate.completed(categoryConst.MAIN, master_code);
 												res.status(200).json(result);
 											} else {
-												txstate.failed(master_code);
+												txstate.failed(categoryConst.MAIN, master_code);
 												res.status(200).json(result);
 											}
 										} catch (err) {
-											txstate.failed(master_code);
+											txstate.failed(categoryConst.MAIN, master_code);
 											res.status(200).json(catchError(err));
 										}
 									}
@@ -207,6 +208,7 @@ module.exports.partnerInvoicePay = async (req, res) => {
 			} else {
 				// Initiate transaction state
 				const master_code = await txstate.initiate(
+					categoryConst.MAIN,
 					cashier.bank_id,
 					"Non Wallet to Merchant"
 				);
@@ -337,12 +339,14 @@ module.exports.partnerInvoicePay = async (req, res) => {
 													throw new Error(status);
 												}
 
-												txstate.completed(master_code);
+												txstate.completed(categoryConst.MAIN, master_code);
 												res.status(200).json(result);
 											} else {
+												txstate.failed(categoryConst.MAIN, master_code);
 												res.status(200).json(result);
 											}
 										} catch (err) {
+											txstate.failed(categoryConst.MAIN, master_code);
 											console.log(err);
 											var message = err.toString();
 											if (err.message) {
