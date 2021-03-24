@@ -38,6 +38,7 @@ module.exports = async function (
 
 		let master_code = transfer.master_code;
 		let trans1 = {
+			transaction_type: "Wallet to Wallet",
 			from: senderWallet,
 			to: receiverWallet,
 			amount: amount,
