@@ -14,9 +14,10 @@ const TxState = require("../../models/TxState");
 // transactions
 const cancelTransaction = require("../transactions/intraBank/cancelTransaction");
 
-module.exports.cashierCancelTransaction = async function (req, res, next) {
+module.exports.cancelTransaction = async function (req, res, next) {
 	const { transaction_id } = req.body;
-	jwtAuthentication(req, function (err, cashier) {
+	let user = req.params.user;
+	jwtAuthentication(user, req, function (err, cashier) {
 		if (err) {
 			res.status(200).json(err);
 		} else {
@@ -54,7 +55,9 @@ module.exports.cashierCancelTransaction = async function (req, res, next) {
 					try {
 						let result = await cancelTransaction.revertOnlyAmount(txstate);
 						if (result.status == 1) {
-							stateUpd.cancelled(transaction_id);
+							stateUpd.cancelled(categoryConst.MAIN, transaction_id);
+						} else {
+							stateUpd.failed(categoryConst.MAIN, transaction_id);
 						}
 						res.status(200).json(result);
 					} catch (err) {
@@ -74,7 +77,8 @@ module.exports.cashierCancelTransaction = async function (req, res, next) {
 
 module.exports.sendForApproval = async function (req, res, next) {
 	const { transaction_id } = req.body;
-	jwtAuthentication(req, function (err, cashier) {
+	let user = req.params.user;
+	jwtAuthentication(user, req, function (err, cashier) {
 		if (err) {
 			res.status(200).json(err);
 		} else {
@@ -107,7 +111,8 @@ module.exports.sendForApproval = async function (req, res, next) {
 
 module.exports.checkApprovalStatus = async function (req, res, next) {
 	const { transaction_id } = req.body;
-	jwtAuthentication(req, function (err, cashier) {
+	let user = req.params.user;
+	jwtAuthentication(user, req, function (err, cashier) {
 		if (err) {
 			res.status(200).json(err);
 		} else {

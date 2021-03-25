@@ -7,7 +7,7 @@ const { jwtAuthentication } = require("./utils");
 const DailyReport = require("../../models/cashier/DailyReport");
 
 module.exports.queryTransactionStates = function (req, res) {
-	jwtAuthentication(req, function (err, cashier) {
+	jwtAuthentication("cashier", req, function (err, cashier) {
 		if (err) {
 			res.status(200).json(err);
 		} else {
@@ -44,7 +44,7 @@ module.exports.addDailyReport = function (req, res) {
 		req_declined,
 		req_pending,
 	} = req.body;
-	jwtAuthentication(req, function (err, cashier) {
+	jwtAuthentication("cashier", req, function (err, cashier) {
 		if (err) {
 			res.status(200).json(err);
 		} else {
@@ -77,7 +77,7 @@ module.exports.addDailyReport = function (req, res) {
 module.exports.queryDailyReport = function (req, res) {
 	const { date_after, date_before, page_start, limit } = req.body;
 
-	jwtAuthentication(req, function (err, cashier) {
+	jwtAuthentication("cashier", req, function (err, cashier) {
 		if (err) {
 			res.status(200).json(err);
 		} else {
