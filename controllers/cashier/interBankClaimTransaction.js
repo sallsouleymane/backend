@@ -28,13 +28,108 @@ const cashierClaimMoney = require("../transactions/interBank/cashierClaimMoney")
 //constants
 const categoryConst = require("../transactions/constants/category");
 
-module.exports.cashierClaimMoney = function (req, res) {
+function addClaimRecord(reqData, otherData, next) {
+	const {
+		transferCode,
+		proof,
+		givenname,
+		familyname,
+		receiverGivenName,
+		receiverFamilyName,
+		mobile,
+	} = reqData;
+
+	const { cashierId, sendRecord } = otherData;
+
+	let data = new CashierClaim();
+	data.transaction_code = transferCode;
+	data.proof = proof;
+	data.cashier_id = cashierId;
+	data.amount = sendRecord.amount;
+	data.fee = sendRecord.fee;
+	data.is_inclusive = sendRecord.is_inclusive;
+	data.sender_name = givenname + " " + familyname;
+	data.sender_mobile = mobile;
+	data.receiver_name = receiverGivenName + " " + receiverFamilyName;
+	data.master_code = sendRecord.master_code;
+
+	data.save((err, cashierClaimObj) => {
+		return next(err, cashierClaimObj);
+	});
+}
+
+function updateClaimRecord(model, data, next) {
 	var today = new Date();
 	today = today.toISOString();
 	var s = today.split("T");
 	var start = s[0] + "T00:00:00.000Z";
 	var end = s[0] + "T23:59:59.999Z";
 
+	const { cashierId, claimId, amount, claimFee } = data;
+	const Model = getTypeClass(model);
+
+	CashierClaim.findByIdAndUpdate(
+		claimId,
+		{
+			status: 1,
+		},
+		(err) => {
+			if (err) {
+				next(err);
+			} else {
+				Model.findByIdAndUpdate(
+					cashierId,
+					{
+						$inc: {
+							cash_paid: Number(amount),
+							cash_in_hand: -Number(amount),
+							fee_generated: Number(claimFee),
+							total_trans: 1,
+						},
+					},
+					function (err) {
+						if (err) {
+							next(err);
+						} else {
+							CashierLedger.findOneAndUpdate(
+								{
+									cashier_id: cashierId,
+									trans_type: "DR",
+									created_at: {
+										$gte: new Date(start),
+										$lte: new Date(end),
+									},
+								},
+								{
+									$inc: {
+										amount: amount,
+									},
+								},
+								function (err, c) {
+									if (err) {
+										next(err);
+									} else if (c == null) {
+										let data = new CashierLedger();
+										data.amount = amount;
+										data.trans_type = "DR";
+										data.cashier_id = cashierId;
+										data.save(function (err) {
+											next(err);
+										});
+									} else {
+										next(null);
+									}
+								}
+							);
+						}
+					}
+				);
+			}
+		}
+	);
+}
+
+module.exports.cashierClaimMoney = function (req, res) {
 	const { transferCode } = req.body;
 
 	jwtAuthentication(req, async function (err, cashier) {
@@ -91,7 +186,7 @@ module.exports.cashierClaimMoney = function (req, res) {
 															res.status(200).json(errMsg);
 														} else {
 															Bank.findOne(
-																{ _id: cs.sending_bank_id },
+																{ _id: sendRecord.sending_bank_id },
 																(err, sendingBank) => {
 																	let errMsg = errorMessage(
 																		err,
@@ -103,7 +198,7 @@ module.exports.cashierClaimMoney = function (req, res) {
 																	} else {
 																		const find = {
 																			bank_id: sendingBank._id,
-																			type: cs.inter_bank_rule_type,
+																			type: sendRecord.inter_bank_rule_type,
 																			status: 1,
 																			active: 1,
 																		};
@@ -120,7 +215,7 @@ module.exports.cashierClaimMoney = function (req, res) {
 																				} else {
 																					const find = {
 																						bank_id: cashier.bank_id,
-																						trans_type: cs.rule_type,
+																						trans_type: sendRecord.rule_type,
 																						status: 1,
 																						active: "Active",
 																					};
@@ -155,14 +250,24 @@ module.exports.cashierClaimMoney = function (req, res) {
 																												.status(200)
 																												.json(catchError(err));
 																										} else {
-																											var transfer = {
-																												master_code: master_code,
-																												amount: cs.amount,
+																											const transfer = {
+																												amount:
+																													sendRecord.amount,
 																												isInclusive:
-																													cs.is_inclusive,
+																													sendRecord.is_inclusive,
+																												master_code:
+																													sendRecord.master_code,
+																												claimerType:
+																													"claimBranch",
+																												claimerCode:
+																													branch.bcode,
+																												sendBranchType:
+																													sendRecord.send_branch_type,
+																												sendBranchId:
+																													sendRecord.send_branch_id,
 																												cashierId: cashier._id,
 																											};
-																											interCashierClaimMoney(
+																											cashierClaimMoney(
 																												transfer,
 																												sendingBank,
 																												bank,
@@ -267,24 +372,8 @@ module.exports.cashierClaimMoney = function (req, res) {
 };
 
 module.exports.partnerClaimMoney = function (req, res) {
-	var today = new Date();
-	today = today.toISOString();
-	var s = today.split("T");
-	var start = s[0] + "T00:00:00.000Z";
-	var end = s[0] + "T23:59:59.999Z";
-
+	const { transferCode } = req.body;
 	const jwtusername = req.sign_creds.username;
-
-	const {
-		transferCode,
-		proof,
-		givenname,
-		familyname,
-		receiverGivenName,
-		receiverFamilyName,
-		mobile,
-	} = req.body;
-
 	PartnerCashier.findOne(
 		{
 			username: jwtusername,
@@ -318,10 +407,10 @@ module.exports.partnerClaimMoney = function (req, res) {
 								{
 									transaction_code: transferCode,
 								},
-								function (err, cs) {
+								function (err, sendRecord) {
 									let errMsg = errorMessage(
 										err,
-										cs,
+										sendRecord,
 										"Cashier send record not found"
 									);
 									if (errMsg.status == 0) {
@@ -365,7 +454,7 @@ module.exports.partnerClaimMoney = function (req, res) {
 																			res.status(200).json(errMsg);
 																		} else {
 																			Bank.findOne(
-																				{ _id: cs.sending_bank_id },
+																				{ _id: sendRecord.sending_bank_id },
 																				(err, sendingBank) => {
 																					let errMsg = errorMessage(
 																						err,
@@ -375,121 +464,81 @@ module.exports.partnerClaimMoney = function (req, res) {
 																					if (errMsg.status == 0) {
 																						res.status(200).json(errMsg);
 																					} else {
-																						var amount = cs.amount;
-																						if (cs.is_inclusive) {
-																							amount = cs.amount - cs.fee;
-																						}
-																						let data = new CashierClaim();
-																						data.transaction_code = transferCode;
-																						data.proof = proof;
-																						data.cashier_id = cashier._id;
-																						data.amount = cs.amount;
-																						data.fee = cs.fee;
-																						data.is_inclusive = cs.is_inclusive;
-																						data.sender_name =
-																							givenname + " " + familyname;
-																						data.sender_mobile = mobile;
-																						data.receiver_name =
-																							receiverGivenName +
-																							" " +
-																							receiverFamilyName;
-																						var master_code = cs.master_code;
-																						data.master_code = master_code;
-																						data.child_code =
-																							master_code + "-1";
-
-																						data.save(
-																							(err, cashierClaimObj) => {
-																								if (err) {
-																									console.log(err);
-																									var message = err;
-																									if (err.message) {
-																										message = err.message;
-																									}
-																									res.status(200).json({
-																										status: 0,
-																										message: message,
-																									});
+																						const find = {
+																							bank_id: sendingBank._id,
+																							type:
+																								sendRecord.inter_bank_rule_type,
+																							status: 1,
+																							active: 1,
+																						};
+																						InterBankRule.findOne(
+																							find,
+																							function (err, rule1) {
+																								let result = errorMessage(
+																									err,
+																									rule1,
+																									"Inter Bank Rule Not Found"
+																								);
+																								if (result.status == 0) {
+																									res.status(200).json(result);
 																								} else {
 																									const find = {
-																										bank_id: sendingBank._id,
-																										type:
-																											cs.inter_bank_rule_type,
+																										bank_id: cashier.bank_id,
+																										trans_type:
+																											sendRecord.rule_type,
 																										status: 1,
-																										active: 1,
+																										active: "Active",
 																									};
-																									InterBankRule.findOne(
+																									Fee.findOne(
 																										find,
-																										function (err, rule1) {
-																											if (err) {
-																												console.log(err);
-																												var message = err;
-																												if (err.message) {
-																													message = err.message;
-																												}
-																												res.status(200).json({
-																													status: 0,
-																													message: message,
-																												});
-																											} else if (
-																												rule1 == null
-																											) {
-																												res.status(200).json({
-																													status: 0,
-																													message:
-																														"Inter Bank Fee Rule Not Found",
-																												});
+																										function (err, rule2) {
+																											let result = errorMessage(
+																												err,
+																												rule2,
+																												"Revenue Rule Not Found"
+																											);
+																											if (result.status == 0) {
+																												res
+																													.status(200)
+																													.json(result);
 																											} else {
-																												const find = {
-																													bank_id:
-																														cashier.bank_id,
-																													trans_type:
-																														cs.rule_type,
-																													status: 1,
-																													active: "Active",
+																												var otherInfo = {
+																													cashierId:
+																														cashier._id,
+																													sendRecord: sendRecord,
 																												};
-																												Fee.findOne(
-																													find,
-																													function (
-																														err,
-																														rule2
-																													) {
+																												addClaimRecord(
+																													req.body,
+																													otherInfo,
+																													(err, claimObj) => {
 																														if (err) {
-																															console.log(err);
-																															var message = err;
-																															if (err.message) {
-																																message =
-																																	err.message;
-																															}
 																															res
 																																.status(200)
-																																.json({
-																																	status: 0,
-																																	message: message,
-																																});
-																														} else if (
-																															rule2 == null
-																														) {
-																															res
-																																.status(200)
-																																.json({
-																																	status: 0,
-																																	message:
-																																		"Revenue Rule Not Found",
-																																});
+																																.json(
+																																	catchError(
+																																		err
+																																	)
+																																);
 																														} else {
-																															var transfer = {
-																																master_code: master_code,
+																															const transfer = {
 																																amount:
-																																	cs.amount,
+																																	sendRecord.amount,
 																																isInclusive:
-																																	cs.is_inclusive,
-																																partnerCode:
+																																	sendRecord.is_inclusive,
+																																master_code:
+																																	sendRecord.master_code,
+																																claimerType:
+																																	"claimPartner",
+																																claimerCode:
 																																	partner.code,
+																																sendBranchType:
+																																	sendRecord.send_branch_type,
+																																sendBranchId:
+																																	sendRecord.send_branch_id,
 																																cashierId:
 																																	cashier._id,
 																															};
-																															interPartnerCashierClaimMoney(
+																															cashierClaimMoney(
 																																transfer,
 																																sendingBank,
 																																bank,
@@ -504,163 +553,53 @@ module.exports.partnerClaimMoney = function (req, res) {
 																																		result.status ==
 																																		1
 																																	) {
-																																		CashierClaim.findByIdAndUpdate(
-																																			cashierClaimObj._id,
-																																			{
-																																				status: 1,
-																																			},
+																																		otherInfo.claimId =
+																																			claimObj._id;
+																																		otherInfo.amount =
+																																			result.amount;
+																																		otherInfo.claimFee =
+																																			result.claimFee;
+
+																																		updateClaimRecord(
+																																			"partnercashier",
+																																			otherInfo,
 																																			(err) => {
 																																				if (
 																																					err
 																																				) {
-																																					console.log(
-																																						err
+																																					res
+																																						.status(
+																																							200
+																																						)
+																																						.json(
+																																							catchError(
+																																								err
+																																							)
+																																						);
+																																				} else {
+																																					txstate.completed(
+																																						categoryConst.MAIN,
+																																						sendRecord.master_code
 																																					);
-																																					var message = err;
-																																					if (
-																																						err.message
-																																					) {
-																																						message =
-																																							err.message;
-																																					}
 																																					res
 																																						.status(
 																																							200
 																																						)
 																																						.json(
 																																							{
-																																								status: 0,
-																																								message: message,
+																																								status: 1,
+																																								message:
+																																									"Cashier claimed money",
 																																							}
 																																						);
-																																				} else {
-																																					PartnerCashier.findByIdAndUpdate(
-																																						cashier._id,
-																																						{
-																																							cash_paid:
-																																								Number(
-																																									cashier.cash_paid
-																																								) +
-																																								Number(
-																																									amount
-																																								),
-																																							cash_in_hand:
-																																								Number(
-																																									cashier.cash_in_hand
-																																								) -
-																																								Number(
-																																									amount
-																																								),
-																																							fee_generated:
-																																								Number(
-																																									cashier.fee_generated
-																																								) +
-																																								Number(
-																																									result.claimFee
-																																								),
-
-																																							total_trans:
-																																								Number(
-																																									cashier.total_trans
-																																								) +
-																																								1,
-																																						},
-																																						function (
-																																							e,
-																																							v
-																																						) {}
-																																					);
-																																					CashierLedger.findOne(
-																																						{
-																																							cashier_id:
-																																								cashier._id,
-																																							trans_type:
-																																								"DR",
-																																							created_at: {
-																																								$gte: new Date(
-																																									start
-																																								),
-																																								$lte: new Date(
-																																									end
-																																								),
-																																							},
-																																						},
-																																						function (
-																																							err,
-																																							c
-																																						) {
-																																							if (
-																																								err ||
-																																								c ==
-																																									null
-																																							) {
-																																								let data = new CashierLedger();
-																																								data.amount = Number(
-																																									amount
-																																								);
-																																								data.trans_type =
-																																									"DR";
-																																								data.cashier_id =
-																																									cashier._id;
-																																								data.save(
-																																									async function (
-																																										err,
-																																										c
-																																									) {
-																																										await txstate.completed(
-																																											categoryConst.MAIN,
-																																											master_code
-																																										);
-																																										res
-																																											.status(
-																																												200
-																																											)
-																																											.json(
-																																												{
-																																													status: 1,
-																																													message:
-																																														"Cashier claimed money",
-																																												}
-																																											);
-																																									}
-																																								);
-																																							} else {
-																																								var amt =
-																																									Number(
-																																										c.amount
-																																									) +
-																																									Number(
-																																										amount
-																																									);
-																																								CashierLedger.findByIdAndUpdate(
-																																									c._id,
-																																									{
-																																										amount: amt,
-																																									},
-																																									function (
-																																										err,
-																																										c
-																																									) {
-																																										res
-																																											.status(
-																																												200
-																																											)
-																																											.json(
-																																												{
-																																													status: 1,
-																																													message:
-																																														"Cashier claimed money",
-																																												}
-																																											);
-																																									}
-																																								);
-																																							}
-																																						}
-																																					);
 																																				}
 																																			}
 																																		);
 																																	} else {
+																																		txstate.failed(
+																																			categoryConst.MAIN,
+																																			sendRecord.master_code
+																																		);
 																																		console.log(
 																																			result.toString()
 																																		);
@@ -675,6 +614,10 @@ module.exports.partnerClaimMoney = function (req, res) {
 																																})
 																																.catch(
 																																	(err) => {
+																																		txstate.failed(
+																																			categoryConst.MAIN,
+																																			sendRecord.master_code
+																																		);
 																																		console.log(
 																																			err.toString()
 																																		);

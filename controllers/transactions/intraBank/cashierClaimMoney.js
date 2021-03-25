@@ -283,7 +283,7 @@ function getPart(txInfo, masterId, childIds, otherIds) {
 	let othersPart = 0;
 	for (childtx of txInfo.childTx) {
 		for (childId of childIds) {
-			if (childtx.transaction.child_code == masterId + "-" + childId) {
+			if (childtx.transaction.child_code == masterId + childId) {
 				myPart += childtx.transaction.amount;
 			}
 		}
@@ -292,7 +292,7 @@ function getPart(txInfo, masterId, childIds, otherIds) {
 	if (otherIds.length > 0) {
 		for (childtx of txInfo.childTx) {
 			for (otherId of otherIds) {
-				if (childtx.transaction.child_code == masterId + "-" + otherId) {
+				if (childtx.transaction.child_code == masterId + otherId) {
 					othersPart += childtx.transaction.amount;
 				}
 			}

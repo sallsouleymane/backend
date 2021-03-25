@@ -381,6 +381,10 @@ module.exports.partnerSendMoney = async function (req, res) {
 																												.status(200)
 																												.json(catchError(err));
 																										} else {
+																											txstate.waitingForCompletion(
+																												categoryConst.MAIN,
+																												master_code
+																											);
 																											res.status(200).json({
 																												status: 1,
 																												message:
@@ -392,7 +396,7 @@ module.exports.partnerSendMoney = async function (req, res) {
 																							} else {
 																								txstate.failed(
 																									categoryConst.MAIN,
-																									transfer.master_code
+																									master_code
 																								);
 																								res.status(200).json(result);
 																							}
@@ -400,7 +404,7 @@ module.exports.partnerSendMoney = async function (req, res) {
 																						.catch((err) => {
 																							txstate.failed(
 																								categoryConst.MAIN,
-																								transfer.master_code
+																								master_code
 																							);
 																							res.status.json(catchError(err));
 																						});

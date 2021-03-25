@@ -1,3 +1,5 @@
+/* If this file is updated, also build docker for receive.js which is a rabbitmq queue receiver*/
+
 const doRequest = require("../routes/utils/doRequest");
 const config = require("../config.json");
 
@@ -159,7 +161,9 @@ module.exports.initiateTransfer = async function (transaction) {
 			uri: "http://" + config.blockChainIP + ":8000/transferBtwEWallets",
 			method: "POST",
 			json: {
-				transaction_type: transaction.transaction_type ? transaction.transaction_type : '',
+				transaction_type: transaction.transaction_type
+					? transaction.transaction_type
+					: "",
 				wallet_from: transaction.from.toString(),
 				wallet_to: transaction.to.toString(),
 				amount: transaction.amount.toString(),
@@ -185,7 +189,9 @@ module.exports.initiateMultiTransfer = async function (transactions) {
 		console.log("Blockchain service: initiateMultiTransfer " + transactions);
 		let argument = transactions.map((transaction) => {
 			return {
-				transaction_type: transaction.transaction_type ? transaction.transaction_type : '',
+				transaction_type: transaction.transaction_type
+					? transaction.transaction_type
+					: "",
 				from_wallet: transaction.from.toString(),
 				to_wallet: transaction.to.toString(),
 				amount: transaction.amount.toString(),

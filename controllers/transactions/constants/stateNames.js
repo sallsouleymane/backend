@@ -1,3 +1,5 @@
+/* If this file is updated, also build docker for receive.js which is a rabbitmq queue receiver*/
+
 const INIT = "INITIATED";
 const WAIT = "WAITING";
 const CANCEL = "CANCELLED";

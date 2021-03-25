@@ -1,3 +1,5 @@
+/* If this file is updated, also build docker for receive.js which is a rabbitmq queue receiver*/
+
 // Below code must be five characters only including dash(-)
 
 const AMOUNT = "-AMNT";
@@ -11,7 +13,9 @@ const INFRA_MASTER = "-INMA"; //infra master
 const CLAIM_MASTER = "-CLMA"; //claimer master
 const SEND_MASTER = "-SEMA"; // sender master
 const PARTNER_SHARE = "-PASH"; //Partner share
-const OTHER_BANK_SHARE = "-OTBA";
+const INTER_BANK_PERCENT = "-IBPR";
+const INTER_BANK_FIXED = "-IBFX";
+const INTER_BANK_MASTER = "-IBMA";
 const REVERT = "-RVRT";
 
 module.exports = {
@@ -27,5 +31,8 @@ module.exports = {
 	SEND_MASTER: SEND_MASTER,
 	PARTNER_SHARE: PARTNER_SHARE,
 	OTHER_BANK_SHARE: OTHER_BANK_SHARE,
+	INTER_BANK_PERCENT: INTER_BANK_PERCENT,
+	INTER_BANK_FIXED: INTER_BANK_FIXED,
+	INTER_BANK_MASTER: INTER_BANK_MASTER,
 	REVERT: REVERT,
 };

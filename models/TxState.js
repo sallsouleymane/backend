@@ -1,10 +1,12 @@
-// User.js
+/* If this file is updated, also build docker for receive.js which is a rabbitmq queue receiver*/
+
 const mongoose = require("mongoose");
 const TxStateSchema = new mongoose.Schema({
 	state: {
 		main: { type: String, required: false, default: "INITIATED" },
 		distribute: { type: String, required: false },
 		master: { type: String, required: false },
+		revert: { type: String, required: false },
 	},
 	txType: { type: String, required: false },
 	bankId: { type: String, required: false },
