@@ -653,12 +653,27 @@ router.post("/user/login", (req, res) => {
 		if (result.status == 0) {
 			res.status(200).json(result);
 		} else {
-			let sign_creds = { username: username, type: "user" };
-			const token = jwtsign(sign_creds);
-			res.status(200).json({
-				status: 1,
-				user: user,
-				token: token,
+			Bank.findById(user.bank_id, (err, bank) => {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else {
+					let sign_creds = { username: username, type: "user" };
+					const token = jwtsign(sign_creds);
+					res.status(200).json({
+						status: 1,
+						bank: bank,
+						user: user,
+						token: token,
+					});
+				}
 			});
 		}
 	});
