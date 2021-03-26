@@ -17,6 +17,9 @@ const MerchantRule = require("../../models/merchant/MerchantRule");
 const MerchantPosition = require("../../models/merchant/Position");
 const Merchant = require("../../models/merchant/Merchant");
 
+//constants
+const categoryConst = require("../transactions/constants/category");
+
 module.exports = (req, res) => {
 	const { invoices } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -48,6 +51,7 @@ module.exports = (req, res) => {
 						} else {
 							// Initiate transaction state
 							const master_code = await txstate.initiate(
+								categoryConst.MAIN,
 								merchant.bank_id,
 								" Merchant cashier to Merchant",
 								cashier._id,
@@ -100,7 +104,11 @@ module.exports = (req, res) => {
 												invoiceDetails: invoiceDetails,
 												invoices: invoices,
 											};
-											txstate.waitingForCompletion(master_code, otherInfo);
+											txstate.waitingForCompletion(
+												categoryConst.MAIN,
+												master_code,
+												otherInfo
+											);
 
 											const today = new Date();
 											await Merchant.findOneAndUpdate(
@@ -144,7 +152,7 @@ module.exports = (req, res) => {
 													throw new Error(status);
 												}
 												//update cash in hand
-												txstate.completed(master_code);
+												txstate.completed(categoryConst.MAIN, master_code);
 												res.status(200).json(result);
 											} else {
 												res.status(200).json(result);

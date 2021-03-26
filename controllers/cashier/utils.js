@@ -2,12 +2,20 @@
 const { errorMessage, catchError } = require("../../routes/utils/errorHandler");
 
 //models
-const Cashier = require("../../models/Cashier");
+const getTypeClass = require("../../routes/utils/getTypeClass");
 
-module.exports.jwtAuthentication = function (req, next) {
+module.exports.jwtAuthentication = function (model, req, next) {
 	const jwtusername = req.sign_creds.username;
 
-	Cashier.findOne(
+	if (model != "cashier" || model != "partnerCashier") {
+		next(
+			"Token changed or user not valid. Try to login again or contact system administrator.",
+			null
+		);
+	}
+	const Model = getTypeClass(model);
+
+	Model.findOne(
 		{
 			username: jwtusername,
 			status: 1,

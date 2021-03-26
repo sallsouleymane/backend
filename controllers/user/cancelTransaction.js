@@ -48,7 +48,9 @@ module.exports.cancelTransaction = async function (req, res, next) {
 					try {
 						let result = await cancelTransaction.revertOnlyAmount(txstate);
 						if (result.status == 1) {
-							stateUpd.cancelled(transaction_id);
+							stateUpd.cancelled(categoryConst.MAIN, transaction_id);
+						} else {
+							stateUpd.failed(categoryConst.MAIN, transaction_id);
 						}
 						res.status(200).json(result);
 					} catch (err) {
@@ -72,16 +74,26 @@ module.exports.sendForApproval = async function (req, res, next) {
 		if (err) {
 			res.status(200).json(err);
 		} else {
-			TxState.updateOne(
-				{ _id: transaction_id },
+			TxState.findOneAndUpdate(
+				{ _id: transaction_id, "cancel.approved": 0 },
 				{
 					$set: {
 						cancel: { approved: 2 },
 					},
 				},
-				(err) => {
-					if (err) {
-						res.status(200).json(catchError(err));
+				(err, txstate) => {
+					let errMsg = errorMessage(
+						err,
+						txstate,
+						"Transaction is either already sent for approval or may be it is already approved or rejected. Please check the transaction status first."
+					);
+					if (errMsg.status == 0) {
+						res.status(200).json(errMsg);
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Sent for approval to branch Admin successfully",
+						});
 					}
 				}
 			);

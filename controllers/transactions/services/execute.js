@@ -1,3 +1,5 @@
+/* If this file is updated, also build docker for receive.js which is a rabbitmq queue receiver*/
+
 const blockchain = require("../../../services/Blockchain.js");
 
 const sendSMS = require("../../../routes/utils/sendSMS");
@@ -24,7 +26,7 @@ module.exports = async function (transactions, category, queue_name = "") {
 				txstate.failed(category, transaction.master_code);
 				sendFailureMail(transaction);
 				if (queue_name != "") {
-					queue.send(queue_name, [transaction]);
+					queue.send(queue_name, transaction, category);
 				}
 			}
 		}

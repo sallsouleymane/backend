@@ -1,3 +1,5 @@
+/* If this file is updated, also build docker for receive.js which is a rabbitmq queue receiver*/
+
 var amqp = require("amqplib/callback_api");
 
 const connection_url = process.env.QUEUE_CONN_URL;

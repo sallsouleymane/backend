@@ -43,7 +43,7 @@ router.post(
 router.post(
 	"/user/cancelTransaction",
 	jwtTokenAuth,
-	cancelTransCntrl.cashierCancelTransaction
+	cancelTransCntrl.cancelTransaction
 );
 
 router.post("/user/getFailedTransactions", jwtTokenAuth, function (req, res) {

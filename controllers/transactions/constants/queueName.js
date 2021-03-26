@@ -1,5 +1,5 @@
-const FEE = "FEE";
-const COMM = "COMM";
+/* If this file is updated, also build docker for receive.js which is a rabbitmq queue receiver*/
+
 const INFRAFIXED = "INFRAFIXED";
 const INFRAPERCENT = "INFRAPERCENT";
 const SENDFEE = "SENDFEE";
@@ -9,7 +9,6 @@ const INFRAMASTER = "INFRAMASTER";
 const CLAIMMASTER = "CLAIMMASTER";
 const SENDMASTER = "SENDMASTER";
 const PARTNERSHARE = "PARTNERSHARE";
-const GENERAL = "GENERAL";
 const REVERT = "REVERT";
 
 module.exports = {
@@ -22,4 +21,5 @@ module.exports = {
 	CLAIM_MASTER: CLAIMMASTER,
 	SEND_MASTER: SENDMASTER,
 	PARTNER_SHARE: PARTNERSHARE,
+	REVERT: REVERT,
 };

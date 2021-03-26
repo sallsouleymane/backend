@@ -1,3 +1,5 @@
+/* If this file is updated, also build docker for receive.js which is a rabbitmq queue receiver*/
+
 const TxState = require("../../../models/TxState");
 const stateConst = require("../constants/stateNames");
 
@@ -93,11 +95,11 @@ module.exports.completed = async function completed(
 	}
 };
 
-module.exports.cancelled = async function (master_code) {
+module.exports.cancelled = async function (category, master_code) {
 	try {
 		console.log(category + " transaction Cancelled");
-		let tx = { state: {} };
-		tx["state." + category] = stateConst.CANCEL;
+		let tx = {};
+		tx["state." + category] = stateConst.REVERT;
 		await TxState.updateOne({ _id: master_code }, tx);
 	} catch (err) {
 		throw err;

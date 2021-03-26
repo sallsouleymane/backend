@@ -55,7 +55,7 @@ amqp.connect(connection_url, function (error0, connection) {
 					// 		childTx.transaction.child_code == child_code && childTx.state == 0
 					// );
 					// console.log(childTrans);
-					console.log("Executing ", transaction);
+					console.log("Executing Transaction");
 					let result = await execute(
 						[content.transaction],
 						content.category,
