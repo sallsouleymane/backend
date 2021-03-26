@@ -161,7 +161,7 @@ module.exports.initiateTransfer = async function (transaction) {
 			uri: "http://" + config.blockChainIP + ":8000/transferBtwEWallets",
 			method: "POST",
 			json: {
-				transaction_type: transaction.transaction_type
+				tx_name: transaction.transaction_type
 					? transaction.transaction_type
 					: "",
 				wallet_from: transaction.from.toString(),
