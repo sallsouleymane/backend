@@ -1,14 +1,16 @@
 //services
 const blockchain = require("../../../services/Blockchain.js");
-const {
-	getTransactionCode,
-	calculateShare,
-} = require("../../utils/calculateShare");
+const { calculateShare } = require("../../../routes/utils/calculateShare");
 const execute = require("../../../controllers/transactions/services/execute");
 
-module.exports = async function (transfer, infra, bank, branch, rule1, rule2) {
+//constants
+const qname = require("../constants/queueName");
+const categoryConst = require("../constants/category");
+const childType = require("../constants/childType");
+
+module.exports = async function (transfer, infra, bank, sender, rule1) {
 	try {
-		const branchOpWallet = branch.wallet_ids.operational;
+		const senderWallet = sender.wallet_id;
 		const bankEsWallet = bank.wallet_ids.escrow;
 		const bankOpWallet = bank.wallet_ids.operational;
 
@@ -19,37 +21,33 @@ module.exports = async function (transfer, infra, bank, branch, rule1, rule2) {
 			amount = amount - fee;
 		}
 
-		var balance = await blockchain.getBalance(branchOpWallet);
+		var balance = await blockchain.getBalance(senderWallet);
 
 		//Check balance first
-		if (Number(balance) + Number(branch.credit_limit) < amount + fee) {
-			return {
-				status: 0,
-				message: "Not enough balance in branch operational wallet",
-			};
+		if (Number(balance) < amount + fee) {
+			throw new Error("Not enough balance in user's wallet");
 		}
 
 		let master_code = transfer.master_code;
 
 		let trans1 = [
 			{
-				from: branchOpWallet,
+				from: senderWallet,
 				to: bankEsWallet,
 				amount: amount,
-				note: "Cashier Send Money to Non Wallet of Inter Bank",
-				email1: branch.email,
+				note: "Transferred Money to " + transfer.receiverFamilyName,
+				email1: sender.email,
 				email2: bank.email,
-				mobile1: branch.mobile,
+				mobile1: sender.mobile,
 				mobile2: bank.mobile,
-				from_name: branch.name,
+				from_name: sender.name,
 				to_name: bank.name,
-				sender_id: transfer.cashierId,
+				sender_id: "",
 				receiver_id: "",
 				master_code: master_code,
-				child_code: master_code,
+				child_code: master_code + "1",
 			},
 		];
-
 		var result = await execute(trans1);
 
 		// return response
@@ -61,58 +59,43 @@ module.exports = async function (transfer, infra, bank, branch, rule1, rule2) {
 			};
 		}
 
-		transfer.fee = fee;
-		var sendingBranchShare = 0;
 		if (fee > 0) {
-			let trans2 = [
+			const trans2 = [
 				{
-					from: branchOpWallet,
+					from: senderWallet,
 					to: bankOpWallet,
 					amount: fee,
-					note:
-						"Cashier Send Fee for Inter Bank Non Wallet to Non Wallet Transaction",
-					email1: branch.email,
+					note: "Bank Fee",
+					email1: sender.email,
 					email2: bank.email,
-					mobile1: branch.mobile,
+					mobile1: sender.mobile,
 					mobile2: bank.mobile,
-					from_name: branch.name,
+					from_name: sender.name,
 					to_name: bank.name,
-					sender_id: transfer.cashierId,
+					sender_id: "",
 					receiver_id: "",
 					master_code: master_code,
-					child_code: master_code + "1",
+					child_code: master_code + "2",
 				},
 			];
-
 			await execute(trans2);
-			sendingBranchShare = calculateShare(
-				"sendBranch",
-				transfer.amount,
-				rule1,
-				rule2,
-				branch.bcode
-			);
-			transfer.sendingBranchShare = sendingBranchShare;
 		}
 
-		transfer.master_code = master_code;
-		distributeRevenue(transfer, infra, bank, branch, rule1);
+		distributeRevenue(transfer, infra, bank, rule1);
 		return {
 			status: 1,
 			message: "Transaction success!",
 			blockchain_message: result.message,
+			balance: balance,
 			amount: amount,
 			fee: fee,
-			sendFee: sendingBranchShare,
-			master_code: master_code,
 		};
 	} catch (err) {
 		throw err;
 	}
 };
 
-async function distributeRevenue(transfer, infra, bank, branch, rule1) {
-	const branchOpWallet = branch.wallet_ids.operational;
+async function distributeRevenue(transfer, infra, bank, rule1) {
 	const bankOpWallet = bank.wallet_ids.operational;
 	const infraOpWallet = bank.wallet_ids.infra_operational;
 
@@ -125,7 +108,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 				to: infraOpWallet,
 				amount: infraShare.percentage_amount,
 				note:
-					"Bank Send Infra Percentage amount for Inter Bank Non Wallet to Non Wallet transaction",
+					"Bank Send Infra Percentage amount for Inter Bank Wallet to Non Wallet transaction",
 				email1: bank.email,
 				email2: infra.email,
 				mobile1: bank.mobile,
@@ -148,7 +131,7 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 				to: infraOpWallet,
 				amount: infraShare.fixed_amount,
 				note:
-					"Bank Send Infra Fixed amount for Inter Bank Wallet to Non Wallet transaction",
+					"Bank Send Infra Fixed amount for Inter Bank Non Wallet to Non Wallet transaction",
 				email1: bank.email,
 				email2: infra.email,
 				mobile1: bank.mobile,
@@ -162,29 +145,5 @@ async function distributeRevenue(transfer, infra, bank, branch, rule1) {
 			},
 		];
 		await execute(trans22);
-	}
-
-	if (transfer.fee > 0) {
-		let trans4 = [
-			{
-				from: bankOpWallet,
-				to: branchOpWallet,
-				amount: transfer.sendingBranchShare,
-				note:
-					"Bank Send Revenue Share for Sending Money for Inter Bank Non Wallet to Non Wallet transaction",
-				email1: bank.email,
-				email2: branch.email,
-				mobile1: bank.mobile,
-				mobile2: branch.mobile,
-				from_name: bank.name,
-				to_name: branch.name,
-				sender_id: "",
-				receiver_id: transfer.cashierId,
-				master_code: transfer.master_code,
-				child_code: transfer.master_code + "3",
-			},
-		];
-
-		await execute(trans4);
 	}
 }

@@ -1,9 +1,6 @@
 //services
 const blockchain = require("../../../services/Blockchain.js");
-const {
-	getTransactionCode,
-	calculateShare,
-} = require("../../utils/calculateShare");
+const { calculateShare } = require("../../../routes/utils/calculateShare");
 const execute = require("../../../controllers/transactions/services/execute");
 
 //constants

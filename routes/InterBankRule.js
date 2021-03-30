@@ -12,16 +12,12 @@ const { errorMessage, catchError } = require("./utils/errorHandler");
 const txstate = require("../controllers/transactions/services/states");
 
 //transactions
-const interCashierToCashier = require("./transactions/interBank/cashierToCashier");
-const interWalletToCashier = require("./transactions/interBank/walletToCashier");
-const interPartnerCashierToCashier = require("./transactions/interBank/partnerCashierToCashier");
-const interCashierClaimMoney = require("./transactions/interBank/cashierClaimMoney");
-const interPartnerCashierClaimMoney = require("./transactions/interBank/partnerCashierClaimMoney");
-const interCashierToWallet = require("./transactions/interBank/cashierToWallet");
-const interWalletToWallet = require("./transactions/interBank/walletToWallet");
-const interPartnerCashierToWallet = require("./transactions/interBank/partnerCashierToWallet");
-const interCashierToOperational = require("./transactions/interBank/cashierToOperational");
-const interPartnerCashierToOperational = require("./transactions/interBank/partnerCashierToOperational");
+const interCashierToCashier = require("../controllers/transactions/interBank/cashierToCashier");
+const interWalletToCashier = require("../controllers/transactions/interBank/walletToCashier");
+const interCashierClaimMoney = require("../controllers/transactions/interBank/cashierClaimMoney");
+const interCashierToWallet = require("../controllers/transactions/interBank/cashierToWallet");
+const interWalletToWallet = require("../controllers/transactions/interBank/walletToWallet");
+const interCashierToOperational = require("../controllers/transactions/interBank/cashierToOperational");
 
 //models
 const Bank = require("../models/Bank");
@@ -158,7 +154,7 @@ router.post(
 																							isInclusive: is_inclusive,
 																							cashierId: cashier._id,
 																						};
-																						interPartnerCashierToOperational(
+																						interCashierToOperational(
 																							transfer,
 																							infra,
 																							bank,
@@ -1061,7 +1057,7 @@ router.post(
 																															partnerCode:
 																																partner.code,
 																														};
-																														interPartnerCashierToWallet(
+																														interCashierToWallet(
 																															transfer,
 																															infra,
 																															bank,

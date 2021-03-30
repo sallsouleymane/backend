@@ -14,15 +14,11 @@ const { calculateShare } = require("./utils/calculateShare");
 //controllers
 const invoicePayCntrl = require("../controllers/cashier/invoicePayTransaction");
 const userInvoicePay = require("../controllers/user/invoicePayTransaction");
-const merchantInvoicePay = require("../controllers/merchant/invoicePayTransaction");
+const merchantInvoicePay = require("../controllers/merchantCashier/invoicePayTransaction");
 
 //transactions
-// const walletInvoicePay = require("./transactions/intraBank/walletInvoicePay");
-// const partnerCashierInvoicePay = require("./transactions/intraBank/partnerCashierInvoicePay");
-// const merchantCashierInvoicePay = require("./transactions/intraBank/merchantCashierInvoicePay");
-const iBCashierInvoicePay = require("./transactions/interBank/cashierInvoicePay");
-const iBwalletInvoicePay = require("./transactions/interBank/walletInvoicePay");
-const iBpartnerCashierInvoicePay = require("./transactions/interBank/partnerCashierInvoicePay");
+const iBCashierInvoicePay = require("../controllers/transactions/interBank/cashierInvoicePay");
+const iBwalletInvoicePay = require("../controllers/transactions/interBank/walletInvoicePay");
 
 //models
 const Bank = require("../models/Bank");
@@ -475,7 +471,7 @@ router.post(
 																		master_code: master_code,
 																	};
 
-																	var result = await iBpartnerCashierInvoicePay(
+																	var result = await iBCashierInvoicePay(
 																		transfer,
 																		infra,
 																		bank,
