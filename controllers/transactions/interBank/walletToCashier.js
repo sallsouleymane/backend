@@ -48,7 +48,26 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 				child_code: master_code + "1",
 			},
 		];
-		var result = await execute(trans1);
+		if (fee > 0) {
+			trans1.push({
+				from: senderWallet,
+				to: bankOpWallet,
+				amount: fee,
+				note: "Bank Fee",
+				email1: sender.email,
+				email2: bank.email,
+				mobile1: sender.mobile,
+				mobile2: bank.mobile,
+				from_name: sender.name,
+				to_name: bank.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: master_code,
+				child_code: master_code + "2",
+			});
+		}
+
+		result = await execute(trans1, categoryConst.MAIN);
 
 		// return response
 		if (result.status == 0) {
@@ -57,28 +76,6 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 				message: "Transaction failed!",
 				blockchain_message: result.message,
 			};
-		}
-
-		if (fee > 0) {
-			const trans2 = [
-				{
-					from: senderWallet,
-					to: bankOpWallet,
-					amount: fee,
-					note: "Bank Fee",
-					email1: sender.email,
-					email2: bank.email,
-					mobile1: sender.mobile,
-					mobile2: bank.mobile,
-					from_name: sender.name,
-					to_name: bank.name,
-					sender_id: "",
-					receiver_id: "",
-					master_code: master_code,
-					child_code: master_code + "2",
-				},
-			];
-			await execute(trans2);
 		}
 
 		distributeRevenue(transfer, infra, bank, rule1);
