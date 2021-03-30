@@ -39,6 +39,7 @@ module.exports = async function (
 
 		let trans = [
 			{
+				transaction_type: "Wallet to Wallet",
 				from: senderWallet,
 				to: receiverWallet,
 				amount: transfer.exclusiveAmount,
@@ -59,7 +60,6 @@ module.exports = async function (
 
 		if (transfer.fee > 0) {
 			trans.push({
-				transaction_type: "Wallet to Wallet",
 				from: senderWallet,
 				to: bankOpWallet,
 				amount: transfer.fee,
