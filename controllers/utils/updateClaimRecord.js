@@ -1,4 +1,7 @@
+//models
 const CashierClaim = require("../../models/CashierClaim");
+const CashierLedger = require("../../models/CashierLedger");
+
 const getTypeClass = require("../../routes/utils/getTypeClass");
 
 module.exports = function updateClaimRecord(model, data, next) {
