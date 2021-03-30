@@ -59,49 +59,41 @@ module.exports = async function (
 			},
 		];
 
-		let result = await execute(trans1);
+		trans1.push({
+			from: bankOpWallet,
+			to: receiverBankOpWallet,
+			amount: amount,
+			note: "Transfer from " + sender.name + " to " + receiver.name,
+			email1: bank.email,
+			email2: receiverBank.email,
+			mobile1: bank.mobile,
+			mobile2: receiverBank.mobile,
+			from_name: bank.name,
+			to_name: receiverBank.name,
+			sender_id: "",
+			receiver_id: "",
+			master_code: master_code,
+			child_code: master_code + "1",
+		});
 
-		trans1 = [
-			{
-				from: bankOpWallet,
-				to: receiverBankOpWallet,
-				amount: amount,
-				note: "Transfer from " + sender.name + " to " + receiver.name,
-				email1: bank.email,
-				email2: receiverBank.email,
-				mobile1: bank.mobile,
-				mobile2: receiverBank.mobile,
-				from_name: bank.name,
-				to_name: receiverBank.name,
-				sender_id: "",
-				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code + "1",
-			},
-		];
+		trans1.push({
+			from: receiverBankOpWallet,
+			to: receiverWallet,
+			amount: amount,
+			note: "Transfer from " + sender.name + " to " + receiver.name,
+			email1: receiverBank.email,
+			email2: receiver.email,
+			mobile1: receiverBank.mobile,
+			mobile2: receiver.mobile,
+			from_name: receiverBank.name,
+			to_name: receiver.name,
+			sender_id: "",
+			receiver_id: "",
+			master_code: master_code,
+			child_code: master_code + "1",
+		});
 
-		result = await execute(trans1);
-
-		trans1 = [
-			{
-				from: receiverBankOpWallet,
-				to: receiverWallet,
-				amount: amount,
-				note: "Transfer from " + sender.name + " to " + receiver.name,
-				email1: receiverBank.email,
-				email2: receiver.email,
-				mobile1: receiverBank.mobile,
-				mobile2: receiver.mobile,
-				from_name: receiverBank.name,
-				to_name: receiver.name,
-				sender_id: "",
-				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code + "1",
-			},
-		];
-
-		result = await execute(trans1);
+		result = await execute(trans1, categoryConst.MAIN);
 
 		// return response
 		if (result.status == 0) {
