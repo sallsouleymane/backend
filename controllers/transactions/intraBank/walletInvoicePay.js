@@ -42,6 +42,7 @@ module.exports = async function (
 
 		let trans = [
 			{
+				transaction_type: 'Wallet to Merchant',
 				from: userWallet,
 				to: merchantOpWallet,
 				amount: transfer.amount,
