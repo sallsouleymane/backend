@@ -36,7 +36,7 @@ module.exports.cashierClaimMoney = function (req, res) {
 					status: 1,
 				},
 				function (err, cc) {
-					let errMsg = errorMessage(err, cc, "Money is already claimed");
+					let errMsg = errorMessage(err, cc, "Money is already claimed", true);
 					if (errMsg.status == 0) {
 						res.status(200).json(errMsg);
 					} else {

@@ -99,7 +99,43 @@ module.exports = async function (
 				sender_id: "",
 				receiver_id: "",
 				master_code: transfer.master_code,
-				child_code: transfer.master_code + childType.REVENUE,
+				child_code: transfer.master_code + childType.REVENUE + "1",
+			});
+		}
+
+		if (transfer.bankComm > 0) {
+			trans1.push({
+				from: merchantOpWallet,
+				to: merBankOpWallet,
+				amount: transfer.bankComm,
+				note: "Bank commission on paid bill",
+				email1: merchant.email,
+				email2: merchantBank.email,
+				mobile1: merchant.mobile,
+				mobile2: merchantBank.mobile,
+				from_name: merchant.name,
+				to_name: merchantBank.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + childType.REVENUE + "2",
+			});
+
+			trans1.push({
+				from: merBankOpWallet,
+				to: bankOpWallet,
+				amount: transfer.bankComm,
+				note: "Bank commission on paid bill",
+				email1: merchantBank.email,
+				email2: bank.email,
+				mobile1: merchantBank.mobile,
+				mobile2: bank.mobile,
+				from_name: merchantBank.name,
+				to_name: bank.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + childType.REVENUE + "3",
 			});
 		}
 
@@ -110,18 +146,9 @@ module.exports = async function (
 			result = {
 				status: 0,
 				message: "Transaction failed! - " + result.message,
-				blockchain_message: result.message,
 			};
 		} else {
-			distributeRevenue(
-				transfer,
-				infra,
-				bank,
-				merchantBank,
-				user,
-				merchant,
-				rule1
-			);
+			distributeRevenue(transfer, infra, bank, merchantBank);
 			return {
 				status: 1,
 				message: "Transaction success!",
@@ -132,17 +159,8 @@ module.exports = async function (
 	}
 };
 
-async function distributeRevenue(
-	transfer,
-	infra,
-	bank,
-	merchantBank,
-	user,
-	merchant,
-	rule1
-) {
+async function distributeRevenue(transfer, infra, bank, merchantBank) {
 	try {
-		const merchantOpWallet = merchant.wallet_ids.operational;
 		const merBankOpWallet = merchantBank.wallet_ids.operational;
 		const bankOpWallet = bank.wallet_ids.operational;
 		const infraOpWallet = bank.wallet_ids.infra_operational;
@@ -167,7 +185,7 @@ async function distributeRevenue(
 					sender_id: "",
 					receiver_id: "",
 					master_code: transfer.master_code,
-					child_code: transfer.master_code + childType.INFRA_PERCENT,
+					child_code: transfer.master_code + childType.INFRA_PERCENT + "1",
 				},
 			];
 
@@ -175,12 +193,12 @@ async function distributeRevenue(
 			transPromises.push(promise);
 		}
 
-		if (infraShare.fixed_amount > 0) {
+		if (transfer.infraShare.fixed_amount > 0) {
 			let trans = [
 				{
 					from: bankOpWallet,
 					to: infraOpWallet,
-					amount: infraShare.fixed_amount,
+					amount: transfer.infraShare.fixed_amount,
 					note: "Fixed Fee on paid bill",
 					email1: bank.email,
 					email2: infra.email,
@@ -191,7 +209,7 @@ async function distributeRevenue(
 					sender_id: "",
 					receiver_id: "",
 					master_code: transfer.master_code,
-					child_code: transfer.master_code + childType.INFRA_FIXED,
+					child_code: transfer.master_code + childType.INFRA_FIXED + "1",
 				},
 			];
 
@@ -199,14 +217,12 @@ async function distributeRevenue(
 			transPromises.push(promise);
 		}
 
-		OtherBankFeeShare = calculateShare("claimBank", transfer.amount, rule1.fee);
-
-		if (OtherBankFeeShare.percentage_amount > 0) {
+		if (transfer.interBankFeeShare.percentage_amount > 0) {
 			let trans = [
 				{
 					from: bankOpWallet,
 					to: merBankOpWallet,
-					amount: OtherBankFeeShare.percentage_amount,
+					amount: transfer.interBankFeeShare.percentage_amount,
 					note: "Claiming Bank's percentage Share for Inter Bank transaction",
 					email1: bank.email,
 					email2: merchantBank.email,
@@ -217,20 +233,24 @@ async function distributeRevenue(
 					sender_id: "",
 					receiver_id: "",
 					master_code: transfer.master_code,
-					child_code: transfer.master_code + "1.1",
+					child_code: transfer.master_code + childType.INTER_BANK_PERCENT + "1",
 				},
 			];
 
-			promise = execute(trans);
+			promise = execute(
+				trans,
+				categoryConst.DISTRIBUTE,
+				qname.INTER_BANK_PERCENT
+			);
 			transPromises.push(promise);
 		}
 
-		if (OtherBankFeeShare.fixed_amount > 0) {
+		if (transfer.interBankFeeShare.fixed_amount > 0) {
 			let trans = [
 				{
 					from: bankOpWallet,
 					to: merBankOpWallet,
-					amount: OtherBankFeeShare.fixed_amount,
+					amount: transfer.interBankFeeShare.fixed_amount,
 					note: "Claiming Bank's fixed Share for Inter Bank transaction",
 					email1: bank.email,
 					email2: merchantBank.email,
@@ -241,72 +261,24 @@ async function distributeRevenue(
 					sender_id: "",
 					receiver_id: "",
 					master_code: transfer.master_code,
-					child_code: transfer.master_code + "1.2",
+					child_code: transfer.master_code + childType.INTER_BANK_FIXED + "1",
 				},
 			];
 
-			promise = execute(trans);
+			promise = execute(
+				trans,
+				categoryConst.DISTRIBUTE,
+				qname.INTER_BANK_FIXED
+			);
 			transPromises.push(promise);
 		}
 
-		//fourth transaction
-		bankComm = calculateShare("bank", transfer.amount, rule1.comm);
-		if (bankComm > 0) {
-			let trans5 = [
-				{
-					from: merchantOpWallet,
-					to: merBankOpWallet,
-					amount: bankComm,
-					note: "Bank commission on paid bill",
-					email1: merchant.email,
-					email2: merchantBank.email,
-					mobile1: merchant.mobile,
-					mobile2: merchantBank.mobile,
-					from_name: merchant.name,
-					to_name: merchantBank.name,
-					sender_id: "",
-					receiver_id: "",
-					master_code: transfer.master_code,
-					child_code:
-						getTransactionCode(merchant.mobile, merchantBank.mobile) + "5",
-				},
-			];
-
-			promise = execute(trans5);
-			transPromises.push(promise);
-
-			trans = [
-				{
-					from: merBankOpWallet,
-					to: bankOpWallet,
-					amount: bankComm,
-					note: "Bank commission on paid bill",
-					email1: merchantBank.email,
-					email2: bank.email,
-					mobile1: merchantBank.mobile,
-					mobile2: bank.mobile,
-					from_name: merchantBank.name,
-					to_name: bank.name,
-					sender_id: "",
-					receiver_id: "",
-					master_code: transfer.master_code,
-					child_code:
-						getTransactionCode(merchantBank.mobile, bank.mobile) + "5",
-				},
-			];
-
-			promise = execute(trans);
-			transPromises.push(promise);
-		}
-
-		//fifth transaction
-		infraShare = calculateShare("infra", transfer.amount, rule1.comm);
-		if (infraShare.percentage_amount > 0) {
+		if (transfer.infraShare.percentage_amount > 0) {
 			let trans = [
 				{
 					from: bankOpWallet,
 					to: infraOpWallet,
-					amount: infraShare.percentage_amount,
+					amount: transfer.infraShare.percentage_amount,
 					note: "Percentage Commission share on paid bill",
 					email1: bank.email,
 					email2: infra.email,
@@ -317,18 +289,19 @@ async function distributeRevenue(
 					sender_id: "",
 					receiver_id: "",
 					master_code: transfer.master_code,
-					child_code: getTransactionCode(bank.mobile, infra.mobile) + "6.1",
+					child_code: transfer.master_code + childType.INFRA_PERCENT + "2",
 				},
 			];
 
-			promise = execute(trans);
+			promise = execute(trans, categoryConst.DISTRIBUTE, qname.INFRA_PERCENT);
+			transPromises.push(promise);
 		}
-		if (infraShare.fixed_amount > 0) {
+		if (transfer.infraShare.fixed_amount > 0) {
 			let trans = [
 				{
 					from: bankOpWallet,
 					to: infraOpWallet,
-					amount: infraShare.fixed_amount,
+					amount: transfer.infraShare.fixed_amount,
 					note: "Fixed Commission on paid bill",
 					email1: bank.email,
 					email2: infra.email,
@@ -339,27 +312,20 @@ async function distributeRevenue(
 					sender_id: "",
 					receiver_id: "",
 					master_code: transfer.master_code,
-					child_code: getTransactionCode(bank.mobile, infra.mobile) + "6.2",
+					child_code: transfer.master_code + childType.INFRA_FIXED + "2",
 				},
 			];
 
-			promise = execute(trans);
+			promise = execute(trans, categoryConst.DISTRIBUTE, qname.INFRA_FIXED);
 			transPromises.push(promise);
 		}
-		//Other bank shares
 
-		OtherBankCommShare = calculateShare(
-			"claimBank",
-			transfer.amount,
-			rule1.comm
-		);
-
-		if (OtherBankCommShare.percentage_amount > 0) {
+		if (transfer.interBankCommShare.percentage_amount > 0) {
 			let trans = [
 				{
 					from: bankOpWallet,
 					to: merBankOpWallet,
-					amount: OtherBankCommShare.percentage_amount,
+					amount: transfer.interBankCommShare.percentage_amount,
 					note: "Claiming Bank's percentage Share for Inter Bank transaction",
 					email1: bank.email,
 					email2: merchantBank.email,
@@ -370,20 +336,24 @@ async function distributeRevenue(
 					sender_id: "",
 					receiver_id: "",
 					master_code: transfer.master_code,
-					child_code: transfer.master_code + "1.1",
+					child_code: transfer.master_code + childType.INTER_BANK_PERCENT + "2",
 				},
 			];
 
-			promise = execute(trans);
+			promise = execute(
+				trans,
+				categoryConst.DISTRIBUTE,
+				qname.INTER_BANK_PERCENT
+			);
 			transPromises.push(promise);
 		}
 
-		if (OtherBankCommShare.fixed_amount > 0) {
+		if (transfer.interBankCommShare.fixed_amount > 0) {
 			let trans = [
 				{
 					from: bankOpWallet,
 					to: merBankOpWallet,
-					amount: OtherBankCommShare.fixed_amount,
+					amount: transfer.interBankCommShare.fixed_amount,
 					note: "Claiming Bank's fixed Share for Inter Bank transaction",
 					email1: bank.email,
 					email2: merchantBank.email,
@@ -394,11 +364,15 @@ async function distributeRevenue(
 					sender_id: "",
 					receiver_id: "",
 					master_code: transfer.master_code,
-					child_code: transfer.master_code + "1.2",
+					child_code: transfer.master_code + childType.INTER_BANK_FIXED + "2",
 				},
 			];
 
-			promise = execute(trans);
+			promise = execute(
+				trans,
+				categoryConst.DISTRIBUTE,
+				childType.INTER_BANK_FIXED
+			);
 			transPromises.push(promise);
 		}
 		Promise.all(transPromises).then((results) => {
@@ -411,7 +385,7 @@ async function distributeRevenue(
 			});
 			if (allTxSuccess) {
 				txstate.completed(categoryConst.DISTRIBUTE, transfer.master_code);
-				transferToMasterWallets(transfer, infra, bank, receiverBank, branch);
+				transferToMasterWallets(transfer, infra, bank, merchantBank);
 			} else {
 				txstate.failed(categoryConst.DISTRIBUTE, transfer.master_code);
 			}
@@ -421,9 +395,119 @@ async function distributeRevenue(
 	}
 }
 
+async function transferToMasterWallets(transfer, infra, bank, bankB) {
+	try {
+		txstate.initiateSubTx(categoryConst.MASTER, transfer.master_code);
+		const bankOpWallet = bank.wallet_ids.operational;
+		const bankMasterWallet = bank.wallet_ids.master;
+		const bankBOpWallet = bank.wallet_ids.operational;
+		const bankBMasterWallet = bank.wallet_ids.master;
+		const infraOpWallet = bank.wallet_ids.infra_operational;
+		const infraMasterWallet = bank.wallet_ids.infra_master;
+
+		let infraPart =
+			transfer.infraFeeShare.percentage_amount +
+			transfer.infraFeeShare.fixed_amount +
+			transfer.infraCommShare.percentage_amount +
+			transfer.infraCommShare.fixed_amount;
+		let interBankPart =
+			transfer.interBankFeeShare.percentage_amount +
+			transfer.interBankFeeShare.fixed_amount +
+			transfer.interBankCommShare.percentage_amount +
+			transfer.interBankCommShare.fixed_amount;
+		let bankPart =
+			transfer.bankFee +
+			transfer.bankComm -
+			transfer.infraFeeShare.percentage_amount -
+			transfer.infraCommShare.percentage_amount -
+			transfer.interBankFeeShare.percentage_amount -
+			transfer.interBankCommShare.percentage_amount;
+
+		let transPromises = [];
+		var promise;
+
+		let trans = [
+			{
+				from: bankOpWallet,
+				to: bankMasterWallet,
+				amount: bankPart,
+				note: "Bank share to its Master Wallet",
+				email1: bank.email,
+				mobile1: bank.mobile,
+				from_name: bank.name,
+				to_name: bank.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + childType.BANK_MASTER,
+				created_at: new Date(),
+			},
+		];
+		promise = execute(trans, categoryConst.MASTER, qname.BANK_MASTER);
+		transPromises.push(promise);
+
+		trans = [
+			{
+				from: infraOpWallet,
+				to: infraMasterWallet,
+				amount: infraPart,
+				note: "Infra share to its Master Wallet",
+				email1: infra.email,
+				mobile1: infra.mobile,
+				from_name: infra.name,
+				to_name: infra.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + childType.INFRA_MASTER,
+				created_at: new Date(),
+			},
+		];
+		promise = execute(trans, categoryConst.MASTER, qname.INFRA_MASTER);
+		transPromises.push(promise);
+
+		trans = [
+			{
+				from: bankBOpWallet,
+				to: bankBMasterWallet,
+				amount: interBankPart,
+				note: "Inter Bank share to its Master Wallet",
+				email1: bankB.email,
+				mobile1: bankB.mobile,
+				from_name: bankB.name,
+				to_name: bankB.name,
+				sender_id: "",
+				receiver_id: "",
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + childType.INTER_BANK_MASTER,
+				created_at: new Date(),
+			},
+		];
+		promise = execute(trans, categoryConst.MASTER, qname.INTER_BANK_MASTER);
+		transPromises.push(promise);
+
+		Promise.all(transPromises).then((results) => {
+			let allTxSuccess = results.every((res) => {
+				if (res.status == 0) {
+					return false;
+				} else {
+					return true;
+				}
+			});
+			if (allTxSuccess) {
+				txstate.completed(categoryConst.MASTER, transfer.master_code);
+			} else {
+				txstate.failed(categoryConst.MASTER, transfer.master_code);
+			}
+		});
+	} catch (err) {
+		txstate.failed(categoryConst.MASTER, transfer.master_code);
+	}
+}
+
 function getAllShares(transfer, rule1) {
 	let amount = transfer.amount;
-	const bankFee = calculateShare("bank", amount, rule1.fee);
+	let bankFee = calculateShare("bank", amount, rule1.fee);
 	let bankComm = calculateShare("bank", amount, rule1.comm);
 	let interBankFeeShare = calculateShare(
 		"claimBank",
@@ -437,7 +521,6 @@ function getAllShares(transfer, rule1) {
 	);
 	let infraFeeShare = calculateShare("infra", amount, rule1.fee);
 	let infraCommShare = calculateShare("infra", amount, rule1.comm);
-	let partnerFeeShare = 0;
 
 	transfer.bankFee = bankFee;
 	transfer.bankComm = bankComm;

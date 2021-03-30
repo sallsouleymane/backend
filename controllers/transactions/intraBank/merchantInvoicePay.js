@@ -126,7 +126,7 @@ async function distributeRevenue(transfer, infra, bank) {
 				},
 			];
 
-			promise = await execute(
+			promise = execute(
 				trans22,
 				categoryConst.DISTRIBUTE,
 				queueName.infra_fixed

@@ -3,6 +3,7 @@ const getTypeClass = require("../../routes/utils/getTypeClass");
 //models
 const CashierSend = require("../../models/CashierSend");
 const CashierLedger = require("../../models/CashierLedger");
+
 module.exports = function updateCashierRecords(model, data, next) {
 	var today = new Date();
 	today = today.toISOString();
@@ -61,7 +62,11 @@ module.exports = function updateCashierRecords(model, data, next) {
 										});
 										data.cashier_id = cashierId;
 										data.save(function (err) {
-											next(null);
+											if (err) {
+												next(err);
+											} else {
+												next(null);
+											}
 										});
 									} else {
 										next(null);
