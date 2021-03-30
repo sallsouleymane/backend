@@ -189,7 +189,7 @@ module.exports.initiateMultiTransfer = async function (transactions) {
 		console.log("Blockchain service: initiateMultiTransfer " + transactions);
 		let argument = transactions.map((transaction) => {
 			return {
-				transaction_type: transaction.transaction_type
+				tx_name: transaction.transaction_type
 					? transaction.transaction_type
 					: "",
 				from_wallet: transaction.from.toString(),
