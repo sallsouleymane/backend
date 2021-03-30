@@ -1,4 +1,5 @@
 const CashierClaim = require("../../models/CashierClaim");
+const getTypeClass = require("../../routes/utils/getTypeClass");
 
 module.exports = function updateClaimRecord(model, data, next) {
 	var today = new Date();
