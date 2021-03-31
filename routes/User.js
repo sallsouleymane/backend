@@ -244,9 +244,9 @@ router.get("/user/listAddedMerchants", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				let result = await user.merchant_list.map(a => a.merchant_id);
+				let res = await user.merchant_list.map(a => a.merchant_id);
 				Merchant.find({
-					'_id': { $in: result}
+					'_id': { $in: res}
 				},
 					(err, merchants) => {
 						if (err) {

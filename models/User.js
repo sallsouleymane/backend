@@ -37,7 +37,7 @@ const UserSchema = new mongoose.Schema({
 	merchant_list: [
 		{
 			merchant_id: { type: String, required: false, default: null },
-		}
+		},
 	],
 	messages: [
 		{
