@@ -296,7 +296,6 @@ router.post("/user/getMerchantStats",jwtTokenAuth,function (req, res) {
 							$match: {
 								merchant_id : merchant_id,
 								mobile: user.mobile,
-								paid: 1,
 							},
 						},
 						{
