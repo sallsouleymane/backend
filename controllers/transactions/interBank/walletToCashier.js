@@ -14,27 +14,20 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 		const bankEsWallet = bank.wallet_ids.escrow;
 		const bankOpWallet = bank.wallet_ids.operational;
 
-		// first transaction
-		var amount = Number(transfer.amount);
-		var fee = calculateShare("bank", transfer.amount, rule1);
-		if (transfer.isInclusive) {
-			amount = amount - fee;
-		}
+		transfer = getAllShares(transfer, rule1);
 
 		var balance = await blockchain.getBalance(senderWallet);
 
 		//Check balance first
-		if (Number(balance) < amount + fee) {
+		if (Number(balance) < transfer.exclusiveAmount + transfer.fee) {
 			throw new Error("Not enough balance in user's wallet");
 		}
-
-		let master_code = transfer.master_code;
 
 		let trans1 = [
 			{
 				from: senderWallet,
 				to: bankEsWallet,
-				amount: amount,
+				amount: transfer.exclusiveAmount,
 				note: "Transferred Money to " + transfer.receiverFamilyName,
 				email1: sender.email,
 				email2: bank.email,
@@ -44,15 +37,15 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 				to_name: bank.name,
 				sender_id: "",
 				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code + "1",
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + childType.AMOUNT,
 			},
 		];
-		if (fee > 0) {
+		if (transfer.fee > 0) {
 			trans1.push({
 				from: senderWallet,
 				to: bankOpWallet,
-				amount: fee,
+				amount: transfer.fee,
 				note: "Bank Fee",
 				email1: sender.email,
 				email2: bank.email,
@@ -62,8 +55,8 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 				to_name: bank.name,
 				sender_id: "",
 				receiver_id: "",
-				master_code: master_code,
-				child_code: master_code + "2",
+				master_code: transfer.master_code,
+				child_code: transfer.master_code + childType.REVENUE,
 			});
 		}
 
@@ -78,69 +71,108 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 			};
 		}
 
-		distributeRevenue(transfer, infra, bank, rule1);
+		distributeRevenue(transfer, infra, bank);
 		return {
 			status: 1,
 			message: "Transaction success!",
-			blockchain_message: result.message,
 			balance: balance,
-			amount: amount,
-			fee: fee,
+			amount: transfer.exclusiveAmount,
+			fee: transfer.fee,
 		};
 	} catch (err) {
 		throw err;
 	}
 };
 
-async function distributeRevenue(transfer, infra, bank, rule1) {
-	const bankOpWallet = bank.wallet_ids.operational;
-	const infraOpWallet = bank.wallet_ids.infra_operational;
+async function distributeRevenue(transfer, infra, bank) {
+	try {
+		const bankOpWallet = bank.wallet_ids.operational;
+		const infraOpWallet = bank.wallet_ids.infra_operational;
 
-	var infraShare = calculateShare("infra", transfer.amount, rule1);
+		let transPromises = [];
+		var promise;
 
-	if (infraShare.percentage_amount > 0) {
-		let trans21 = [
-			{
-				from: bankOpWallet,
-				to: infraOpWallet,
-				amount: infraShare.percentage_amount,
-				note:
-					"Bank Send Infra Percentage amount for Inter Bank Wallet to Non Wallet transaction",
-				email1: bank.email,
-				email2: infra.email,
-				mobile1: bank.mobile,
-				mobile2: infra.mobile,
-				from_name: bank.name,
-				to_name: infra.name,
-				sender_id: "",
-				receiver_id: "",
-				master_code: transfer.master_code,
-				child_code: transfer.master_code + "2.1",
-			},
-		];
-		await execute(trans21);
+		if (transfer.infraShare.percentage_amount > 0) {
+			let trans21 = [
+				{
+					from: bankOpWallet,
+					to: infraOpWallet,
+					amount: transfer.infraShare.percentage_amount,
+					note:
+						"Bank Send Infra Percentage amount for Inter Bank Wallet to Non Wallet transaction",
+					email1: bank.email,
+					email2: infra.email,
+					mobile1: bank.mobile,
+					mobile2: infra.mobile,
+					from_name: bank.name,
+					to_name: infra.name,
+					sender_id: "",
+					receiver_id: "",
+					master_code: transfer.master_code,
+					child_code: transfer.master_code + childType.INFRA_PERCENT,
+				},
+			];
+			promise = execute(trans21, categoryConst.DISTRIBUTE, qname.INFRA_PERCENT);
+			transPromises.push(promise);
+		}
+
+		if (transfer.infraShare.fixed_amount > 0) {
+			let trans22 = [
+				{
+					from: bankOpWallet,
+					to: infraOpWallet,
+					amount: transfer.infraShare.fixed_amount,
+					note:
+						"Bank Send Infra Fixed amount for Inter Bank Non Wallet to Non Wallet transaction",
+					email1: bank.email,
+					email2: infra.email,
+					mobile1: bank.mobile,
+					mobile2: infra.mobile,
+					from_name: bank.name,
+					to_name: infra.name,
+					sender_id: "",
+					receiver_id: "",
+					master_code: transfer.master_code,
+					child_code: transfer.master_code + childType.INFRA_FIXED,
+				},
+			];
+			promise = execute(trans22, categoryConst.DISTRIBUTE, qname.INFRA_FIXED);
+			transPromises.push(promise);
+		}
+
+		Promise.all(transPromises).then((results) => {
+			let allTxSuccess = results.every((res) => {
+				if (res.status == 0) {
+					return false;
+				} else {
+					return true;
+				}
+			});
+			if (allTxSuccess) {
+				txstate.waitingForCompletion(
+					categoryConst.DISTRIBUTE,
+					transfer.master_code
+				);
+			} else {
+				txstate.failed(categoryConst.DISTRIBUTE, transfer.master_code);
+			}
+		});
+	} catch (err) {
+		txstate.failed(categoryConst.DISTRIBUTE, transfer.master_code);
 	}
+}
 
-	if (infraShare.fixed_amount > 0) {
-		let trans22 = [
-			{
-				from: bankOpWallet,
-				to: infraOpWallet,
-				amount: infraShare.fixed_amount,
-				note:
-					"Bank Send Infra Fixed amount for Inter Bank Non Wallet to Non Wallet transaction",
-				email1: bank.email,
-				email2: infra.email,
-				mobile1: bank.mobile,
-				mobile2: infra.mobile,
-				from_name: bank.name,
-				to_name: infra.name,
-				sender_id: "",
-				receiver_id: "",
-				master_code: transfer.master_code,
-				child_code: transfer.master_code + "2.2",
-			},
-		];
-		await execute(trans22);
+function getAllShares(transfer, rule1) {
+	let amount = transfer.amount;
+	let exclusiveAmount = amount;
+	var fee = calculateShare("bank", amount, rule1);
+	if (transfer.isInclusive) {
+		exclusiveAmount = amount - fee;
 	}
+	let infraShare = calculateShare("infra", amount, rule1);
+
+	transfer.exclusiveAmount = exclusiveAmount;
+	transfer.fee = fee;
+	transfer.infraShare = infraShare;
+	return transfer;
 }

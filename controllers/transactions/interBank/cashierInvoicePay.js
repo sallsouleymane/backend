@@ -240,7 +240,7 @@ async function distributeRevenue(transfer, infra, bank, merchantBank, branch) {
 					child_code: transfer.master_code + childType.INTER_BANK_PERCENT + "1",
 				},
 			];
-			promise = await execute(
+			promise = execute(
 				trans,
 				categoryConst.DISTRIBUTE,
 				qname.INTER_BANK_PERCENT

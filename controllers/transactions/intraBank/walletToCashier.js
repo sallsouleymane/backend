@@ -148,10 +148,9 @@ async function distributeRevenue(transfer, infra, bank) {
 					created_at: new Date(),
 				},
 			];
+			promise = execute(trans22, categoryConst.DISTRIBUTE, qname.INFRA_FIXED);
+			transPromises.push(promise);
 		}
-
-		promise = execute(trans22, categoryConst.DISTRIBUTE, qname.INFRA_FIXED);
-		transPromises.push(promise);
 		Promise.all(transPromises).then((results) => {
 			let allTxSuccess = results.every((res) => {
 				if (res.status == 0) {

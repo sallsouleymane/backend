@@ -125,11 +125,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 					child_code: transfer.master_code + childType.INFRA_PERCENT,
 				},
 			];
-			promise = await execute(
-				trans21,
-				categoryConst.DISTRIBUTE,
-				qname.INFRA_PERCENT
-			);
+			promise = execute(trans21, categoryConst.DISTRIBUTE, qname.INFRA_PERCENT);
 			transPromises.push(promise);
 		}
 
@@ -152,11 +148,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 					child_code: transfer.master_code + childType.INFRA_FIXED,
 				},
 			];
-			promise = await execute(
-				trans22,
-				categoryConst.DISTRIBUTE,
-				qname.INFRA_FIXED
-			);
+			promise = execute(trans22, categoryConst.DISTRIBUTE, qname.INFRA_FIXED);
 			transPromises.push(promise);
 		}
 		if (transfer.fee > 0) {
@@ -179,7 +171,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 				},
 			];
 
-			promise = await execute(trans4, categoryConst.DISTRIBUTE, qname.SEND_FEE);
+			promise = execute(trans4, categoryConst.DISTRIBUTE, qname.SEND_FEE);
 			transPromises.push(promise);
 		}
 		Promise.all(transPromises).then((results) => {
