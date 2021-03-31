@@ -228,6 +228,184 @@ router.get("/user/listMerchants", jwtTokenAuth, function (req, res) {
 	);
 });
 
+router.get("/user/listAddedMerchants", jwtTokenAuth, function (req, res) {
+	const username = req.sign_creds.username;
+	User.findOne(
+		{
+			username,
+			status: 1,
+		},
+		async function (err, user) {
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				const list = await user.merchant_list.map(a => a.merchant_id);
+				Merchant.find({
+					'_id': { $in: list}
+				},
+					(err, merchants) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Merchant List",
+								list: merchants,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/user/getMerchantStats",jwtTokenAuth,function (req, res) {
+	const username = req.sign_creds.username;
+	const { merchant_id } = req.body;
+	User.findOne(
+		{
+			username,
+			status: 1,
+		},
+		async function (err, user) {
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.aggregate(
+					[
+						{
+							$match: {
+								merchant_id : merchant_id,
+								mobile: user.mobile,
+							},
+						},
+						{
+							$group: {
+								_id: "$paid", 
+								amount: { $sum: "$amount" },
+								bills: { $sum: 1 },
+								penalty: { $sum: "$penalty"},
+							},
+						},
+					],async (err, post6) => {
+						let result = errorMessage(
+							err,
+							post6,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							let InvoicePaid = 0;
+							let InvoicePending = 0;
+							let AmountPaid= 0;
+							let AmountPending = 0;
+							if (
+								post6 != undefined &&
+								post6 != null &&
+								post6.length > 0
+							) {
+								const Paid = await post6.filter((val) => {
+									return val._id === 1
+								});
+								const Pending = await post6.filter((val) => {
+									return val._id === 0
+								});
+								if(Paid.length > 0){
+									InvoicePaid = Paid[0].bills;
+									AmountPaid = Paid[0].amount + Paid[0].penalty;
+								}
+								if(Pending.length > 0){
+									InvoicePending = Pending[0].bills;
+									AmountPending = Pending[0].amount + Pending[0].penalty;
+								}
+							}
+							res.status(200).json({
+								status: 1,
+								amount_paid: AmountPaid,
+								bill_paid: InvoicePaid,
+								amount_pending: AmountPending,
+								bill_pending: InvoicePending,
+							});
+						}
+					}
+				);
+			}
+		}		
+	);
+});
+
+router.post("/user/addMerchant", jwtTokenAuth, function (req, res) {
+	const username = req.sign_creds.username;
+	const { merchant_id } = req.body;
+	User.findOne(
+		{
+			username,
+			status: 1,
+		},
+		async function (err, user) {
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				User.updateOne(
+					{
+						_id: user._id,
+					},
+					{
+						$push: {
+							merchant_list: {
+								merchant_id: merchant_id,
+							},
+						},
+					},
+					function (err, update) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Merchant Added Successfully",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/user/checkFee", jwtTokenAuth, function (req, res) {
 	var { amount, trans_type } = req.body;
 	const username = req.sign_creds.username;
