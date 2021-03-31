@@ -479,7 +479,7 @@ router.post("/cashier/getUserInvoices", jwtTokenAuth, (req, res) => {
 router.post(
 	"/cashier/payInvoice",
 	jwtTokenAuth,
-	invoicePayCntrl.cashierInvoicePay
+	cashInvoicePayCntrl.cashierInvoicePay
 );
 
 router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
