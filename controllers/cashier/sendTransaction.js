@@ -770,10 +770,18 @@ module.exports.partnerSendMoneyToWallet = async function (req, res) {
 																										}
 																									);
 																								} else {
+																									txstate.failed(
+																										categoryConst.MAIN,
+																										master_code
+																									);
 																									res.status(200).json(result);
 																								}
 																							})
 																							.catch((err) => {
+																								txstate.failed(
+																									categoryConst.MAIN,
+																									master_code
+																								);
 																								console.log(err.toString());
 																								res.status(200).json({
 																									status: 0,
