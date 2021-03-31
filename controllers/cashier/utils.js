@@ -9,28 +9,33 @@ module.exports.jwtAuthentication = function (model, req, next) {
 
 	if (model != "cashier" || model != "partnerCashier") {
 		next(
-			"Token changed or user not valid. Try to login again or contact system administrator.",
+			{
+				status: 0,
+				message:
+					"Token changed or user not valid. Try to login again or contact system administrator..",
+			},
 			null
 		);
-	}
-	const Model = getTypeClass(model);
+	} else {
+		const Model = getTypeClass(model);
 
-	Model.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, cashier) {
-			let errMsg = errorMessage(
-				err,
-				cashier,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (errMsg.status == 0) {
-				next(errMsg, null);
-			} else {
-				next(null, cashier);
+		Model.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, cashier) {
+				let errMsg = errorMessage(
+					err,
+					cashier,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (errMsg.status == 0) {
+					next(errMsg, null);
+				} else {
+					next(null, cashier);
+				}
 			}
-		}
-	);
+		);
+	}
 };
