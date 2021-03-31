@@ -125,7 +125,7 @@ module.exports.cashierInvoicePay = async (req, res) => {
 											comm
 										);
 										if (result.status == 1) {
-											var c = await Cashier.updateOne(
+											await Cashier.updateOne(
 												{ _id: cashier._id },
 												{
 													$inc: {
@@ -133,15 +133,10 @@ module.exports.cashierInvoicePay = async (req, res) => {
 														cash_in_hand: total_amount + result.bankFee,
 														fee_generated: result.partnerFeeShare,
 														commission_generated: result.partnerCommShare,
-														total_trans: invoices.length,
+														total_trans: 1,
 													},
 												}
 											);
-											if (c == null) {
-												throw new Error(
-													"Bank cashier's status can not be updated"
-												);
-											}
 
 											let otherInfo = {
 												total_amount: total_amount,
@@ -287,7 +282,7 @@ module.exports.partnerInvoicePay = async (req, res) => {
 											comm
 										);
 										if (result.status == 1) {
-											var c = await PartnerCashier.updateOne(
+											await PartnerCashier.updateOne(
 												{ _id: cashier._id },
 												{
 													$inc: {
@@ -299,11 +294,6 @@ module.exports.partnerInvoicePay = async (req, res) => {
 													},
 												}
 											);
-											if (c == null) {
-												status_update_feedback =
-													"Partner cashier's status can not be updated";
-											}
-
 											let otherInfo = {
 												total_amount: total_amount,
 												master_code: master_code,
