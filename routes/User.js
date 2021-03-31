@@ -228,6 +228,103 @@ router.get("/user/listMerchants", jwtTokenAuth, function (req, res) {
 	);
 });
 
+router.get("/user/listAddedMerchants", jwtTokenAuth, function (req, res) {
+	const username = req.sign_creds.username;
+	User.findOne(
+		{
+			username,
+			status: 1,
+		},
+		async function (err, user) {
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				let result = await user.merchant_list.map(a => a.merchant_id);
+				Merchant.find({
+					'_id': { $in: result}
+				},
+					(err, merchants) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Merchant List",
+								list: merchants,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.("/user/addMerchant", jwtTokenAuth, function (req, res) {
+	const username = req.sign_creds.username;
+	const { merchant_id } = req.body;
+	User.findOne(
+		{
+			username,
+			status: 1,
+		},
+		async function (err, user) {
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				User.updateOne(
+					{
+						_id: user._id,
+					},
+					{
+						$push: {
+							merchant_list: {
+								merchant_id: merchant_id,
+							},
+						},
+					},
+					function (err, update) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Merchant Added Successfully",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/user/checkFee", jwtTokenAuth, function (req, res) {
 	var { amount, trans_type } = req.body;
 	const username = req.sign_creds.username;
