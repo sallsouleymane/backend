@@ -35,6 +35,7 @@ module.exports = async function (
 		// amount and fee transfer is a synchronous transaction
 		let trans = [
 			{
+				transaction_type: 'Non Wallet to Wallet',
 				from: branchOpWallet,
 				to: receiverWallet,
 				amount: transfer.exclusiveAmount,
