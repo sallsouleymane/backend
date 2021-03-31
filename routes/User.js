@@ -325,10 +325,10 @@ router.post("/user/getMerchantStats",jwtTokenAuth,function (req, res) {
 								post6.length > 0
 							) {
 								const Paid = await post6.filter((val) => {
-									return val._id==='1'
+									return val._id === 1
 								});
 								const Pending = await post6.filter((val) => {
-									return val._id==='0'
+									return val._id === 0
 								});
 								if(Paid.length > 0){
 									InvoicePaid = Paid[0].bills;
