@@ -273,7 +273,7 @@ router.get("/user/listAddedMerchants", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.("/user/addMerchant", jwtTokenAuth, function (req, res) {
+router.post("/user/addMerchant", jwtTokenAuth, function (req, res) {
 	const username = req.sign_creds.username;
 	const { merchant_id } = req.body;
 	User.findOne(
