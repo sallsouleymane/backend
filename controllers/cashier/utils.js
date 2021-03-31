@@ -7,7 +7,7 @@ const getTypeClass = require("../../routes/utils/getTypeClass");
 module.exports.jwtAuthentication = function (model, req, next) {
 	const jwtusername = req.sign_creds.username;
 
-	if (model != "cashier" || model != "partnerCashier") {
+	if (model != "cashier" && model != "partnerCashier") {
 		next(
 			{
 				status: 0,
