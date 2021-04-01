@@ -27,12 +27,50 @@ const User = require("../../models/User");
 //controllers
 const cashSendTransCntrl = require("../../controllers/cashier/sendTransaction");
 const cashClaimTransCntrl = require("../../controllers/cashier/claimTransaction");
+const { queryTxStates } = require("../../controllers/utils/common");
 
 router.post(
 	"/partnerCashier/sendToOperational",
 	jwtTokenAuth,
 	cashSendTransCntrl.partnerSendToOperational
 );
+
+router.post("/partnerCashier/queryTransactionStates", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { bank_id } = req.body;
+		PartnerCashier.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, cashier) {
+				let errMsg = errorMessage(
+					err,
+					cashier,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (errMsg.status == 0) {
+					res.status(200).json(errMsg);
+				} else {
+				queryTxStates(
+					bank_id,
+					cashier._id,
+					req,
+					function (err, txstates) {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							res.status(200).json({
+								status: 1,
+								transactions: txstates,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
 
 router.post(
 	"/partnerCashier/getFailedTransactions",
