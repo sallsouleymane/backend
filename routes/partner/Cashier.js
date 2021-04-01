@@ -492,7 +492,7 @@ router.post("/partnerCashier/transferMoney", jwtTokenAuth, function (req, res) {
 							let data = new CashierTransfer();
 							data.amount = amount;
 							data.sender_id = cashier._id;
-							data.branch_id = branch._id;
+							data.branch_id = cashier.branch_id;
 							data.receiver_id = receiver_id;
 							data.sender_name = cashier.name;
 							data.receiver_name = receiver_name;
