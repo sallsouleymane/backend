@@ -34,6 +34,15 @@ const Partner = require("../models/partner/Partner");
 const Infra = require("../models/Infra");
 const TxState = require("../models/TxState");
 
+//controllers
+const cancelTransCntrl = require("../controllers/bank/transactions");
+
+router.post(
+	"/bank/revertTransaction",
+	jwtTokenAuth,
+	cancelTransCntrl.revertTransaction
+);
+
 router.post("/bank/retryTransaction", jwtTokenAuth, (req, res) => {
 	const { master_code, child_code } = req.body;
 	const username = req.sign_creds.username;

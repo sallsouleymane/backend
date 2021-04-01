@@ -34,6 +34,7 @@ module.exports = (req, res) => {
 			} else {
 				// Initiate transaction
 				const master_code = await txstate.initiate(
+					categoryConst.MAIN,
 					user.bank_id,
 					"Inter Bank Wallet To Merchant"
 				);
@@ -73,31 +74,6 @@ module.exports = (req, res) => {
 										res.status(200).json(errRes);
 									} else {
 										try {
-											var total_amount = 0;
-											for (invoice of invoices) {
-												var { id, penalty } = invoice;
-												var inv = await Invoice.findOneAndUpdate(
-													{
-														_id: id,
-														merchant_id: merchant_id,
-														paid: 0,
-														is_validated: 1,
-													},
-													{ penalt: penalty }
-												);
-												if (inv == null) {
-													throw new Error(
-														"Invoice id " +
-															id +
-															" is already paid or it belongs to different merchant"
-													);
-												}
-												total_amount += inv.amount + penalty;
-											}
-											if (total_amount < 0) {
-												throw new Error("Amount is a negative value");
-											}
-											console.log("Total Amount", total_amount);
 											// all the users
 
 											let infra = await Infra.findOne({
@@ -138,6 +114,11 @@ module.exports = (req, res) => {
 												comm,
 											};
 
+											const total_amount = await invoicesTotalAmount(
+												invoices,
+												merchant_id
+											);
+
 											let transfer = {
 												amount: total_amount,
 												master_code: master_code,
@@ -152,94 +133,30 @@ module.exports = (req, res) => {
 												merchant,
 												rule1
 											);
-											var status_update_feedback;
 											if (result.status == 1) {
-												for (invoice of invoices) {
-													var i = await Invoice.findOneAndUpdate(
-														{ _id: invoice.id },
-														{
-															paid: 1,
-															paid_by: "US",
-															payer_id: user._id,
-														}
-													);
-													if (i == null) {
-														status_update_feedback =
-															"Invoice status can not be updated";
-													}
+												let otherInfo = {
+													total_amount: total_amount,
+													master_code: master_code,
+													paid_by: "US",
+													payer_id: user._id,
+												};
 
-													var last_paid_at = new Date();
-													var m = await Merchant.updateOne(
-														{ _id: merchant._id },
-														{
-															last_paid_at: last_paid_at,
-															$inc: {
-																amount_collected: total_amount,
-																amount_due: -total_amount,
-																bills_paid: 1,
-															},
-														}
-													);
-													if (m == null) {
-														status_update_feedback =
-															"Merchant status can not be updated";
-													}
-
-													var mc = await MerchantPosition.updateOne(
-														{ _id: i.creator_id },
-														{
-															last_paid_at: last_paid_at,
-														}
-													);
-													if (mc == null) {
-														status_update_feedback =
-															"Merchant cashier status can not be updated";
-													}
-
-													var mb = await MerchantBranch.updateOne(
-														{ _id: mc.branch_id },
-														{
-															last_paid_at: last_paid_at,
-															$inc: {
-																amount_collected: total_amount,
-																amount_due: -total_amount,
-																bills_paid: 1,
-															},
-														}
-													);
-													if (mb == null) {
-														status_update_feedback =
-															"Merchant Branch status can not be updated";
-													}
-
-													var ig = await InvoiceGroup.updateOne(
-														{ _id: i.group_id },
-														{
-															last_paid_at: last_paid_at,
-															$inc: {
-																bills_paid: 1,
-															},
-														}
-													);
-													if (ig == null) {
-														status_update_feedback =
-															"Invoice group status can not be updated";
-													}
-
-													content =
-														"E-Wallet:: Due amount " +
-														i.amount +
-														" is paid for invoice nummber " +
-														i.number +
-														" for purpose " +
-														i.description;
-													sendSMS(content, i.mobile);
+												let status = await updateInvoiceRecord(
+													req.body,
+													otherInfo
+												);
+												if (status != null) {
+													throw new Error(status);
 												}
+
+												txstate.completed(categoryConst.MAIN, master_code);
+												res.status(200).json(result);
+											} else {
+												txstate.failed(categoryConst.MAIN, master_code);
+												res.status(200).json(result);
 											}
-											result.status_update_feedback = status_update_feedback;
-											await txstate.completed(master_code);
-											res.status(200).json(result);
 										} catch (err) {
+											txstate.failed(categoryConst.MAIN, master_code);
 											console.log(err);
 											var message = err;
 											if (err && err.message) {

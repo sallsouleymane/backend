@@ -27,17 +27,11 @@ module.exports.sendMoneyToNonWallet = function (req, res) {
 	const username = req.sign_creds.username;
 
 	const {
-		note,
-		withoutID,
-		requireOTP,
 		receiverMobile,
 		receiverGivenName,
 		receiverFamilyName,
 		receiverCountry,
 		receiverEmail,
-		receiverIdentificationType,
-		receiverIdentificationNumber,
-		receiverIdentificationValidTill,
 		receiverIdentificationAmount,
 		isInclusive,
 	} = req.body;
@@ -94,106 +88,81 @@ module.exports.sendMoneyToNonWallet = function (req, res) {
 						throw new Error("Rule not found");
 					}
 
-					let data = new CashierSend();
-					temp = {
-						mobile: sender.mobile,
-						note: note,
-						givenname: sender.name,
-						familyname: sender.last_name,
-						address1: sender.address,
-						state: sender.state,
-						country: sender.country,
-						email: sender.email,
+					req.body.givenname = sender.name;
+					req.body.familyname = sender.last_name;
+					req.body.senderIdentificationCountry = "";
+					req.body.senderIdentificationType = sender.id_type;
+					req.body.senderIdentificationNumber = sender.id_number;
+					req.body.senderIdentificationValidTill = sender.valid_till;
+					req.body.address1 = sender.address;
+					req.body.state = sender.state;
+					req.body.zip = "";
+					req.body.ccode = "";
+					req.body.country = sender.country;
+					req.body.email = sender.email;
+					req.body.mobile = sender.mobile;
+					req.body.receiverccode = "";
+					req.body.receiverIdentificationCountry = "";
+
+					var otherInfo = {
+						cashierId: "",
+						userId: sender._id,
+						transactionCode: transactionCode,
+						ruleType: "Wallet to Non Wallet",
+						masterCode: master_code,
 					};
-					data.sender_info = temp;
-					temp = {
-						mobile: receiverMobile,
-						// ccode: receiverccode,
-						givenname: receiverGivenName,
-						familyname: receiverFamilyName,
-						country: receiverCountry,
-						email: receiverEmail,
-					};
-					data.receiver_info = temp;
-					temp = {
-						country: receiverCountry,
-						type: receiverIdentificationType,
-						number: receiverIdentificationNumber,
-						valid: receiverIdentificationValidTill,
-					};
-					data.receiver_id = temp;
-					data.amount = receiverIdentificationAmount;
-					data.is_inclusive = isInclusive;
-					const transactionCode = makeid(8);
-					data.transaction_code = transactionCode;
-					data.rule_type = "Wallet to Non Wallet";
-					data.sending_bank_id = bank._id;
-					data.inter_bank_rule_type = "IBWNW";
-					data.is_inter_bank = 1;
-					data.master_code = master_code;
+					addCashierSendRecord(req.body, otherInfo, async (err, cs) => {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							var transfer = {
+								master_code: master_code,
+								amount: receiverIdentificationAmount,
+								isInclusive: isInclusive,
+								receiverFamilyName: receiverFamilyName,
+							};
+							var result = await walletToCashier(
+								transfer,
+								infra,
+								bank,
+								sender,
+								rule
+							);
+							console.log("Result: " + result);
+							if (result.status != 0) {
+								let content = "Your Transaction Code is " + transactionCode;
+								if (receiverMobile && receiverMobile != null) {
+									sendSMS(content, receiverMobile);
+								}
+								if (receiverEmail && receiverEmail != null) {
+									sendMail(content, "Transaction Code", receiverEmail);
+								}
 
-					data.without_id = withoutID ? 1 : 0;
-					if (requireOTP) {
-						data.require_otp = 1;
-						data.otp = makeotp(6);
-						content = data.otp + " - Send this OTP to the Receiver";
-						if (sender.mobile && sender.mobile != null) {
-							sendSMS(content, sender.mobile);
+								const caSend = await CashierSend.findByIdAndUpdate(cs._id, {
+									status: 1,
+									fee: result.fee,
+								});
+								if (caSend == null) {
+									throw new Error("Cashier send record not found");
+								}
+
+								NWUser.create(receiver);
+								await txstate.waitingForCompletion(master_code);
+								res.status(200).json({
+									status: 1,
+									message:
+										receiverIdentificationAmount +
+										" XOF is transferred to branch",
+									balance: result.balance - (result.amount + result.fee),
+								});
+							} else {
+								res.status(200).json({
+									status: 0,
+									message: result.toString(),
+								});
+							}
 						}
-						if (sender.email && sender.email != null) {
-							sendMail(content, "Transaction OTP", receiver.email);
-						}
-					}
-
-					//send transaction sms after actual transaction
-
-					var cs = await data.save();
-
-					var transfer = {
-						master_code: master_code,
-						amount: receiverIdentificationAmount,
-						isInclusive: isInclusive,
-						receiverFamilyName: receiverFamilyName,
-					};
-					var result = await walletToCashier(
-						transfer,
-						infra,
-						bank,
-						sender,
-						rule
-					);
-					console.log("Result: " + result);
-					if (result.status != 0) {
-						let content = "Your Transaction Code is " + transactionCode;
-						if (receiverMobile && receiverMobile != null) {
-							sendSMS(content, receiverMobile);
-						}
-						if (receiverEmail && receiverEmail != null) {
-							sendMail(content, "Transaction Code", receiverEmail);
-						}
-
-						const caSend = await CashierSend.findByIdAndUpdate(cs._id, {
-							status: 1,
-							fee: result.fee,
-						});
-						if (caSend == null) {
-							throw new Error("Cashier send record not found");
-						}
-
-						NWUser.create(receiver);
-						await txstate.waitingForCompletion(master_code);
-						res.status(200).json({
-							status: 1,
-							message:
-								receiverIdentificationAmount + " XOF is transferred to branch",
-							balance: result.balance - (result.amount + result.fee),
-						});
-					} else {
-						res.status(200).json({
-							status: 0,
-							message: result.toString(),
-						});
-					}
+					});
 				} catch (err) {
 					console.log(err);
 					var message = err.toString();
@@ -232,6 +201,7 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 
 		// Initiate transaction
 		const master_code = await txstate.initiate(
+			categoryConst.MAIN,
 			sender.bank_id,
 			"Inter Bank Wallet To Wallet"
 		);
@@ -289,7 +259,7 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 		);
 		console.log("Result: " + result1);
 		if (result1.status == 1) {
-			await txstate.completed(master_code);
+			await txstate.completed(categoryConst.MAIN, master_code);
 			res.status(200).json({
 				status: 1,
 				message: sending_amount + " XOF is transferred to " + receiver.name,
@@ -302,6 +272,7 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 			});
 		}
 	} catch (err) {
+		txstate.failed(categoryConst.MAIN, master_code);
 		console.log(err);
 		var message = err.toString();
 		if (err && err.message) {

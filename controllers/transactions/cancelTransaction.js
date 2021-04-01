@@ -1,58 +1,101 @@
 //services
-const execute = require("../services/execute.js");
-const TxState = require("../../../models/TxState.js");
+const execute = require("./services/execute.js");
+const TxState = require("../../models/TxState.js");
 
 //constants
-const qname = require("../constants/queueName");
-const categoryConst = require("../constants/category.js");
-const childType = require("../constants/childType");
+const qname = require("./constants/queueName");
+const categoryConst = require("./constants/category.js");
+const childType = require("./constants/childType");
 
-module.exports.revertOnlyAmount = async function (txstate) {
-	try {
-		revertTxId = txstate._id + childType.AMOUNT;
-
-		var txFound = false;
-		var res;
-		var cancelTx = [];
-		for (i = 0; i < txstate.childTx.length; i++) {
-			if (
-				txstate.childTx[i].transaction.child_code == revertTxId &&
-				txstate.childTx[i].state == 1
-			) {
-				let waitTx = (cancelTx = txstate.childTx[i].transaction);
-				cancelTx.from = waitTx.to;
-				cancelTx.to = waitTx.from;
-				cancelTx.email1 = waitTx.email2;
-				cancelTx.email2 = waitTx.email1;
-				cancelTx.mobile1 = waitTx.mobile2;
-				cancelTx.mobile2 = waitTx.mobile1;
-				cancelTx.from_name = waitTx.to_name;
-				cancelTx.to_name = waitTx.from_name;
-				cancelTx.sender_id = waitTx.receiver_id;
-				cancelTx.receiver_id = waitTx.sender_id;
-				cancelTx.note = "Transaction cancelled. Reverting the amount";
-				cancelTx.child_code = waitTx.master_code + childType.REVERT;
-				cancelTx.push(cancelTx);
-				txFound = true;
-				break;
+module.exports.run = async function (transaction_id, next) {
+	TxState.findById(transaction_id, async (err, txstate) => {
+		let errMsg = errorMessage(err, txstate, "Transaction not found");
+		if (errMsg.status == 0) {
+			next(errMsg);
+		} else if (txstate.state == stateNames.DONE) {
+			next({
+				status: 0,
+				message:
+					"The money is already claimed. The transaction can not be cancelled.",
+			});
+		} else if (txstate.state == stateNames.CANCEL) {
+			next({
+				status: 0,
+				message: "The transaction is already cancelled.",
+			});
+		} else if (txstate.cancel_approval == 0) {
+			next({
+				status: 0,
+				message: "Transaction is not sent for approval",
+			});
+		} else if (txstate.cancel_approval == -1) {
+			next({
+				status: 0,
+				message: "Cancel request is rejected.",
+			});
+		} else if (txstate.cancel_approval == 2) {
+			next({
+				status: 0,
+				message: "The request is not approved yet.",
+			});
+		} else if (txstate.state == stateNames.WAIT) {
+			try {
+				let result = await revertOnlyAmount(txstate);
+				if (result.status == 1) {
+					stateUpd.cancelled(categoryConst.MAIN, transaction_id);
+				}
+				next(result);
+			} catch (err) {
+				next(catchError(err));
 			}
+		} else {
+			next({
+				status: 0,
+				message:
+					"The state in which transaction is in does not allow it to cancel. Please check with the administrator.",
+			});
 		}
-
-		res = await execute(cancelTx, categoryConst.MAIN);
-		if (txFound == false) {
-			return { status: 0, message: "No transaction found to revert." };
-		}
-		if (res.status == 0) {
-			return { status: 0, message: "Transaction Failed - " + res.message };
-		}
-		return {
-			status: 1,
-			message: "Transaction success!",
-		};
-	} catch (err) {
-		throw err;
-	}
+	});
 };
+
+async function revertOnlyAmount(txstate) {
+	var txFound = false;
+	var res;
+	var cancelTx = [];
+	for (i = 0; i < txstate.childTx.length; i++) {
+		let txChildType = fetchChildType(txstate.childTx[i].transaction.child_code);
+		if (txChildType == childType.AMOUNT && txstate.childTx[i].state == 1) {
+			let waitTx = (cancelTx = txstate.childTx[i].transaction);
+			cancelTx.from = waitTx.to;
+			cancelTx.to = waitTx.from;
+			cancelTx.email1 = waitTx.email2;
+			cancelTx.email2 = waitTx.email1;
+			cancelTx.mobile1 = waitTx.mobile2;
+			cancelTx.mobile2 = waitTx.mobile1;
+			cancelTx.from_name = waitTx.to_name;
+			cancelTx.to_name = waitTx.from_name;
+			cancelTx.sender_id = waitTx.receiver_id;
+			cancelTx.receiver_id = waitTx.sender_id;
+			cancelTx.note = "Transaction cancelled. Reverting the amount";
+			cancelTx.child_code = waitTx.master_code + childType.REVERT;
+			cancelTx.push(cancelTx);
+			txFound = true;
+			break;
+		}
+	}
+	if (txFound == false) {
+		return { status: 0, message: "No transaction found to revert." };
+	}
+
+	res = await execute(cancelTx, categoryConst.MAIN);
+	if (res.status == 0) {
+		return { status: 0, message: "Transaction Failed - " + res.message };
+	}
+	return {
+		status: 1,
+		message: "Transaction success!",
+	};
+}
 
 module.exports.revertAll = async function (txstate) {
 	try {
@@ -179,3 +222,8 @@ module.exports.revertAll = async function (txstate) {
 		throw err;
 	}
 };
+
+function fetchChildType(code) {
+	let subCode = code.substring(str.indexOf("-") + 1, 4);
+	return subCode;
+}

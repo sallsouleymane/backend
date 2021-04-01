@@ -26,7 +26,7 @@ const blockchain = require("../services/Blockchain");
 
 //controllers
 const userSendTransCntrl = require("../controllers/user/sendTransaction");
-const cancelTransCntrl = require("../controllers/cashier/cancelTransaction");
+const cancelTransCntrl = require("../controllers/user/cancelTransaction");
 
 router.post(
 	"/user/checkCancelReqStatus",

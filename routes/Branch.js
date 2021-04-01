@@ -23,12 +23,6 @@ const BranchLedger = require("../models/BranchLedger");
 const cancelTransCntrl = require("../controllers/branch/cancelTransaction");
 
 router.post(
-	"/branch/cancelTransaction",
-	jwtTokenAuth,
-	cancelTransCntrl.cancelTransaction
-);
-
-router.post(
 	"/branch/approveCancelTxReq",
 	jwtTokenAuth,
 	cancelTransCntrl.approveCancelRequest
