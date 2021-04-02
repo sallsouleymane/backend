@@ -1093,6 +1093,7 @@ router.post(
 					res.status(200).json({
 						limit: limit,
 						closingTime: cashier.closing_time,
+						openingTime: cashier.opening_time,
 						transactionStarted: cashier.transaction_started,
 						cashInHand: cashier.cash_in_hand,
 						isClosed: cashier.is_closed,
@@ -1561,6 +1562,7 @@ router.post("/partnerCashier/openBalance", jwtTokenAuth, (req, res) => {
 					opening_balance: bal,
 					cash_received: 0,
 					fee_generated: 0,
+					opening_time: new Date(),
 					cash_paid: 0,
 					closing_balance: 0,
 					closing_time: null,

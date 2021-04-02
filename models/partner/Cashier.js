@@ -28,6 +28,7 @@ const PartnerCashierSchema = new mongoose.Schema({
     cash_accepted: { type: Number, required: false, default: 0 },
     closing_balance: { type: Number, required: false, default: 0 },
     closing_time: { type: Date, required: false, default: null },
+    opening_time: { type: Date, required: false, default: null },
     is_closed: { type: Boolean, required: false, default: true },
     transaction_started: { type: Boolean, default: false },
     total_trans: { type: Number, required: false, default: 0 },
