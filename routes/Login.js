@@ -72,7 +72,7 @@ router.post("/partnerCashier/login", function (req, res) {
 										if (result.status == 0) {
 											res.status(200).json(result);
 										} else {
-											Bank.findById(cashier.bank_id, function (err, partner) {
+											Bank.findById(cashier.bank_id, function (err, bank) {
 												var result = errorMessage(
 													err,
 													bank,
@@ -95,7 +95,7 @@ router.post("/partnerCashier/login", function (req, res) {
 														bank_id: cashier.bank_id,
 														branch_id: cashier.branch_id,
 														bank_name: bank.name,
-														banl_logo:bank.logo,
+														bank_logo: bank.logo,
 														partner_name:partner.name,
 														branch_name:branch.name,
 														max_trans_amt:cashier.max_trans_amt,
