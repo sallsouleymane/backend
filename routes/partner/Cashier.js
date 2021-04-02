@@ -5,6 +5,7 @@ const jwtTokenAuth = require("../JWTTokenAuth");
 
 //utils
 const { errorMessage, catchError } = require("../utils/errorHandler");
+const getWalletIds = require("../utils/getWalletIds");
 const blockchain = require("../../services/Blockchain");
 
 //models
@@ -13,6 +14,7 @@ const Partner = require("../../models/partner/Partner");
 const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
 const PartnerUser = require("../../models/partner/User");
+const Bank = require("../../models/Bank");
 const Fee = require("../../models/Fee");
 const CashierSend = require("../../models/CashierSend");
 const CashierPending = require("../../models/CashierPending");
@@ -536,6 +538,296 @@ router.post("/partnerCashier/transferMoney", jwtTokenAuth, function (req, res) {
 			}
 		}
 	); //branch
+});
+
+router.post("/partnerCashier/editUser", jwtTokenAuth, function (req, res) {
+	const {
+		name,
+		last_name,
+		mobile,
+		email,
+		address,
+		city,
+		state,
+		country,
+		id_type,
+		id_name,
+		valid_till,
+		id_number,
+		dob,
+		gender,
+		docs_hash,
+	} = req.body;
+	var userDetails = {
+		name: name,
+		last_name: last_name,
+		email: email,
+		address: address,
+		city: city,
+		state: state,
+		country: country,
+		id_type: id_type,
+		id_name: id_name,
+		valid_till: valid_till,
+		id_number: id_number,
+		dob: dob,
+		gender: gender,
+		docs_hash: docs_hash,
+	};
+	for (let detail in userDetails) {
+		if (userDetails[detail] == "" || userDetails[detail] == []) {
+			delete userDetails[detail];
+		}
+	}
+	const jwtusername = req.sign_creds.username;
+	PartnerCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			let result = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+			User.findOneAndUpdate(
+				{ mobile },
+				{ $set: userDetails },
+				function (err, user) {
+					let result = errorMessage(err, user, "User not found");
+					if (result.status == 0) {
+						res.status(200).json(result);
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "edit successfull",
+						});
+					}
+				}
+			);
+		}
+	});
+});
+
+router.post("/partnerCashier/createUser", jwtTokenAuth, function (req, res) {
+	const {
+		name,
+		last_name,
+		mobile,
+		email,
+		address,
+		city,
+		state,
+		country,
+		id_type,
+		id_name,
+		valid_till,
+		id_number,
+		dob,
+		gender,
+		bank,
+		docs_hash,
+	} = req.body;
+
+	const password = makeid(10);
+	var userDetails = {
+		name: name,
+		last_name: last_name,
+		mobile: mobile,
+		email: email,
+		username: mobile,
+		password: password,
+		address: address,
+		city: city,
+		state: state,
+		country: country,
+		id_type: id_type,
+		id_name: id_name,
+		valid_till: valid_till,
+		id_number: id_number,
+		dob: dob,
+		gender: gender,
+		bank: bank,
+		docs_hash: docs_hash,
+		status: 2,
+	};
+	const jwtusername = req.sign_creds.username;
+
+	PartnerCashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, cashier) {
+			let result = errorMessage(
+				err,
+				cashier,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+			User.create(userDetails, function (err) {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else {
+					let content =
+						"<p>You are added as a User in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+						config.mainIP +
+						"/user/" +
+						bank +
+						"'>http://" +
+						config.mainIP +
+						"/user/" +
+						bank +
+						"</a></p><p><p>Your username: " +
+						mobile +
+						"</p><p>Your password: " +
+						password +
+						"</p>";
+					sendMail(content, "Ewallet account created", email);
+					let content2 =
+						"You are added as a User in E-Wallet application Login URL: http://" +
+						config.mainIP +
+						"/user/" +
+						bank +
+						" Your username: " +
+						mobile +
+						" Your password: " +
+						password;
+					sendSMS(content2, mobile);
+					res.status(200).json({
+						status: 1,
+						message: "User created",
+					});
+				}
+			});
+		}
+	});
+});
+
+router.post("/partnerCashier/activateUser", jwtTokenAuth, function (req, res) {
+	try {
+		const { mobile } = req.body;
+		const jwtusername = req.sign_creds.username;
+		PartnerCashier.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, cashier) {
+				let result = errorMessage(
+					err,
+					cashier,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					Bank.findOne({ _id: cashier.bank_id }, async (err, bank) => {
+						let errMsg = errorMessage(
+							err,
+							bank,
+							"You are either not authorised or not logged in."
+						);
+						if (errMsg.status == 0) {
+							res.status(200).json(errMsg);
+						} else {
+							try {
+								let wallet_id = getWalletIds("user", mobile, bank.bcode);
+								let result = await blockchain.createWallet([wallet_id]);
+								if (result != "" && !result.includes("wallet already exists")) {
+									console.log(result);
+									res.status(200).json({
+										status: 0,
+										message:
+											"Blockchain service was unavailable. Please try again.",
+										result: result,
+									});
+								} else {
+									User.findOneAndUpdate(
+										{ mobile },
+										{
+											$set: {
+												status: 1,
+												wallet_id: wallet_id,
+											},
+										},
+										function (err, user) {
+											let errMsg = errorMessage(err, user, "User not found");
+											if (errMsg.status == 0) {
+												res.status(200).json(errMsg);
+											} else {
+												let content =
+													"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+													config.mainIP +
+													"/user";
+												"'>http://" +
+													config.mainIP +
+													"/user" +
+													"</a></p><p><p>Your username: " +
+													mobile +
+													"</p><p>Your password: " +
+													user.password +
+													"</p>";
+												sendMail(
+													content,
+													"Approved Ewallet Account",
+													user.email
+												);
+												let content2 =
+													"Your account is activated. Login URL: http://" +
+													config.mainIP +
+													"/user" +
+													" Your username: " +
+													mobile +
+													" Your password: " +
+													user.password;
+												sendSMS(content2, mobile);
+												res.status(200).json({
+													status: 1,
+													message: result.toString(),
+												});
+											}
+										}
+									);
+								}
+							} catch (err) {
+								console.log(err);
+								res.status(200).json({
+									status: 0,
+									message: err.message,
+								});
+							}
+						}
+					});
+				}
+			}
+		);
+	} catch (err) {
+		console.log(err);
+		var message = err.toString();
+		if (err.message) {
+			message = err.message;
+		}
+		res.status(200).json({
+			status: 0,
+			message: message,
+			err: err,
+		});
+	}
 });
 
 router.post(
