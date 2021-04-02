@@ -7,6 +7,8 @@ const jwtTokenAuth = require("../JWTTokenAuth");
 const { errorMessage, catchError } = require("../utils/errorHandler");
 const getWalletIds = require("../utils/getWalletIds");
 const blockchain = require("../../services/Blockchain");
+const sendMail = require("../utils/sendMail");
+const sendSMS = require("../utils/sendSMS");
 
 //models
 const TxState = require("../../models/TxState");
