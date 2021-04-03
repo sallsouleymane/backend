@@ -28,7 +28,10 @@ module.exports = async function (
 
 		// check branch operational wallet balance
 		var balance = await blockchain.getBalance(branchOpWallet);
-		if (Number(balance) < transfer.amount) {
+		if (
+			Number(balance) <
+			transfer.amount + transfer.bankFee + transfer.bankComm
+		) {
 			throw new Error("Not enough balance. Recharge Your wallet.");
 		}
 
