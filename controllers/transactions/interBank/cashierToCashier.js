@@ -68,7 +68,15 @@ module.exports = async function (transfer, infra, bank, branch, rule1, rule2) {
 			});
 		}
 
-		await execute(trans1, categoryConst.MAIN);
+		let result = await execute(trans1, categoryConst.MAIN);
+		// return response
+		if (result.status == 0) {
+			return {
+				status: 0,
+				message: "Transaction failed!",
+				blockchain_message: result.message,
+			};
+		}
 
 		distributeRevenue(transfer, infra, bank, branch);
 		return {
