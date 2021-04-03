@@ -595,7 +595,7 @@ module.exports.cashierSendMoneyToWallet = function (req, res) {
 																									} else {
 																										var transfer = {
 																											master_code: master_code,
-																											amount: amount,
+																											amount: receiverIdentificationAmount,
 																											isInclusive: isInclusive,
 																											cashierId: cashier._id,
 																											senderType: "sendBranch",
