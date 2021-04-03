@@ -27,6 +27,7 @@ const OTP = require("../../models/OTP");
 const Merchant = require("../../models/merchant/Merchant");
 const MerchantSettings = require("../../models/merchant/MerchantSettings");
 const User = require("../../models/User");
+const DailyReport = require("../../models/cashier/DailyReport");
 
 //controllers
 const cashSendTransCntrl = require("../../controllers/cashier/sendTransaction");
