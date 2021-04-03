@@ -871,7 +871,7 @@ module.exports.partnerSendMoneyToWallet = function (req, res) {
 																												//End
 																												var transfer = {
 																													master_code: master_code,
-																													amount: amount,
+																													amount: receiverIdentificationAmount,
 																													isInclusive: isInclusive,
 																													cashierId:
 																														cashier._id,

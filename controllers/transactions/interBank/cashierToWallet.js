@@ -139,64 +139,70 @@ async function distributeRevenue(transfer, infra, bank, receiverBank, branch) {
 		var promise;
 
 		if (transfer.infraShare.percentage_amount > 0) {
-			let trans21 = {
-				from: bankOpWallet,
-				to: infraOpWallet,
-				amount: transfer.infraShare.percentage_amount,
-				note: "Cashier Send percentage Infra Fee",
-				email1: bank.email,
-				email2: infra.email,
-				mobile1: bank.mobile,
-				mobile2: infra.mobile,
-				from_name: bank.name,
-				to_name: infra.name,
-				sender_id: "",
-				receiver_id: "",
-				master_code: transfer.master_code,
-				child_code: transfer.master_code + childType.INFRA_PERCENT,
-			};
+			let trans21 = [
+				{
+					from: bankOpWallet,
+					to: infraOpWallet,
+					amount: transfer.infraShare.percentage_amount,
+					note: "Cashier Send percentage Infra Fee",
+					email1: bank.email,
+					email2: infra.email,
+					mobile1: bank.mobile,
+					mobile2: infra.mobile,
+					from_name: bank.name,
+					to_name: infra.name,
+					sender_id: "",
+					receiver_id: "",
+					master_code: transfer.master_code,
+					child_code: transfer.master_code + childType.INFRA_PERCENT,
+				},
+			];
 			promise = execute(trans21, categoryConst.DISTRIBUTE, qname.INFRA_PERCENT);
 			transPromises.push(promise);
 		}
 
 		if (transfer.infraShare.fixed_amount > 0) {
-			let trans22 = {
-				from: bankOpWallet,
-				to: infraOpWallet,
-				amount: transfer.infraShare.fixed_amount,
-				note: "Cashier Send fixed Infra Fee",
-				email1: bank.email,
-				email2: infra.email,
-				mobile1: bank.mobile,
-				mobile2: infra.mobile,
-				from_name: bank.name,
-				to_name: infra.name,
-				sender_id: "",
-				receiver_id: "",
-				master_code: transfer.master_code,
-				child_code: transfer.master_code + childType.INFRA_FIXED,
-			};
+			let trans22 = [
+				{
+					from: bankOpWallet,
+					to: infraOpWallet,
+					amount: transfer.infraShare.fixed_amount,
+					note: "Cashier Send fixed Infra Fee",
+					email1: bank.email,
+					email2: infra.email,
+					mobile1: bank.mobile,
+					mobile2: infra.mobile,
+					from_name: bank.name,
+					to_name: infra.name,
+					sender_id: "",
+					receiver_id: "",
+					master_code: transfer.master_code,
+					child_code: transfer.master_code + childType.INFRA_FIXED,
+				},
+			];
 			promise = execute(trans22, categoryConst.DISTRIBUTE, qname.INFRA_FIXED);
 			transPromises.push(promise);
 		}
 
 		if (transfer.interBankShare.percentage_amount > 0) {
-			let trans2 = {
-				from: bankOpWallet,
-				to: receiverBankOpWallet,
-				amount: transfer.interBankShare.percentage_amount,
-				note: "Claiming Bank's Share for Inter Bank transaction",
-				email1: bank.email,
-				email2: receiverBank.email,
-				mobile1: bank.mobile,
-				mobile2: receiverBank.mobile,
-				from_name: bank.name,
-				to_name: receiverBank.name,
-				sender_id: "",
-				receiver_id: "",
-				master_code: transfer.master_code,
-				child_code: transfer.master_code + childType.INTER_BANK_PERCENT,
-			};
+			let trans2 = [
+				{
+					from: bankOpWallet,
+					to: receiverBankOpWallet,
+					amount: transfer.interBankShare.percentage_amount,
+					note: "Claiming Bank's Share for Inter Bank transaction",
+					email1: bank.email,
+					email2: receiverBank.email,
+					mobile1: bank.mobile,
+					mobile2: receiverBank.mobile,
+					from_name: bank.name,
+					to_name: receiverBank.name,
+					sender_id: "",
+					receiver_id: "",
+					master_code: transfer.master_code,
+					child_code: transfer.master_code + childType.INTER_BANK_PERCENT,
+				},
+			];
 
 			promise = execute(
 				trans2,
@@ -207,22 +213,24 @@ async function distributeRevenue(transfer, infra, bank, receiverBank, branch) {
 		}
 
 		if (transfer.interBankShare.fixed_amount > 0) {
-			let trans2 = {
-				from: bankOpWallet,
-				to: receiverBankOpWallet,
-				amount: transfer.interBankShare.fixed_amount,
-				note: "Claiming Bank's Fixed Share for Inter Bank transaction",
-				email1: bank.email,
-				email2: receiverBank.email,
-				mobile1: bank.mobile,
-				mobile2: receiverBank.mobile,
-				from_name: bank.name,
-				to_name: receiverBank.name,
-				sender_id: "",
-				receiver_id: "",
-				master_code: transfer.master_code,
-				child_code: transfer.master_code + childType.INTER_BANK_FIXED,
-			};
+			let trans2 = [
+				{
+					from: bankOpWallet,
+					to: receiverBankOpWallet,
+					amount: transfer.interBankShare.fixed_amount,
+					note: "Claiming Bank's Fixed Share for Inter Bank transaction",
+					email1: bank.email,
+					email2: receiverBank.email,
+					mobile1: bank.mobile,
+					mobile2: receiverBank.mobile,
+					from_name: bank.name,
+					to_name: receiverBank.name,
+					sender_id: "",
+					receiver_id: "",
+					master_code: transfer.master_code,
+					child_code: transfer.master_code + childType.INTER_BANK_FIXED,
+				},
+			];
 
 			promise = execute(
 				trans2,
@@ -233,22 +241,24 @@ async function distributeRevenue(transfer, infra, bank, receiverBank, branch) {
 		}
 
 		if (transfer.fee > 0) {
-			let trans4 = {
-				from: bankOpWallet,
-				to: branchOpWallet,
-				amount: transfer.sendingBranchShare,
-				note: "Bank Send Revenue Branch for Sending money",
-				email1: bank.email,
-				email2: branch.email,
-				mobile1: bank.mobile,
-				mobile2: branch.mobile,
-				from_name: bank.name,
-				to_name: branch.name,
-				sender_id: "",
-				receiver_id: transfer.cashierId,
-				master_code: transfer.master_code,
-				child_code: transfer.master_code + childType.SENDER,
-			};
+			let trans4 = [
+				{
+					from: bankOpWallet,
+					to: branchOpWallet,
+					amount: transfer.sendingBranchShare,
+					note: "Bank Send Revenue Branch for Sending money",
+					email1: bank.email,
+					email2: branch.email,
+					mobile1: bank.mobile,
+					mobile2: branch.mobile,
+					from_name: bank.name,
+					to_name: branch.name,
+					sender_id: "",
+					receiver_id: transfer.cashierId,
+					master_code: transfer.master_code,
+					child_code: transfer.master_code + childType.SENDER,
+				},
+			];
 
 			promise = execute(trans4, categoryConst.DISTRIBUTE, qname.SEND_FEE);
 			transPromises.push(promise);
