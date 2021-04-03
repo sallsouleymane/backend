@@ -320,27 +320,29 @@ router.post("/partnerCashier/addClosingBalance", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				let data = new CashierLedger();
-				data.amount = total;
-				data.cashier_id = cashier._id;
-				data.trans_type = "CB";
-				let td = {
-					denomination,
-					note,
-				};
-				data.transaction_details = JSON.stringify(td);
-
-				data.save((err) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message,
-						});
+				let data = new DailyReport();
+					data.cashier_id = cashier._id;
+					data.created_at = new Date();
+					data.user = "Partner Cashier";
+					data.denomination = denomination;
+					data.note = note;
+					data.opening_balance = cashier.opening_balance;
+					data.closing_balance =  total;
+					data.cash_in_hand = cashier.cash_in_hand;
+					data.opening_time = cashier.opening_time;
+					data.closing_time = new Date();
+					data.descripency =  total - cashier.cash_in_hand,
+					data.save((err) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
 					} else {
 						PartnerCashier.findByIdAndUpdate(
 							cashier._id,
@@ -361,6 +363,51 @@ router.post("/partnerCashier/addClosingBalance", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+router.post(
+	"/partnerCashier/getDailyReport",
+	jwtTokenAuth,
+	function (req, res) {
+		const { start, end } = req.body;
+		const jwtusername = req.sign_creds.username;
+		PartnerCashier.findOne(
+			{
+				username: jwtusername,
+				status: 1,
+			},
+			function (err, cashier) {
+				let result = errorMessage(
+					err,
+					cashier,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					DailyReport.find(
+						{ 	cashier_id: cashier._id,
+							created_at: {
+								$gte: new Date(
+									start
+								),
+								$lte: new Date(
+									end
+								),
+							},
+						},
+						(err, reports) => {
+							if (err) {
+								res.status(200).json(catchError(err));
+							} else {
+								res.status(200).json({ status: 1, reports: reports });
+							}
+						}
+					);
+				}
+			}
+		);
+	}
+);
 
 router.post(
 	"/partnerCashier/getClosingBalance",
