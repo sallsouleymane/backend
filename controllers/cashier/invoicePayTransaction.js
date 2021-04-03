@@ -5,7 +5,7 @@ const updateInvoiceRecord = require("../utils/updateInvoiceRecord");
 const { jwtAuthentication } = require("./utils");
 
 //controllers
-const cashierInvoicePay = require("../transactions/interBank/cashierInvoicePay");
+const cashierInvoicePay = require("../transactions/intraBank/cashierInvoicePay");
 
 // transactions
 const txstate = require("../transactions/services/states");

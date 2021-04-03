@@ -20,6 +20,7 @@ const Cashier = require("../../models/Cashier");
 const Partner = require("../../models/partner/Partner");
 const PartnerCashier = require("../../models/partner/Cashier");
 const PartnerBranch = require("../../models/partner/Branch");
+const IBMerchantRule = require("../../models/InterBankRule");
 
 //constants
 const categoryConst = require("../transactions/constants/category");
