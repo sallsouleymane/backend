@@ -13,6 +13,7 @@ const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
 const CashierTransfer = require("../../models/CashierTransfer");
 const CashierPending = require("../../models/CashierPending");
+const Invoice = require("../../models/merchant/Invoice");
 
 router.post("/partnerBranch/getCashierDetails", jwtTokenAuth, function (req, res) {
 	const { cashier_id } = req.body;
@@ -469,11 +470,13 @@ router.post("/partnerBranch/getDashStats", jwtTokenAuth, function (req, res) {
 									cg = aggregate[0].totalCommission;
 									ob = aggregate[0].openingBalance;
 								}
+								var totalInvoicePaid = await Invoice.countDocuments({payer_branch_id: branch._id});
 								var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, branch_id: branch._id});
 								var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, branch_id: branch._id});
 								var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, branch_id: branch._id});
 								res.status(200).json({
 									status: 1,
+									invoicePaid: totalInvoicePaid,
 									totalCashier: count,
 									cashInHand: cin,
 									feeGenerated : fg,
