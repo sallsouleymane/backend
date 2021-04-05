@@ -166,27 +166,27 @@ router.post("/:user/getPartnerCashierDashStats", jwtTokenAuth, function (req, re
 						_id: cashier_id,
 						status: 1,
 					},
-					function (err, user) {
+					function (err, cashier) {
 						let result = errorMessage(
 							err,
-							user,
+							cashier,
 							"Token changed or user not valid. Try to login again or contact system administrator."
 						);
 						if (result.status == 0) {
 							res.status(200).json(result);
 						} else {
 							res.status(200).json({
-								openingBalance: user.opening_balance,
-								closingBalance: user.closing_balance,
-								cashPaid: user.cash_paid,
-								cashReceived: user.cash_received,
-								cashInHand: user.cash_in_hand,
-								feeGenerated: user.fee_generated,
-								commissionGenerated: user.commission_generated,
-								closingTime: user.closing_time,
-								transactionStarted: user.transaction_started,
-								branchId: user.branch_id,
-								isClosed: user.is_closed,
+								openingBalance: cashier.opening_balance,
+								closingBalance: cashier.closing_balance,
+								cashPaid: cashier.cash_paid,
+								cashReceived: cashier.cash_received,
+								cashInHand: cashier.cash_in_hand,
+								feeGenerated: cashier.fee_generated,
+								commissionGenerated: cashier.commission_generated,
+								closingTime: cashier.closing_time,
+								transactionStarted: cashier.transaction_started,
+								branchId: cashier.branch_id,
+								isClosed: cashier.is_closed,
 							});
 						}
 					}
