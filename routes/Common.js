@@ -196,7 +196,7 @@ router.post("/:user/getPartnerCashierDashStats", jwtTokenAuth, function (req, re
 	);
 });
 
-router.post("/:user/queryTransactionStates", jwtTokenAuth, function (req, res) {
+router.post("/:user/queryCashierTransactionStates", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { bank_id, cashier_id } = req.body;
 	var User = getTypeClass(user);
