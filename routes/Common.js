@@ -41,6 +41,7 @@ const CountryModel = require("../models/Country");
 const TxState = require("../models/TxState");
 const Partner = require("../models/partner/Partner");
 const PartnerBranch = require("../models/partner/Branch");
+const PartnerCashier = require("../models/partner/Cashier");
 const Invoice = require("../models/merchant/Invoice");
 const ClaimCode = require("../models/ClaimCode");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
@@ -65,6 +66,183 @@ router.get("/getClaimCode", function (req, res) {
 		},
 		function (err, cc) {
 			res.send(cc);
+		}
+	);
+});
+
+router.post("/:user/getDailyReport",jwtTokenAuth,function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { cashier_id } = req.body;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "Partner") {
+		User = getTypeClass("Partner");
+	} else if (user == "partnerBranch") {
+		User = getTypeClass("partnerBranch");
+	} else if (user == "partnerCashier") {
+		User = getTypeClass("partnerCashier");
+	} else if (user == "bank") {
+		User = getTypeClass("bank");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+					DailyReport.find(
+						{ 	cashier_id: cashier_id,
+							created_at: {
+								$gte: new Date(
+									start
+								),
+								$lte: new Date(
+									end
+								),
+							},
+						},
+						(err, reports) => {
+							if (err) {
+								res.status(200).json(catchError(err));
+							} else {
+								res.status(200).json({ status: 1, reports: reports });
+							}
+						}
+					);
+				}
+			}
+		);
+	}
+);
+
+router.post("/:user/getPartnerCashierDashStats", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { cashier_id } = req.body;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "Partner") {
+		User = getTypeClass("Partner");
+	} else if (user == "partnerBranch") {
+		User = getTypeClass("partnerBranch");
+	} else if (user == "partnerCashier") {
+		User = getTypeClass("partnerCashier");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				PartnerCashier.findOne(
+					{
+						_id: cashier_id,
+						status: 1,
+					},
+					function (err, user) {
+						let result = errorMessage(
+							err,
+							user,
+							"Token changed or user not valid. Try to login again or contact system administrator."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							res.status(200).json({
+								openingBalance: user.opening_balance,
+								closingBalance: user.closing_balance,
+								cashPaid: user.cash_paid,
+								cashReceived: user.cash_received,
+								cashInHand: user.cash_in_hand,
+								feeGenerated: user.fee_generated,
+								commissionGenerated: user.commission_generated,
+								closingTime: user.closing_time,
+								transactionStarted: user.transaction_started,
+								branchId: user.branch_id,
+								isClosed: user.is_closed,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/:user/queryTransactionStates", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { bank_id, cashier_id } = req.body;
+	var User = getTypeClass(user);
+	if (user == "Partner") {
+		User = getTypeClass("Partner");
+	} else if (user == "partnerBranch") {
+		User = getTypeClass("partnerBranch");
+	} else if (user == "partnerCashier") {
+		User = getTypeClass("partnerCashier");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				queryTxStates(
+					bank_id,
+					cashier_id,
+					req,
+					function (err, txstates) {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							res.status(200).json({
+								status: 1,
+								transactions: txstates,
+							});
+						}
+					}
+				);
+			}
 		}
 	);
 });
