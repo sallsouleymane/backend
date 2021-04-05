@@ -1045,6 +1045,7 @@ router.post("/getCashierTransLimit", jwtTokenAuth, function (req, res) {
 					status: 1,
 					limit: limit,
 					closingTime: t1.closing_time,
+					openingTime: t1.opening_time,
 					transactionStarted: t1.transaction_started,
 					cashInHand: t1.cash_in_hand,
 					isClosed: t1.is_closed,
