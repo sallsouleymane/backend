@@ -37,10 +37,8 @@ const NWUser = require("../models/NonWalletUsers");
 
 //controllers
 const cashSendTransCntrl = require("../controllers/cashier/interBankSendTransaction");
-const cashClaimTransCntrl = require("../controllers/cashier/claimTransaction");
-const cashCancelTransCntrl = require("../controllers/cashier/cancelTransaction");
-const userSendTransCntrl = require("../controllers/user/sendTransaction");
-const userCancelTransCntrl = require("../controllers/cashier/cancelTransaction");
+const cashClaimTransCntrl = require("../controllers/cashier/interBankClaimTransaction");
+const userSendTransCntrl = require("../controllers/user/interBankSendTransaction");
 
 router.post(
 	"/partnerCashier/interBank/sendToOperational",
