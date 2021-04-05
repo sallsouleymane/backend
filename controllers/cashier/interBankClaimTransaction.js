@@ -15,6 +15,7 @@ const CashierClaim = require("../../models/CashierClaim");
 const Partner = require("../../models/partner/Partner");
 const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
+const InterBankRule = require("../../models/InterBankRule");
 
 // transactions
 const txstate = require("../transactions/services/states");
