@@ -72,7 +72,7 @@ router.get("/getClaimCode", function (req, res) {
 
 router.post("/:user/getCashierDailyReport",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
-	const { cashier_id } = req.body;
+	const { cashier_id,  start, end } = req.body;
 	const user = req.params.user;
 	var User = getTypeClass(user);
 	if (user == "Partner") {
