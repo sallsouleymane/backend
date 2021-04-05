@@ -26,6 +26,8 @@ module.exports = async function (
 
 		transfer = getAllShares(transfer, rule1, rule2);
 
+		console.log(transfer);
+
 		let trans = [
 			{
 				from: senderBankEsWallet,
