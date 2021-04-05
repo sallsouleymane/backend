@@ -120,7 +120,7 @@ module.exports = async function (
 			message: "Transaction success!",
 			amount: transfer.exclusiveAmount,
 			fee: transfer.fee,
-			sendFee: transfer.sendingBranchShare,
+			sendFee: transfer.senderShare,
 			master_code: transfer.master_code,
 		};
 	} catch (err) {
@@ -245,7 +245,7 @@ async function distributeRevenue(transfer, infra, bank, receiverBank, branch) {
 				{
 					from: bankOpWallet,
 					to: branchOpWallet,
-					amount: transfer.sendingBranchShare,
+					amount: transfer.senderShare,
 					note: "Bank Send Revenue Branch for Sending money",
 					email1: bank.email,
 					email2: branch.email,
