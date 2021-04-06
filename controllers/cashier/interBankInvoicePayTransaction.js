@@ -34,7 +34,7 @@ module.exports.cashierInvoicePay = (req, res) => {
 			const master_code = await txstate.initiate(
 				categoryConst.MAIN,
 				cashier.bank_id,
-				"Inter Bank Non Wallet To Wallet"
+				"Inter Bank Non Wallet To Merchant"
 			);
 			var find = {
 				merchant_id: merchant_id,
