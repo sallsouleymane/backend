@@ -14,6 +14,7 @@ const Bank = require("../../models/Bank");
 const Infra = require("../../models/Infra");
 const Fee = require("../../models/Fee");
 const CashierSend = require("../../models/CashierSend");
+const InterBankRule = require("../../models/InterBankRule");
 
 // transactions
 const txstate = require("../transactions/services/states");

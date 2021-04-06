@@ -15,6 +15,7 @@ const Infra = require("../../models/Infra");
 const MerchantRule = require("../../models/merchant/MerchantRule");
 const Merchant = require("../../models/merchant/Merchant");
 const User = require("../../models/User");
+const IBMerchantRule = require("../../models/InterBankRule");
 
 //constants
 const categoryConst = require("../transactions/constants/category");
