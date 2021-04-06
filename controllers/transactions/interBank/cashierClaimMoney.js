@@ -98,6 +98,7 @@ module.exports = async function (
 			status: 1,
 			message: "Transaction success!",
 			claimFee: transfer.claimerBranchShare,
+			amount: transfer.exclusiveAmount,
 		};
 	} catch (err) {
 		throw err;
