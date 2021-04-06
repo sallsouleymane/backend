@@ -111,8 +111,7 @@ module.exports = (req, res) => {
 											);
 											var rule1 = {
 												fee: fee,
-												comm,
-												comm,
+												comm: comm,
 											};
 
 											const total_amount = await invoicesTotalAmount(
