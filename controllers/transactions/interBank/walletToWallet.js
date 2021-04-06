@@ -371,7 +371,7 @@ function getAllShares(transfer, rule1) {
 		exclusiveAmount = amount - fee;
 	}
 	let infraShare = calculateShare("infra", amount, rule1);
-	let interBankShare = calculateShare("claimBank", transfer.amount, rule1.fee);
+	let interBankShare = calculateShare("claimBank", transfer.amount, rule1);
 
 	transfer.exclusiveAmount = exclusiveAmount;
 	transfer.fee = fee;

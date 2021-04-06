@@ -14,6 +14,7 @@ const Bank = require("../../models/Bank");
 const Infra = require("../../models/Infra");
 const Fee = require("../../models/Fee");
 const CashierSend = require("../../models/CashierSend");
+const InterBankRule = require("../../models/InterBankRule");
 
 // transactions
 const txstate = require("../transactions/services/states");
@@ -36,6 +37,8 @@ module.exports.sendMoneyToNonWallet = function (req, res) {
 		isInclusive,
 	} = req.body;
 
+	var master_code;
+
 	User.findOneAndUpdate(
 		{
 			username,
@@ -52,7 +55,8 @@ module.exports.sendMoneyToNonWallet = function (req, res) {
 				res.status(200).json(result1);
 			} else {
 				// Initiate transaction
-				const master_code = await txstate.initiate(
+				master_code = await txstate.initiate(
+					categoryConst.MAIN,
 					sender.bank_id,
 					"Inter Bank Wallet To Non Wallet"
 				);
@@ -147,7 +151,10 @@ module.exports.sendMoneyToNonWallet = function (req, res) {
 								}
 
 								NWUser.create(receiver);
-								await txstate.waitingForCompletion(master_code);
+								await txstate.waitingForCompletion(
+									categoryConst.MAIN,
+									master_code
+								);
 								res.status(200).json({
 									status: 1,
 									message:
@@ -156,6 +163,7 @@ module.exports.sendMoneyToNonWallet = function (req, res) {
 									balance: result.balance - (result.amount + result.fee),
 								});
 							} else {
+								txstate.failed(categoryConst.MAIN, master_code);
 								res.status(200).json({
 									status: 0,
 									message: result.toString(),
@@ -164,6 +172,7 @@ module.exports.sendMoneyToNonWallet = function (req, res) {
 						}
 					});
 				} catch (err) {
+					txstate.failed(categoryConst.MAIN, master_code);
 					console.log(err);
 					var message = err.toString();
 					if (err.message) {
@@ -180,6 +189,7 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 	const username = req.sign_creds.username;
 
 	const { receiverMobile, note, sending_amount, isInclusive } = req.body;
+	var master_code;
 
 	try {
 		const sender = await User.findOneAndUpdate(
@@ -200,7 +210,7 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 		}
 
 		// Initiate transaction
-		const master_code = await txstate.initiate(
+		master_code = await txstate.initiate(
 			categoryConst.MAIN,
 			sender.bank_id,
 			"Inter Bank Wallet To Wallet"

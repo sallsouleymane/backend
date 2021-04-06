@@ -11,6 +11,10 @@ const qname = require("../constants/queueName");
 const categoryConst = require("../constants/category");
 const childType = require("../constants/childType");
 
+//models
+const TxState = require("../../../models/TxState.js");
+const Infra = require("../../../models/Infra");
+
 module.exports = async function (
 	transfer,
 	sendingBank,
@@ -98,6 +102,7 @@ module.exports = async function (
 			status: 1,
 			message: "Transaction success!",
 			claimFee: transfer.claimerBranchShare,
+			amount: transfer.exclusiveAmount,
 		};
 	} catch (err) {
 		throw err;

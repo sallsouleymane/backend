@@ -4,10 +4,8 @@ const invoicesTotalAmount = require("../utils/invoicesTotalAmount");
 const updateInvoiceRecord = require("../utils/updateInvoiceRecord");
 const { jwtAuthentication } = require("./utils");
 
-//controllers
-const cashierInvoicePay = require("../transactions/interBank/cashierInvoicePay");
-
 // transactions
+const cashierInvoicePay = require("../transactions/interBank/cashierInvoicePay");
 const txstate = require("../transactions/services/states");
 
 //models
@@ -36,7 +34,7 @@ module.exports.cashierInvoicePay = (req, res) => {
 			const master_code = await txstate.initiate(
 				categoryConst.MAIN,
 				cashier.bank_id,
-				"Inter Bank Non Wallet To Wallet"
+				"Inter Bank Non Wallet To Merchant"
 			);
 			var find = {
 				merchant_id: merchant_id,
