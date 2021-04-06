@@ -26,6 +26,7 @@ const categoryConst = require("../transactions/constants/category");
 
 module.exports.sendMoneyToNonWallet = function (req, res) {
 	const username = req.sign_creds.username;
+	const transactionCode = makeid(8);
 
 	const {
 		receiverMobile,
