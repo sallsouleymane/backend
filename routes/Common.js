@@ -48,6 +48,7 @@ const MerchantSettings = require("../models/merchant/MerchantSettings");
 const DailyReport = require("../models/cashier/DailyReport");
 const MerchantPosition = require("../models/merchant/Position");
 const MerchantStaff = require("../models/merchant/Staff");
+const CashierTransfer = require("../models/CashierTransfer");
 
 router.get("/testGet", function (req, res) {
 	res.status(200).json({
@@ -115,11 +116,41 @@ router.post("/:user/getCashierDailyReport",jwtTokenAuth,function (req, res) {
 								),
 							},
 						},
-						(err, reports) => {
+						async(err, reports) => {
 							if (err) {
 								res.status(200).json(catchError(err));
 							} else {
-								res.status(200).json({ status: 1, reports: reports });
+								var totalPendingTransfers = await CashierTransfer.countDocuments(
+									{ status: 0, sender_id: cashier_id }
+								);
+								var totalAcceptedTransfers = await CashierTransfer.countDocuments(
+									{ status: 1, sender_id: cashier_id }
+								);
+								var totalcancelledTransfers = await CashierTransfer.countDocuments(
+									{ status: -1, sender_id: cashier_id }
+								);
+								var InvoicePaid = await Invoice.countDocuments(
+									{ 
+										payer_id: cashier_id,
+										date_paid: {
+											$gte: new Date(
+												start
+											),
+											$lte: new Date(
+												end
+											),
+										},
+									}
+								);
+
+								res.status(200).json({
+									status: 1,
+									reports: reports,
+									accepted: totalAcceptedTransfers,
+									pending: totalPendingTransfers,
+									decline: totalcancelledTransfers,
+									invoicePaid: InvoicePaid,
+								});
 							}
 						}
 					);
