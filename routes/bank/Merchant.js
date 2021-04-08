@@ -337,6 +337,7 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 													group.description = 'default';
 													group.save((err) => {
 														if (err) {
+															
 															console.log(err);
 															var message = err;
 															if (err.message) {
