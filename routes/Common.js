@@ -120,37 +120,64 @@ router.post("/:user/getCashierDailyReport",jwtTokenAuth,function (req, res) {
 							if (err) {
 								res.status(200).json(catchError(err));
 							} else {
-								var totalPendingTransfers = await CashierTransfer.countDocuments(
-									{ status: 0, sender_id: cashier_id }
-								);
-								var totalAcceptedTransfers = await CashierTransfer.countDocuments(
-									{ status: 1, sender_id: cashier_id }
-								);
-								var totalcancelledTransfers = await CashierTransfer.countDocuments(
-									{ status: -1, sender_id: cashier_id }
-								);
-								var InvoicePaid = await Invoice.countDocuments(
-									{ 
-										payer_id: cashier_id,
-										date_paid: {
-											$gte: new Date(
-												start
-											),
-											$lte: new Date(
-												end
-											),
+								Invoice.aggregate(
+									[{ 
+										$match : {
+											payer_id: cashier_id,
+											date_paid: {
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
+											paid:1,
+										}
+									},
+										{
+											$group: {
+												_id: null,
+												totalAmountPaid: {
+													$sum: "$amount",
+												},
+												bills_paid: { $sum: 1 },
+											},
 										},
-									}
-								);
+									],
+									async (err, invoices) => {
+										let amountpaid = 0;
+										let billpaid = 0;
+										if (
+											invoices != undefined &&
+											invoices != null &&
+											invoices.length > 0
+										) {
+											amountpaid = invoices[0].totalAmountPaid;
+											billpaid = invoices[0].bills_paid;
+										}
+											var totalPendingTransfers = await CashierTransfer.countDocuments(
+												{ status: 0, sender_id: cashier_id }
+											);
+											var totalAcceptedTransfers = await CashierTransfer.countDocuments(
+												{ status: 1, sender_id: cashier_id }
+											);
+											var totalcancelledTransfers = await CashierTransfer.countDocuments(
+												{ status: -1, sender_id: cashier_id }
+											);
+											
 
-								res.status(200).json({
-									status: 1,
-									reports: reports,
-									accepted: totalAcceptedTransfers,
-									pending: totalPendingTransfers,
-									decline: totalcancelledTransfers,
-									invoicePaid: InvoicePaid,
-								});
+											res.status(200).json({
+												status: 1,
+												reports: reports,
+												accepted: totalAcceptedTransfers,
+												pending: totalPendingTransfers,
+												decline: totalcancelledTransfers,
+												invoicePaid: billpaid,
+												amountPaid: amountpaid,
+											});
+									}
+								)
 							}
 						}
 					);
