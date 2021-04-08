@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const InvoiceGroupSchema = new mongoose.Schema({
-	code: { type: String, required: true, unique: true },
+	code: { type: String, required: true},
 	merchant_id: { type: String, required: true },
 	name: { type: String, required: true },
 	description: { type: String, required: false },
