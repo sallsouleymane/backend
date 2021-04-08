@@ -141,22 +141,36 @@ router.post("/partnerBranch/login", function (req, res) {
 						if (err) {
 							res.status(200).json(catchError(err));
 						} else {
-							let logo = partner.logo;
-							let sign_creds = { username: username, type: "partnerBranch" };
-							const token = jwtsign(sign_creds);
+							Bank.findById(partner.bank_id, function (err, bank) {
+								var result = errorMessage(
+									err,
+									bank,
+									"Bank not found."
+								);
+								if (result.status == 0) {
+									res.status(200).json(result);
+								} else {
+									let logo = partner.logo;
+									let sign_creds = { username: username, type: "partnerBranch" };
+									const token = jwtsign(sign_creds);
 
-							res.status(200).json({
-								token: token,
-								name: branch.name,
-								initial_setup: branch.initial_setup,
-								username: branch.username,
-								status: branch.status,
-								email: branch.email,
-								mobile: branch.mobile,
-								logo: logo,
-								id: branch._id,
-								partner_id: partner._id,
-								credit_limit: branch.credit_limit,
+									res.status(200).json({
+										token: token,
+										name: branch.name,
+										initial_setup: branch.initial_setup,
+										username: branch.username,
+										status: branch.status,
+										email: branch.email,
+										mobile: branch.mobile,
+										partner_name: partner.name,
+										logo: logo,
+										bank_name: bank.name,
+										bank_logo: bank.logo,
+										id: branch._id,
+										partner_id: partner._id,
+										credit_limit: branch.credit_limit,
+									});
+								}
 							});
 						}
 					}
