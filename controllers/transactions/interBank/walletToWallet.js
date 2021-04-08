@@ -67,7 +67,7 @@ module.exports = async function (
 			to_name: receiverBank.name,
 			sender_id: "",
 			receiver_id: "",
-			master_code: master_code,
+			master_code: transfer.master_code,
 			child_code: transfer.master_code + childType.AMOUNT,
 		});
 
@@ -84,7 +84,7 @@ module.exports = async function (
 			to_name: receiver.name,
 			sender_id: "",
 			receiver_id: "",
-			master_code: master_code,
+			master_code: transfer.master_code,
 			child_code: transfer.master_code + childType.AMOUNT,
 		});
 
@@ -317,8 +317,8 @@ async function transferToMasterWallets(transfer, infra, bank, bankB) {
 				to_name: infra.name,
 				sender_id: "",
 				receiver_id: "",
-				master_code: transfer.master_code,
-				child_code: transfer.master_code + childType.INFRA_MASTER,
+				master_code: master_code,
+				child_code: master_code + childType.INFRA_MASTER,
 			},
 		];
 		promise = execute(trans, categoryConst.MASTER, qname.INFRA_MASTER);
@@ -336,8 +336,8 @@ async function transferToMasterWallets(transfer, infra, bank, bankB) {
 				to_name: bankB.name,
 				sender_id: "",
 				receiver_id: "",
-				master_code: transfer.master_code,
-				child_code: transfer.master_code + childType.INTER_BANK_MASTER,
+				master_code: master_code,
+				child_code: master_code + childType.INTER_BANK_MASTER,
 				created_at: new Date(),
 			},
 		];

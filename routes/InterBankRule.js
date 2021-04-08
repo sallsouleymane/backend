@@ -11,14 +11,6 @@ const JWTTokenAuth = require("./JWTTokenAuth");
 const { errorMessage, catchError } = require("./utils/errorHandler");
 const txstate = require("../controllers/transactions/services/states");
 
-//transactions
-const interCashierToCashier = require("../controllers/transactions/interBank/cashierToCashier");
-const interWalletToCashier = require("../controllers/transactions/interBank/walletToCashier");
-const interCashierClaimMoney = require("../controllers/transactions/interBank/cashierClaimMoney");
-const interCashierToWallet = require("../controllers/transactions/interBank/cashierToWallet");
-const interWalletToWallet = require("../controllers/transactions/interBank/walletToWallet");
-const interCashierToOperational = require("../controllers/transactions/interBank/cashierToOperational");
-
 //models
 const Bank = require("../models/Bank");
 const Branch = require("../models/Branch");

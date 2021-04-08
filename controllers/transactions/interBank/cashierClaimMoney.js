@@ -30,7 +30,7 @@ module.exports = async function (
 
 		transfer = getAllShares(transfer, rule1, rule2);
 
-		console.log(transfer);
+		console.log("Transfer: ", transfer);
 
 		let trans = [
 			{

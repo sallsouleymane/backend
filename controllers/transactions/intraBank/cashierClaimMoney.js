@@ -48,6 +48,7 @@ module.exports = async function (transfer, bank, branch, rule) {
 		// 	};
 		// }
 
+		console.log("Transfer: ", transfer);
 		let trans = [
 			{
 				from: bankEsWallet,
