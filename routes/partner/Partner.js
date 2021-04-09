@@ -14,6 +14,7 @@ const blockchain = require("../../services/Blockchain");
 //models
 const Bank = require("../../models/Bank");
 const Partner = require("../../models/partner/Partner");
+const CashierTransfer = require("../../models/CashierTransfer");
 const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
 const PartnerUser = require("../../models/partner/User");
