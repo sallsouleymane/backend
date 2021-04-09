@@ -20,6 +20,7 @@ const PartnerCashier = require("../../models/partner/Cashier");
 const PartnerUser = require("../../models/partner/User");
 const Invoice = require("../../models/merchant/Invoice");
 const getWalletIds = require("../utils/getWalletIds");
+const DailyReport = require("../../models/cashier/DailyReport");
 
 router.post("/partner/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -134,6 +135,134 @@ router.post("/partner/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	);
 });
 
+router.post("/partner/getBranchDailyReport", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { branch_id } = req.body;
+	Partner.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, partner) {
+			let errMsg = errorMessage(
+				err,
+				partner,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errMsg.status == 0) {
+				res.status(200).json(result);
+			} else {
+				DailyReport.aggregate(
+					[{ 
+						$match : {
+							branch_id: branch_id,
+							created_at: {
+								$gte: new Date(
+									start
+								),
+								$lte: new Date(
+									end
+								),
+							},
+						}
+					},
+						{
+							$group: {
+								_id: null,
+								opening_balance: {
+									$sum: "$opening_balance",
+								},
+								cash_in_hand: {
+									$sum: "$cash_in_hand",
+								},
+								cash_paid: {
+									$sum: "$cash_paid",
+								},
+								cash_received: {
+									$sum: "$cash_received",
+								},
+								fee_generated: {
+									$sum: "$fee_generated",
+								},
+								comm_generated: {
+									$sum: "$comm_generated",
+								},
+								closing_balance: {
+									$sum: "$closing_balance",
+								},
+								
+							},
+						},
+					],
+					async(err, branchReports) => {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							Invoice.aggregate(
+								[{ 
+									$match : {
+										payer_branch_id: branch_id,
+										date_paid: {
+											$gte: new Date(
+												start
+											),
+											$lte: new Date(
+												end
+											),
+										},
+										paid:1,
+									}
+								},
+									{
+										$group: {
+											_id: null,
+											totalAmountPaid: {
+												$sum: "$amount",
+											},
+											bills_paid: { $sum: 1 },
+										},
+									},
+								],
+								async (err, invoices) => {
+									let amountpaid = 0;
+									let billpaid = 0;
+									if (
+										invoices != undefined &&
+										invoices != null &&
+										invoices.length > 0
+									) {
+										amountpaid = invoices[0].totalAmountPaid;
+										billpaid = invoices[0].bills_paid;
+									}
+										var totalPendingTransfers = await CashierTransfer.countDocuments(
+											{ status: 0, branch_id: branch_id }
+										);
+										var totalAcceptedTransfers = await CashierTransfer.countDocuments(
+											{ status: 1, branch_id: branch_id }
+										);
+										var totalcancelledTransfers = await CashierTransfer.countDocuments(
+											{ status: -1, branch_id: branch_id }
+										);
+										
+
+										res.status(200).json({
+											status: 1,
+											reports: branchReports,
+											accepted: totalAcceptedTransfers,
+											pending: totalPendingTransfers,
+											decline: totalcancelledTransfers,
+											invoicePaid: billpaid,
+											amountPaid: amountpaid,
+										});
+								}
+							)
+						}
+					}
+				);
+			}
+		}
+	);
+});
 
 router.post(
 	"/partner/getBranchWalletBalnce",
