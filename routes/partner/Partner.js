@@ -14,11 +14,259 @@ const blockchain = require("../../services/Blockchain");
 //models
 const Bank = require("../../models/Bank");
 const Partner = require("../../models/partner/Partner");
+const CashierTransfer = require("../../models/CashierTransfer");
 const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
 const PartnerUser = require("../../models/partner/User");
-
+const Invoice = require("../../models/merchant/Invoice");
 const getWalletIds = require("../utils/getWalletIds");
+const DailyReport = require("../../models/cashier/DailyReport");
+
+router.post("/partner/getBranchDashStats", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { branch_id } = req.body;
+	Partner.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, partner) {
+			let errMsg = errorMessage(
+				err,
+				partner,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errMsg.status == 0) {
+				res.status(200).json(result);
+			} else {
+				PartnerCashier.countDocuments(
+					{
+						branch_id: branch_id,
+					},
+					(err, count) => {
+						if (count == null || !count) {
+							count = 0;
+						}
+						PartnerCashier.aggregate(
+							[
+								{ $match : {branch_id: branch_id}},
+								{
+									$group: {
+										_id: null,
+										total: {
+											$sum: "$cash_in_hand",
+										},
+										totalFee: {
+											$sum: "$fee_generated",
+										},
+										totalCommission: {
+											$sum: "$commission_generated",
+										},
+										openingBalance: {
+											$sum: "$opening_balance",
+										},
+									},
+								},
+							],
+							async (err, aggregate) => {
+								Invoice.aggregate(
+									[{ 
+										$match : {
+											payer_branch_id: branch_id,
+											paid:1,
+										}
+									},
+										{
+											$group: {
+												_id: null,
+												totalAmountPaid: {
+													$sum: "$amount",
+												},
+												bills_paid: { $sum: 1 },
+											},
+										},
+									],
+									async (err, invoices) => {
+										let amountpaid = 0;
+										let billpaid = 0;
+										let cin = 0;
+										if (
+											aggregate != undefined &&
+											aggregate != null &&
+											aggregate.length > 0
+										) {
+											cin = aggregate[0].total;
+											fg = aggregate[0].totalFee;
+											cg = aggregate[0].totalCommission;
+											ob = aggregate[0].openingBalance;
+										}
+										if (
+											invoices != undefined &&
+											invoices != null &&
+											invoices.length > 0
+										) {
+											amountpaid = invoices[0].totalAmountPaid;
+											billpaid = invoices[0].bills_paid;
+										}
+										var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, branch_id: branch_id});
+										var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, branch_id: branch_id});
+										var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, branch_id: branch_id});
+										res.status(200).json({
+											status: 1,
+											invoicePaid: billpaid,
+											amountPaid: amountpaid,
+											totalCashier: count,
+											cashInHand: cin,
+											feeGenerated : fg,
+											commissionGenerated: cg,
+											openingBalance: ob,
+											cancelled: totalcancelledTransfers,
+											pending: totalPendingTransfers,
+											accepted: totalAcceptedTransfers,
+										});
+									}
+								);
+							}
+						);
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/partner/getBranchDailyReport", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { branch_id, start, end} = req.body;
+	Partner.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, partner) {
+			let errMsg = errorMessage(
+				err,
+				partner,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errMsg.status == 0) {
+				res.status(200).json(result);
+			} else {
+				DailyReport.aggregate(
+					[{ 
+						$match : {
+							branch_id: branch_id,
+							created_at: {
+								$gte: new Date(
+									start
+								),
+								$lte: new Date(
+									end
+								),
+							},
+						}
+					},
+						{
+							$group: {
+								_id: null,
+								opening_balance: {
+									$sum: "$opening_balance",
+								},
+								cash_in_hand: {
+									$sum: "$cash_in_hand",
+								},
+								cash_paid: {
+									$sum: "$cash_paid",
+								},
+								cash_received: {
+									$sum: "$cash_received",
+								},
+								fee_generated: {
+									$sum: "$fee_generated",
+								},
+								comm_generated: {
+									$sum: "$comm_generated",
+								},
+								closing_balance: {
+									$sum: "$closing_balance",
+								},
+								
+							},
+						},
+					],
+					async(err, reports) => {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							Invoice.aggregate(
+								[{ 
+									$match : {
+										payer_branch_id: branch_id,
+										date_paid: {
+											$gte: new Date(
+												start
+											),
+											$lte: new Date(
+												end
+											),
+										},
+										paid:1,
+									}
+								},
+									{
+										$group: {
+											_id: null,
+											totalAmountPaid: {
+												$sum: "$amount",
+											},
+											bills_paid: { $sum: 1 },
+										},
+									},
+								],
+								async (err, invoices) => {
+									if (err) {
+										res.status(200).json(catchError(err));
+									} else {
+										let amountpaid = 0;
+										let billpaid = 0;
+										if (
+											invoices != undefined &&
+											invoices != null &&
+											invoices.length > 0
+										) {
+											amountpaid = invoices[0].totalAmountPaid;
+											billpaid = invoices[0].bills_paid;
+										}
+											var totalPendingTransfers = await CashierTransfer.countDocuments(
+												{ status: 0, branch_id: branch_id }
+											);
+											var totalAcceptedTransfers = await CashierTransfer.countDocuments(
+												{ status: 1, branch_id: branch_id }
+											);
+											var totalcancelledTransfers = await CashierTransfer.countDocuments(
+												{ status: -1, branch_id: branch_id }
+											);
+											
+
+											res.status(200).json({
+												status: 1,
+												reports: reports,
+												accepted: totalAcceptedTransfers,
+												pending: totalPendingTransfers,
+												decline: totalcancelledTransfers,
+												invoicePaid: billpaid,
+												amountPaid: amountpaid,
+											});
+									}
+								}
+							)
+						}
+					}
+				);
+			}
+		}
+	);
+});
 
 router.post(
 	"/partner/getBranchWalletBalnce",

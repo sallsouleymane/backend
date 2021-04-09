@@ -413,7 +413,7 @@ router.post(
 	}
 );
 
-router.post("/partnerBranch/getDashStats", jwtTokenAuth, function (req, res) {
+router.post("/partnerBranch/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	PartnerBranch.findOne(
 		{
@@ -459,33 +459,63 @@ router.post("/partnerBranch/getDashStats", jwtTokenAuth, function (req, res) {
 								},
 							],
 							async (err, aggregate) => {
-								let cin = 0;
-								if (
-									aggregate != undefined &&
-									aggregate != null &&
-									aggregate.length > 0
-								) {
-									cin = aggregate[0].total;
-									fg = aggregate[0].totalFee;
-									cg = aggregate[0].totalCommission;
-									ob = aggregate[0].openingBalance;
-								}
-								var totalInvoicePaid = await Invoice.countDocuments({payer_branch_id: branch._id});
-								var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, branch_id: branch._id});
-								var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, branch_id: branch._id});
-								var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, branch_id: branch._id});
-								res.status(200).json({
-									status: 1,
-									invoicePaid: totalInvoicePaid,
-									totalCashier: count,
-									cashInHand: cin,
-									feeGenerated : fg,
-									commissionGenerated: cg,
-									openingBalance: ob,
-									cancelled: totalcancelledTransfers,
-									pending: totalPendingTransfers,
-									accepted: totalAcceptedTransfers,
-								});
+								Invoice.aggregate(
+									[{ 
+										$match : {
+											payer_branch_id: branch._id,
+											paid:1,
+										}
+									},
+										{
+											$group: {
+												_id: null,
+												totalAmountPaid: {
+													$sum: "$amount",
+												},
+												bills_paid: { $sum: 1 },
+											},
+										},
+									],
+									async (err, invoices) => {
+										let amountpaid = 0;
+										let billpaid = 0;
+										let cin = 0;
+										if (
+											aggregate != undefined &&
+											aggregate != null &&
+											aggregate.length > 0
+										) {
+											cin = aggregate[0].total;
+											fg = aggregate[0].totalFee;
+											cg = aggregate[0].totalCommission;
+											ob = aggregate[0].openingBalance;
+										}
+										if (
+											invoices != undefined &&
+											invoices != null &&
+											invoices.length > 0
+										) {
+											amountpaid = invoices[0].totalAmountPaid;
+											billpaid = invoices[0].bills_paid;
+										}
+										var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, branch_id: branch._id});
+										var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, branch_id: branch._id});
+										var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, branch_id: branch._id});
+										res.status(200).json({
+											status: 1,
+											invoicePaid: billpaid,
+											amountPaid: amountpaid,
+											totalCashier: count,
+											cashInHand: cin,
+											feeGenerated : fg,
+											commissionGenerated: cg,
+											openingBalance: ob,
+											cancelled: totalcancelledTransfers,
+											pending: totalPendingTransfers,
+											accepted: totalAcceptedTransfers,
+										});
+									}
+								);
 							}
 						);
 					}

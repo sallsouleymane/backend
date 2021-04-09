@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const CashierDailyReportSchema = new mongoose.Schema({
 	cashier_id: { type: String, required: true },
+	branch_id: { type: String, required: true },
 	created_at: { type: Date, default: Date.now },
 	user: { type: String, required: true },
 	note: { type: String, required: true },

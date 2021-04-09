@@ -333,15 +333,19 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 													const group = new InvoiceGroup();
 													group.merchant_id = merchant._id;
 													group.name = 'Default';
-													group.code = 'default';
+													group.code = `${merchant.name}default`;
 													group.description = 'default';
 													group.save((err) => {
 														if (err) {
+
 															console.log(err);
+															var message = err;
+															if (err.message) {
+																message = err.message;
+															}
 															res.status(200).json({
 																status: 0,
-																message:
-																	"Error creating Invoice Group Category",
+																message: message,
 															});
 														} else {
 															let content =
