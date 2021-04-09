@@ -137,7 +137,7 @@ router.post("/partner/getBranchDashStats", jwtTokenAuth, function (req, res) {
 
 router.post("/partner/getBranchDailyReport", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
-	const { branch_id } = req.body;
+	const { branch_id, start, end} = req.body;
 	Partner.findOne(
 		{
 			username: jwtusername,
