@@ -197,19 +197,32 @@ router.post("/partner/login", function (req, res) {
 					message: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
-				let sign_creds = { username: username, type: "partner" };
-				const token = jwtsign(sign_creds);
+				Bank.findById(partner.bank_id, function (err, bank) {
+					var result = errorMessage(
+						err,
+						bank,
+						"Bank not found."
+					);
+					if (result.status == 0) {
+						res.status(200).json(result);
+					} else {
+						let sign_creds = { username: username, type: "partner" };
+						const token = jwtsign(sign_creds);
 
-				res.status(200).json({
-					token: token,
-					name: partner.name,
-					initial_setup: partner.initial_setup,
-					username: partner.username,
-					mobile: partner.mobile,
-					status: partner.status,
-					contract: partner.contract,
-					logo: partner.logo,
-					id: partner._id,
+						res.status(200).json({
+							token: token,
+							name: partner.name,
+							initial_setup: partner.initial_setup,
+							username: partner.username,
+							mobile: partner.mobile,
+							status: partner.status,
+							bank_name: bank.name,
+							bank_logo: bank.logo,
+							contract: partner.contract,
+							logo: partner.logo,
+							id: partner._id,
+						});
+					}
 				});
 			}
 		}
