@@ -76,7 +76,7 @@ router.post("/:user/getCashierDailyReport",jwtTokenAuth,function (req, res) {
 	const { cashier_id,  start, end } = req.body;
 	const user = req.params.user;
 	var User = getTypeClass(user);
-	if (user == "Partner") {
+	if (user == "partner") {
 		User = getTypeClass("Partner");
 	} else if (user == "partnerBranch") {
 		User = getTypeClass("partnerBranch");
