@@ -192,8 +192,8 @@ router.post("/:user/getPartnerCashierDashStats", jwtTokenAuth, function (req, re
 	const { cashier_id } = req.body;
 	const user = req.params.user;
 	var User = getTypeClass(user);
-	if (user == "Partner") {
-		User = getTypeClass("Partner");
+	if (user == "partner") {
+		User = getTypeClass("partner");
 	} else if (user == "partnerBranch") {
 		User = getTypeClass("partnerBranch");
 	} else if (user == "partnerCashier") {
@@ -259,8 +259,8 @@ router.post("/:user/queryCashierTransactionStates", jwtTokenAuth, function (req,
 	const { bank_id, cashier_id } = req.body;
 	const user = req.params.user;
 	var User = getTypeClass(user);
-	if (user == "Partner") {
-		User = getTypeClass("Partner");
+	if (user == "partner") {
+		User = getTypeClass("partner");
 	} else if (user == "partnerBranch") {
 		User = getTypeClass("partnerBranch");
 	} else if (user == "partnerCashier") {
