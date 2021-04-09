@@ -432,7 +432,7 @@ async function transferToMasterWallets(transfer, infra, bank, branch) {
 }
 
 function getAllShares(transfer, feeRule, commRule) {
-	let amount = transfer.amount;
+	let amount = Number(transfer.amount);
 	let bankFee = calculateShare("bank", amount, feeRule);
 	let bankComm = calculateShare("bank", amount, commRule);
 	let infraFeeShare = calculateShare("infra", amount, feeRule);

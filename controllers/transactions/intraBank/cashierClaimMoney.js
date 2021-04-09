@@ -304,7 +304,7 @@ function getPart(txInfo, masterId, childIds, otherIds) {
 }
 
 function getAllShares(transfer, rule) {
-	let amount = transfer.amount;
+	let amount = Number(transfer.amount);
 	let exclusiveAmount = amount;
 	let fee = calculateShare("bank", amount, rule);
 	if (transfer.isInclusive) {

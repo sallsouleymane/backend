@@ -203,7 +203,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 }
 
 function getAllShares(transfer, rule) {
-	let amount = transfer.amount;
+	let amount = Number(transfer.amount);
 	let exclusiveAmount = amount;
 	var fee = calculateShare("bank", amount, rule);
 	if (transfer.isInclusive) {
