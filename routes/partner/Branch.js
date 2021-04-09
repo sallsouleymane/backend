@@ -413,7 +413,7 @@ router.post(
 	}
 );
 
-router.post("/partnerBranch/getDashStats", jwtTokenAuth, function (req, res) {
+router.post("/partnerBranch/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	PartnerBranch.findOne(
 		{
