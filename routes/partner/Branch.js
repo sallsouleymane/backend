@@ -415,6 +415,7 @@ router.post(
 
 router.post("/partnerBranch/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
+	const { branch_id } = req.body;
 	PartnerBranch.findOne(
 		{
 			username: jwtusername,
@@ -467,7 +468,7 @@ router.post("/partnerBranch/getBranchDashStats", jwtTokenAuth, function (req, re
 
 				PartnerCashier.countDocuments(
 					{
-						branch_id: branch._id,
+						branch_id: branch_id,
 					},
 					(err, count) => {
 						if (count == null || !count) {
@@ -475,7 +476,7 @@ router.post("/partnerBranch/getBranchDashStats", jwtTokenAuth, function (req, re
 						}
 						PartnerCashier.aggregate(
 							[
-								{ $match : {branch_id: String(branch._id)}},
+								{ $match : {branch_id: branch_id}},
 								{
 									$group: {
 										_id: null,
@@ -498,7 +499,7 @@ router.post("/partnerBranch/getBranchDashStats", jwtTokenAuth, function (req, re
 								Invoice.aggregate(
 									[{ 
 										$match : {
-											payer_branch_id: branch._id,
+											payer_branch_id: branch_id,
 											paid:1,
 										}
 									},
@@ -534,9 +535,9 @@ router.post("/partnerBranch/getBranchDashStats", jwtTokenAuth, function (req, re
 											amountpaid = invoices[0].totalAmountPaid;
 											billpaid = invoices[0].bills_paid;
 										}
-										var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, branch_id: branch._id});
-										var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, branch_id: branch._id});
-										var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, branch_id: branch._id});
+										var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, branch_id: branch_id});
+										var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, branch_id: branch_id});
+										var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, branch_id: branch_id});
 										res.status(200).json({
 											status: 1,
 											invoicePaid: billpaid,
