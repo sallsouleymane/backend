@@ -407,7 +407,7 @@ async function transferToMasterWallets(transfer, infra, bank, bankB, branch) {
 }
 
 function getAllShares(transfer, rule1, rule2) {
-	let amount = transfer.amount;
+	let amount = Number(transfer.amount);
 	let exclusiveAmount = amount;
 	var fee = calculateShare("bank", amount, rule1);
 	if (transfer.isInclusive) {

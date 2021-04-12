@@ -23,7 +23,7 @@ module.exports = async function (transactions, category, queue_name = "") {
 			if (res.status == 1) {
 				sendSuccessMail(transaction);
 			} else {
-				txstate.failed(category, transaction.master_code);
+				// txstate.failed(category, transaction.master_code);
 				sendFailureMail(transaction);
 				if (queue_name != "") {
 					queue.send(queue_name, transaction, category);

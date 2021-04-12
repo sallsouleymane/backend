@@ -31,7 +31,7 @@ module.exports = async function (transfer, infra, bank, sender, rule) {
 
 		let trans = [
 			{
-				transaction_type: 'Wallet to Non Wallet',
+				transaction_type: "Wallet to Non Wallet",
 				from: senderWallet,
 				to: bankEsWallet,
 				amount: transfer.amount,
@@ -176,7 +176,7 @@ async function distributeRevenue(transfer, infra, bank) {
 }
 
 function getAllShares(transfer, rule) {
-	let amount = transfer.amount;
+	let amount = Number(transfer.amount);
 	let exclusiveAmount = amount;
 	var fee = calculateShare("bank", amount, rule);
 	if (transfer.isInclusive) {

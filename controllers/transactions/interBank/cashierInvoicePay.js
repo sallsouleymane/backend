@@ -27,7 +27,7 @@ module.exports = async function (
 		const bankOpWallet = bank.wallet_ids.operational;
 		const merBankOpWallet = merchantBank.wallet_ids.operational;
 
-		transfer = getAllShares(transfer, rule1, rule2);
+		transfer = getAllShares(transfer, rule1, rule2, branch.bcode);
 
 		// check branch operational wallet balance
 		var balance = await blockchain.getBalance(branchOpWallet);
@@ -589,7 +589,7 @@ async function transferToMasterWallets(transfer, infra, bank, bankB, branch) {
 }
 
 function getAllShares(transfer, rule1, rule2) {
-	let amount = transfer.amount;
+	let amount = Number(transfer.amount);
 	const bankFee = calculateShare("bank", amount, rule1.fee);
 	let bankComm = calculateShare("bank", amount, rule1.comm);
 	let interBankFeeShare = calculateShare(
@@ -607,21 +607,21 @@ function getAllShares(transfer, rule1, rule2) {
 	let partnerFeeShare = 0;
 	if (bankFee > 0) {
 		partnerFeeShare = calculateShare(
-			"branch",
+			transfer.payerType,
 			amount,
 			rule1.fee,
 			rule2.fee,
-			branch.bcode
+			transfer.payerCode
 		);
 	}
 	let partnerCommShare = 0;
 	if (bankComm > 0) {
 		partnerCommShare = calculateShare(
-			"branch",
+			transfer.payerType,
 			amount,
 			rule1.comm,
 			rule2.comm,
-			branch.bcode
+			transfer.payerCode
 		);
 	}
 	transfer.bankFee = bankFee;
