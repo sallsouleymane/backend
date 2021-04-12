@@ -197,7 +197,7 @@ router.post("/partnerBranch/login", function (req, res) {
 															logo: logo,
 															bank_name: bank.name,
 															bank_logo: bank.logo,
-															id: branch._id,
+															id: adminbranch._id,
 															partner_id: adminpartner._id,
 															credit_limit: adminbranch.credit_limit,
 														});
