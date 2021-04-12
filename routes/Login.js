@@ -256,6 +256,7 @@ router.post("/partner/login", function (req, res) {
 													contract: adminpartner.contract,
 													logo: adminpartner.logo,
 													id: adminpartner._id,
+													admin: true,
 												});
 											}
 										}
@@ -295,6 +296,7 @@ router.post("/partner/login", function (req, res) {
 							contract: partner.contract,
 							logo: partner.logo,
 							id: partner._id,
+							admin: false,
 						});
 					}
 				});
