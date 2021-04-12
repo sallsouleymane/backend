@@ -8,7 +8,7 @@ const PartnerUserSchema = new mongoose.Schema({
     mobile: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    branch_id: { type: String, required: true },
+    branch_id: { type: String, required: false },
     partner_id: { type: String, required: true },
     logo: { type: String, required: false },
     status: { type: Number, required: true, default: 1 }
