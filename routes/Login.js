@@ -194,7 +194,7 @@ router.post("/partnerBranch/login", function (req, res) {
 															email: adminbranch.email,
 															mobile: adminbranch.mobile,
 															partner_name: adminpartner.name,
-															logo: logo,
+															logo: adminpartner.logo,
 															bank_name: bank.name,
 															bank_logo: bank.logo,
 															id: adminbranch._id,
