@@ -200,6 +200,7 @@ router.post("/partnerBranch/login", function (req, res) {
 															id: adminbranch._id,
 															partner_id: adminpartner._id,
 															credit_limit: adminbranch.credit_limit,
+															admin:true,
 														});
 													}
 												}
@@ -248,6 +249,7 @@ router.post("/partnerBranch/login", function (req, res) {
 										id: branch._id,
 										partner_id: partner._id,
 										credit_limit: branch.credit_limit,
+										admin:false,
 									});
 								}
 							});
