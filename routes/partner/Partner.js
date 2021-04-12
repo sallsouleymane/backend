@@ -99,6 +99,12 @@ router.post("/partner/getBranchDashStats", jwtTokenAuth, function (req, res) {
 										openingBalance: {
 											$sum: "$opening_balance",
 										},
+										cashReceived: {
+											$sum: "$cash_received",
+										},
+										cashPaid: {
+											$sum: "$cash_paid",
+										}
 									},
 								},
 							],
@@ -124,6 +130,11 @@ router.post("/partner/getBranchDashStats", jwtTokenAuth, function (req, res) {
 										let amountpaid = 0;
 										let billpaid = 0;
 										let cin = 0;
+										let fg = 0;
+										let cg = 0;
+										let ob = 0;
+										let cr = 0;
+										let cp = 0;
 										if (
 											aggregate != undefined &&
 											aggregate != null &&
@@ -133,6 +144,8 @@ router.post("/partner/getBranchDashStats", jwtTokenAuth, function (req, res) {
 											fg = aggregate[0].totalFee;
 											cg = aggregate[0].totalCommission;
 											ob = aggregate[0].openingBalance;
+											cr = aggregate[0].cashReceived;
+											cp = aggregate[0].cashPaid;
 										}
 										if (
 											invoices != undefined &&
@@ -152,6 +165,8 @@ router.post("/partner/getBranchDashStats", jwtTokenAuth, function (req, res) {
 											totalCashier: count,
 											cashInHand: cin,
 											feeGenerated : fg,
+										 	cashReceived: cr,
+											cashPaid: cp,
 											commissionGenerated: cg,
 											openingBalance: ob,
 											cancelled: totalcancelledTransfers,
