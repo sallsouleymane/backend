@@ -588,6 +588,7 @@ router.post("/partner/addUser", jwtTokenAuth, (req, res) => {
 		email,
 		ccode,
 		mobile,
+		role,
 		username,
 		password,
 		branch_id,
@@ -611,6 +612,7 @@ router.post("/partner/addUser", jwtTokenAuth, (req, res) => {
 				data.name = name;
 				data.email = email;
 				data.mobile = mobile;
+				data.role = role;
 				data.username = username;
 				data.password = password;
 				data.branch_id = branch_id;
@@ -664,6 +666,7 @@ router.post("/partner/editUser", jwtTokenAuth, (req, res) => {
 	const {
 		name,
 		email,
+		role,
 		ccode,
 		mobile,
 		username,
@@ -696,6 +699,7 @@ router.post("/partner/editUser", jwtTokenAuth, (req, res) => {
 						email: email,
 						ccode: ccode,
 						mobile: mobile,
+						role: role,
 						username: username,
 						password: password,
 						branch_id: branch_id,
