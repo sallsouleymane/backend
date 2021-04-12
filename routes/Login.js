@@ -124,14 +124,93 @@ router.post("/partnerBranch/login", function (req, res) {
 			password,
 		},
 		function (err, branch) {
-			var result = errorMessage(err, branch, "Incorrect username or password");
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else if (branch.status == -1) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
 				res.status(200).json({
 					status: 0,
-					message: "Your account has been blocked, pls contact the admin!",
+					message: message,
 				});
+			}else if (!branch || branch === null || branch === undefined){
+				PartnerUser.findOne(
+					{ username, password, role: "branchAdmin" },
+					"-password",
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Partner.findOne({ _id: admin.partner_id }, (err, adminpartner) => {
+								var result = errorMessage(err, adminpartner, "Partner is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								} else if (adminpartner.status == -1) {
+									res.status(200).json({
+										status: 0,
+										message: "Your account has been blocked, pls contact the admin!",
+									});	
+								} else {
+									PartnerBranch.findOne({ _id: admin.branch_id }, (err, adminbranch) => {
+										var result = errorMessage(err, adminbranch, "Branch is blocked");
+										if (result.status == 0) {
+											res.status(200).json(result);
+										} else {
+											Bank.findOne(
+												{
+													_id: adminpartner.bank_id,
+												},(err, bank) => {
+													var result = errorMessage(
+														err,
+														bank,
+														"No bank is assigned to the partner"
+													);
+													if (result.status == 0) {
+														res.status(200).json(
+															result
+														);
+													} else {
+														let sign_creds = { username: username, type: "partnerUser" };
+														const token = jwtsign(sign_creds);
+														res.status(200).json({
+															token: token,
+															name: adminbranch.name,
+															initial_setup: adminbranch.initial_setup,
+															username: adminbranch.username,
+															status: adminbranch.status,
+															email: adminbranch.email,
+															mobile: adminbranch.mobile,
+															partner_name: partner.name,
+															logo: logo,
+															bank_name: bank.name,
+															bank_logo: bank.logo,
+															id: branch._id,
+															partner_id: adminpartner._id,
+															credit_limit: adminbranch.credit_limit,
+														});
+													}
+												}
+											);
+										}
+									});
+								}
+							});
+						}	
+					}
+				);
 			} else {
 				Partner.findOne(
 					{
@@ -266,6 +345,7 @@ router.post("/partner/login", function (req, res) {
 						}	
 					}
 				);
+			
 			} else if (partner.status == -1) {
 				res.status(200).json({
 					status: 0,
