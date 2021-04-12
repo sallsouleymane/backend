@@ -188,14 +188,88 @@ router.post("/partner/login", function (req, res) {
 			password,
 		},
 		function (err, partner) {
-			var result = errorMessage(err, partner, "Incorrect username or password");
-			if (result.status == 0) {
-				res.status(200).json(result);
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!partner || partner === null || partner === undefined){
+				PartnerUser.findOne(
+					{ username, password, role: "partnerAdmin" },
+					"-password",
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Partner.findOne({ _id: admin.partner_id }, (err, adminpartner) => {
+								var result = errorMessage(err, adminpartner, "Partner is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								} else if (adminpartner.status == -1) {
+									res.status(200).json({
+										status: 0,
+										message: "Your account has been blocked, pls contact the admin!",
+									});	
+								} else {
+									Bank.findOne(
+										{
+											_id: adminpartner.bank_id,
+										},(err, bank) => {
+											var result = errorMessage(
+												err,
+												bank,
+												"No bank is assigned to the partner"
+											);
+											if (result.status == 0) {
+												res.status(200).json(
+													result
+												);
+											} else {
+												let sign_creds = { username: username, type: "partnerUser" };
+												const token = jwtsign(sign_creds);
+												res.status(200).json({
+													token: token,
+													name: adminpartner.name,
+													initial_setup: adminpartner.initial_setup,
+													username: adminpartner.username,
+													mobile: adminpartner.mobile,
+													status: adminpartner.status,
+													bank_name: bank.name,
+													bank_logo: bank.logo,
+													contract: adminpartner.contract,
+													logo: adminpartner.logo,
+													id: adminpartner._id,
+												});
+											}
+										}
+									);
+								}
+							});
+						}	
+					}
+				);
 			} else if (partner.status == -1) {
 				res.status(200).json({
 					status: 0,
 					message: "Your account has been blocked, pls contact the admin!",
-				});
+				});	
 			} else {
 				Bank.findById(partner.bank_id, function (err, bank) {
 					var result = errorMessage(
@@ -431,6 +505,12 @@ router.post("/merchant/login", (req, res) => {
 						}	
 					}
 				);	
+			
+			
+			
+			
+			
+			
 			} else {
 				Bank.findOne(
 					{

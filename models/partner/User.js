@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const PartnerUserSchema = new mongoose.Schema({
     name: { type: String, required: true },
     username: { type: String, required: true, unique: true },
+    role: { type: String, default: 'user'},
     ccode: { type: String, required: false },
     mobile: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
