@@ -421,14 +421,50 @@ router.post("/partnerBranch/getBranchDashStats", jwtTokenAuth, function (req, re
 			status: 1,
 		},
 		function (err, branch) {
-			let result = errorMessage(
-				err,
-				branch,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!branch || branch === null || branch === undefined){
+				PartnerUser.findOne(
+					{
+						username: jwtusername,
+						role: "branchAdmin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Partner.findOne({ _id: admin.partner_id }, (err, adminpartner) => {
+								var result = errorMessage(err, adminpartner, "Partner is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+			
+
 				PartnerCashier.countDocuments(
 					{
 						branch_id: branch._id,
@@ -520,7 +556,7 @@ router.post("/partnerBranch/getBranchDashStats", jwtTokenAuth, function (req, re
 						);
 					}
 				);
-			}
+			
 		}
 	);
 });
