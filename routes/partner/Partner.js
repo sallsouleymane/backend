@@ -259,6 +259,9 @@ router.post("/partner/getBranchDailyReport", jwtTokenAuth, function (req, res) {
 								closing_balance: {
 									$sum: "$closing_balance",
 								},
+								discripancy: {
+									$sum: "$descripency",
+								}
 								
 							},
 						},
