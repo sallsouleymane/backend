@@ -14,6 +14,7 @@ const PartnerCashier = require("../../models/partner/Cashier");
 const CashierTransfer = require("../../models/CashierTransfer");
 const CashierPending = require("../../models/CashierPending");
 const Invoice = require("../../models/merchant/Invoice");
+const PartnerUser = require("../../models/partner/User");
 
 router.post("/partnerBranch/getCashierDetails", jwtTokenAuth, function (req, res) {
 	const { cashier_id } = req.body;
