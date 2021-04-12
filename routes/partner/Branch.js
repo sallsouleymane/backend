@@ -9,6 +9,7 @@ const { errorMessage, catchError } = require("../utils/errorHandler");
 const blockchain = require("../../services/Blockchain");
 
 //models
+const Partner = require("../../models/partner/Partner");
 const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
 const CashierTransfer = require("../../models/CashierTransfer");
