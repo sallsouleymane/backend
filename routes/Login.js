@@ -755,6 +755,7 @@ router.post("/branchLogin", function (req, res) {
 								username: bank.username,
 								status: bank.status,
 								email: bank.email,
+								bank_name: ba.name,
 								mobile: bank.mobile,
 								logo: logo,
 								bank_id: ba._id,
