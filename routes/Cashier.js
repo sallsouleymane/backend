@@ -851,17 +851,22 @@ router.post("/addClosingBalance", jwtTokenAuth, function (req, res) {
 				res.status(200).json(result);
 			} else {
 				let data = new DailyReport();
-					data.cashier_id = cashier._id;
-					data.created_at = new Date();
-					data.user = "Cashier";
-					data.denomination = denomination;
-					data.note = note;
-					data.opening_balance = cashier.opening_balance;
-					data.closing_balance =  total;
-					data.cash_in_hand = cashier.cash_in_hand;
-					data.opening_time = cashier.opening_time;
-					data.closing_time = new Date();
-					data.descripency =  total - cashier.cash_in_hand,
+				data.cashier_id = cashier._id;
+				data.branch_id = cashier.branch_id;
+				data.created_at = new Date();
+				data.user = "Cashier";
+				data.denomination = denomination;
+				data.note = note;
+				data.paid_in_cash = cashier.cash_paid;
+				data.cash_received = cashier.cash_received;
+				data.fee_generated = cashier.fee_generated;
+				data.comm_generated = cashier.commission_generated;
+				data.opening_balance = cashier.opening_balance;
+				data.closing_balance =  total;
+				data.cash_in_hand = cashier.cash_in_hand;
+				data.opening_time = cashier.opening_time;
+				data.closing_time = new Date();
+				data.descripency =  total - cashier.cash_in_hand,
 					data.save((err) => {
 						if (err) {
 							console.log(err);
