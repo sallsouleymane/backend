@@ -35,6 +35,64 @@ router.post(
 	cancelTransCntrl.rejectCancelRequest
 );
 
+router.post("/branch/cashierStats",jwtTokenAuth,function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { cashier_id } = req.body;
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	Branch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, branch) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else{
+				let status = await Invoice.aggregate([
+					{
+						$match: {
+							payer_id: cashier_id,
+							paid: 1,
+							date_paid: {
+								$gte: new Date(
+									start
+								),
+								$lte: new Date(
+									end
+								),
+							},
+						},
+					},
+					{
+						$group: {
+							_id: null,
+							amount_collected: { $sum: "$amount" },
+							penalty_collected: { $sum: "$penalty" },
+							bills_paid: { $sum: 1 },
+						},
+					},
+				]);
+								
+				res.status(200).json({
+					stats: status,						
+				});
+								
+			}
+		}
+	);	
+});
+
 router.post("/branch/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { branch_id } = req.body;
