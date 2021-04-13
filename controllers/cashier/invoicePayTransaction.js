@@ -36,7 +36,9 @@ module.exports.cashierInvoicePay = async (req, res) => {
 			const master_code = await txstate.initiate(
 				categoryConst.MAIN,
 				cashier.bank_id,
-				"Non Wallet to Merchant"
+				"Non Wallet to Merchant",
+				cashier._id,
+				cashier.cash_in_hand,
 			);
 			MerchantRule.findOne(
 				{ merchant_id: merchant_id, type: "NWM-F", status: 1, active: 1 },
