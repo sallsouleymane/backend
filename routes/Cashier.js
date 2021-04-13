@@ -805,6 +805,7 @@ router.post("/openCashierBalance", jwtTokenAuth, function (req, res) {
 					cash_paid: 0,
 					closing_balance: 0,
 					closing_time: null,
+					opening_time: new Date(),
 					transaction_started: true,
 					is_closed: false,
 				};
