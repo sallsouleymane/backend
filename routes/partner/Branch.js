@@ -547,7 +547,6 @@ router.post("/partnerBranch/getBranchDashStats", jwtTokenAuth, function (req, re
 											cp = aggregate[0].cashPaid;
 											cb = aggregate[0].closingBalance;
 										}
-										}
 										if (
 											invoices != undefined &&
 											invoices != null &&
