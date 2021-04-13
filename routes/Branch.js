@@ -18,6 +18,7 @@ const CashierLedger = require("../models/CashierLedger");
 const BranchSend = require("../models/BranchSend");
 const BranchClaim = require("../models/BranchClaim");
 const BranchLedger = require("../models/BranchLedger");
+const Invoice = require("../models/merchant/Invoice");
 
 //controllers
 const cancelTransCntrl = require("../controllers/branch/cancelTransaction");
