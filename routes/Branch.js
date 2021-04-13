@@ -48,7 +48,7 @@ router.post("/branch/cashierStats",jwtTokenAuth,function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, branch) {
+		async function (err, branch) {
 			if (err) {
 				var message = err;
 				if (err.message) {
