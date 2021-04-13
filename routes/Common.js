@@ -84,6 +84,10 @@ router.post("/:user/getCashierDailyReport",jwtTokenAuth,function (req, res) {
 		User = getTypeClass("partnerCashier");
 	} else if (user == "partnerUser") {
 		User = getTypeClass("partnerUser");
+	} else if (user == "cashier") {
+		User = getTypeClass("cashier");
+	} else if (user == "branch") {
+		User = getTypeClass("branch");
 	} else if (user == "bank") {
 		User = getTypeClass("bank");
 	} else {
@@ -256,6 +260,73 @@ router.post("/:user/getPartnerCashierDashStats", jwtTokenAuth, function (req, re
 	);
 });
 
+router.post("/:user/getBankCashierDashStats", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { cashier_id } = req.body;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "bank") {
+		User = getTypeClass("bank");
+	} else if (user == "branch") {
+		User = getTypeClass("branch");
+	} else if (user == "cashier") {
+		User = getTypeClass("cashier");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Cashier.findOne(
+					{
+						_id: cashier_id,
+						status: 1,
+					},
+					function (err, cashier) {
+						let result = errorMessage(
+							err,
+							cashier,
+							"Token changed or user not valid. Try to login again or contact system administrator."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							res.status(200).json({
+								openingBalance: cashier.opening_balance,
+								closingBalance: cashier.closing_balance,
+								cashPaid: cashier.cash_paid,
+								cashReceived: cashier.cash_received,
+								cashInHand: cashier.cash_in_hand,
+								feeGenerated: cashier.fee_generated,
+								commissionGenerated: cashier.commission_generated,
+								closingTime: cashier.closing_time,
+								transactionStarted: cashier.transaction_started,
+								branchId: cashier.branch_id,
+								isClosed: cashier.is_closed,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/:user/queryCashierTransactionStates", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { bank_id, cashier_id } = req.body;
@@ -267,6 +338,10 @@ router.post("/:user/queryCashierTransactionStates", jwtTokenAuth, function (req,
 		User = getTypeClass("partnerBranch");
 	} else if (user == "partnerCashier") {
 		User = getTypeClass("partnerCashier");
+	} else if (user == "cashier") {
+		User = getTypeClass("cashier");
+	} else if (user == "branch") {
+		User = getTypeClass("branch");
 	} else {
 		res.status(200).json({
 			status: 0,
