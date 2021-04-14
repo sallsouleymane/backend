@@ -101,6 +101,10 @@ router.post("/branch/cashierStats",jwtTokenAuth,function (req, res) {
 
 router.post("/branch/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
 	const { branch_id } = req.body;
 	Branch.findOne(
 		{
@@ -162,6 +166,14 @@ router.post("/branch/getBranchDashStats", jwtTokenAuth, function (req, res) {
 										$match : {
 											payer_branch_id: branch_id,
 											paid:1,
+											date_paid: {
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
 										}
 									},
 										{
