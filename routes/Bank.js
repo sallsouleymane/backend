@@ -121,61 +121,67 @@ router.post(
 	bankCommonContrl.queryTransactionStates
 );
 
-// router.post("/bank/cashierStats",jwtTokenAuth,function (req, res) {
-// 	const jwtusername = req.sign_creds.username;
-// 	const { cashier_id } = req.body;
-// 	var today = new Date();
-// 	today = today.toISOString();
-// 	var s = today.split("T");
-// 	var start = s[0] + "T00:00:00.000Z";
-// 	var end = s[0] + "T23:59:59.999Z";
-// 	Bank.findOne(
-// 		{
-// 			username: jwtusername,
-// 			status: 1,
-// 		},
-// 		function (err, bank) {
-// 			let errMsg = errorMessage(
-// 				err,
-// 				bank,
-// 				"Token changed or user not valid. Try to login again or contact system administrator."
-// 			);
-// 			if (errMsg.status == 0) {
-// 				res.status(200).json(result);
-// 			} else {
-// 				let status = await Invoice.aggregate([
-// 					{
-// 						$match: {
-// 							payer_id: cashier_id,
-// 							paid: 1,
-// 							date_paid: {
-// 								$gte: new Date(
-// 									start
-// 								),
-// 								$lte: new Date(
-// 									end
-// 								),
-// 							},
-// 						},
-// 					},
-// 					{
-// 						$group: {
-// 							_id: null,
-// 							amount_collected: { $sum: "$amount" },
-// 							penalty_collected: { $sum: "$penalty" },
-// 							bills_paid: { $sum: 1 },
-// 						},
-// 					},
-// 				]);
+router.post("/bank/cashierStats",jwtTokenAuth,function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { cashier_id } = req.body;
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, bank) {
+			let errMsg = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errMsg.status == 0) {
+				res.status(200).json(result);
+			} else {
+				let status = await Invoice.aggregate([
+					{
+						$match: {
+							payer_id: cashier_id,
+							paid: 1,
+							date_paid: {
+								$gte: new Date(
+									start
+								),
+								$lte: new Date(
+									end
+								),
+							},
+						},
+					},
+					{
+						$group: {
+							_id: null,
+							amount_collected: { $sum: "$amount" },
+							penalty_collected: { $sum: "$penalty" },
+							bills_paid: { $sum: 1 },
+						},
+					},
+				]);
+				if (status.length > 0) {			
+					res.status(200).json({
+						stats: status,						
+					});
+				} else{
+					res.status(200).json({
+						stats: {},						
+					});
+				}
 								
-// 				res.status(200).json({
-// 					stats: status,						
-// 				});
-								
-// 			}
-// 		}
-// 	);	
-// });
+			}
+		}
+	);	
+});
+
 
 
 router.post("/bank/getBranchDashStats", jwtTokenAuth, function (req, res) {
