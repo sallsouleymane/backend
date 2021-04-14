@@ -8,7 +8,8 @@ module.exports.initiate = async function (
 	bank_id,
 	tx_type,
 	payer_id = "",
-	cash_in_hand = 0
+	cash_in_hand = 0,
+	transaction = {},
 ) {
 	try {
 		console.log(category + " transaction initiated");
@@ -18,6 +19,7 @@ module.exports.initiate = async function (
 		tx.txType = tx_type;
 		tx.payerId = payer_id;
 		tx.cash_in_hand = cash_in_hand;
+		tx.transaction = transaction;
 		let txstate = await tx.save();
 		return txstate._id;
 	} catch (err) {

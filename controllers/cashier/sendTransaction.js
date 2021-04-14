@@ -426,7 +426,8 @@ module.exports.cashierSendMoneyToWallet = async function (req, res) {
 					cashier.bank_id,
 					"Non Wallet to Wallet",
 					cashier._id,
-					""
+					cashier.cash_in_hand,
+					req.body,
 				);
 				User.findOne(
 					{
