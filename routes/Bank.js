@@ -33,6 +33,7 @@ const Merchant = require("../models/merchant/Merchant");
 const Partner = require("../models/partner/Partner");
 const Infra = require("../models/Infra");
 const TxState = require("../models/TxState");
+const Invoice = require("../models/merchant/Invoice");
 
 //controllers
 const cancelTransCntrl = require("../controllers/bank/transactions");
@@ -119,6 +120,137 @@ router.post(
 	jwtTokenAuth,
 	bankCommonContrl.queryTransactionStates
 );
+
+router.post("/bank/getBranchDashStats", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { branch_id } = req.body;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, bank) {
+			let errMsg = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (errMsg.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Cashier.countDocuments(
+					{
+						branch_id: branch_id,
+					},
+					(err, count) => {
+						if (count == null || !count) {
+							count = 0;
+						}
+						Cashier.aggregate(
+							[
+								{ $match : {branch_id: branch_id}},
+								{
+									$group: {
+										_id: null,
+										total: {
+											$sum: "$cash_in_hand",
+										},
+										totalFee: {
+											$sum: "$fee_generated",
+										},
+										totalCommission: {
+											$sum: "$commission_generated",
+										},
+										openingBalance: {
+											$sum: "$opening_balance",
+										},
+										closingBalance: {
+											$sum: "$closing_balance",
+										},
+										cashReceived: {
+											$sum: "$cash_received",
+										},
+										cashPaid: {
+											$sum: "$cash_paid",
+										}
+									},
+								},
+							],
+							async (err, aggregate) => {
+								Invoice.aggregate(
+									[{ 
+										$match : {
+											payer_branch_id: branch_id,
+											paid:1,
+										}
+									},
+										{
+											$group: {
+												_id: null,
+												totalAmountPaid: {
+													$sum: "$amount",
+												},
+												bills_paid: { $sum: 1 },
+											},
+										},
+									],
+									async (err, invoices) => {
+										let amountpaid = 0;
+										let billpaid = 0;
+										let cin = 0;
+										let fg = 0;
+										let cg = 0;
+										let ob = 0;
+										let cr = 0;
+										let cp = 0;
+										let cb = 0;
+										if (
+											aggregate != undefined &&
+											aggregate != null &&
+											aggregate.length > 0
+										) {
+											cin = aggregate[0].total;
+											fg = aggregate[0].totalFee;
+											cg = aggregate[0].totalCommission;
+											ob = aggregate[0].openingBalance;
+											cr = aggregate[0].cashReceived;
+											cp = aggregate[0].cashPaid;
+											cb = aggregate[0].closingBalance;
+										}
+										if (
+											invoices != undefined &&
+											invoices != null &&
+											invoices.length > 0
+										) {
+											amountpaid = invoices[0].totalAmountPaid;
+											billpaid = invoices[0].bills_paid;
+										}
+
+										res.status(200).json({
+											status: 1,
+											invoicePaid: billpaid,
+											amountPaid: amountpaid,
+											totalCashier: count,
+											cashInHand: cin,
+											feeGenerated : fg,
+										 	cashReceived: cr,
+											cashPaid: cp,
+											commissionGenerated: cg,
+											openingBalance: ob,
+											closingBalance: cb,
+										});
+									}
+								);
+							}
+						);
+					}
+				);
+			}
+			
+		}
+	);
+});
+
 
 router.post("/bank/getBranchWalletBalance", jwtTokenAuth, function (req, res) {
 	const { branch_id, wallet_type } = req.body;
