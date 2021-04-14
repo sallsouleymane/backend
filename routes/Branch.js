@@ -83,10 +83,16 @@ router.post("/branch/cashierStats",jwtTokenAuth,function (req, res) {
 						},
 					},
 				]);
+				if (status.length > 0) {
 								
-				res.status(200).json({
-					stats: status,						
-				});
+					res.status(200).json({
+						stats: status,						
+					});
+				} else{
+					res.status(200).json({
+						stats: {},						
+					});
+				}
 								
 			}
 		}
