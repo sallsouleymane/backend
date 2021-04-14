@@ -48,7 +48,9 @@ module.exports.cashierSendMoney = async function (req, res) {
 				categoryConst.MAIN,
 				cashier.bank_id,
 				"Inter Bank Non Wallet To Non Wallet",
-				cashier._id
+				cashier._id,
+				cashier.cash_in_hand,
+				req.body,
 			);
 			Branch.findOne(
 				{
@@ -462,7 +464,8 @@ module.exports.cashierSendMoneyToWallet = function (req, res) {
 				cashier.bank_id,
 				"Inter Bank Non Wallet To Wallet",
 				cashier._id,
-				""
+				cashier.cash_in_hand,
+				req.body,
 			);
 			User.findOne(
 				{

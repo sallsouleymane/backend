@@ -47,7 +47,9 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 					categoryConst.MAIN,
 					cashier.bank_id,
 					"Non Wallet To Non Wallet",
-					cashier._id
+					cashier._id,
+					cashier.cash_in_hand,
+					req.body,
 				);
 
 				Branch.findOne(
