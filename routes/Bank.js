@@ -134,7 +134,7 @@ router.post("/bank/cashierStats",jwtTokenAuth,function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, bank) {
+		async function (err, bank) {
 			let errMsg = errorMessage(
 				err,
 				bank,
