@@ -101,6 +101,7 @@ router.post("/branch/cashierStats",jwtTokenAuth,function (req, res) {
 
 router.post("/branch/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
+	var today = new Date();
 	today = today.toISOString();
 	var s = today.split("T");
 	var start = s[0] + "T00:00:00.000Z";
