@@ -46,10 +46,10 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 				const master_code = await txstate.initiate(
 					categoryConst.MAIN,
 					cashier.bank_id,
-					"ABC",
+					"Non Wallet To Non Wallet",
 					cashier._id,
 					cashier.cash_in_hand,
-					req.body,
+					{name:'hatim'},
 				);
 
 				Branch.findOne(
