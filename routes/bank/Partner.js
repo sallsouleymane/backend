@@ -24,6 +24,7 @@ const Partner = require("../../models/partner/Partner");
 const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
 const Document = require("../../models/Document");
+const Invoice = require("../../models/merchant/Invoice");
 
 router.post("/bank/blockPartner", jwtTokenAuth, function (req, res) {
 	var { partner_id } = req.body;
