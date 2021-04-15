@@ -50,7 +50,7 @@ module.exports.cashierSendMoney = async function (req, res) {
 				"Inter Bank Non Wallet To Non Wallet",
 				cashier._id,
 				cashier.cash_in_hand,
-				req.body,
+				{...req.body},
 			);
 			Branch.findOne(
 				{
