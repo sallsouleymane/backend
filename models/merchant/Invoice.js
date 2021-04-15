@@ -30,6 +30,7 @@ const InvoiceSchema = new mongoose.Schema({
 	date_paid: { type: Date, required: false },
 	payer_id: { type: String, required: false },
 	payer_branch_id: { type: String, required: false },
+	payer_partner_id: { type: String, required: false },
 	group_id: { type: String, required: false },
 	is_created: { type: Number, required: true, default: 0 },
 	is_validated: { type: Number, required: true, default: 1 },

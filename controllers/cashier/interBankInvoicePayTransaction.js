@@ -416,6 +416,7 @@ module.exports.partnerInvoicePay = (req, res) => {
 																	paid_by: "PC",
 																	payer_id: cashier._id,
 																	payer_branch_id: cashier.branch_id,
+																	payer_partner_id: cashier.partner_id,
 																};
 
 																let status = await updateInvoiceRecord(
