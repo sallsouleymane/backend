@@ -43,13 +43,14 @@ module.exports.cashierSendMoney = async function (req, res, next) {
 				res.status(200).json(err);
 			} else {
 				// Initiate transaction state
+				const obj = {...req.body}
 				const master_code = await txstate.initiate(
 					categoryConst.MAIN,
 					cashier.bank_id,
 					"Non Wallet To Non Wallet",
 					cashier._id,
 					cashier.cash_in_hand,
-					{name:'hatim'},
+					obj,
 				);
 
 				Branch.findOne(
