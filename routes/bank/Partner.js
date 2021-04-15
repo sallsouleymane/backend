@@ -25,6 +25,7 @@ const PartnerBranch = require("../../models/partner/Branch");
 const PartnerCashier = require("../../models/partner/Cashier");
 const Document = require("../../models/Document");
 const Invoice = require("../../models/merchant/Invoice");
+const DailyReport = require("../../models/cashier/DailyReport");
 
 router.post("/bank/blockPartner", jwtTokenAuth, function (req, res) {
 	var { partner_id } = req.body;
@@ -624,6 +625,184 @@ router.post("/bank/getPartnerDashStats", jwtTokenAuth, function (req, res) {
 								);
 							}
 						);
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/bank/listPartnerBranches", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const {partner_id} = req.body;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, bank) {
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {	
+				PartnerBranch.find(
+					{ partner_id: partner_id },
+					function (err, branches) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								branches: branches,
+							});
+						}
+					}
+				);
+			}
+		}
+		
+	);
+});
+
+router.post("/bank/getPartnerBranchDailyReport", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { branch_id, start, end} = req.body;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, bank) {
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {	
+				DailyReport.aggregate(
+					[{ 
+						$match : {
+							branch_id: branch_id,
+							created_at: {
+								$gte: new Date(
+									start
+								),
+								$lte: new Date(
+									end
+								),
+							},
+						}
+					},
+						{
+							$group: {
+								_id: null,
+								opening_balance: {
+									$sum: "$opening_balance",
+								},
+								cash_in_hand: {
+									$sum: "$cash_in_hand",
+								},
+								cash_paid: {
+									$sum: "$cash_paid",
+								},
+								cash_received: {
+									$sum: "$cash_received",
+								},
+								fee_generated: {
+									$sum: "$fee_generated",
+								},
+								comm_generated: {
+									$sum: "$comm_generated",
+								},
+								closing_balance: {
+									$sum: "$closing_balance",
+								},
+								discripancy: {
+									$sum: "$descripency",
+								}
+								
+							},
+						},
+					],
+					async(err, reports) => {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							Invoice.aggregate(
+								[{ 
+									$match : {
+										payer_branch_id: branch_id,
+										date_paid: {
+											$gte: new Date(
+												start
+											),
+											$lte: new Date(
+												end
+											),
+										},
+										paid:1,
+									}
+								},
+									{
+										$group: {
+											_id: null,
+											totalAmountPaid: {
+												$sum: "$amount",
+											},
+											bills_paid: { $sum: 1 },
+										},
+									},
+								],
+								async (err, invoices) => {
+									if (err) {
+										res.status(200).json(catchError(err));
+									} else {
+										let amountpaid = 0;
+										let billpaid = 0;
+										if (
+											invoices != undefined &&
+											invoices != null &&
+											invoices.length > 0
+										) {
+											amountpaid = invoices[0].totalAmountPaid;
+											billpaid = invoices[0].bills_paid;
+										}
+											var totalPendingTransfers = await CashierTransfer.countDocuments(
+												{ status: 0, branch_id: branch_id }
+											);
+											var totalAcceptedTransfers = await CashierTransfer.countDocuments(
+												{ status: 1, branch_id: branch_id }
+											);
+											var totalcancelledTransfers = await CashierTransfer.countDocuments(
+												{ status: -1, branch_id: branch_id }
+											);
+											res.status(200).json({
+												status: 1,
+												reports: reports,
+												accepted: totalAcceptedTransfers,
+												pending: totalPendingTransfers,
+												decline: totalcancelledTransfers,
+												invoicePaid: billpaid,
+												amountPaid: amountpaid,
+											});
+									}
+								}
+							)
+						}
 					}
 				);
 			}
