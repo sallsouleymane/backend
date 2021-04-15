@@ -18,6 +18,7 @@ const MerchantBranch = require("../../models/merchant/MerchantBranch");
 const MerchantPosition = require("../../models/merchant/Position");
 const getWalletIds = require("../utils/getWalletIds");
 const InvoiceGroup = require("../../models/merchant/InvoiceGroup");
+const Invoice = require("../../models/merchant/Invoice");
 
 router.post("/bank/changeMerchantAcces", jwtTokenAuth, function (req, res) {
 	const { merchant_id, is_private } = req.body;
@@ -441,6 +442,147 @@ router.post("/bank/editMerchant", jwtTokenAuth, function (req, res) {
 					}
 				);
 			}
+		}
+	);
+});
+
+router.post("/bank/getMerchantDashStats", jwtTokenAuth, function (req, res) {
+	const { merchant_id } = req.body;
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	const jwtusername = req.sign_creds.username;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, bank) {
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+			Invoice.aggregate(
+					[
+						{
+							$match: {
+								merchant_id: String(merchant_id),
+								created_at: {
+									$gte: new Date(
+										start
+									),
+									$lte: new Date(
+										end
+									),
+								},
+								paid:1,
+							},
+						},
+						{
+							$group: {
+								_id: "$paid_by",
+								amount_paid: { $sum: "$amount" },
+								bills_paid: { $sum: 1 },
+							},
+						},
+					],async (err, post6) => {
+						let result = errorMessage(
+							err,
+							post6,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Invoice.aggregate(
+								[
+									{
+										$match: {
+											merchant_id: String(merchant_id),
+											created_at: {
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
+										},
+									},
+									{
+										$group: {
+											_id: "$is_created",
+											amount_generated: { $sum: "$amount" },
+											bills_generated: { $sum: 1 },
+										},
+									},
+								],async (err, post7) => {
+									let result = errorMessage(
+										err,
+										post7,
+										"Error."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										Invoice.aggregate(
+											[
+												{
+													$match: {
+														merchant_id: String(merchant_id),
+														paid: 0,
+													},
+												},
+												{
+													$group: {
+														_id: null,
+														amount_pending: { $sum: "$amount" },
+														bills_pending: { $sum: 1 },
+													},
+												},
+											],async (err, post8) => {
+												let result = errorMessage(
+													err,
+													post8,
+													"Error."
+												);
+												if (result.status == 0) {
+													res.status(200).json(result);
+												} else {
+													let ap = 0;
+													let bp = 0;
+													if (
+														post8 != undefined &&
+														post8 != null &&
+														post8.length > 0
+													) {
+														ap = post8[0].amount_pending;
+														bp = post8[0].bills_pending;
+													}
+													res.status(200).json({
+														status: 1,
+														post6:post6,
+														post7:post7,
+														amount_pending: ap,
+														bills_pending: bp,
+													});
+												}
+											}
+										);
+									}
+								}
+							);
+						}
+					}		
+			);
+			}
+
 		}
 	);
 });
