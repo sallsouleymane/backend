@@ -57,7 +57,9 @@ module.exports.waitingForCompletion = async function (
 		console.log(category + " transaction waiting for completion");
 		let tx = {};
 		tx["state." + category] = stateConst.WAIT;
-		tx.transaction = transaction;
+		if (!isEmptyObject(transaction)) {
+			tx.transaction = transaction;
+		}
 		await TxState.updateOne({ _id: master_code }, { $set: tx });
 	} catch (err) {
 		throw err;
@@ -107,3 +109,7 @@ module.exports.cancelled = async function (category, master_code) {
 		throw err;
 	}
 };
+
+function isEmptyObject(obj) {
+	return !Object.keys(obj).length;
+}
