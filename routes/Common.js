@@ -1482,6 +1482,7 @@ router.post("/:user/listMerchantBranchInvoicesByDateRange", jwtTokenAuth, (req, 
 });
 
 router.post("/:user/getMerchantSettings", jwtTokenAuth, function (req, res) {
+	const { merchant_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
 	var User = getTypeClass(user);
@@ -1513,7 +1514,7 @@ router.post("/:user/getMerchantSettings", jwtTokenAuth, function (req, res) {
 				res.status(200).json(result);
 			} else {
 				MerchantSettings.findOne(
-					{ merchant_id: data.merchant_id },
+					{ merchant_id: user === 'bank' ? merchant_id : data.merchant_id },
 					(err, setting) => {
 						if (err) {
 							console.log(err);
