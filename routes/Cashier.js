@@ -33,6 +33,7 @@ const CashierTransfer = require("../models/CashierTransfer");
 const Merchant = require("../models/merchant/Merchant");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
 const DailyReport = require("../models/cashier/DailyReport");
+const Invoice = require("../models/merchant/Invoice");
 
 //controllers
 const cashSendTransCntrl = require("../controllers/cashier/sendTransaction");
@@ -1470,6 +1471,120 @@ router.post(
 	jwtTokenAuth,
 	cashClaimTransCntrl.cashierClaimMoney
 );
+
+router.post("/cashierSearchPaidInvoiceByMobile", jwtTokenAuth, function (req, res) {
+	const { mobile } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Cashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, f) {
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.find(
+					{ 	paid: 1,
+						mobile: mobile,
+					},
+					(err, invoices) => {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "List of paid invoices",
+								invoices: invoices,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/cashierSearchPaidInvoiceByBillNumber", jwtTokenAuth, function (req, res) {
+	const { number } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Cashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, f) {
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.find(
+					{ 	paid: 1,
+						$or: [{ number: number }, { reference_invoice: number }],
+					},
+					(err, invoices) => {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "List of paid invoices",
+								invoices: invoices,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/cashierSearchPaidInvoiceByCustomerCode", jwtTokenAuth, function (req, res) {
+	const { customer_code } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Cashier.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, f) {
+			let result = errorMessage(
+				err,
+				f,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Invoice.find(
+					{ 	paid: 1,
+						customer_code: customer_code,
+					},
+					(err, invoices) => {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "List of paid invoices",
+								invoices: invoices,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
 
 router.post("/getClaimMoney", jwtTokenAuth, function (req, res) {
 	const { transferCode } = req.body;
