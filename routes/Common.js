@@ -342,6 +342,8 @@ router.post("/:user/queryCashierTransactionStates", jwtTokenAuth, function (req,
 		User = getTypeClass("cashier");
 	} else if (user == "branch") {
 		User = getTypeClass("branch");
+	} else if (user == "bank") {
+		User = getTypeClass("bank");
 	} else {
 		res.status(200).json({
 			status: 0,
