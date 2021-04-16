@@ -662,7 +662,7 @@ router.post("/bank/getMerchantDashStats", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/bank/getMerchantZoneList", jwtTokenAuth, (req, res) => {
+router.post("/bank/getMerchantzoneList", jwtTokenAuth, (req, res) => {
 	const { merchant_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
@@ -704,7 +704,7 @@ router.post("/bank/getMerchantZoneList", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/bank/getMerchantSubzoneList", jwtTokenAuth, (req, res) => {
+router.post("/bank/getMerchantsubzoneList", jwtTokenAuth, (req, res) => {
 	const { merchant_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
@@ -746,7 +746,7 @@ router.post("/bank/getMerchantSubzoneList", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/bank/getMerchantBranchList", jwtTokenAuth, (req, res) => {
+router.post("/bank/getMerchantbranchList", jwtTokenAuth, (req, res) => {
 	const { merchant_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
