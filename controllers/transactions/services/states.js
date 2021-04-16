@@ -9,7 +9,7 @@ module.exports.initiate = async function (
 	tx_type,
 	payer_id = "",
 	cash_in_hand = 0,
-	transaction = {},
+	transaction = {}
 ) {
 	try {
 		console.log(category + " transaction initiated");
@@ -42,7 +42,7 @@ module.exports.updateClaimer = async function (master_code, receiver_id) {
 	try {
 		console.log("Updated claimer id");
 		let tx = { receiverId: receiver_id };
-		await TxState.updateOne({ _id: master_code }, tx);
+		await TxState.updateOne({ _id: master_code }, { $set: tx });
 	} catch (err) {
 		throw err;
 	}
@@ -58,7 +58,7 @@ module.exports.waitingForCompletion = async function (
 		let tx = {};
 		tx["state." + category] = stateConst.WAIT;
 		tx.transaction = transaction;
-		await TxState.updateOne({ _id: master_code }, tx);
+		await TxState.updateOne({ _id: master_code }, { $set: tx });
 	} catch (err) {
 		throw err;
 	}
@@ -102,7 +102,7 @@ module.exports.cancelled = async function (category, master_code) {
 		console.log(category + " transaction Cancelled");
 		let tx = {};
 		tx["state." + category] = stateConst.REVERT;
-		await TxState.updateOne({ _id: master_code }, tx);
+		await TxState.updateOne({ _id: master_code }, { $set: tx });
 	} catch (err) {
 		throw err;
 	}
