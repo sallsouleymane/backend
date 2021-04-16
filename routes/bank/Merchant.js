@@ -786,54 +786,6 @@ router.post("/bank/getMerchantbranchList", jwtTokenAuth, (req, res) => {
 	);
 });
 
-router.post("/bank/getMerchantSettings", jwtTokenAuth, function (req, res) {
-	const { merchant_id } = req.body;
-	const jwtusername = req.sign_creds.username;
-	Bank.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, bank) {
-			let result = errorMessage(
-				err,
-				bank,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				MerchantSettings.findOne(
-					{ merchant_id: merchant_id },
-					(err, setting) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message,
-							});
-						} else if (!setting) {
-							res.status(200).json({
-								status: 0,
-								message: "Setting Not found",
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								setting: setting,
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
-
 router.post("/bank/:type/getMerchantStatsBydate",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const type = req.params.type;
