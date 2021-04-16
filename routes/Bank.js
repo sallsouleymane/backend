@@ -34,6 +34,7 @@ const Partner = require("../models/partner/Partner");
 const Infra = require("../models/Infra");
 const TxState = require("../models/TxState");
 const Invoice = require("../models/merchant/Invoice");
+const CashierTransfer = require("../models/CashierTransfer");
 
 //controllers
 const cancelTransCntrl = require("../controllers/bank/transactions");
@@ -301,6 +302,9 @@ router.post("/bank/getBranchDashStats", jwtTokenAuth, function (req, res) {
 											amountpaid = invoices[0].totalAmountPaid;
 											billpaid = invoices[0].bills_paid;
 										}
+										var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, branch_id: branch_id});
+										var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, branch_id: branch_id});
+										var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, branch_id: branch_id});
 
 										res.status(200).json({
 											status: 1,
@@ -314,6 +318,9 @@ router.post("/bank/getBranchDashStats", jwtTokenAuth, function (req, res) {
 											commissionGenerated: cg,
 											openingBalance: ob,
 											closingBalance: cb,
+											cancelled: totalcancelledTransfers,
+											pending: totalPendingTransfers,
+											accepted: totalAcceptedTransfers,
 										});
 									}
 								);
