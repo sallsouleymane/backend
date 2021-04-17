@@ -324,6 +324,7 @@ router.post("/partnerCashier/addClosingBalance", jwtTokenAuth, (req, res) => {
 				let data = new DailyReport();
 					data.cashier_id = cashier._id;
 					data.branch_id = cashier.branch_id;
+					data.partner_id = cashier.partner_id;
 					data.created_at = new Date();
 					data.user = "Partner Cashier";
 					data.denomination = denomination;

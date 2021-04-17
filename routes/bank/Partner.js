@@ -799,5 +799,128 @@ router.post("/bank/getPartnerBranchDailyReport", jwtTokenAuth, function (req, re
 	);
 });
 
+router.post("/bank/getPartnerDailyReport", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { partner_id, start, end} = req.body;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, bank) {
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {	
+				DailyReport.aggregate(
+					[{ 
+						$match : {
+							partner_id: partner_id,
+							created_at: {
+								$gte: new Date(
+									start
+								),
+								$lte: new Date(
+									end
+								),
+							},
+						}
+					},
+						{
+							$group: {
+								_id: null,
+								opening_balance: {
+									$sum: "$opening_balance",
+								},
+								cash_in_hand: {
+									$sum: "$cash_in_hand",
+								},
+								cash_paid: {
+									$sum: "$cash_paid",
+								},
+								cash_received: {
+									$sum: "$cash_received",
+								},
+								fee_generated: {
+									$sum: "$fee_generated",
+								},
+								comm_generated: {
+									$sum: "$comm_generated",
+								},
+								closing_balance: {
+									$sum: "$closing_balance",
+								},
+								discripancy: {
+									$sum: "$descripency",
+								}
+								
+							},
+						},
+					],
+					async(err, reports) => {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							Invoice.aggregate(
+								[{ 
+									$match : {
+										payer_partner_id: partner_id,
+										date_paid: {
+											$gte: new Date(
+												start
+											),
+											$lte: new Date(
+												end
+											),
+										},
+										paid:1,
+									}
+								},
+									{
+										$group: {
+											_id: null,
+											totalAmountPaid: {
+												$sum: "$amount",
+											},
+											bills_paid: { $sum: 1 },
+										},
+									},
+								],
+								async (err, invoices) => {
+									if (err) {
+										res.status(200).json(catchError(err));
+									} else {
+										let amountpaid = 0;
+										let billpaid = 0;
+										if (
+											invoices != undefined &&
+											invoices != null &&
+											invoices.length > 0
+										) {
+											amountpaid = invoices[0].totalAmountPaid;
+											billpaid = invoices[0].bills_paid;
+										}
+											
+											res.status(200).json({
+												status: 1,
+												reports: reports,
+												invoicePaid: billpaid,
+												amountPaid: amountpaid,
+											});
+									}
+								}
+							)
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 
 module.exports = router;
