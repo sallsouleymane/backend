@@ -964,6 +964,183 @@ router.post("/bank/:type/getMerchantStatsBydate",jwtTokenAuth,function (req, res
 	);
 });
 
+router.post("/bank/getBankMerchantStatsBydate",jwtTokenAuth,function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { merchant_id, date } = req.body;
+	var today = new Date(date);
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, bank) {
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+
+				Invoice.aggregate(
+					[
+						{
+							$match: {
+								merchant_id: merchant_id,
+								created_at: {
+									$gte: new Date(
+										start
+									),
+									$lte: new Date(
+										end
+									),
+								},
+								paid:1,
+							},
+						},
+						{
+							$group: {
+								_id: "$paid_by",
+								amount_paid: { $sum: "$amount" },
+								penalty: { $sum: "$penalty"},
+								bills_paid: { $sum: 1 },
+							},
+						},
+					],async (err, post6) => {
+						let result = errorMessage(
+							err,
+							post6,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Invoice.aggregate(
+								[
+									{
+										$match: {
+											merchant_id : merchant_id,
+											created_at: {
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
+										},
+									},
+									{
+										$group: {
+											_id: null,
+											amount_generated: { $sum: "$amount" },
+											bills_generated: { $sum: 1 },
+										},
+									},
+								],async (err, post7) => {
+									let result = errorMessage(
+										err,
+										post7,
+										"Error."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										let ag = 0;
+										let bg = 0;
+										let InvoicePaidByMC = 0;
+										let InvoicePaidByBC = 0;
+										let InvoicePaidByPC = 0;
+										let InvoicePaidByUS = 0;
+										let AmountPaidByMC = 0;
+										let AmountPaidByBC = 0;
+										let AmountPaidByPC = 0;
+										let AmountPaidByUS = 0;
+										let InvoicePaid = 0;
+										let AmountPaid = 0;
+										if (
+											post7 != undefined &&
+											post7 != null &&
+											post7.length > 0
+										) {
+											ag = post7[0].amount_generated;
+											bg = post7[0].bills_generated;
+										}
+										if (
+											post6 != undefined &&
+											post6 != null &&
+											post6.length > 0
+										) {
+											const PaidByMC = await post6.filter((val) => {
+												return val._id==='MC'
+											});
+											const PaidByBC = await post6.filter((val) => {
+												return val._id==='BC'
+											});
+											const PaidByPC = await post6.filter((val)=>{
+												return val._id==='PC'
+											});
+											const PaidByUS = await post6.filter((val)=>{
+												return val._id==='US'
+											});
+											if(PaidByMC.length > 0){
+												InvoicePaidByMC = PaidByMC[0].bills_paid;
+												AmountPaidByMC = PaidByMC[0].amount_paid + PaidByMC[0].penalty;
+											}
+											if(PaidByBC.length > 0){
+												InvoicePaidByBC = PaidByBC[0].bills_paid;
+												AmountPaidByBC = PaidByBC[0].amount_paid + PaidByBC[0].penalty;
+											}
+											if(PaidByPC.length > 0){
+												InvoicePaidByPC = PaidByPC[0].bills_paid;
+												AmountPaidByPC = PaidByPC[0].amount_paid + PaidByPC[0].penalty;
+											}
+											if(PaidByUS.length > 0){
+												InvoicePaidByUS = PaidByUS[0].bills_paid;
+												AmountPaidByUS = PaidByUS[0].amount_paid + PaidByUS[0].penalty;
+											}
+
+											InvoicePaid = await post6.reduce((a, b) => {
+												return a + b.bills_paid;
+											}, 0);
+											
+											AmountPaid = await post6.reduce((a, b) => {
+												return a + b.amount_paid;
+											}, 0);
+										}
+										res.status(200).json({
+											status: 1,
+											amount_generated: ag,
+											bill_generated: bg,
+											amount_paid: AmountPaid,
+											bill_paid: InvoicePaid,
+											bill_paid_by_MC : InvoicePaidByMC,
+											amount_paid_by_MC: AmountPaidByMC,
+											bill_paid_by_PC : InvoicePaidByPC,
+											amount_paid_by_PC: AmountPaidByPC,
+											bill_paid_by_BC : InvoicePaidByBC,
+											amount_paid_by_BC: AmountPaidByBC,
+											bill_paid_by_US : InvoicePaidByUS,
+											amount_paid_by_US: AmountPaidByUS,
+											post7:post7,
+											post6:post6,
+										});
+									}
+								}
+							);
+						}
+					}		
+				);
+			}
+		}
+	);
+});
+
 router.post("/bank/:type/getMerchantStatsByPeriod",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const type = req.params.type;
