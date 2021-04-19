@@ -717,7 +717,7 @@ router.post("/bank/getPartnerBranchDailyReport", jwtTokenAuth, function (req, re
 									$sum: "$cash_in_hand",
 								},
 								cash_paid: {
-									$sum: "$cash_paid",
+									$sum: "$paid_in_cash",
 								},
 								cash_received: {
 									$sum: "$cash_received",
@@ -840,7 +840,7 @@ router.post("/bank/getPartnerDailyReport", jwtTokenAuth, function (req, res) {
 									$sum: "$cash_in_hand",
 								},
 								cash_paid: {
-									$sum: "$cash_paid",
+									$sum: "$paid_in_cash",
 								},
 								cash_received: {
 									$sum: "$cash_received",
