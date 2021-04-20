@@ -250,7 +250,8 @@ module.exports.partnerSendMoney = async function (req, res) {
 				cashier.bank_id,
 				"Inter Bank Non Wallet To Non Wallet",
 				cashier._id,
-				""
+				cashier.cash_in_hand,
+				req.body,
 			);
 			PartnerBranch.findOne(
 				{
@@ -393,7 +394,7 @@ module.exports.partnerSendMoney = async function (req, res) {
 																												.status(200)
 																												.json(catchError(err));
 																										} else {
-																											txstate.waitingForCompletion(
+																											txstate.completed(
 																												categoryConst.MAIN,
 																												master_code
 																											);
@@ -721,7 +722,9 @@ module.exports.partnerSendMoneyToWallet = function (req, res) {
 				categoryConst.MAIN,
 				cashier.bank_id,
 				"Inter Bank Non Wallet To Wallet",
-				cashier._id
+				cashier._id,
+				cashier.cash_in_hand,
+				req.body,
 			);
 			Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
 				let result = errorMessage(err, partner, "Partner not found");
