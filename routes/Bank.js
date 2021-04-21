@@ -1214,7 +1214,7 @@ router.post("/getBankUsers", jwtTokenAuth, function (req, res) {
 						}
 					}
 				);
-			}
+			
 		}
 	);
 });
