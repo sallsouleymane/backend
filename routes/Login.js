@@ -690,9 +690,67 @@ router.post("/bankLogin", function (req, res) {
 			password,
 		},
 		function (err, bank) {
-			var result = errorMessage(err, bank, "Incorrect username or password");
-			if (result.status == 0) {
-				res.status(200).json(result);
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{ username, password, role: "bankAdmin" },
+					"-password",
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								} else if (adminbank.status == -1) {
+									res.status(200).json({
+										status: 0,
+										message: "Your account has been blocked, pls contact the admin!",
+									});	
+								} else {
+									let sign_creds = { username: username, type: "bankUser" };
+									const token = jwtsign(sign_creds);
+									res.status(200).json({
+										token: token,
+										name: adminbank.name,
+										initial_setup: adminbank.initial_setup,
+										username: adminbank.username,
+										mobile: adminbank.mobile,
+										status: adminbank.status,
+										contract: adminbank.contract,
+										logo: adminbank.logo,
+										id: adminbank._id,
+										admin: true,
+									});
+											
+								}
+							});
+						}	
+					}
+				);
+			
 			} else if (bank.status == -1) {
 				res.status(200).json({
 					status: 0,
@@ -712,6 +770,7 @@ router.post("/bankLogin", function (req, res) {
 					contract: bank.contract,
 					logo: bank.logo,
 					id: bank._id,
+					admin: false,
 				});
 			}
 		}
