@@ -13,6 +13,7 @@ const { errorMessage, catchError } = require("../utils/errorHandler");
 const { createWallet } = require("../../services/Blockchain.js");
 
 const Bank = require("../../models/Bank");
+const BankUser = require("../models/BankUser");
 const Merchant = require("../../models/merchant/Merchant");
 const MerchantBranch = require("../../models/merchant/MerchantBranch");
 const Zone = require("../../models/merchant/Zone");
@@ -212,21 +213,57 @@ router.post("/bank/unblockMerchant", jwtTokenAuth, function (req, res) {
 
 router.post("/bank/listMerchants", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
+	const { bank_id } = req.body;
 	Bank.findOne(
 		{
 			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
-			let result = errorMessage(
-				err,
-				bank,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Merchant.find({ bank_id: bank._id }, "-password", (err, merchants) => {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: "bankAdmin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+
+				Merchant.find({ bank_id: bank_id }, "-password", (err, merchants) => {
 					if (err) {
 						console.log(err);
 						var message = err;
@@ -245,7 +282,7 @@ router.post("/bank/listMerchants", jwtTokenAuth, function (req, res) {
 						});
 					}
 				});
-			}
+			
 		}
 	);
 });
@@ -463,14 +500,48 @@ router.post("/bank/getMerchantDashStats", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			let result = errorMessage(
-				err,
-				bank,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: "bankAdmin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
 			Invoice.aggregate(
 					[
 						{
@@ -656,7 +727,7 @@ router.post("/bank/getMerchantDashStats", jwtTokenAuth, function (req, res) {
 						}
 					}		
 			);
-			}
+			
 
 		}
 	);
@@ -671,14 +742,48 @@ router.post("/bank/getMerchantzoneList", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, bank) {
-			let result = errorMessage(
-				err,
-				bank,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: "bankAdmin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
 		
 				Zone.find({ merchant_id: merchant_id }, async (err, zones) => {
 					if (err) {
@@ -698,7 +803,7 @@ router.post("/bank/getMerchantzoneList", jwtTokenAuth, (req, res) => {
 						});
 					}
 				});
-			}
+			
 			
 		}
 	);
@@ -713,14 +818,48 @@ router.post("/bank/getMerchantsubzoneList", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, bank) {
-			let result = errorMessage(
-				err,
-				bank,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: "bankAdmin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
 			
 				Subzone.find({ merchant_id: merchant_id }, async (err, subzones) => {
 					if (err) {
@@ -740,7 +879,7 @@ router.post("/bank/getMerchantsubzoneList", jwtTokenAuth, (req, res) => {
 						});
 					}
 				});
-			}
+			
 			
 		}
 	);
@@ -755,14 +894,48 @@ router.post("/bank/getMerchantbranchList", jwtTokenAuth, (req, res) => {
 			status: 1,
 		},
 		function (err, bank) {
-			let result = errorMessage(
-				err,
-				bank,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: "bankAdmin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
 				MerchantBranch.find({ merchant_id: merchant_id }, async (err, branches) => {
 					if (err) {
 						console.log(err);
@@ -781,7 +954,7 @@ router.post("/bank/getMerchantbranchList", jwtTokenAuth, (req, res) => {
 						});
 					}
 				});
-			}
+			
 		}
 	);
 });
@@ -801,14 +974,49 @@ router.post("/bank/:type/getMerchantStatsBydate",jwtTokenAuth,function (req, res
 			status: 1,
 		},
 		function (err, bank) {
-			let result = errorMessage(
-				err,
-				bank,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: "bankAdmin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+
 
 				Invoice.aggregate(
 					[
@@ -959,7 +1167,7 @@ router.post("/bank/:type/getMerchantStatsBydate",jwtTokenAuth,function (req, res
 						}
 					}		
 				);
-			}
+			
 		}
 	);
 });
@@ -978,14 +1186,48 @@ router.post("/bank/getBankMerchantStatsBydate",jwtTokenAuth,function (req, res) 
 			status: 1,
 		},
 		function (err, bank) {
-			let result = errorMessage(
-				err,
-				bank,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: "bankAdmin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
 
 				Invoice.aggregate(
 					[
@@ -1136,7 +1378,7 @@ router.post("/bank/getBankMerchantStatsBydate",jwtTokenAuth,function (req, res) 
 						}
 					}		
 				);
-			}
+			
 		}
 	);
 });
@@ -1151,14 +1393,48 @@ router.post("/bank/:type/getMerchantStatsByPeriod",jwtTokenAuth,function (req, r
 			status: 1,
 		},
 		function (err, bank) {
-			let result = errorMessage(
-				err,
-				bank,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: "bankAdmin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
 				Invoice.aggregate(
 					[
 						{
@@ -1294,7 +1570,7 @@ router.post("/bank/:type/getMerchantStatsByPeriod",jwtTokenAuth,function (req, r
 						}
 					}		
 				);
-			}
+			
 		}
 	);
 });
@@ -1308,14 +1584,48 @@ router.post("/bank/listMerchantSubzonesByZoneId",jwtTokenAuth,function (req, res
 				status: 1,
 			},
 			function (err, bank) {
-				let result = errorMessage(
-					err,
-					bank,
-					"Token changed or user not valid. Try to login again or contact system administrator."
-				);
-				if (result.status == 0) {
-					res.status(200).json(result);
-				} else {
+				if (err) {
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				}else if (!bank || bank === null || bank === undefined){
+					BankUser.findOne(
+						{
+							username: jwtusername,
+							role: "bankAdmin",
+						},
+						function (err, admin) {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							}else if (!admin || admin===null || admin === undefined){
+								res.status(200).json({
+									status: 0,
+									message: "User not found",
+								});
+							} else {
+								Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+									var result = errorMessage(err, adminbank, "Bank is blocked");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									}
+								});
+							}	
+						}
+					);
+				}
 					Subzone.find(
 						{ zone_id: zone_id },
 						function (err, subzone) {
@@ -1337,7 +1647,7 @@ router.post("/bank/listMerchantSubzonesByZoneId",jwtTokenAuth,function (req, res
 							}
 						}
 					);
-				}
+				
 			}
 		);
 	}
@@ -1355,14 +1665,49 @@ router.post(
 				status: 1,
 			},
 			function (err, bank) {
-				let result = errorMessage(
-					err,
-					bank,
-					"Token changed or user not valid. Try to login again or contact system administrator."
-				);
-				if (result.status == 0) {
-					res.status(200).json(result);
-				} else {
+				if (err) {
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				}else if (!bank || bank === null || bank === undefined){
+					BankUser.findOne(
+						{
+							username: jwtusername,
+							role: "bankAdmin",
+						},
+						function (err, admin) {
+							if (err) {
+								console.log(err);
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							}else if (!admin || admin===null || admin === undefined){
+								res.status(200).json({
+									status: 0,
+									message: "User not found",
+								});
+							} else {
+								Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+									var result = errorMessage(err, adminbank, "Bank is blocked");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									}
+								});
+							}	
+						}
+					);
+				}
+
 					MerchantBranch.find(
 						{  subzone_id: subzone_id },
 						function (err, branch) {
@@ -1384,7 +1729,7 @@ router.post(
 							}
 						}
 					);
-				}
+				
 				
 			}
 		);
