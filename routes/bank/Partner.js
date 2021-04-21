@@ -987,6 +987,7 @@ router.post("/bank/getPartnerDailyReport", jwtTokenAuth, function (req, res) {
 						}	
 					}
 				);
+			}
 				DailyReport.aggregate(
 					[{ 
 						$match : {
