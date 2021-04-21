@@ -482,6 +482,84 @@ router.post("/bank/getBranchWalletBalance", jwtTokenAuth, function (req, res) {
 	);
 });
 
+router.post("/bank/getBankWalletBalance", jwtTokenAuth, function (req, res) {
+	const { bank_id, wallet_type } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, bank) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: "bankAdmin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
+				Bank.findById(bank_id, (err, bank) => {
+					let errMsg = errorMessage(
+						err,
+						bank,
+						"Token changed or user not valid. Try to login again or contact system administrator."
+					);
+					if (errMsg.status == 0) {
+						res.status(200).json(result);
+					} else {
+						let wallet_id = bank.wallet_ids[wallet_type];
+						getBalance(wallet_id)
+							.then(function (result) {
+								res.status(200).json({
+									status: 1,
+									balance: result,
+								});
+							})
+							.catch((err) => {
+								res.status(200).json(catchError(err));
+							});
+					}
+				});
+			
+		}
+	);
+});
+
 router.post("/bank/getMerchantById", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { merchant_id } = req.body;
