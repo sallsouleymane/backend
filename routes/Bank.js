@@ -1142,24 +1142,58 @@ router.post("/getBranches", jwtTokenAuth, function (req, res) {
 
 router.post("/getBankUsers", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
+	const { bank_id } = req.body;
 	Bank.findOne(
 		{
 			username: jwtusername,
 			status: 1,
 		},
 		function (err, user) {
-			let result = errorMessage(
-				err,
-				user,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				const user_id = user._id;
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: "bankAdmin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
 				BankUser.find(
 					{
-						bank_id: user_id,
+						bank_id: bank_id,
 					},
 					function (err, bank) {
 						if (err) {
