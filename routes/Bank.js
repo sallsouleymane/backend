@@ -199,14 +199,48 @@ router.post("/bank/getBranchDashStats", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			let errMsg = errorMessage(
-				err,
-				bank,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (errMsg.status == 0) {
-				res.status(200).json(result);
-			} else {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: "bankAdmin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
 				Cashier.countDocuments(
 					{
 						branch_id: branch_id,
@@ -328,7 +362,7 @@ router.post("/bank/getBranchDashStats", jwtTokenAuth, function (req, res) {
 						);
 					}
 				);
-			}
+			
 			
 		}
 	);
@@ -1034,21 +1068,55 @@ router.get("/getBankOperationalBalance", jwtTokenAuth, function (req, res) {
 
 router.post("/getBranches", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
+	const { bank_id } = req.body;
 	Bank.findOne(
 		{
 			username: jwtusername,
 			status: 1,
 		},
 		function (err, bank) {
-			let result = errorMessage(
-				err,
-				bank,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				const bank_id = bank._id;
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: "bankAdmin",
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
 				Branch.find({ bank_id: bank_id }, function (err, branch) {
 					if (err) {
 						console.log(err);
@@ -1067,7 +1135,7 @@ router.post("/getBranches", jwtTokenAuth, function (req, res) {
 						});
 					}
 				});
-			}
+			
 		}
 	);
 });
