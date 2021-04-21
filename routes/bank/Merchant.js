@@ -13,7 +13,7 @@ const { errorMessage, catchError } = require("../utils/errorHandler");
 const { createWallet } = require("../../services/Blockchain.js");
 
 const Bank = require("../../models/Bank");
-const BankUser = require("../models/BankUser");
+const BankUser = require("../../models/BankUser");
 const Merchant = require("../../models/merchant/Merchant");
 const MerchantBranch = require("../../models/merchant/MerchantBranch");
 const Zone = require("../../models/merchant/Zone");
