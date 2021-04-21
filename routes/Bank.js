@@ -1495,6 +1495,7 @@ router.post("/addBankUser", jwtTokenAuth, function (req, res) {
 		ccode,
 		mobile,
 		username,
+		role,
 		password,
 		branch_id,
 		logo,
@@ -1520,6 +1521,7 @@ router.post("/addBankUser", jwtTokenAuth, function (req, res) {
 				data.username = username;
 				data.password = password;
 				data.branch_id = branch_id;
+				data.role = role;
 				data.bank_id = user._id;
 				data.ccode = ccode;
 				data.logo = logo;
@@ -1574,6 +1576,7 @@ router.post("/editBankUser", jwtTokenAuth, function (req, res) {
 		mobile,
 		username,
 		password,
+		role,
 		branch_id,
 		logo,
 		user_id,
@@ -1606,6 +1609,7 @@ router.post("/editBankUser", jwtTokenAuth, function (req, res) {
 						password: password,
 						branch_id: branch_id,
 						logo: logo,
+						role: role,
 					},
 					(err) => {
 						if (err) {
