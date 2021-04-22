@@ -869,7 +869,7 @@ router.post("/branchLogin", function (req, res) {
 			} else {
 				Bank.findOne(
 					{
-						_id: bank.bank_id,
+						_id: branch.bank_id,
 					},
 					function (err, ba) {
 						var result = errorMessage(err, ba, "Bank not found");
