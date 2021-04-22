@@ -893,6 +893,7 @@ router.post("/branchLogin", function (req, res) {
 								bank_id: ba._id,
 								id: branch._id,
 								credit_limit: branch.credit_limit,
+								admin: false,
 							});
 						}
 					}
