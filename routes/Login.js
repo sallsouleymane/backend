@@ -784,11 +784,84 @@ router.post("/branchLogin", function (req, res) {
 			username,
 			password,
 		},
-		function (err, bank) {
-			var result = errorMessage(err, bank, "Incorrect username or password");
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else if (bank.status == -1) {
+		function (err, branch) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!branch || branch === null || branch === undefined){
+				BankUser.findOne(
+					{ username, password, role: "branchAdmin" },
+					"-password",
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								} else if (adminbank.status == -1) {
+									res.status(200).json({
+										status: 0,
+										message: "Your account has been blocked, pls contact the admin!",
+									});	
+								} else {
+									Branch.findOne({ _id: admin.branch_id }, (err, adminbranch) => {
+										var result = errorMessage(err, adminbranch, "Bank is blocked");
+										if (result.status == 0) {
+											res.status(200).json(result);
+										} else if (adminbranch.status == -1) {
+											res.status(200).json({
+												status: 0,
+												message: "Your account has been blocked, pls contact the admin!",
+											});	
+										} else {
+											let sign_creds = { username: username, type: "bankUser" };
+											const token = jwtsign(sign_creds);
+											res.status(200).json({
+												token: token,
+												name: adminbranch.name,
+												initial_setup: adminbranch.initial_setup,
+												username: adminbranch.username,
+												status: adminbranch.status,
+												email: adminbranch.email,
+												bank_name: adminbank.name,
+												mobile: adminbranch.mobile,
+												logo: adminbank.logo,
+												bank_id: adminbank._id,
+												id: adminbranch._id,
+												credit_limit: adminbranch.credit_limit,
+												admin: true,
+											});
+
+										}
+									});	
+								}
+							});
+						}	
+					}
+				);
+			
+			} else if (branch.status == -1) {
 				res.status(200).json({
 					status: 0,
 					message: "Your account has been blocked, pls contact the admin!",
@@ -809,17 +882,17 @@ router.post("/branchLogin", function (req, res) {
 
 							res.status(200).json({
 								token: token,
-								name: bank.name,
-								initial_setup: bank.initial_setup,
-								username: bank.username,
-								status: bank.status,
-								email: bank.email,
+								name: branch.name,
+								initial_setup: branch.initial_setup,
+								username: branch.username,
+								status: branch.status,
+								email: branch.email,
 								bank_name: ba.name,
-								mobile: bank.mobile,
+								mobile: branch.mobile,
 								logo: logo,
 								bank_id: ba._id,
-								id: bank._id,
-								credit_limit: bank.credit_limit,
+								id: branch._id,
+								credit_limit: branch.credit_limit,
 							});
 						}
 					}
