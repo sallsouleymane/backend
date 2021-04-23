@@ -855,6 +855,7 @@ router.post("/addClosingBalance", jwtTokenAuth, function (req, res) {
 				let data = new DailyReport();
 				data.cashier_id = cashier._id;
 				data.branch_id = cashier.branch_id;
+				data.bank_id = cashier.bank_id;
 				data.created_at = new Date();
 				data.user = "Cashier";
 				data.denomination = denomination;

@@ -33,8 +33,310 @@ const Cashier = require("../models/Cashier");
 const Branch = require("../models/Branch");
 const MerchantBranch = require("../models/merchant/MerchantBranch");
 const Partner = require("../models/partner/Partner");
+const Invoice = require("../models/merchant/Invoice");
+const DailyReport = require("../models/cashier/DailyReport");
 
 const mainFee = config.mainFee;
+
+router.post("/infra/getBankDailyReport", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { bank_id, start, end} = req.body;
+	Infra.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, infra) {
+			let result = errorMessage(
+				err,
+				infra,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				DailyReport.aggregate(
+					[{ 
+						$match : {
+							bank_id: bank_id,
+							created_at: {
+								$gte: new Date(
+									start
+								),
+								$lte: new Date(
+									end
+								),
+							},
+						}
+					},
+						{
+							$group: {
+								_id: null,
+								opening_balance: {
+									$sum: "$opening_balance",
+								},
+								cash_in_hand: {
+									$sum: "$cash_in_hand",
+								},
+								cash_paid: {
+									$sum: "$paid_in_cash",
+								},
+								cash_received: {
+									$sum: "$cash_received",
+								},
+								fee_generated: {
+									$sum: "$fee_generated",
+								},
+								comm_generated: {
+									$sum: "$comm_generated",
+								},
+								closing_balance: {
+									$sum: "$closing_balance",
+								},
+								discripancy: {
+									$sum: "$descripency",
+								}
+								
+							},
+						},
+					],
+					async(err, reports) => {
+						if (err) {
+							res.status(200).json(catchError(err));
+						} else {
+							Invoice.aggregate(
+								[{ 
+									$match : {
+										payer_bank_id: bank_id,
+										date_paid: {
+											$gte: new Date(
+												start
+											),
+											$lte: new Date(
+												end
+											),
+										},
+										paid:1,
+									}
+								},
+									{
+										$group: {
+											_id: null,
+											totalAmountPaid: {
+												$sum: "$amount",
+											},
+											bills_paid: { $sum: 1 },
+										},
+									},
+								],
+								async (err, invoices) => {
+									if (err) {
+										res.status(200).json(catchError(err));
+									} else {
+										let amountpaid = 0;
+										let billpaid = 0;
+										if (
+											invoices != undefined &&
+											invoices != null &&
+											invoices.length > 0
+										) {
+											amountpaid = invoices[0].totalAmountPaid;
+											billpaid = invoices[0].bills_paid;
+										}
+											
+											res.status(200).json({
+												status: 1,
+												reports: reports,
+												invoicePaid: billpaid,
+												amountPaid: amountpaid,
+											});
+									}
+								}
+							)
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+router.post("/infra/getMerchantStatsBydate",jwtTokenAuth,function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { merchant_id, date } = req.body;
+	var today = new Date(date);
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	Infra.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, infra) {
+			let result = errorMessage(
+				err,
+				infra,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+
+				Invoice.aggregate(
+					[
+						{
+							$match: {
+								merchant_id: merchant_id,
+								created_at: {
+									$gte: new Date(
+										start
+									),
+									$lte: new Date(
+										end
+									),
+								},
+								paid:1,
+							},
+						},
+						{
+							$group: {
+								_id: "$paid_by",
+								amount_paid: { $sum: "$amount" },
+								penalty: { $sum: "$penalty"},
+								bills_paid: { $sum: 1 },
+							},
+						},
+					],async (err, post6) => {
+						let result = errorMessage(
+							err,
+							post6,
+							"Error."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							Invoice.aggregate(
+								[
+									{
+										$match: {
+											merchant_id : merchant_id,
+											created_at: {
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
+										},
+									},
+									{
+										$group: {
+											_id: null,
+											amount_generated: { $sum: "$amount" },
+											bills_generated: { $sum: 1 },
+										},
+									},
+								],async (err, post7) => {
+									let result = errorMessage(
+										err,
+										post7,
+										"Error."
+									);
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else {
+										let ag = 0;
+										let bg = 0;
+										let InvoicePaidByMC = 0;
+										let InvoicePaidByBC = 0;
+										let InvoicePaidByPC = 0;
+										let InvoicePaidByUS = 0;
+										let AmountPaidByMC = 0;
+										let AmountPaidByBC = 0;
+										let AmountPaidByPC = 0;
+										let AmountPaidByUS = 0;
+										let InvoicePaid = 0;
+										let AmountPaid = 0;
+										if (
+											post7 != undefined &&
+											post7 != null &&
+											post7.length > 0
+										) {
+											ag = post7[0].amount_generated;
+											bg = post7[0].bills_generated;
+										}
+										if (
+											post6 != undefined &&
+											post6 != null &&
+											post6.length > 0
+										) {
+											const PaidByMC = await post6.filter((val) => {
+												return val._id==='MC'
+											});
+											const PaidByBC = await post6.filter((val) => {
+												return val._id==='BC'
+											});
+											const PaidByPC = await post6.filter((val)=>{
+												return val._id==='PC'
+											});
+											const PaidByUS = await post6.filter((val)=>{
+												return val._id==='US'
+											});
+											if(PaidByMC.length > 0){
+												InvoicePaidByMC = PaidByMC[0].bills_paid;
+												AmountPaidByMC = PaidByMC[0].amount_paid + PaidByMC[0].penalty;
+											}
+											if(PaidByBC.length > 0){
+												InvoicePaidByBC = PaidByBC[0].bills_paid;
+												AmountPaidByBC = PaidByBC[0].amount_paid + PaidByBC[0].penalty;
+											}
+											if(PaidByPC.length > 0){
+												InvoicePaidByPC = PaidByPC[0].bills_paid;
+												AmountPaidByPC = PaidByPC[0].amount_paid + PaidByPC[0].penalty;
+											}
+											if(PaidByUS.length > 0){
+												InvoicePaidByUS = PaidByUS[0].bills_paid;
+												AmountPaidByUS = PaidByUS[0].amount_paid + PaidByUS[0].penalty;
+											}
+
+											InvoicePaid = await post6.reduce((a, b) => {
+												return a + b.bills_paid;
+											}, 0);
+											
+											AmountPaid = await post6.reduce((a, b) => {
+												return a + b.amount_paid;
+											}, 0);
+										}
+										res.status(200).json({
+											status: 1,
+											amount_generated: ag,
+											bill_generated: bg,
+											amount_paid: AmountPaid,
+											bill_paid: InvoicePaid,
+											bill_paid_by_MC : InvoicePaidByMC,
+											amount_paid_by_MC: AmountPaidByMC,
+											bill_paid_by_PC : InvoicePaidByPC,
+											amount_paid_by_PC: AmountPaidByPC,
+											bill_paid_by_BC : InvoicePaidByBC,
+											amount_paid_by_BC: AmountPaidByBC,
+											bill_paid_by_US : InvoicePaidByUS,
+											amount_paid_by_US: AmountPaidByUS,
+											post7:post7,
+											post6:post6,
+										});
+									}
+								}
+							);
+						}
+					}		
+				);
+			}
+		}
+	);
+});
 
 router.post("/infra/transferMasterToOp", jwtTokenAuth, function (req, res) {
 	const { bank_id, amount } = req.body;
@@ -155,6 +457,46 @@ router.post("/infra/bank/listMerchants", jwtTokenAuth, function (req, res) {
 				res.status(200).json(result);
 			} else {
 				Merchant.find({ bank_id: bank_id }, "-password", (err, merchants) => {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						res.status(200).json({
+							status: 1,
+							message: "Merchant List",
+							list: merchants,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
+router.post("/infra/listMerchants", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	Infra.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, infra) {
+			let result = errorMessage(
+				err,
+				infra,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Merchant.find({}, "-password", (err, merchants) => {
 					if (err) {
 						console.log(err);
 						var message = err;

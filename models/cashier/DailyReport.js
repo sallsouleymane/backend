@@ -3,6 +3,7 @@ const CashierDailyReportSchema = new mongoose.Schema({
 	cashier_id: { type: String, required: true },
 	branch_id: { type: String, required: true },
 	partner_id: { type: String, required: false },
+	bank_id: { type: String, required: false },
 	created_at: { type: Date, default: Date.now },
 	user: { type: String, required: true },
 	note: { type: String, required: true },

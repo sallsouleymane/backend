@@ -200,6 +200,7 @@ module.exports.cashierInvoicePay = (req, res) => {
 																paid_by: "BC",
 																payer_id: cashier._id,
 																payer_branch_id: cashier.branch_id,
+																payer_bank_id: cashier.bank_id,
 															};
 
 															let status = await updateInvoiceRecord(

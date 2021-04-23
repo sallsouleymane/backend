@@ -17,6 +17,7 @@ module.exports = async function (reqData, otherData) {
 		payer_id,
 		payer_branch_id,
 		payer_partner_id = '',
+		payer_bank_id = '',
 	} = otherData;
 	var last_paid_at = new Date();
 	console.log(total_amount);
@@ -46,6 +47,7 @@ module.exports = async function (reqData, otherData) {
 				penalty: penalty,
 				payer_branch_id: payer_branch_id,
 				payer_partner_id: payer_partner_id,
+				payer_bank_id: payer_bank_id,
 				transaction_code: master_code,
 				date_paid: new Date(),
 			}
