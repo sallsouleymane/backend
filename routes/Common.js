@@ -1522,7 +1522,7 @@ router.post("/:user/getMerchantSettings", jwtTokenAuth, function (req, res) {
 				res.status(200).json(result);
 			} else {
 				MerchantSettings.findOne(
-					{ merchant_id: user === 'bank' ||  user === 'bankuser' ? merchant_id : data.merchant_id },
+					{ merchant_id: user === 'bank' ||  user === 'bankuser' || user === 'infra'? merchant_id : data.merchant_id },
 					(err, setting) => {
 						if (err) {
 							console.log(err);
