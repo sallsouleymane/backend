@@ -10,6 +10,7 @@ const sendMail = require("./utils/sendMail");
 const makeotp = require("./utils/makeotp");
 const getWalletIds = require("./utils/getWalletIds");
 const { errorMessage, catchError } = require("./utils/errorHandler");
+const jwtsign = require("./utils/jwtsign");
 
 //services
 const {
@@ -357,7 +358,7 @@ router.post("/infra/bankAccess",jwtTokenAuth, function (req, res) {
 				res.status(200).json(result);
 			} else {
 				BankUser.findOne(
-					{ username, bank_id, role: "infraAdmin" },
+					{ username: username, bank_id:bank_id, role: "infraAdmin" },
 					function (err, admin) {
 							if (err) {
 								var message = err;
