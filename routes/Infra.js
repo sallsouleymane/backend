@@ -23,6 +23,7 @@ const {
 const Infra = require("../models/Infra");
 const Fee = require("../models/Fee");
 const Bank = require("../models/Bank");
+const BankUser = require("../models/BankUser");
 const OTP = require("../models/OTP");
 const Profile = require("../models/Profile");
 const Document = require("../models/Document");
@@ -332,6 +333,75 @@ router.post("/infra/getMerchantStatsBydate",jwtTokenAuth,function (req, res) {
 							);
 						}
 					}		
+				);
+			}
+		}
+	);
+});
+
+router.post("/infra/bankAccess",jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { username, bank_id } = req.body;
+	Infra.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, infra) {
+			let result = errorMessage(
+				err,
+				infra,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				BankUser.findOne(
+					{ username, bank_id, role: "infraAdmin" },
+					function (err, admin) {
+							if (err) {
+								var message = err;
+								if (err.message) {
+									message = err.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message,
+								});
+							}else if (!admin || admin===null || admin === undefined){
+								res.status(200).json({
+									status: 0,
+									message: "User not found",
+								});
+							} else {
+								Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+									var result = errorMessage(err, adminbank, "Bank is blocked");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									} else if (adminbank.status == -1) {
+										res.status(200).json({
+											status: 0,
+											message: "Your account has been blocked, pls contact the admin!",
+										});	
+									} else {
+										let sign_creds = { username: username, type: "bankUser" };
+											const token = jwtsign(sign_creds);
+											res.status(200).json({
+												token: token,
+												name: adminbank.name,
+												initial_setup: adminbank.initial_setup,
+												username: adminbank.username,
+												mobile: adminbank.mobile,
+												status: adminbank.status,
+												contract: adminbank.contract,
+												logo: adminbank.logo,
+												id: adminbank._id,
+												admin: true,
+											});			
+									}
+								});
+							}	
+					}
 				);
 			}
 		}
