@@ -1494,6 +1494,8 @@ router.post("/:user/getMerchantSettings", jwtTokenAuth, function (req, res) {
 		User = getTypeClass("merchantPosition");
 	}else if (user == "bank") {
 		User = getTypeClass("bank");
+	}else if (user == "infra") {
+		User = getTypeClass("infra");
 	}else if (user == "bankuser") {
 		User = getTypeClass("bankuser");	
 	} else if (user == "merchantBranch") {
