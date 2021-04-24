@@ -233,7 +233,7 @@ router.post("/bank/listMerchants", jwtTokenAuth, function (req, res) {
 				BankUser.findOne(
 					{
 						username: jwtusername,
-						role: "bankAdmin",
+						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
 					function (err, admin) {
 						if (err) {
@@ -513,7 +513,7 @@ router.post("/bank/getMerchantDashStats", jwtTokenAuth, function (req, res) {
 				BankUser.findOne(
 					{
 						username: jwtusername,
-						role: "bankAdmin",
+						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
 					function (err, admin) {
 						if (err) {
@@ -755,7 +755,7 @@ router.post("/bank/getMerchantzoneList", jwtTokenAuth, (req, res) => {
 				BankUser.findOne(
 					{
 						username: jwtusername,
-						role: "bankAdmin",
+						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
 					function (err, admin) {
 						if (err) {
@@ -831,7 +831,7 @@ router.post("/bank/getMerchantsubzoneList", jwtTokenAuth, (req, res) => {
 				BankUser.findOne(
 					{
 						username: jwtusername,
-						role: "bankAdmin",
+						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
 					function (err, admin) {
 						if (err) {
@@ -907,7 +907,7 @@ router.post("/bank/getMerchantbranchList", jwtTokenAuth, (req, res) => {
 				BankUser.findOne(
 					{
 						username: jwtusername,
-						role: "bankAdmin",
+						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
 					function (err, admin) {
 						if (err) {
@@ -987,7 +987,7 @@ router.post("/bank/:type/getMerchantStatsBydate",jwtTokenAuth,function (req, res
 				BankUser.findOne(
 					{
 						username: jwtusername,
-						role: "bankAdmin",
+						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
 					function (err, admin) {
 						if (err) {
@@ -1199,7 +1199,7 @@ router.post("/bank/getBankMerchantStatsBydate",jwtTokenAuth,function (req, res) 
 				BankUser.findOne(
 					{
 						username: jwtusername,
-						role: "bankAdmin",
+						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
 					function (err, admin) {
 						if (err) {
@@ -1406,7 +1406,7 @@ router.post("/bank/:type/getMerchantStatsByPeriod",jwtTokenAuth,function (req, r
 				BankUser.findOne(
 					{
 						username: jwtusername,
-						role: "bankAdmin",
+						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
 					function (err, admin) {
 						if (err) {
@@ -1597,7 +1597,7 @@ router.post("/bank/listMerchantSubzonesByZoneId",jwtTokenAuth,function (req, res
 					BankUser.findOne(
 						{
 							username: jwtusername,
-							role: "bankAdmin",
+							role: {$in: ['bankAdmin', 'infraAdmin']},
 						},
 						function (err, admin) {
 							if (err) {
@@ -1678,7 +1678,7 @@ router.post(
 					BankUser.findOne(
 						{
 							username: jwtusername,
-							role: "bankAdmin",
+							role: {$in: ['bankAdmin', 'infraAdmin']},
 						},
 						function (err, admin) {
 							if (err) {

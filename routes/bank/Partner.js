@@ -197,7 +197,7 @@ router.post("/bank/listPartners", jwtTokenAuth, function (req, res) {
 				BankUser.findOne(
 					{
 						username: jwtusername,
-						role: "bankAdmin",
+						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
 					function (err, admin) {
 						if (err) {
@@ -562,7 +562,7 @@ router.post("/bank/getPartnerDashStats", jwtTokenAuth, function (req, res) {
 				BankUser.findOne(
 					{
 						username: jwtusername,
-						role: "bankAdmin",
+						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
 					function (err, admin) {
 						if (err) {
@@ -724,7 +724,7 @@ router.post("/bank/listPartnerBranches", jwtTokenAuth, function (req, res) {
 				BankUser.findOne(
 					{
 						username: jwtusername,
-						role: "bankAdmin",
+						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
 					function (err, admin) {
 						if (err) {
@@ -802,7 +802,7 @@ router.post("/bank/getPartnerBranchDailyReport", jwtTokenAuth, function (req, re
 				BankUser.findOne(
 					{
 						username: jwtusername,
-						role: "bankAdmin",
+						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
 					function (err, admin) {
 						if (err) {
@@ -959,7 +959,7 @@ router.post("/bank/getPartnerDailyReport", jwtTokenAuth, function (req, res) {
 				BankUser.findOne(
 					{
 						username: jwtusername,
-						role: "bankAdmin",
+						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
 					function (err, admin) {
 						if (err) {
