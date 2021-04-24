@@ -760,231 +760,231 @@ router.post("/infra/listInfraMerchants", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/infra/getMerchantDashStats", jwtTokenAuth, function (req, res) {
-	const { merchant_id,bank_id } = req.body;
-	var today = new Date();
-	today = today.toISOString();
-	var s = today.split("T");
-	var start = s[0] + "T00:00:00.000Z";
-	var end = s[0] + "T23:59:59.999Z";
-	const jwtusername = req.sign_creds.username;
-	Infra.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, infra) {
-			let result = errorMessage(
-				err,
-				infra,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Invoice.aggregate(
-					[
-						{
-							$match: {
-								merchant_id: String(merchant_id),
-								created_at: {
-									$gte: new Date(
-										start
-									),
-									$lte: new Date(
-										end
-									),
-								},
-								paid:1,
-							},
-						},
-						{
-							$group: {
-								_id: "$paid_by",
-								amount_paid: { $sum: "$amount" },
-								bills_paid: { $sum: 1 },
-							},
-						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
-							post6,
-							"Error."
-						);
-						if (result.status == 0) {
-							res.status(200).json(result);
-						} else {
-							Invoice.aggregate(
-								[
-									{
-										$match: {
-											merchant_id: String(merchant_id),
-											created_at: {
-												$gte: new Date(
-													start
-												),
-												$lte: new Date(
-													end
-												),
-											},
-										},
-									},
-									{
-										$group: {
-											_id: null,
-											amount_generated: { $sum: "$amount" },
-											bills_generated: { $sum: 1 },
-										},
-									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
-										post7,
-										"Error."
-									);
-									if (result.status == 0) {
-										res.status(200).json(result);
-									} else {
-										Invoice.aggregate(
-											[
-												{
-													$match: {
-														merchant_id: String(merchant_id),
-														paid: 0,
-													},
-												},
-												{
-													$group: {
-														_id: null,
-														amount_pending: { $sum: "$amount" },
-														bills_pending: { $sum: 1 },
-													},
-												},
-											],async (err, post8) => {
-												let result = errorMessage(
-													err,
-													post8,
-													"Error."
-												);
-												if (result.status == 0) {
-													res.status(200).json(result);
-												} else {
-													Bank.findOne(
-														{
-															_id: bank_id,
-														},
-														function (err, ba) {
-															let result = errorMessage(err, ba, "Not found");
-															if (result.status == 0) {
-																res.status(200).json(result);
-															} else {
-																let ag = 0;
-																let bg = 0;
-																let InvoicePaidByMC = 0;
-																let InvoicePaidByBC = 0;
-																let InvoicePaidByPC = 0;
-																let InvoicePaidByUS = 0;
-																let AmountPaidByMC = 0;
-																let AmountPaidByBC = 0;
-																let AmountPaidByPC = 0;
-																let AmountPaidByUS = 0;
-																let InvoicePaid = 0;
-																let AmountPaid = 0;
-																let ap = 0;
-																let bp = 0;
-																if (
-																	post7 != undefined &&
-																	post7 != null &&
-																	post7.length > 0
-																) {
-																	ag = post7[0].amount_generated;
-																	bg = post7[0].bills_generated;
-																}
-																if (
-																	post6 != undefined &&
-																	post6 != null &&
-																	post6.length > 0
-																) {
-																	const PaidByMC = await post6.filter((val) => {
-																		return val._id==='MC'
-																	});
-																	const PaidByBC = await post6.filter((val) => {
-																		return val._id==='BC'
-																	});
-																	const PaidByPC = await post6.filter((val)=>{
-																		return val._id==='PC'
-																	});
-																	const PaidByUS = await post6.filter((val)=>{
-																		return val._id==='US'
-																	});
-																	if(PaidByMC.length > 0){
-																		InvoicePaidByMC = PaidByMC[0].bills_paid;
-																		AmountPaidByMC = PaidByMC[0].amount_paid + PaidByMC[0].penalty;
-																	}
-																	if(PaidByBC.length > 0){
-																		InvoicePaidByBC = PaidByBC[0].bills_paid;
-																		AmountPaidByBC = PaidByBC[0].amount_paid + PaidByBC[0].penalty;
-																	}
-																	if(PaidByPC.length > 0){
-																		InvoicePaidByPC = PaidByPC[0].bills_paid;
-																		AmountPaidByPC = PaidByPC[0].amount_paid + PaidByPC[0].penalty;
-																	}
-																	if(PaidByUS.length > 0){
-																		InvoicePaidByUS = PaidByUS[0].bills_paid;
-																		AmountPaidByUS = PaidByUS[0].amount_paid + PaidByUS[0].penalty;
-																	}
+// router.post("/infra/getMerchantDashStats", jwtTokenAuth, function (req, res) {
+// 	const { merchant_id,bank_id } = req.body;
+// 	var today = new Date();
+// 	today = today.toISOString();
+// 	var s = today.split("T");
+// 	var start = s[0] + "T00:00:00.000Z";
+// 	var end = s[0] + "T23:59:59.999Z";
+// 	const jwtusername = req.sign_creds.username;
+// 	Infra.findOne(
+// 		{
+// 			username: jwtusername,
+// 			status: 1,
+// 		},
+// 		function (err, infra) {
+// 			let result = errorMessage(
+// 				err,
+// 				infra,
+// 				"Token changed or user not valid. Try to login again or contact system administrator."
+// 			);
+// 			if (result.status == 0) {
+// 				res.status(200).json(result);
+// 			} else {
+// 				Invoice.aggregate(
+// 					[
+// 						{
+// 							$match: {
+// 								merchant_id: String(merchant_id),
+// 								created_at: {
+// 									$gte: new Date(
+// 										start
+// 									),
+// 									$lte: new Date(
+// 										end
+// 									),
+// 								},
+// 								paid:1,
+// 							},
+// 						},
+// 						{
+// 							$group: {
+// 								_id: "$paid_by",
+// 								amount_paid: { $sum: "$amount" },
+// 								bills_paid: { $sum: 1 },
+// 							},
+// 						},
+// 					],async (err, post6) => {
+// 						let result = errorMessage(
+// 							err,
+// 							post6,
+// 							"Error."
+// 						);
+// 						if (result.status == 0) {
+// 							res.status(200).json(result);
+// 						} else {
+// 							Invoice.aggregate(
+// 								[
+// 									{
+// 										$match: {
+// 											merchant_id: String(merchant_id),
+// 											created_at: {
+// 												$gte: new Date(
+// 													start
+// 												),
+// 												$lte: new Date(
+// 													end
+// 												),
+// 											},
+// 										},
+// 									},
+// 									{
+// 										$group: {
+// 											_id: null,
+// 											amount_generated: { $sum: "$amount" },
+// 											bills_generated: { $sum: 1 },
+// 										},
+// 									},
+// 								],async (err, post7) => {
+// 									let result = errorMessage(
+// 										err,
+// 										post7,
+// 										"Error."
+// 									);
+// 									if (result.status == 0) {
+// 										res.status(200).json(result);
+// 									} else {
+// 										Invoice.aggregate(
+// 											[
+// 												{
+// 													$match: {
+// 														merchant_id: String(merchant_id),
+// 														paid: 0,
+// 													},
+// 												},
+// 												{
+// 													$group: {
+// 														_id: null,
+// 														amount_pending: { $sum: "$amount" },
+// 														bills_pending: { $sum: 1 },
+// 													},
+// 												},
+// 											],async (err, post8) => {
+// 												let result = errorMessage(
+// 													err,
+// 													post8,
+// 													"Error."
+// 												);
+// 												if (result.status == 0) {
+// 													res.status(200).json(result);
+// 												} else {
+// 													Bank.findOne(
+// 														{
+// 															_id: bank_id,
+// 														},
+// 														function (err, ba) {
+// 															let result = errorMessage(err, ba, "Not found");
+// 															if (result.status == 0) {
+// 																res.status(200).json(result);
+// 															} else {
+// 																let ag = 0;
+// 																let bg = 0;
+// 																let InvoicePaidByMC = 0;
+// 																let InvoicePaidByBC = 0;
+// 																let InvoicePaidByPC = 0;
+// 																let InvoicePaidByUS = 0;
+// 																let AmountPaidByMC = 0;
+// 																let AmountPaidByBC = 0;
+// 																let AmountPaidByPC = 0;
+// 																let AmountPaidByUS = 0;
+// 																let InvoicePaid = 0;
+// 																let AmountPaid = 0;
+// 																let ap = 0;
+// 																let bp = 0;
+// 																if (
+// 																	post7 != undefined &&
+// 																	post7 != null &&
+// 																	post7.length > 0
+// 																) {
+// 																	ag = post7[0].amount_generated;
+// 																	bg = post7[0].bills_generated;
+// 																}
+// 																if (
+// 																	post6 != undefined &&
+// 																	post6 != null &&
+// 																	post6.length > 0
+// 																) {
+// 																	const PaidByMC = await post6.filter((val) => {
+// 																		return val._id==='MC'
+// 																	});
+// 																	const PaidByBC = await post6.filter((val) => {
+// 																		return val._id==='BC'
+// 																	});
+// 																	const PaidByPC = await post6.filter((val)=>{
+// 																		return val._id==='PC'
+// 																	});
+// 																	const PaidByUS = await post6.filter((val)=>{
+// 																		return val._id==='US'
+// 																	});
+// 																	if(PaidByMC.length > 0){
+// 																		InvoicePaidByMC = PaidByMC[0].bills_paid;
+// 																		AmountPaidByMC = PaidByMC[0].amount_paid + PaidByMC[0].penalty;
+// 																	}
+// 																	if(PaidByBC.length > 0){
+// 																		InvoicePaidByBC = PaidByBC[0].bills_paid;
+// 																		AmountPaidByBC = PaidByBC[0].amount_paid + PaidByBC[0].penalty;
+// 																	}
+// 																	if(PaidByPC.length > 0){
+// 																		InvoicePaidByPC = PaidByPC[0].bills_paid;
+// 																		AmountPaidByPC = PaidByPC[0].amount_paid + PaidByPC[0].penalty;
+// 																	}
+// 																	if(PaidByUS.length > 0){
+// 																		InvoicePaidByUS = PaidByUS[0].bills_paid;
+// 																		AmountPaidByUS = PaidByUS[0].amount_paid + PaidByUS[0].penalty;
+// 																	}
 						
-																	InvoicePaid = await post6.reduce((a, b) => {
-																		return a + b.bills_paid;
-																	}, 0);
+// 																	InvoicePaid = await post6.reduce((a, b) => {
+// 																		return a + b.bills_paid;
+// 																	}, 0);
 																	
-																	AmountPaid = await post6.reduce((a, b) => {
-																		return a + b.amount_paid;
-																	}, 0);
-																}
-																if (
-																	post8 != undefined &&
-																	post8 != null &&
-																	post8.length > 0
-																) {
-																	ap = post8[0].amount_pending;
-																	bp = post8[0].bills_pending;
-																}
-																res.status(200).json({
-																	status: 1,
-																	bills_created:bg,
-																	amount_created:ag,
-																	bank_name:ba.name,
-																	amount_paid: AmountPaid,
-																	bill_paid: InvoicePaid,
-																	bill_paid_by_MC : InvoicePaidByMC,
-																	amount_paid_by_MC: AmountPaidByMC,
-																	bill_paid_by_PC : InvoicePaidByPC,
-																	amount_paid_by_PC: AmountPaidByPC,
-																	bill_paid_by_BC : InvoicePaidByBC,
-																	amount_paid_by_BC: AmountPaidByBC,
-																	bill_paid_by_US : InvoicePaidByUS,
-																	amount_paid_by_US: AmountPaidByUS,
-																	amount_pending: ap,
-																	bills_pending: bp,
-																});
-															}
-														}
-													);	
-												}
-											}
-										);
-									}
-								}
-							);
-						}
-					}		
-				);
-			}
+// 																	AmountPaid = await post6.reduce((a, b) => {
+// 																		return a + b.amount_paid;
+// 																	}, 0);
+// 																}
+// 																if (
+// 																	post8 != undefined &&
+// 																	post8 != null &&
+// 																	post8.length > 0
+// 																) {
+// 																	ap = post8[0].amount_pending;
+// 																	bp = post8[0].bills_pending;
+// 																}
+// 																res.status(200).json({
+// 																	status: 1,
+// 																	bills_created:bg,
+// 																	amount_created:ag,
+// 																	bank_name:ba.name,
+// 																	amount_paid: AmountPaid,
+// 																	bill_paid: InvoicePaid,
+// 																	bill_paid_by_MC : InvoicePaidByMC,
+// 																	amount_paid_by_MC: AmountPaidByMC,
+// 																	bill_paid_by_PC : InvoicePaidByPC,
+// 																	amount_paid_by_PC: AmountPaidByPC,
+// 																	bill_paid_by_BC : InvoicePaidByBC,
+// 																	amount_paid_by_BC: AmountPaidByBC,
+// 																	bill_paid_by_US : InvoicePaidByUS,
+// 																	amount_paid_by_US: AmountPaidByUS,
+// 																	amount_pending: ap,
+// 																	bills_pending: bp,
+// 																});
+// 															}
+// 														}
+// 													);	
+// 												}
+// 											}
+// 										);
+// 									}
+// 								}
+// 							);
+// 						}
+// 					}		
+// 				);
+// 			}
 
-		}
-	);
-});
+// 		}
+// 	);
+// });
 
 router.post("/infra/createMerchant", jwtTokenAuth, function (req, res) {
 	var {
