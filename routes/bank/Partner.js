@@ -293,6 +293,7 @@ router.post("/bank/editPartner", jwtTokenAuth, function (req, res) {
 		name,
 		bcode,
 		address,
+		verify_user_access,
 		state,
 		zip,
 		country,
@@ -355,6 +356,7 @@ router.post("/bank/editPartner", jwtTokenAuth, function (req, res) {
 										country: country,
 										mobile: mobile,
 										email: email,
+										verify_user_access: verify_user_access,
 										logo: logo,
 										contract: contract,
 									},
@@ -415,6 +417,7 @@ router.post("/bank/addPartner", jwtTokenAuth, function (req, res) {
 		email,
 		logo,
 		contract,
+		verify_user_access,
 		otp_id,
 		otp,
 	} = req.body;
@@ -480,6 +483,7 @@ router.post("/bank/addPartner", jwtTokenAuth, function (req, res) {
 									data.mobile = mobile;
 									data.username = mobile;
 									data.email = email;
+									data.verify_user_access = verify_user_access;
 									data.bank_id = bank._id;
 									data.logo = logo;
 									data.contract = contract;

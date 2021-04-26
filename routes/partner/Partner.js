@@ -716,6 +716,7 @@ router.post("/partner/addUser", jwtTokenAuth, (req, res) => {
 		ccode,
 		mobile,
 		role,
+		verify_user_access,
 		username,
 		password,
 		branch_id,
@@ -743,6 +744,7 @@ router.post("/partner/addUser", jwtTokenAuth, (req, res) => {
 				data.username = username;
 				data.password = password;
 				data.branch_id = branch_id;
+				data.verify_user_access = verify_user_access;
 				data.partner_id = partner._id;
 				data.ccode = ccode;
 				data.logo = logo;
@@ -797,6 +799,7 @@ router.post("/partner/editUser", jwtTokenAuth, (req, res) => {
 		ccode,
 		mobile,
 		username,
+		verify_user_access,
 		password,
 		branch_id,
 		logo,
@@ -827,6 +830,7 @@ router.post("/partner/editUser", jwtTokenAuth, (req, res) => {
 						ccode: ccode,
 						mobile: mobile,
 						role: role,
+						verify_user_access: verify_user_access,
 						username: username,
 						password: password,
 						branch_id: branch_id,

@@ -87,6 +87,7 @@ router.post("/partnerCashier/login", function (req, res) {
 													res.status(200).json({
 														token: token,
 														name: cashier.name,
+														verify_user_access: user.verify_user_access,
 														username: user.username,
 														status: cashier.status,
 														email: user.email,
@@ -328,6 +329,7 @@ router.post("/partner/login", function (req, res) {
 												res.status(200).json({
 													token: token,
 													name: adminpartner.name,
+													verify_user_access: adminpartner.verify_user_access,
 													initial_setup: adminpartner.initial_setup,
 													username: adminpartner.username,
 													mobile: adminpartner.mobile,
@@ -369,6 +371,7 @@ router.post("/partner/login", function (req, res) {
 						res.status(200).json({
 							token: token,
 							name: partner.name,
+							verify_user_access: partner.verify_user_access,
 							initial_setup: partner.initial_setup,
 							username: partner.username,
 							mobile: partner.mobile,

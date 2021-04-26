@@ -9,6 +9,7 @@ const PartnerSchema = new mongoose.Schema({
     country: { type: String, required: true },
     ccode: { type: String, required: false },
     mobile: { type: String, required: true, unique: true },
+    verify_user_access: { type: Boolean, default: false },
     email: { type: String, required: true, unique: true },
     bank_id: { type: String, required: true },
     logo: { type: String, required: false },
