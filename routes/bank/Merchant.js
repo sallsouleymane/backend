@@ -562,6 +562,9 @@ router.post("/bank/getMerchantDashStats", jwtTokenAuth, function (req, res) {
 							$group: {
 								_id: "$paid_by",
 								amount_paid: { $sum: "$amount" },
+								penalty: {$sum: "$penalty"},
+								fee: {$sum: "$fee"},
+								commission: {$sum: "$commission"},
 								bills_paid: { $sum: 1 },
 							},
 						},
@@ -639,6 +642,14 @@ router.post("/bank/getMerchantDashStats", jwtTokenAuth, function (req, res) {
 													let AmountPaidByBC = 0;
 													let AmountPaidByPC = 0;
 													let AmountPaidByUS = 0;
+													let FeeGeneratedByBC = 0;
+													let CommissionGeneratedByBC = 0;
+													let FeeGeneratedByPC = 0;
+													let CommissionGeneratedByPC = 0;
+													let FeeGeneratedByMC = 0;
+													let CommissionGeneratedByMC = 0;
+													let FeeGeneratedByUS = 0;
+													let CommissionGeneratedByUS = 0;
 													let InvoicePaid = 0;
 													let AmountPaid = 0;
 													let ap = 0;
@@ -671,18 +682,26 @@ router.post("/bank/getMerchantDashStats", jwtTokenAuth, function (req, res) {
 														if(PaidByMC.length > 0){
 															InvoicePaidByMC = PaidByMC[0].bills_paid;
 															AmountPaidByMC = PaidByMC[0].amount_paid + PaidByMC[0].penalty;
+															FeeGeneratedByMC = PaidByMC[0].fee;
+															CommissionGeneratedByMC = PaidByMC[0].commission;
 														}
 														if(PaidByBC.length > 0){
 															InvoicePaidByBC = PaidByBC[0].bills_paid;
 															AmountPaidByBC = PaidByBC[0].amount_paid + PaidByBC[0].penalty;
+															FeeGeneratedByBC = PaidByBC[0].fee;
+															CommissionGeneratedByBC = PaidByBC[0].commission;
 														}
 														if(PaidByPC.length > 0){
 															InvoicePaidByPC = PaidByPC[0].bills_paid;
 															AmountPaidByPC = PaidByPC[0].amount_paid + PaidByPC[0].penalty;
+															FeeGeneratedByPC = PaidByPC[0].fee;
+															CommissionGeneratedByPC = PaidByPC[0].commission;
 														}
 														if(PaidByUS.length > 0){
 															InvoicePaidByUS = PaidByUS[0].bills_paid;
 															AmountPaidByUS = PaidByUS[0].amount_paid + PaidByUS[0].penalty;
+															FeeGeneratedByUS = PaidByUS[0].fee;
+															CommissionGeneratedByUS = PaidByUS[0].commission;
 														}
 			
 														InvoicePaid = await post6.reduce((a, b) => {
@@ -715,6 +734,14 @@ router.post("/bank/getMerchantDashStats", jwtTokenAuth, function (req, res) {
 														amount_paid_by_BC: AmountPaidByBC,
 														bill_paid_by_US : InvoicePaidByUS,
 														amount_paid_by_US: AmountPaidByUS,
+														fee_generated_by_BC: FeeGeneratedByBC,
+														commission_generated_by_BC: CommissionGeneratedByBC,
+														fee_generated_by_PC: FeeGeneratedByPC,
+														commission_generated_by_PC: CommissionGeneratedByPC,
+														fee_generated_by_MC: FeeGeneratedByMC,
+														commission_generated_by_MC: CommissionGeneratedByMC,
+														fee_generated_by_US: FeeGeneratedByUS,
+														commission_generated_by_US: CommissionGeneratedByUS,
 														amount_pending: ap,
 														bills_pending: bp,
 													});
