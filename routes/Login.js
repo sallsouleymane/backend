@@ -522,8 +522,8 @@ router.post("/merchantStaff/login", (req, res) => {
 router.post("/merchant/login", (req, res) => {
 	const { username, password } = req.body;
 	Merchant.findOne(
-		{ username },
-		// "-password",
+		{ username, password },
+		"-password",
 		function (err, merchant) {
 			if (err) {
 				var message = err;
@@ -621,7 +621,6 @@ router.post("/merchant/login", (req, res) => {
 								details: merchant,
 								bank:bank,
 								token: token,
-								password: merchant.password,
 								admin: false,
 							});
 						}
