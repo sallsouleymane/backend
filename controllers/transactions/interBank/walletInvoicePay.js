@@ -158,6 +158,7 @@ module.exports = async function (
 			distributeRevenue(transfer, infra, bank, merchantBank);
 			return {
 				status: 1,
+				transaction_code: transfer.master_code,
 				message: "Transaction success!",
 			};
 		}

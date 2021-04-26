@@ -118,6 +118,7 @@ module.exports = async function (
 
 		return {
 			status: 1,
+			transaction_code: transfer.master_code,
 			message: "Transaction success!",
 		};
 	} catch (err) {
