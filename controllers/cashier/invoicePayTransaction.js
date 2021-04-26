@@ -308,6 +308,8 @@ module.exports.partnerInvoicePay = async (req, res) => {
 												payer_id: cashier._id,
 												payer_branch_id: cashier.branch_id,
 												payer_partner_id: cashier.partner_id,
+												fee: Number(result.partnerFeeShare)/invoices.length,
+												commission: Number(result.partnerCommShare)/invoices.length,
 											};
 
 											let status = await updateInvoiceRecord(
