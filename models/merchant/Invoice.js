@@ -10,6 +10,8 @@ const InvoiceSchema = new mongoose.Schema({
 	customer_code: { type: String, required: false },
 	amount: { type: Number, required: false },
 	penalty: { type: Number, required: false },
+	fee: { type: Number, required: false },
+	commission: { type: Number, required: false },
 	bill_date: { type: String, required: false },
 	bill_period: {
 		start_date: { type: Date, required: false },
