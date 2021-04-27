@@ -1208,7 +1208,7 @@ router.post("/getBankDashStatsForAgencies", jwtTokenAuth, function (req, res) {
 						}
 						Cashier.aggregate(
 							[
-								{ $match : {branch_id: branch_id}},
+								{ $match : {bank_id: bank_id}},
 								{
 									$group: {
 										_id: null,
