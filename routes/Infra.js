@@ -35,6 +35,8 @@ const Cashier = require("../models/Cashier");
 const Branch = require("../models/Branch");
 const MerchantBranch = require("../models/merchant/MerchantBranch");
 const Partner = require("../models/partner/Partner");
+const PartnerBranch = require("../models/partner/Branch");
+const PartnerCashier = require("../models/partner/Cashier");
 const Invoice = require("../models/merchant/Invoice");
 const DailyReport = require("../models/cashier/DailyReport");
 const Zone = require("../models/merchant/Zone");
@@ -1807,13 +1809,14 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 			} else {
 				try {
 					var totalBanks = await Bank.countDocuments({});
-					var totalmerchants = await Merchant.countDocuments({});
-					var totalusers = await User.countDocuments({});
 					var totalbranches = await Branch.countDocuments({});
-					var totalmerchantbranches = await MerchantBranch.countDocuments({});
 					var totalcashiers = await Cashier.countDocuments({});
 					var totalpartners = await Partner.countDocuments({});
-
+					var totalpartnerbranches = await PartnerBranch.countDocuments({});
+					var totalpartnercashiers = await PartnerCashier.countDocuments({});
+					var totalmerchants = await Merchant.countDocuments({});
+					var totalusers = await User.countDocuments({});
+					var totalmerchantbranches = await MerchantBranch.countDocuments({});
 					res.status(200).json({
 						status: 1,
 						totalBanks: totalBanks,
@@ -1822,6 +1825,8 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 						totalcashiers: totalcashiers,
 						totalmerchantbranches: totalmerchantbranches,
 						totalpartners: totalpartners,
+						totalpartnerbrances:totalpartnerbranches,
+						totalpartnercashiers:totalpartnercashiers,
 						totalbranches: totalbranches,
 					});
 				} catch (err) {
