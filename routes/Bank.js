@@ -1142,43 +1142,185 @@ router.post("/bankActivate", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/getBankDashStats", jwtTokenAuth, function (req, res) {
-	try {
-		const jwtusername = req.sign_creds.username;
-		Bank.findOne(
-			{
-				username: jwtusername,
-				status: 1,
-			},
-			async function (err, user) {
-				let result = errorMessage(
-					err,
-					user,
-					"Token changed or user not valid. Try to login again or contact system administrator."
-				);
-				if (result.status == 0) {
-					res.status(200).json(result);
-				} else {
-					const user_id = user._id;
-					var branchCount = await Branch.countDocuments({
-						bank_id: user_id,
-					});
-					var merchantCount = await Merchant.countDocuments({
-						bank_id: user_id,
-					});
-
-					res.status(200).json({
-						status: 1,
-						totalBranches: branchCount,
-						totalMerchants: merchantCount,
-					});
+router.post("/getBankDashStatsForAgencies", jwtTokenAuth, function (req, res) {
+	const { bank_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, bank) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
 				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: {$in: ['bankAdmin', 'infraAdmin']},
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
 			}
-		);
-	} catch (err) {
-		res.status(200).json(catchError(err));
-	}
+				Cashier.countDocuments(
+					{
+						bank_id: bank_id,
+					},
+					(err, count) => {
+						if (count == null || !count) {
+							count = 0;
+						}
+						Cashier.aggregate(
+							[
+								{ $match : {branch_id: branch_id}},
+								{
+									$group: {
+										_id: null,
+										total: {
+											$sum: "$cash_in_hand",
+										},
+										totalFee: {
+											$sum: "$fee_generated",
+										},
+										totalCommission: {
+											$sum: "$commission_generated",
+										},
+										openingBalance: {
+											$sum: "$opening_balance",
+										},
+										closingBalance: {
+											$sum: "$closing_balance",
+										},
+										cashReceived: {
+											$sum: "$cash_received",
+										},
+										cashPaid: {
+											$sum: "$cash_paid",
+										}
+									},
+								},
+							],
+							async (err, aggregate) => {
+								Invoice.aggregate(
+									[{ 
+										$match : {
+											payer_bank_id: bank_id,
+											paid:1,
+											date_paid: {
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
+										}
+									},
+										{
+											$group: {
+												_id: null,
+												totalAmountPaid: {
+													$sum: "$amount",
+												},
+												bills_paid: { $sum: 1 },
+											},
+										},
+									],
+									async (err, invoices) => {
+										let amountpaid = 0;
+										let billpaid = 0;
+										let cin = 0;
+										let fg = 0;
+										let cg = 0;
+										let ob = 0;
+										let cr = 0;
+										let cp = 0;
+										let cb = 0;
+										if (
+											aggregate != undefined &&
+											aggregate != null &&
+											aggregate.length > 0
+										) {
+											cin = aggregate[0].total;
+											fg = aggregate[0].totalFee;
+											cg = aggregate[0].totalCommission;
+											ob = aggregate[0].openingBalance;
+											cr = aggregate[0].cashReceived;
+											cp = aggregate[0].cashPaid;
+											cb = aggregate[0].closingBalance;
+										}
+										if (
+											invoices != undefined &&
+											invoices != null &&
+											invoices.length > 0
+										) {
+											amountpaid = invoices[0].totalAmountPaid;
+											billpaid = invoices[0].bills_paid;
+										}
+										var totalAgencies = await Branch.countDocuments({bank_id: bank_id});
+									
+										res.status(200).json({
+											status: 1,
+											invoicePaid: billpaid,
+											amountPaid: amountpaid,
+											totalCashier: count,
+											cashInHand: cin,
+											feeGenerated : fg,
+										 	cashReceived: cr,
+											cashPaid: cp,
+											commissionGenerated: cg,
+											openingBalance: ob,
+											closingBalance: cb,
+											totalAgencies: totalAgencies,
+										});
+									}
+								);
+							}
+						);
+					}
+				);
+			
+			
+		}
+	);
 });
+
 
 router.get("/getBankOperationalBalance", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
