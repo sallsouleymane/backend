@@ -706,6 +706,170 @@ router.post("/bank/getPartnerDashStats", jwtTokenAuth, function (req, res) {
 	);
 });
 
+router.post("/getBankDashStatsForPartners", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { bank_id } = req.body;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, bank) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: {$in: ['bankAdmin', 'infraAdmin']},
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}	
+				PartnerCashier.countDocuments(
+					{
+						bank_id: bank_id,
+					},
+					(err, count) => {
+						if (count == null || !count) {
+							count = 0;
+						}
+						PartnerCashier.aggregate(
+							[
+								{ $match : {bank_id: bank_id}},
+								{
+									$group: {
+										_id: null,
+										total: {
+											$sum: "$cash_in_hand",
+										},
+										totalFee: {
+											$sum: "$fee_generated",
+										},
+										totalCommission: {
+											$sum: "$commission_generated",
+										},
+										openingBalance: {
+											$sum: "$opening_balance",
+										},
+										closingBalance: {
+											$sum: "$closing_balance",
+										},
+										cashReceived: {
+											$sum: "$cash_received",
+										},
+										cashPaid: {
+											$sum: "$cash_paid",
+										}
+									},
+								},
+							],
+							async (err, aggregate) => {
+								Invoice.aggregate(
+									[{ 
+										$match : {
+											payer_bank_id: bank_id,
+											paid:1,
+										}
+									},
+										{
+											$group: {
+												_id: null,
+												totalAmountPaid: {
+													$sum: "$amount",
+												},
+												bills_paid: { $sum: 1 },
+											},
+										},
+									],
+									async (err, invoices) => {
+										let amountpaid = 0;
+										let billpaid = 0;
+										let cin = 0;
+										let fg = 0;
+										let cg = 0;
+										let ob = 0;
+										let cr = 0;
+										let cp = 0;
+										let cb = 0;
+										if (
+											aggregate != undefined &&
+											aggregate != null &&
+											aggregate.length > 0
+										) {
+											cin = aggregate[0].total;
+											fg = aggregate[0].totalFee;
+											cg = aggregate[0].totalCommission;
+											ob = aggregate[0].openingBalance;
+											cr = aggregate[0].cashReceived;
+											cp = aggregate[0].cashPaid;
+											cb = aggregate[0].closingBalance;
+										}
+										if (
+											invoices != undefined &&
+											invoices != null &&
+											invoices.length > 0
+										) {
+											amountpaid = invoices[0].totalAmountPaid;
+											billpaid = invoices[0].bills_paid;
+										}
+										var totalPartners = await Partner.countDocuments({bank_id: bank_id});
+										res.status(200).json({
+											status: 1,
+											invoicePaid: billpaid,
+											amountPaid: amountpaid,
+											totalCashier: count,
+											cashInHand: cin,
+											feeGenerated : fg,
+										 	cashReceived: cr,
+											cashPaid: cp,
+											commissionGenerated: cg,
+											openingBalance: ob,
+											closingBalance: cb,
+											totalPartners:totalPartners,
+										});
+									}
+								);
+							}
+						);
+					}
+				);
+			
+		}
+	);
+});
+
 router.post("/bank/listPartnerBranches", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const {partner_id} = req.body;
