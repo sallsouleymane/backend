@@ -93,6 +93,7 @@ module.exports = async function (
 		return {
 			status: 1,
 			message: "Transaction success!",
+			transaction_code: transfer.master_code,
 			amount: transfer.exclusiveAmount,
 			fee: transfer.fee,
 			balance: balance,
