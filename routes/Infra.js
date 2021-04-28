@@ -1857,12 +1857,8 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 										$match : {
 											paid:1,
 											date_paid: {
-												$gte: new Date(
-													start
-												),
-												$lte: new Date(
-													end
-												),
+												$gte: new Date(),
+												$lte: new Date(),
 											},
 										}
 									},
@@ -1936,18 +1932,15 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 											totalpartnerbrances:totalpartnerbranches,
 											totalpartnercashiers:totalpartnercashiers,
 											totalbranches: totalbranches,
-											bank: bankaggregate,
-											partner: partneraggregate,
-											merchant: invoices,
-											// bankfee: bankFee,
-											// bankcommision: bankCommision,
-											// partnerfee: partnerFee,
-											// partnercommission: partnerCommission,
-											// banktranscount: bankTransCount,
-											// partnertranscount: partnerTransCount,
-											// merchanfee: merchantFee,
-											// merchantcommission: merchantCommission,
-											// merchantinvoice: merchantInvoice,
+											bankfee: bankFee,
+											bankcommision: bankCommision,
+											partnerfee: partnerFee,
+											partnercommission: partnerCommission,
+											banktranscount: bankTransCount,
+											partnertranscount: partnerTransCount,
+											merchanfee: merchantFee,
+											merchantcommission: merchantCommission,
+											merchantinvoice: merchantInvoice,
 										});
 
 									}
