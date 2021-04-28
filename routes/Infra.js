@@ -1807,32 +1807,146 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				try {
-					var totalBanks = await Bank.countDocuments({});
-					var totalbranches = await Branch.countDocuments({});
-					var totalcashiers = await Cashier.countDocuments({});
-					var totalpartners = await Partner.countDocuments({});
-					var totalpartnerbranches = await PartnerBranch.countDocuments({});
-					var totalpartnercashiers = await PartnerCashier.countDocuments({});
-					var totalmerchants = await Merchant.countDocuments({});
-					var totalusers = await User.countDocuments({});
-					var totalmerchantbranches = await MerchantBranch.countDocuments({});
-					res.status(200).json({
-						status: 1,
-						totalBanks: totalBanks,
-						totalMerchants: totalmerchants,
-						totalusers: totalusers,
-						totalcashiers: totalcashiers,
-						totalmerchantbranches: totalmerchantbranches,
-						totalpartners: totalpartners,
-						totalpartnerbrances:totalpartnerbranches,
-						totalpartnercashiers:totalpartnercashiers,
-						totalbranches: totalbranches,
-					});
-				} catch (err) {
-					console.log(err);
-					res.status(200).json({ status: 0, message: err.message });
-				}
+				Cashier.aggregate(
+					[
+						{
+							$group: {
+								_id: null,
+								
+								totalFee: {
+									$sum: "$fee_generated",
+								},
+								totalCommission: {
+									$sum: "$commission_generated",
+								},
+								totalTrans:{
+									$sum: "$total_trans",
+								},
+							}
+						},
+					],
+					async (err, bankaggregate) => {
+						PartnerCashier.aggregate(
+							[
+								{
+									$group: {
+										_id: null,
+										
+										totalFee: {
+											$sum: "$fee_generated",
+										},
+										totalCommission: {
+											$sum: "$commission_generated",
+										},
+										totalTrans:{
+											$sum: "$total_trans",
+										},
+									}
+								},
+							],
+							async (err, partneraggregate) => {
+								Invoice.aggregate(
+									[{ 
+										$match : {
+											paid:1,
+											date_paid: {
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
+										}
+									},
+										{
+											$group: {
+												_id: null,
+												totalFee: {
+													$sum: "$fee",
+												},
+												totalCommission:  {
+													$sum: "$commission",
+												},
+												billsPaid: { $sum: 1 },
+											},
+										},
+									],
+									async (err, invoices) => {
+										let bankfee = 0;
+										let bankcommision = 0;
+										let partnerfee = 0;
+										let partnercommission = 0;
+										let banktranscount = 0;
+										let partnertranscount = 0;
+										let merchanfee = 0;
+										let merchantcommission = 0;
+										let merchantinvoice = 0;
+										if (
+											bankaggregate != undefined &&
+											bankaggregate != null &&
+											bankaggregate.length > 0
+										) {
+											bankfee = bankaggregate[0].totalFee;
+											bankcommision = bankaggregate[0].totalCommission;
+											banktranscount = bankaggregate[0].totalTrans;
+										}
+										if (
+											partneraggregate != undefined &&
+											partneraggregate != null &&
+											partneraggregate.length > 0
+										) {
+											partnerfee = partneraggregate[0].totalFee;
+											partnercommission = partneraggregate[0].totalCommission;
+											partnertranscount = partneraggregate[0].totalTrans;
+										}
+										if (
+											invoices != undefined &&
+											invoices != null &&
+											invoices.length > 0
+										) {
+											merchanfee = invoices[0].totalFee;
+											merchantcommission = invoices[0].totalCommission;
+											merchantinvoice = invoices[0].billsPaid;
+										}
+										var totalBanks = await Bank.countDocuments({});
+										var totalbranches = await Branch.countDocuments({});
+										var totalcashiers = await Cashier.countDocuments({});
+										var totalpartners = await Partner.countDocuments({});
+										var totalpartnerbranches = await PartnerBranch.countDocuments({});
+										var totalpartnercashiers = await PartnerCashier.countDocuments({});
+										var totalmerchants = await Merchant.countDocuments({});
+										var totalusers = await User.countDocuments({});
+										var totalmerchantbranches = await MerchantBranch.countDocuments({});
+										res.status(200).json({
+											status: 1,
+											totalBanks: totalBanks,
+											totalMerchants: totalmerchants,
+											totalusers: totalusers,
+											totalcashiers: totalcashiers,
+											totalmerchantbranches: totalmerchantbranches,
+											totalpartners: totalpartners,
+											totalpartnerbrances:totalpartnerbranches,
+											totalpartnercashiers:totalpartnercashiers,
+											totalbranches: totalbranches,
+											bankfee: bankfee,
+											bankcommision: bankcommision,
+											partnerfee: partnerfee,
+											partnercommission: partnercommission,
+											banktranscount: banktranscount,
+											partnertranscount: partnertranscount,
+											merchanfee: merchanfee,
+											merchantcommission: merchantcommission,
+											merchantinvoice: merchantinvoice,
+										});
+
+									}
+								);
+							}
+						);
+					}
+
+				);
 			}
 		}
 	);
