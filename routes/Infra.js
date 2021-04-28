@@ -1816,7 +1816,6 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 						{
 							$group: {
 								_id: null,
-								
 								totalFee: {
 									$sum: "$fee_generated",
 								},
@@ -1881,41 +1880,41 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 										},
 									],
 									async (err, invoices) => {
-										let bankfee = 0;
-										let bankcommision = 0;
-										let partnerfee = 0;
-										let partnercommission = 0;
-										let banktranscount = 0;
-										let partnertranscount = 0;
-										let merchanfee = 0;
-										let merchantcommission = 0;
-										let merchantinvoice = 0;
+										let bankFee = 0;
+										let bankCommision = 0;
+										let partnerFee = 0;
+										let partnerCommission = 0;
+										let bankTransCount = 0;
+										let partnerTransCount = 0;
+										let merchantFee = 0;
+										let merchantCommission = 0;
+										let merchantInvoice = 0;
 										if (
 											bankaggregate != undefined &&
 											bankaggregate != null &&
 											bankaggregate.length > 0
 										) {
-											bankfee = bankaggregate[0].totalFee;
-											bankcommision = bankaggregate[0].totalCommission;
-											banktranscount = bankaggregate[0].totalTrans;
+											bankFee = bankaggregate[0].totalFee;
+											bankCommision = bankaggregate[0].totalCommission;
+											bankTransCount = bankaggregate[0].totalTrans;
 										}
 										if (
 											partneraggregate != undefined &&
 											partneraggregate != null &&
 											partneraggregate.length > 0
 										) {
-											partnerfee = partneraggregate[0].totalFee;
-											partnercommission = partneraggregate[0].totalCommission;
-											partnertranscount = partneraggregate[0].totalTrans;
+											partnerFee = partneraggregate[0].totalFee;
+											partnerCommission = partneraggregate[0].totalCommission;
+											partnerTransCount = partneraggregate[0].totalTrans;
 										}
 										if (
 											invoices != undefined &&
 											invoices != null &&
 											invoices.length > 0
 										) {
-											merchanfee = invoices[0].totalFee;
-											merchantcommission = invoices[0].totalCommission;
-											merchantinvoice = invoices[0].billsPaid;
+											merchantFee = invoices[0].totalFee;
+											merchantCommission = invoices[0].totalCommission;
+											merchantInvoice = invoices[0].billsPaid;
 										}
 										var totalBanks = await Bank.countDocuments({});
 										var totalbranches = await Branch.countDocuments({});
@@ -1937,15 +1936,15 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 											totalpartnerbrances:totalpartnerbranches,
 											totalpartnercashiers:totalpartnercashiers,
 											totalbranches: totalbranches,
-											bankfee: bankfee,
-											bankcommision: bankcommision,
-											partnerfee: partnerfee,
-											partnercommission: partnercommission,
-											banktranscount: banktranscount,
-											partnertranscount: partnertranscount,
-											merchanfee: merchanfee,
-											merchantcommission: merchantcommission,
-											merchantinvoice: merchantinvoice,
+											bankfee: bankFee,
+											bankcommision: bankCommision,
+											partnerfee: partnerFee,
+											partnercommission: partnerCommission,
+											banktranscount: bankTransCount,
+											partnertranscount: partnerTransCount,
+											merchanfee: merchantFee,
+											merchantcommission: merchantCommission,
+											merchantinvoice: merchantInvoice,
 										});
 
 									}
