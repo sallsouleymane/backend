@@ -1808,7 +1808,11 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 				res.status(200).json(result);
 			} else {
 				Cashier.aggregate(
-					[
+					[{ 
+						$match : {
+							status:1,
+						}
+					},
 						{
 							$group: {
 								_id: null,
@@ -1827,7 +1831,11 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 					],
 					async (err, bankaggregate) => {
 						PartnerCashier.aggregate(
-							[
+							[{ 
+								$match : {
+									status:1,
+								}
+							},
 								{
 									$group: {
 										_id: null,
