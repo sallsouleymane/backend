@@ -1924,7 +1924,7 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 										var totalusers = await User.countDocuments({});
 										var totalmerchantbranches = await MerchantBranch.countDocuments({});
 										var totalmerchantstaff = await MerchantPosition.countDocuments({type:'staff'});
-										var totalmerchantcashier = await MerchantBranch.countDocuments({type:'cashier'});
+										var totalmerchantcashier = await MerchantPosition.countDocuments({type:'cashier'});
 										res.status(200).json({
 											status: 1,
 											totalBanks: totalBanks,
