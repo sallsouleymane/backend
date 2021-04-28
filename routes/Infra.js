@@ -1925,6 +1925,14 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 										var totalmerchantbranches = await MerchantBranch.countDocuments({});
 										var totalmerchantstaff = await MerchantPosition.countDocuments({type:'staff'});
 										var totalmerchantcashier = await MerchantPosition.countDocuments({type:'cashier'});
+										var totalinvoicecreated = await Invoice.countDocuments(
+											{
+												created_at: {
+													$gte: new Date(),
+													$lte: new Date(),
+												},
+											}
+										);
 										res.status(200).json({
 											status: 1,
 											totalBanks: totalBanks,
@@ -1948,6 +1956,7 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 											merchanfee: merchantFee,
 											merchantcommission: merchantCommission,
 											merchantinvoice: merchantInvoice,
+											merchantinvoicecreated: totalinvoicecreated,
 										});
 
 									}
