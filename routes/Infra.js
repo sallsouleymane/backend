@@ -41,6 +41,7 @@ const Invoice = require("../models/merchant/Invoice");
 const DailyReport = require("../models/cashier/DailyReport");
 const Zone = require("../models/merchant/Zone");
 const Subzone = require("../models/merchant/Subzone");
+const MerchantPosition = require("../models/merchant/Position");
 
 const mainFee = config.mainFee;
 
@@ -1918,13 +1919,19 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 										var totalpartners = await Partner.countDocuments({});
 										var totalpartnerbranches = await PartnerBranch.countDocuments({});
 										var totalpartnercashiers = await PartnerCashier.countDocuments({});
-										var totalmerchants = await Merchant.countDocuments({});
+										var totalbankmerchants = await Merchant.countDocuments({creator:0});
+										var totalInframerchants = await Merchant.countDocuments({creator:1});
 										var totalusers = await User.countDocuments({});
 										var totalmerchantbranches = await MerchantBranch.countDocuments({});
+										var totalmerchantstaff = await MerchantPosition.countDocuments({type:'staff'});
+										var totalmerchantcashier = await MerchantBranch.countDocuments({type:'cashier'});
 										res.status(200).json({
 											status: 1,
 											totalBanks: totalBanks,
-											totalMerchants: totalmerchants,
+											totalBankMerchants: totalbankmerchants,
+											totalInfraMerchants: totalInframerchants,
+											totalMerchantStaff: totalmerchantstaff,
+											totalMerchantCashier: totalmerchantcashier,
 											totalusers: totalusers,
 											totalcashiers: totalcashiers,
 											totalmerchantbranches: totalmerchantbranches,
