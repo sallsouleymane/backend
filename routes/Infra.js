@@ -1933,7 +1933,7 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 											totalpartnercashiers:totalpartnercashiers,
 											totalbranches: totalbranches,
 											bankfee: bankFee,
-											bankcommission: bankCommision,
+											bankcommission: bankCommission,
 											partnerfee: partnerFee,
 											partnercommission: partnerCommission,
 											banktranscount: bankTransCount,
