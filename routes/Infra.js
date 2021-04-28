@@ -1877,7 +1877,7 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 									],
 									async (err, invoices) => {
 										let bankFee = 0;
-										let bankCommision = 0;
+										let bankCommission = 0;
 										let partnerFee = 0;
 										let partnerCommission = 0;
 										let bankTransCount = 0;
@@ -1891,7 +1891,7 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 											bankaggregate.length > 0
 										) {
 											bankFee = bankaggregate[0].totalFee;
-											bankCommision = bankaggregate[0].totalCommission;
+											bankCommission = bankaggregate[0].totalCommission;
 											bankTransCount = bankaggregate[0].totalTrans;
 										}
 										if (
@@ -1933,7 +1933,7 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 											totalpartnercashiers:totalpartnercashiers,
 											totalbranches: totalbranches,
 											bankfee: bankFee,
-											bankcommision: bankCommision,
+											bankcommission: bankCommision,
 											partnerfee: partnerFee,
 											partnercommission: partnerCommission,
 											banktranscount: bankTransCount,
