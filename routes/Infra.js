@@ -964,9 +964,10 @@ router.post("/infra/getBankDashStats", jwtTokenAuth, function (req, res) {
 												) {
 													amountpaid = invoices[0].totalAmountPaid;
 													billpaid = invoices[0].bills_paid;
-													mfg = invoices[0].fee,
-													mcg = invoices[0].comm,
+													mfg = invoices[0].fee;
+													mcg = invoices[0].comm;
 												}
+
 												var bankmerchants = await Merchant.countDocuments({bank_id:bank_id});
 												var merchantBranches = await MerchantBranch.countDocuments({bank_id:bank_id});
 												var merchantStaffs = await MerchantPosition.countDocuments({bank_id:bank_id, type:'staff'});
