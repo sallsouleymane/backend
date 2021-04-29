@@ -28,6 +28,7 @@ module.exports = function updateClaimRecord(model, data, next) {
 					{
 						$inc: {
 							cash_paid: Number(amount),
+							cash_paid_fee: Number(claimFee),
 							cash_in_hand: -Number(amount),
 							fee_generated: Number(claimFee),
 							total_trans: 1,

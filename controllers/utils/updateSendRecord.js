@@ -31,6 +31,7 @@ module.exports = function updateCashierRecords(model, data, next) {
 					{
 						$inc: {
 							cash_received: totalAmount,
+							cash_received_fee: Number(sendFee),
 							cash_in_hand: totalAmount,
 							fee_generated: Number(sendFee),
 							total_trans: 1,
