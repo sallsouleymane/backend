@@ -842,85 +842,179 @@ router.post("/infra/getBankDashStats", jwtTokenAuth, function (req, res) {
 										totalCommission: {
 											$sum: "$commission_generated",
 										},
-										openingBalance: {
-											$sum: "$opening_balance",
-										},
-										closingBalance: {
-											$sum: "$closing_balance",
-										},
 										cashReceived: {
 											$sum: "$cash_received",
 										},
+										cashReceivedFee: {
+											$sum: "$cash_received_fee",
+										},
+										cashReceivedComm: {
+											$sum: "$cash_received_commission",
+										},
 										cashPaid: {
 											$sum: "$cash_paid",
+										},
+										cashPaidFee: {
+											$sum: "$cash_paid_fee",
+										},
+										cashPaidComm: {
+											$sum: "$cash_paid_commission",
+										},
+										totalTrans:{
+											$sum: "$total_trans",
 										}
 									},
 								},
 							],
 							async (err, aggregate) => {
-								Invoice.aggregate(
-									[{ 
-										$match : {
-											payer_bank_id: bank_id,
-											paid:1,
-										}
-									},
+
+								PartnerCashier.aggregate(
+									[
+										{ $match : {bank_id: bank_id}},
 										{
 											$group: {
 												_id: null,
-												totalAmountPaid: {
-													$sum: "$amount",
+												totalFee: {
+													$sum: "$fee_generated",
 												},
-												bills_paid: { $sum: 1 },
+												totalCommission: {
+													$sum: "$commission_generated",
+												},
+												totalTrans:{
+													$sum: "$total_trans",
+												},
+												partnerCashier: { $sum: 1 },
 											},
 										},
 									],
-									async (err, invoices) => {
-										let amountpaid = 0;
-										let billpaid = 0;
-										let cin = 0;
-										let fg = 0;
-										let cg = 0;
-										let ob = 0;
-										let cr = 0;
-										let cp = 0;
-										let cb = 0;
-										if (
-											aggregate != undefined &&
-											aggregate != null &&
-											aggregate.length > 0
-										) {
-											cin = aggregate[0].total;
-											fg = aggregate[0].totalFee;
-											cg = aggregate[0].totalCommission;
-											ob = aggregate[0].openingBalance;
-											cr = aggregate[0].cashReceived;
-											cp = aggregate[0].cashPaid;
-											cb = aggregate[0].closingBalance;
-										}
-										if (
-											invoices != undefined &&
-											invoices != null &&
-											invoices.length > 0
-										) {
-											amountpaid = invoices[0].totalAmountPaid;
-											billpaid = invoices[0].bills_paid;
-										}
-										res.status(200).json({
-											status: 1,
-											invoicePaid: billpaid,
-											amountPaid: amountpaid,
-											totalCashier: count,
-											cashInHand: cin,
-											feeGenerated : fg,
-										 	cashReceived: cr,
-											cashPaid: cp,
-											commissionGenerated: cg,
-											openingBalance: ob,
-											closingBalance: cb,
-										});
+									async (err, partneraggregate) => {
+										Invoice.aggregate(
+											[{ 
+												$match : {
+													payer_bank_id: bank_id,
+													paid:1,
+												}
+											},
+												{
+													$group: {
+														_id: null,
+														totalAmountPaid: {
+															$sum: "$amount",
+														},
+														fee: {
+															$sum: "$fee",
+														},
+														comm: {
+															$sum: "$commission",
+														},
+														bills_paid: { $sum: 1 },
+
+													},
+												},
+											],
+											async (err, invoices) => {
+												let amountpaid = 0;
+												let billpaid = 0;
+												let banktrans = 0;
+												let cr = 0;
+												let cp = 0;
+												let crf = 0;
+												let cpc = 0;
+												let crc = 0;
+												let cpf = 0;
+												let cin = 0;
+												let fg = 0;
+												let cg = 0;
+												let partnertrans = 0;
+												let partnercashier = 0;
+												let pfg = 0;
+												let pcg = 0;
+												let mfg = 0;
+												let mcg = 0;
+												if (
+													aggregate != undefined &&
+													aggregate != null &&
+													aggregate.length > 0
+												) {
+													cin = aggregate[0].total;
+													fg = aggregate[0].totalFee;
+													cg = aggregate[0].totalCommission;
+													cr = aggregate[0].cashReceived;
+													crf = aggregate[0].cashReceivedFee;
+													crc = aggregate[0].cashReceivedComm;
+													cp = aggregate[0].cashPaid;
+													cpf = aggregate[0].cashPaidFee;
+													cpc = aggregate[0].cashPaidComm;
+													banktrans = aggregate[0].totalTrans;
+												}
+												if (
+													partneraggregate != undefined &&
+													partneraggregate != null &&
+													partneraggregate.length > 0
+												) {
+													partnertrans = partneraggregate[0].totalTrans;
+													partnercashier = partneraggregate[0].partnerCashier;
+													pfg = partneraggregate[0].totalFee;
+													pcg = partneraggregate[0].totalCommission;
+												}
+												if (
+													invoices != undefined &&
+													invoices != null &&
+													invoices.length > 0
+												) {
+													amountpaid = invoices[0].totalAmountPaid;
+													billpaid = invoices[0].bills_paid;
+													mfg = invoices[0].fee,
+													mcg = invoices[0].comm,
+												}
+												var bankmerchants = await Merchant.countDocuments({bank_id:bank_id});
+												var merchantBranches = await MerchantBranch.countDocuments({bank_id:bank_id});
+												var merchantStaffs = await MerchantPosition.countDocuments({bank_id:bank_id, type:'staff'});
+												var merchantCashiers = await MerchantPosition.countDocuments({bank_id:bank_id,type:'cashier'});
+												var partnerBranches = await PartnerBranch.countDocuments({bank_id:bank_id});
+												var totalinvoicecreated = await Invoice.countDocuments(
+													{
+														bank_id:bank_id,
+														created_at: {
+															$gte: new Date(),
+															$lte: new Date(),
+														},
+													}
+												);
+												res.status(200).json({
+													status: 1,
+													totalCashier: count,
+													cashInHand: cin,
+													cashReceived: cr,
+													cashReceivedFee: crf,
+													cashReceivedComm: crc,
+													cashPaid: cp,
+													cashPaidFee: cpf,
+													cashPaidComm: cpc,
+													commissionGenerated: cg,
+													feeGenerated : fg,
+													totalTrans: banktrans,
+													partnerCashier:partnercashier,
+													partnerBranch:partnerBranches,
+													partnerCommissionGenerated: pcg,
+													partnerFeeGenerated : pfg,
+													partnerTotalTrans: partnertrans,
+													totalMerchant:bankmerchants,
+													merchantBranch:merchantBranches,
+													merchantStaff: merchantStaffs,
+													merchantCashiers:merchantCashiers,
+													invoicePaid: billpaid,
+													amountPaid: amountpaid,
+													invoiceCreated:totalinvoicecreated,
+													merchantCommissionGenerated: mcg,
+													merchantFeeGenerated : mfg,
+												});
+											}
+										);
+
 									}
 								);
+
 							}
 						);
 					}
