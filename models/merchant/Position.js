@@ -8,6 +8,7 @@ const MerchantPositionSchema = new mongoose.Schema({
 	merchant_id: { type: String, required: true },
 	branch_id: { type: String, required: true },
 	staff_id: { type: String, required: false, default: null },
+	bank_id: { type: String, required: false },
 	type: { type: String, required: false, default: null },
 	cash_in_hand: { type: Number, required: false, default: 0 },
 	closing_balance: { type: Number, required: false, default: 0 },

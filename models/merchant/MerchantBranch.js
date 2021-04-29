@@ -11,6 +11,7 @@ const MerchantBranchSchema = new mongoose.Schema({
 	state: { type: String, required: true },
 	read_only: { type: Boolean, default: false },
 	zip: { type: String, required: true },
+	bank_id: { type: String, required: false },
 	country: { type: String, required: true },
 	ccode: { type: String, required: true },
 	mobile: { type: String, required: true, unique: true },

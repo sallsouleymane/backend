@@ -3692,6 +3692,7 @@ router.post("/merchant/addPosition", jwtTokenAuth, (req, res) => {
 						data.working_to = working_to;
 						data.merchant_id = merchant._id;
 						data.branch_id = branch_id;
+						data.bank_id = merchant.bank_id;
 						data.type = type;
 						data.save((err, position) => {
 							if (err) {
@@ -4159,6 +4160,7 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 				data.country = country;
 				data.read_only = read_only;
 				data.zip = zip;
+				data.bank_id = merchant.bank_id;
 				data.ccode = ccode;
 				data.mobile = mobile;
 				data.email = email;
