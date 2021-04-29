@@ -134,6 +134,8 @@ module.exports.cashierInvoicePay = async (req, res) => {
 														cash_received: total_amount + result.bankFee,
 														cash_in_hand: total_amount + result.bankFee,
 														fee_generated: result.partnerFeeShare,
+														cash_received_fee: result.partnerFeeShare,
+														cash_received_commission: result.partnerCommShare,
 														commission_generated: result.partnerCommShare,
 														total_trans: 1,
 													},
