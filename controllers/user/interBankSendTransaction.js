@@ -162,6 +162,7 @@ module.exports.sendMoneyToNonWallet = function (req, res) {
 										receiverIdentificationAmount +
 										" XOF is transferred to branch",
 									balance: result.balance - (result.amount + result.fee),
+									transaction_code:master_code,
 								});
 							} else {
 								txstate.failed(categoryConst.MAIN, master_code);
@@ -275,6 +276,7 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 				status: 1,
 				message: sending_amount + " XOF is transferred to " + receiver.name,
 				balance: result1.balance - (result1.amount + result1.fee),
+				transaction_code:master_code,
 			});
 		} else {
 			res.status(200).json({

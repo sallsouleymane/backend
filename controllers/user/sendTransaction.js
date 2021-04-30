@@ -195,6 +195,7 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 																							balance:
 																								result.balance -
 																								(result.amount + result.fee),
+																							transaction_code:master_code,
 																						});
 																					}
 																				}
@@ -346,6 +347,7 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 																			balance:
 																				result.balance -
 																				(result.amount + result.fee),
+																			transaction_code:master_code,
 																		});
 																	} else {
 																		txstate.failed(
