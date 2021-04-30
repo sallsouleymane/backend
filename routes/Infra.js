@@ -63,59 +63,66 @@ router.post("/infra/getBankDailyReport", jwtTokenAuth, function (req, res) {
 				res.status(200).json(result);
 			} else {
 				DailyReport.aggregate(
-					[{ 
-						$match : {
-							bank_id: bank_id,
-							created_at: {
-								$gte: new Date(
-									start
-								),
-								$lte: new Date(
-									end
-								),
-							},
-						}
-					},
+					[
+						{ 
+							$match : {
+								user: 'Cashier',
+								bank_id: bank_id,
+								created_at: {
+									$gte: new Date(
+										start
+									),
+									$lte: new Date(
+										end
+									),
+								},
+							}
+						},
 						{
 							$group: {
 								_id: null,
-								opening_balance: {
-									$sum: "$opening_balance",
-								},
-								cash_in_hand: {
+								cashInHand: {
 									$sum: "$cash_in_hand",
 								},
-								cash_paid: {
-									$sum: "$paid_in_cash",
-								},
-								cash_received: {
-									$sum: "$cash_received",
-								},
-								fee_generated: {
+								totalFee: {
 									$sum: "$fee_generated",
 								},
-								comm_generated: {
-									$sum: "$comm_generated",
+								totalCommission: {
+									$sum: "$commission_generated",
 								},
-								closing_balance: {
-									$sum: "$closing_balance",
+								cashReceived: {
+									$sum: "$cash_received",
 								},
-								discripancy: {
-									$sum: "$descripency",
+								cashReceivedFee: {
+									$sum: "$cash_received_fee",
+								},
+								cashReceivedComm: {
+									$sum: "$cash_received_commission",
+								},
+								cashPaid: {
+									$sum: "$cash_paid",
+								},
+								cashPaidFee: {
+									$sum: "$cash_paid_fee",
+								},
+								cashPaidComm: {
+									$sum: "$cash_paid_commission",
+								},
+								totalTrans:{
+									$sum: "$total_trans",
 								}
-								
 							},
 						},
 					],
-					async(err, reports) => {
-						if (err) {
-							res.status(200).json(catchError(err));
-						} else {
-							Invoice.aggregate(
-								[{ 
+					async (err, aggregate) => {
+
+						DailyReport.aggregate(
+							[
+								{ 
 									$match : {
-										payer_bank_id: bank_id,
-										date_paid: {
+										user: 'PartnerCashier',
+										bank_id: bank_id,
+										created_at: {
 											$gte: new Date(
 												start
 											),
@@ -123,25 +130,54 @@ router.post("/infra/getBankDailyReport", jwtTokenAuth, function (req, res) {
 												end
 											),
 										},
-										paid:1,
 									}
 								},
-									{
-										$group: {
-											_id: null,
-											totalAmountPaid: {
-												$sum: "$amount",
-											},
-											bills_paid: { $sum: 1 },
+								{
+									$group: {
+										_id: null,
+										totalFee: {
+											$sum: "$fee_generated",
 										},
+										totalCommission: {
+											$sum: "$commission_generated",
+										},
+										totalTrans:{
+											$sum: "$total_trans",
+										},
+										partnerCashier: { $sum: 1 },
 									},
-								],
-								async (err, invoices) => {
-									if (err) {
-										res.status(200).json(catchError(err));
-									} else {
+								},
+							],
+							async (err, partneraggregate) => {
+								Invoice.aggregate(
+									[{ 
+										$match : {
+											payer_bank_id: bank_id,
+											paid:1,
+										}
+									},
+										{
+											$group: {
+												_id: null,
+												totalAmountPaid: {
+													$sum: "$amount",
+												},
+												fee: {
+													$sum: "$fee",
+												},
+												comm: {
+													$sum: "$commission",
+												},
+												bills_paid: { $sum: 1 },
+
+											},
+										},
+									],
+									async (err, invoices) => {
 										let amountpaid = 0;
 										let billpaid = 0;
+										let mfg = 0;
+										let mcg = 0;
 										if (
 											invoices != undefined &&
 											invoices != null &&
@@ -149,18 +185,278 @@ router.post("/infra/getBankDailyReport", jwtTokenAuth, function (req, res) {
 										) {
 											amountpaid = invoices[0].totalAmountPaid;
 											billpaid = invoices[0].bills_paid;
+											mfg = invoices[0].fee;
+											mcg = invoices[0].comm;
 										}
-											
-											res.status(200).json({
-												status: 1,
-												reports: reports,
-												invoicePaid: billpaid,
-												amountPaid: amountpaid,
-											});
+										var bankbranch = await Branch.countDocuments({bank_id:bank_id});
+										var bankcashier = await Cashier.countDocuments({bank_id:bank_id});
+										var bankmerchants = await Merchant.countDocuments({bank_id:bank_id});
+										var merchantBranches = await MerchantBranch.countDocuments({bank_id:bank_id});
+										var merchantStaffs = await MerchantPosition.countDocuments({bank_id:bank_id, type:'staff'});
+										var merchantCashiers = await MerchantPosition.countDocuments({bank_id:bank_id,type:'cashier'});
+										var bankpartner = await Partner.countDocuments({bank_id:bank_id});
+										var partnerCashier = await PartnerCashier.countDocuments({bank_id:bank_id});
+										var partnerBranches = await PartnerBranch.countDocuments({bank_id:bank_id});
+										var totalinvoicecreated = await Invoice.countDocuments(
+											{
+												bank_id:bank_id,
+												created_at: {
+													$gte: new Date(start),
+													$lte: new Date(end),
+												},
+											}
+										);
+										res.status(200).json({
+											status: 1,
+											totalCashier: bankcashier,
+											totalBranch: bankbranch,
+											totalMerchant:bankmerchants,
+											merchantBranch:merchantBranches,
+											merchantStaff: merchantStaffs,
+											merchantCashiers:merchantCashiers,
+											totalPartner:bankpartner,
+											partnerCashier:partnerCashier,
+											partnerBranch:partnerBranches,
+											merchantCommissionGenerated: mcg,
+											merchantFeeGenerated : mfg,
+											invoicePaid: billpaid,
+											amountPaid: amountpaid,
+											invoiceCreated:totalinvoicecreated,
+											bankreport: aggregate,
+											partnerreport: partneraggregate,
+
+										});
 									}
-								}
-							)
+								);
+
+							}
+						);
+
+					}
+				);
+			}
+		}
+	);
+});
+
+
+router.post("/infra/getBankDashStats", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { bank_id } = req.body;
+	Infra.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, infra) {
+			let result = errorMessage(
+				err,
+				infra,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+
+				Cashier.countDocuments(
+					{
+						bank_id: bank_id,
+					},
+					(err, count) => {
+						if (count == null || !count) {
+							count = 0;
 						}
+						Cashier.aggregate(
+							[
+								{ $match : {bank_id: bank_id}},
+								{
+									$group: {
+										_id: null,
+										total: {
+											$sum: "$cash_in_hand",
+										},
+										totalFee: {
+											$sum: "$fee_generated",
+										},
+										totalCommission: {
+											$sum: "$commission_generated",
+										},
+										cashReceived: {
+											$sum: "$cash_received",
+										},
+										cashReceivedFee: {
+											$sum: "$cash_received_fee",
+										},
+										cashReceivedComm: {
+											$sum: "$cash_received_commission",
+										},
+										cashPaid: {
+											$sum: "$cash_paid",
+										},
+										cashPaidFee: {
+											$sum: "$cash_paid_fee",
+										},
+										cashPaidComm: {
+											$sum: "$cash_paid_commission",
+										},
+										totalTrans:{
+											$sum: "$total_trans",
+										}
+									},
+								},
+							],
+							async (err, aggregate) => {
+
+								PartnerCashier.aggregate(
+									[
+										{ $match : {bank_id: bank_id}},
+										{
+											$group: {
+												_id: null,
+												totalFee: {
+													$sum: "$fee_generated",
+												},
+												totalCommission: {
+													$sum: "$commission_generated",
+												},
+												totalTrans:{
+													$sum: "$total_trans",
+												},
+												partnerCashier: { $sum: 1 },
+											},
+										},
+									],
+									async (err, partneraggregate) => {
+										Invoice.aggregate(
+											[{ 
+												$match : {
+													payer_bank_id: bank_id,
+													paid:1,
+												}
+											},
+												{
+													$group: {
+														_id: null,
+														totalAmountPaid: {
+															$sum: "$amount",
+														},
+														fee: {
+															$sum: "$fee",
+														},
+														comm: {
+															$sum: "$commission",
+														},
+														bills_paid: { $sum: 1 },
+
+													},
+												},
+											],
+											async (err, invoices) => {
+												let amountpaid = 0;
+												let billpaid = 0;
+												let banktrans = 0;
+												let cr = 0;
+												let cp = 0;
+												let crf = 0;
+												let cpc = 0;
+												let crc = 0;
+												let cpf = 0;
+												let cin = 0;
+												let fg = 0;
+												let cg = 0;
+												let partnertrans = 0;
+												let partnercashier = 0;
+												let pfg = 0;
+												let pcg = 0;
+												let mfg = 0;
+												let mcg = 0;
+												if (
+													aggregate != undefined &&
+													aggregate != null &&
+													aggregate.length > 0
+												) {
+													cin = aggregate[0].total;
+													fg = aggregate[0].totalFee;
+													cg = aggregate[0].totalCommission;
+													cr = aggregate[0].cashReceived;
+													crf = aggregate[0].cashReceivedFee;
+													crc = aggregate[0].cashReceivedComm;
+													cp = aggregate[0].cashPaid;
+													cpf = aggregate[0].cashPaidFee;
+													cpc = aggregate[0].cashPaidComm;
+													banktrans = aggregate[0].totalTrans;
+												}
+												if (
+													partneraggregate != undefined &&
+													partneraggregate != null &&
+													partneraggregate.length > 0
+												) {
+													partnertrans = partneraggregate[0].totalTrans;
+													partnercashier = partneraggregate[0].partnerCashier;
+													pfg = partneraggregate[0].totalFee;
+													pcg = partneraggregate[0].totalCommission;
+												}
+												if (
+													invoices != undefined &&
+													invoices != null &&
+													invoices.length > 0
+												) {
+													amountpaid = invoices[0].totalAmountPaid;
+													billpaid = invoices[0].bills_paid;
+													mfg = invoices[0].fee;
+													mcg = invoices[0].comm;
+												}
+
+												var bankmerchants = await Merchant.countDocuments({bank_id:bank_id});
+												var merchantBranches = await MerchantBranch.countDocuments({bank_id:bank_id});
+												var merchantStaffs = await MerchantPosition.countDocuments({bank_id:bank_id, type:'staff'});
+												var merchantCashiers = await MerchantPosition.countDocuments({bank_id:bank_id,type:'cashier'});
+												var partnerBranches = await PartnerBranch.countDocuments({bank_id:bank_id});
+												var totalinvoicecreated = await Invoice.countDocuments(
+													{
+														bank_id:bank_id,
+														created_at: {
+															$gte: new Date(),
+															$lte: new Date(),
+														},
+													}
+												);
+												res.status(200).json({
+													status: 1,
+													totalCashier: count,
+													cashInHand: cin,
+													cashReceived: cr,
+													cashReceivedFee: crf,
+													cashReceivedComm: crc,
+													cashPaid: cp,
+													cashPaidFee: cpf,
+													cashPaidComm: cpc,
+													commissionGenerated: cg,
+													feeGenerated : fg,
+													totalTrans: banktrans,
+													partnerCashier:partnercashier,
+													partnerBranch:partnerBranches,
+													partnerCommissionGenerated: pcg,
+													partnerFeeGenerated : pfg,
+													partnerTotalTrans: partnertrans,
+													totalMerchant:bankmerchants,
+													merchantBranch:merchantBranches,
+													merchantStaff: merchantStaffs,
+													merchantCashiers:merchantCashiers,
+													invoicePaid: billpaid,
+													amountPaid: amountpaid,
+													invoiceCreated:totalinvoicecreated,
+													merchantCommissionGenerated: mcg,
+													merchantFeeGenerated : mfg,
+												});
+											}
+										);
+
+									}
+								);
+
+							}
+						);
 					}
 				);
 			}
@@ -794,230 +1090,6 @@ router.post("/infra/bankAccess",jwtTokenAuth, function (req, res) {
 									}
 								});
 							}	
-					}
-				);
-			}
-		}
-	);
-});
-
-router.post("/infra/getBankDashStats", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	const { bank_id } = req.body;
-	Infra.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, infra) {
-			let result = errorMessage(
-				err,
-				infra,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-
-				Cashier.countDocuments(
-					{
-						bank_id: bank_id,
-					},
-					(err, count) => {
-						if (count == null || !count) {
-							count = 0;
-						}
-						Cashier.aggregate(
-							[
-								{ $match : {bank_id: bank_id}},
-								{
-									$group: {
-										_id: null,
-										total: {
-											$sum: "$cash_in_hand",
-										},
-										totalFee: {
-											$sum: "$fee_generated",
-										},
-										totalCommission: {
-											$sum: "$commission_generated",
-										},
-										cashReceived: {
-											$sum: "$cash_received",
-										},
-										cashReceivedFee: {
-											$sum: "$cash_received_fee",
-										},
-										cashReceivedComm: {
-											$sum: "$cash_received_commission",
-										},
-										cashPaid: {
-											$sum: "$cash_paid",
-										},
-										cashPaidFee: {
-											$sum: "$cash_paid_fee",
-										},
-										cashPaidComm: {
-											$sum: "$cash_paid_commission",
-										},
-										totalTrans:{
-											$sum: "$total_trans",
-										}
-									},
-								},
-							],
-							async (err, aggregate) => {
-
-								PartnerCashier.aggregate(
-									[
-										{ $match : {bank_id: bank_id}},
-										{
-											$group: {
-												_id: null,
-												totalFee: {
-													$sum: "$fee_generated",
-												},
-												totalCommission: {
-													$sum: "$commission_generated",
-												},
-												totalTrans:{
-													$sum: "$total_trans",
-												},
-												partnerCashier: { $sum: 1 },
-											},
-										},
-									],
-									async (err, partneraggregate) => {
-										Invoice.aggregate(
-											[{ 
-												$match : {
-													payer_bank_id: bank_id,
-													paid:1,
-												}
-											},
-												{
-													$group: {
-														_id: null,
-														totalAmountPaid: {
-															$sum: "$amount",
-														},
-														fee: {
-															$sum: "$fee",
-														},
-														comm: {
-															$sum: "$commission",
-														},
-														bills_paid: { $sum: 1 },
-
-													},
-												},
-											],
-											async (err, invoices) => {
-												let amountpaid = 0;
-												let billpaid = 0;
-												let banktrans = 0;
-												let cr = 0;
-												let cp = 0;
-												let crf = 0;
-												let cpc = 0;
-												let crc = 0;
-												let cpf = 0;
-												let cin = 0;
-												let fg = 0;
-												let cg = 0;
-												let partnertrans = 0;
-												let partnercashier = 0;
-												let pfg = 0;
-												let pcg = 0;
-												let mfg = 0;
-												let mcg = 0;
-												if (
-													aggregate != undefined &&
-													aggregate != null &&
-													aggregate.length > 0
-												) {
-													cin = aggregate[0].total;
-													fg = aggregate[0].totalFee;
-													cg = aggregate[0].totalCommission;
-													cr = aggregate[0].cashReceived;
-													crf = aggregate[0].cashReceivedFee;
-													crc = aggregate[0].cashReceivedComm;
-													cp = aggregate[0].cashPaid;
-													cpf = aggregate[0].cashPaidFee;
-													cpc = aggregate[0].cashPaidComm;
-													banktrans = aggregate[0].totalTrans;
-												}
-												if (
-													partneraggregate != undefined &&
-													partneraggregate != null &&
-													partneraggregate.length > 0
-												) {
-													partnertrans = partneraggregate[0].totalTrans;
-													partnercashier = partneraggregate[0].partnerCashier;
-													pfg = partneraggregate[0].totalFee;
-													pcg = partneraggregate[0].totalCommission;
-												}
-												if (
-													invoices != undefined &&
-													invoices != null &&
-													invoices.length > 0
-												) {
-													amountpaid = invoices[0].totalAmountPaid;
-													billpaid = invoices[0].bills_paid;
-													mfg = invoices[0].fee;
-													mcg = invoices[0].comm;
-												}
-
-												var bankmerchants = await Merchant.countDocuments({bank_id:bank_id});
-												var merchantBranches = await MerchantBranch.countDocuments({bank_id:bank_id});
-												var merchantStaffs = await MerchantPosition.countDocuments({bank_id:bank_id, type:'staff'});
-												var merchantCashiers = await MerchantPosition.countDocuments({bank_id:bank_id,type:'cashier'});
-												var partnerBranches = await PartnerBranch.countDocuments({bank_id:bank_id});
-												var totalinvoicecreated = await Invoice.countDocuments(
-													{
-														bank_id:bank_id,
-														created_at: {
-															$gte: new Date(),
-															$lte: new Date(),
-														},
-													}
-												);
-												res.status(200).json({
-													status: 1,
-													totalCashier: count,
-													cashInHand: cin,
-													cashReceived: cr,
-													cashReceivedFee: crf,
-													cashReceivedComm: crc,
-													cashPaid: cp,
-													cashPaidFee: cpf,
-													cashPaidComm: cpc,
-													commissionGenerated: cg,
-													feeGenerated : fg,
-													totalTrans: banktrans,
-													partnerCashier:partnercashier,
-													partnerBranch:partnerBranches,
-													partnerCommissionGenerated: pcg,
-													partnerFeeGenerated : pfg,
-													partnerTotalTrans: partnertrans,
-													totalMerchant:bankmerchants,
-													merchantBranch:merchantBranches,
-													merchantStaff: merchantStaffs,
-													merchantCashiers:merchantCashiers,
-													invoicePaid: billpaid,
-													amountPaid: amountpaid,
-													invoiceCreated:totalinvoicecreated,
-													merchantCommissionGenerated: mcg,
-													merchantFeeGenerated : mfg,
-												});
-											}
-										);
-
-									}
-								);
-
-							}
-						);
 					}
 				);
 			}
