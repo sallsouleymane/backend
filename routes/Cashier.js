@@ -858,8 +858,13 @@ router.post("/addClosingBalance", jwtTokenAuth, function (req, res) {
 				data.bank_id = cashier.bank_id;
 				data.created_at = new Date();
 				data.user = "Cashier";
+				data.total_trans = cashier.total_trans;
 				data.denomination = denomination;
 				data.note = note;
+				data.cash_received_fee = cashier.cash_received_fee;
+				data.cash_received_commission = cashier.cash_received_commission;
+				data.cash_paid_fee = cashier.cash_paid_fee;
+				data.cash_paid_commission = cashier.cash_paid_commission;
 				data.paid_in_cash = cashier.cash_paid;
 				data.cash_received = cashier.cash_received;
 				data.fee_generated = cashier.fee_generated;
