@@ -154,6 +154,14 @@ router.post("/infra/getBankDailyReport", jwtTokenAuth, function (req, res) {
 										$match : {
 											payer_bank_id: bank_id,
 											paid:1,
+											date_paid:{
+												$gte: new Date(
+													start
+												),
+												$lte: new Date(
+													end
+												),
+											},
 										}
 									},
 										{
