@@ -330,6 +330,24 @@ router.post("/infra/getBankDashStats", jwtTokenAuth, function (req, res) {
 												totalTrans:{
 													$sum: "$total_trans",
 												},
+												cashReceived: {
+													$sum: "$cash_received",
+												},
+												cashReceivedFee: {
+													$sum: "$cash_received_fee",
+												},
+												cashReceivedComm: {
+													$sum: "$cash_received_commission",
+												},
+												cashPaid: {
+													$sum: "$cash_paid",
+												},
+												cashPaidFee: {
+													$sum: "$cash_paid_fee",
+												},
+												cashPaidComm: {
+													$sum: "$cash_paid_commission",
+												},
 												partnerCashier: { $sum: 1 },
 											},
 										},
@@ -374,6 +392,12 @@ router.post("/infra/getBankDashStats", jwtTokenAuth, function (req, res) {
 												let cg = 0;
 												let partnertrans = 0;
 												let partnercashier = 0;
+												let pcr = 0;
+												let pcp = 0;
+												let pcrf = 0;
+												let pcpc = 0;
+												let pcrc = 0;
+												let pcpf = 0;
 												let pfg = 0;
 												let pcg = 0;
 												let mfg = 0;
@@ -403,6 +427,12 @@ router.post("/infra/getBankDashStats", jwtTokenAuth, function (req, res) {
 													partnercashier = partneraggregate[0].partnerCashier;
 													pfg = partneraggregate[0].totalFee;
 													pcg = partneraggregate[0].totalCommission;
+													pcr = partneraggregate[0].cashReceived;
+													pcrf = partneraggregate[0].cashReceivedFee;
+													pcrc = partneraggregate[0].cashReceivedComm;
+													pcp = partneraggregate[0].cashPaid;
+													pcpf = partneraggregate[0].cashPaidFee;
+													pcpc = partneraggregate[0].cashPaidComm;
 												}
 												if (
 													invoices != undefined &&
@@ -439,6 +469,12 @@ router.post("/infra/getBankDashStats", jwtTokenAuth, function (req, res) {
 													cashPaid: cp,
 													cashPaidFee: cpf,
 													cashPaidComm: cpc,
+													partnerCashReceived: pcr,
+													partnerCashReceivedFee: pcrf,
+													partnerCashReceivedComm: pcrc,
+													partnerCashPaid: pcp,
+													partnerCashPaidFee: pcpf,
+													partnerCashPaidComm: pcpc,
 													commissionGenerated: cg,
 													feeGenerated : fg,
 													totalTrans: banktrans,
