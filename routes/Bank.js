@@ -1254,8 +1254,20 @@ router.post("/getBankDashStatsForAgencies", jwtTokenAuth, function (req, res) {
 										cashReceived: {
 											$sum: "$cash_received",
 										},
+										cashReceivedFee: {
+											$sum: "$cash_received_fee",
+										},
+										cashReceivedComm: {
+											$sum: "$cash_received_commission",
+										},
 										cashPaid: {
 											$sum: "$cash_paid",
+										},
+										cashPaidFee: {
+											$sum: "$cash_paid_fee",
+										},
+										cashPaidComm: {
+											$sum: "$cash_paid_commission",
 										}
 									},
 								},
@@ -1294,7 +1306,11 @@ router.post("/getBankDashStatsForAgencies", jwtTokenAuth, function (req, res) {
 										let cg = 0;
 										let ob = 0;
 										let cr = 0;
+										let crf = 0;
+										let crc = 0;
 										let cp = 0;
+										let cpc = 0;
+										let cpf = 0;
 										let cb = 0;
 										if (
 											aggregate != undefined &&
@@ -1306,7 +1322,11 @@ router.post("/getBankDashStatsForAgencies", jwtTokenAuth, function (req, res) {
 											cg = aggregate[0].totalCommission;
 											ob = aggregate[0].openingBalance;
 											cr = aggregate[0].cashReceived;
+											crf = aggregate[0].cashReceivedFee;
+											crc = aggregate[0].cashReceivedComm;
 											cp = aggregate[0].cashPaid;
+											cpf = aggregate[0].cashPaidFee;
+											cpc = aggregate[0].cashPaidComm;
 											cb = aggregate[0].closingBalance;
 										}
 										if (
@@ -1327,7 +1347,11 @@ router.post("/getBankDashStatsForAgencies", jwtTokenAuth, function (req, res) {
 											cashInHand: cin,
 											feeGenerated : fg,
 										 	cashReceived: cr,
+											cashReceivedFee: crf,
+											cashReceivedComm: crc,
 											cashPaid: cp,
+											cashPaidFee: cpf,
+											cashPaidComm: cpc,
 											commissionGenerated: cg,
 											openingBalance: ob,
 											closingBalance: cb,
