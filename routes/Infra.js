@@ -145,6 +145,24 @@ router.post("/infra/getBankDailyReport", jwtTokenAuth, function (req, res) {
 											$sum: "$total_trans",
 										},
 										partnerCashier: { $sum: 1 },
+										cashReceived: {
+											$sum: "$cash_received",
+										},
+										cashReceivedFee: {
+											$sum: "$cash_received_fee",
+										},
+										cashReceivedComm: {
+											$sum: "$cash_received_commission",
+										},
+										cashPaid: {
+											$sum: "$cash_paid",
+										},
+										cashPaidFee: {
+											$sum: "$cash_paid_fee",
+										},
+										cashPaidComm: {
+											$sum: "$cash_paid_commission",
+										},
 									},
 								},
 							],
