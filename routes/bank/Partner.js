@@ -627,8 +627,20 @@ router.post("/bank/getPartnerDashStats", jwtTokenAuth, function (req, res) {
 										cashReceived: {
 											$sum: "$cash_received",
 										},
+										cashReceivedFee: {
+											$sum: "$cash_received_fee",
+										},
+										cashReceivedComm: {
+											$sum: "$cash_received_commission",
+										},
 										cashPaid: {
 											$sum: "$cash_paid",
+										},
+										cashPaidFee: {
+											$sum: "$cash_paid_fee",
+										},
+										cashPaidComm: {
+											$sum: "$cash_paid_commission",
 										}
 									},
 								},
@@ -659,7 +671,11 @@ router.post("/bank/getPartnerDashStats", jwtTokenAuth, function (req, res) {
 										let cg = 0;
 										let ob = 0;
 										let cr = 0;
+										let crf = 0;
+										let crc = 0;
 										let cp = 0;
+										let cpf = 0;
+										let cpc = 0;
 										let cb = 0;
 										if (
 											aggregate != undefined &&
@@ -673,6 +689,10 @@ router.post("/bank/getPartnerDashStats", jwtTokenAuth, function (req, res) {
 											cr = aggregate[0].cashReceived;
 											cp = aggregate[0].cashPaid;
 											cb = aggregate[0].closingBalance;
+											crf = aggregate[0].cashReceivedFee;
+											crc = aggregate[0].cashReceivedComm;
+											cpf = aggregate[0].cashPaidFee;
+											cpc = aggregate[0].cashPaidComm;
 										}
 										if (
 											invoices != undefined &&
@@ -690,7 +710,11 @@ router.post("/bank/getPartnerDashStats", jwtTokenAuth, function (req, res) {
 											cashInHand: cin,
 											feeGenerated : fg,
 										 	cashReceived: cr,
+											cashReceivedFee: crf,
+											cashReceivedComm: crc,
 											cashPaid: cp,
+											cashPaidFee: cpf,
+											cashPaidComm: cpc,
 											commissionGenerated: cg,
 											openingBalance: ob,
 											closingBalance: cb,
@@ -789,8 +813,20 @@ router.post("/getBankDashStatsForPartners", jwtTokenAuth, function (req, res) {
 										cashReceived: {
 											$sum: "$cash_received",
 										},
+										cashReceivedFee: {
+											$sum: "$cash_received_fee",
+										},
+										cashReceivedComm: {
+											$sum: "$cash_received_commission",
+										},
 										cashPaid: {
 											$sum: "$cash_paid",
+										},
+										cashPaidFee: {
+											$sum: "$cash_paid_fee",
+										},
+										cashPaidComm: {
+											$sum: "$cash_paid_commission",
 										}
 									},
 								},
@@ -821,7 +857,11 @@ router.post("/getBankDashStatsForPartners", jwtTokenAuth, function (req, res) {
 										let cg = 0;
 										let ob = 0;
 										let cr = 0;
+										let crf = 0;
+										let crc = 0;
 										let cp = 0;
+										let cpf = 0;
+										let cpc = 0;
 										let cb = 0;
 										if (
 											aggregate != undefined &&
@@ -835,6 +875,10 @@ router.post("/getBankDashStatsForPartners", jwtTokenAuth, function (req, res) {
 											cr = aggregate[0].cashReceived;
 											cp = aggregate[0].cashPaid;
 											cb = aggregate[0].closingBalance;
+											crf = aggregate[0].cashReceivedFee;
+											crc = aggregate[0].cashReceivedComm;
+											cpf = aggregate[0].cashPaidFee;
+											cpc = aggregate[0].cashPaidComm;
 										}
 										if (
 											invoices != undefined &&
@@ -854,6 +898,10 @@ router.post("/getBankDashStatsForPartners", jwtTokenAuth, function (req, res) {
 											feeGenerated : fg,
 										 	cashReceived: cr,
 											cashPaid: cp,
+											cashReceivedFee: crf,
+											cashReceivedComm: crc,
+											cashPaidFee: cpf,
+											cashPaidComm: cpc,
 											commissionGenerated: cg,
 											openingBalance: ob,
 											closingBalance: cb,
