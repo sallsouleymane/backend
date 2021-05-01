@@ -1070,12 +1070,6 @@ router.post("/bank/getPartnerBranchDailyReport", jwtTokenAuth, function (req, re
 								cash_in_hand: {
 									$sum: "$cash_in_hand",
 								},
-								cash_paid: {
-									$sum: "$paid_in_cash",
-								},
-								cash_received: {
-									$sum: "$cash_received",
-								},
 								fee_generated: {
 									$sum: "$fee_generated",
 								},
@@ -1087,7 +1081,25 @@ router.post("/bank/getPartnerBranchDailyReport", jwtTokenAuth, function (req, re
 								},
 								discripancy: {
 									$sum: "$descripency",
-								}
+								},
+								cash_received: {
+									$sum: "$cash_received",
+								},
+								cash_received_fee: {
+									$sum: "$cash_received_fee",
+								},
+								cash_received_commission: {
+									$sum: "$cash_received_commission",
+								},
+								cash_paid: {
+									$sum: "$cash_paid",
+								},
+								cash_paid_fee: {
+									$sum: "$cash_paid_fee",
+								},
+								cash_paid_commission: {
+									$sum: "$cash_paid_commission",
+								},
 								
 							},
 						},
@@ -1227,12 +1239,6 @@ router.post("/bank/getPartnerDailyReport", jwtTokenAuth, function (req, res) {
 								cash_in_hand: {
 									$sum: "$cash_in_hand",
 								},
-								cash_paid: {
-									$sum: "$paid_in_cash",
-								},
-								cash_received: {
-									$sum: "$cash_received",
-								},
 								fee_generated: {
 									$sum: "$fee_generated",
 								},
@@ -1244,7 +1250,25 @@ router.post("/bank/getPartnerDailyReport", jwtTokenAuth, function (req, res) {
 								},
 								discripancy: {
 									$sum: "$descripency",
-								}
+								},
+								cash_received: {
+									$sum: "$cash_received",
+								},
+								cash_received_fee: {
+									$sum: "$cash_received_fee",
+								},
+								cash_received_commission: {
+									$sum: "$cash_received_commission",
+								},
+								cash_paid: {
+									$sum: "$cash_paid",
+								},
+								cash_paid_fee: {
+									$sum: "$cash_paid_fee",
+								},
+								cash_paid_commission: {
+									$sum: "$cash_paid_commission",
+								},
 								
 							},
 						},
