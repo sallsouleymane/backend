@@ -154,7 +154,11 @@ module.exports.sendMoneyToNonWallet = function (req, res) {
 								NWUser.create(receiver);
 								await txstate.waitingForCompletion(
 									categoryConst.MAIN,
-									master_code
+									master_code,
+									{
+										infra_fee:result.infraFee,
+										bank_fee: result.fee,
+									}
 								);
 								res.status(200).json({
 									status: 1,
@@ -271,7 +275,17 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 		);
 		console.log("Result: " + result1);
 		if (result1.status == 1) {
-			await txstate.completed(categoryConst.MAIN, master_code);
+			await txstate.completed(
+				categoryConst.MAIN,
+				master_code,
+				{
+					infra_fee:result.infraFee,
+					bank_fee: result.fee,
+					send_fee: result.sendFee,
+					inter_bank_fee: result.interBankFee,
+				}
+
+			);
 			res.status(200).json({
 				status: 1,
 				message: sending_amount + " XOF is transferred to " + receiver.name,

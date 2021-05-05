@@ -82,6 +82,7 @@ module.exports = async function (transfer, infra, bank, sender, rule1) {
 			balance: balance,
 			amount: transfer.exclusiveAmount,
 			fee: transfer.fee,
+			infraFee: transfer.infraShare,
 		};
 	} catch (err) {
 		throw err;

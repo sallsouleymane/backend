@@ -185,7 +185,11 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 																					} else {
 																						txstate.waitingForCompletion(
 																							categoryConst.MAIN,
-																							master_code
+																							master_code,
+																							{
+																								infra_fee:result.infraFee,
+																								bank_fee: result.fee,
+																							}
 																						);
 																						res.status(200).json({
 																							status: 1,
@@ -336,7 +340,11 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 																	if (result.status == 1) {
 																		txstate.completed(
 																			categoryConst.MAIN,
-																			master_code
+																			master_code,
+																			{
+																				infra_fee:result.infraFee,
+																				bank_fee: result.fee,
+																			}
 																		);
 																		res.status(200).json({
 																			status: 1,

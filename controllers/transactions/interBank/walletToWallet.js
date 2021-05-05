@@ -125,6 +125,8 @@ module.exports = async function (
 			transaction_code: transfer.master_code,
 			amount: transfer.amount,
 			fee: transfer.fee,
+			infraFee: transfer.infraShare,
+			interBankFee: transfer.interBankShare,
 			balance: balance,
 		};
 	} catch (err) {

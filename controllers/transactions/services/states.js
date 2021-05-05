@@ -51,12 +51,14 @@ module.exports.updateClaimer = async function (master_code, receiver_id) {
 module.exports.waitingForCompletion = async function (
 	category,
 	master_code,
+	fee = {},
 	transaction = {}
 ) {
 	try {
 		console.log(category + " transaction waiting for completion");
 		let tx = {};
 		tx["state." + category] = stateConst.WAIT;
+		tx.fee = fee;
 		if (!isEmptyObject(transaction)) {
 			tx.transaction = transaction;
 		}
@@ -85,6 +87,7 @@ module.exports.failed = async function (
 module.exports.completed = async function completed(
 	category,
 	master_code,
+	fee = {},
 	cash_in_hand = 0
 ) {
 	try {
@@ -92,6 +95,7 @@ module.exports.completed = async function completed(
 		let tx = {};
 		tx["state." + category] = stateConst.DONE;
 		tx.cash_in_hand = cash_in_hand;
+		tx.fee = fee;
 		console.log(tx);
 		await TxState.updateOne({ _id: master_code }, { $set: tx });
 	} catch (err) {

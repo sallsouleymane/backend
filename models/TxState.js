@@ -14,6 +14,8 @@ const TxStateSchema = new mongoose.Schema({
 	payerId: { type: String, required: false },
 	receiverId: { type: String, required: false },
 	transaction: { type: Object, required: false },
+	fee: { type: Object, required: false },
+	commission: { type: Object, required: false },
 	cash_in_hand: { type: Number, required: false, default: 0 },
 	amount: { type: Number, required: false, default: 0 },
 	description: { type: String, required: false },

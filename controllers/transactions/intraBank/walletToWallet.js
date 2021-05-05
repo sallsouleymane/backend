@@ -96,6 +96,7 @@ module.exports = async function (
 			transaction_code: transfer.master_code,
 			amount: transfer.exclusiveAmount,
 			fee: transfer.fee,
+			infraFee: transfer.infraShare,
 			balance: balance,
 		};
 	} catch (err) {

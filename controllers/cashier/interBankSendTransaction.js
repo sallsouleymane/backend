@@ -181,7 +181,12 @@ module.exports.cashierSendMoney = async function (req, res) {
 																								} else {
 																									txstate.waitingForCompletion(
 																										categoryConst.MAIN,
-																										master_code
+																										master_code,
+																										{
+																											infra_fee:result.infraFee,
+																											bank_fee: result.fee,
+																											send_fee: result.sendFee,
+																										}
 																									);
 																									res.status(200).json({
 																										status: 1,
@@ -396,7 +401,12 @@ module.exports.partnerSendMoney = async function (req, res) {
 																										} else {
 																											txstate.completed(
 																												categoryConst.MAIN,
-																												master_code
+																												master_code,
+																												{
+																													infra_fee:result.infraFee,
+																													bank_fee: result.fee,
+																													send_fee: result.sendFee,
+																												}
 																											);
 																											res.status(200).json({
 																												status: 1,
@@ -646,7 +656,13 @@ module.exports.cashierSendMoneyToWallet = function (req, res) {
 																															} else {
 																																txstate.completed(
 																																	categoryConst.MAIN,
-																																	master_code
+																																	master_code,
+																																	{
+																																		infra_fee:result.infraFee,
+																																		bank_fee: result.fee,
+																																		send_fee: result.sendFee,
+																																		inter_bank_fee: result.interBankFee,
+																																	}
 																																);
 																																res
 																																	.status(200)
@@ -934,7 +950,13 @@ module.exports.partnerSendMoneyToWallet = function (req, res) {
 																																	} else {
 																																		txstate.completed(
 																																			categoryConst.MAIN,
-																																			master_code
+																																			master_code,
+																																			{
+																																				infra_fee:result.infraFee,
+																																				bank_fee: result.fee,
+																																				send_fee: result.sendFee,
+																																				inter_bank_fee: result.interBankFee,
+																																			}
 																																		);
 																																		res
 																																			.status(
