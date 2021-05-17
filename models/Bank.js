@@ -32,5 +32,9 @@ const BankSchema = new mongoose.Schema({
 		infra_operational: { type: String, required: false },
 		infra_master: { type: String, required: false },
 	},
+	theme:{
+		primary: { type: String, required: false },
+		secondary: { type: String, required: false },
+	}
 });
 module.exports = mongoose.model("Bank", BankSchema);

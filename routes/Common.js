@@ -329,6 +329,64 @@ router.post("/:user/getBankCashierDashStats", jwtTokenAuth, function (req, res) 
 	);
 });
 
+router.post("/:user/getBankTheme", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	const { bank_id } = req.body;
+	const user = req.params.user;
+	var User = getTypeClass(user);
+	if (user == "bank") {
+		User = getTypeClass("bank");
+	} else if (user == "branch") {
+		User = getTypeClass("branch");
+	} else if (user == "cashier") {
+		User = getTypeClass("cashier");
+	} else {
+		res.status(200).json({
+			status: 0,
+			message: "The user does not have API support",
+		});
+		return;
+	}
+	User.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		async function (err, data) {
+			var result = errorMessage(
+				err,
+				data,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Bank.findOne(
+					{
+						_id: bank_id,
+						status: 1,
+					},
+					function (err, bank) {
+						let result = errorMessage(
+							err,
+							bank,
+							"Token changed or user not valid. Try to login again or contact system administrator."
+						);
+						if (result.status == 0) {
+							res.status(200).json(result);
+						} else {
+							res.status(200).json({
+								theme: bank.theme,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+
 router.post("/:user/queryCashierTransactionStates", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { bank_id, cashier_id } = req.body;

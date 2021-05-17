@@ -2074,6 +2074,56 @@ router.post("/editBankUser", jwtTokenAuth, function (req, res) {
 	);
 });
 
+router.post("/editBankTheme", jwtTokenAuth, function (req, res) {
+	const {
+		theme
+	} = req.body;
+
+	const jwtusername = req.sign_creds.username;
+	Bank.findOne(
+		{
+			username: jwtusername,
+		},
+		function (err, user) {
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Bank.findOneAndUpdate(
+					{
+						_id: user_id,
+					},
+					{
+						theme: theme,
+					},
+					(err) => {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								message: "Bank theme edited sucessfully.",
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/getBankHistory", jwtTokenAuth, function (req, res) {
 	const { from } = req.body;
 
