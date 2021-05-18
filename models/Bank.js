@@ -33,8 +33,8 @@ const BankSchema = new mongoose.Schema({
 		infra_master: { type: String, required: false },
 	},
 	theme:{
-		primary: { type: String, required: false },
-		secondary: { type: String, required: false },
+		primary: { type: String, required: false, default: '#417505' },
+		secondary: { type: String, required: false, default: '#6cac69' },
 	}
 });
 module.exports = mongoose.model("Bank", BankSchema);

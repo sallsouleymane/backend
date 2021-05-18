@@ -2095,7 +2095,7 @@ router.post("/editBankTheme", jwtTokenAuth, function (req, res) {
 			} else {
 				Bank.findOneAndUpdate(
 					{
-						_id: user_id,
+						_id: user._id,
 					},
 					{
 						theme: theme,
