@@ -792,6 +792,50 @@ router.post(
 	}
 );
 
+router.post("/branch//disassignUser", jwtTokenAuth, (req, res) => {
+	const { cashier_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Branch.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, branch) {
+			let result = errorMessage(
+				err,
+				branch,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Cashier.findByIdAndUpdate(
+					cashier_id,
+					{ bank_user_id: null },
+					function (err, cashier) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						} else {
+							res.status(200).json({
+								status: 1,
+								row: cashier,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 router.post("/branch/getCashierDetails", jwtTokenAuth, function (req, res) {
 	const { cashier_id } = req.body;
 
