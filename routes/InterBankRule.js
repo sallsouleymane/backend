@@ -315,6 +315,7 @@ router.post("/cashier/interBank/checkFee", JWTTokenAuth, function (req, res) {
 									message: "Inter Bank " + rule.name + " Fee",
 									fee: fee,
 									active: rule.active,
+									bankid: cashier.bank_id,
 								});
 							} else {
 								res.status(200).json({
