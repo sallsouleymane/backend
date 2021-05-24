@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const OfferingSchema = new mongoose.Schema({
 	merchant_id: { type: String, required: true },
-	code: { type: String, required: true },
+	code: { type: String, required: true, unique: true },
 	name: { type: String, required: true },
 	description: { type: String, required: false },
 	denomination: { type: String, required: true },
