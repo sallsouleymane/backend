@@ -792,7 +792,7 @@ router.post(
 	}
 );
 
-router.post("/branch//disassignUser", jwtTokenAuth, (req, res) => {
+router.post("/branch/disassignUser", jwtTokenAuth, (req, res) => {
 	const { cashier_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Branch.findOne(
