@@ -3498,7 +3498,7 @@ router.post("/transferMoney", jwtTokenAuth, function (req, res) {
 					const infra_mobile = f.mobile;
 
 					var c = to.split("@");
-					const bank = c[1];
+					const bank = c[2];
 					Bank.findOne(
 						{
 							name: bank,
