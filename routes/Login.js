@@ -99,7 +99,7 @@ router.post("/partnerCashier/login", function (req, res) {
 														bank_logo: bank.logo,
 														partner_name:partner.name,
 														branch_name:branch.name,
-														max_trans_amt:cashier.max_trans_amt,
+														max_trans_amt:cashier.per_trans_amt,
 														id: user._id,
 													});
 												}
