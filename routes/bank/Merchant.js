@@ -486,7 +486,7 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 														} else {
 															Bank.updateOne(
 																{
-																	_id: bank_id,
+																	_id: adminbank._id,
 																},
 																{
 																	$inc: { total_partners: 1 },
@@ -617,7 +617,7 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 									} else {
 										Bank.updateOne(
 											{
-												_id: bank_id,
+												_id: bank._id,
 											},
 											{
 												$inc: { total_partners: 1 },
