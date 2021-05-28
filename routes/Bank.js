@@ -644,7 +644,7 @@ router.post("/bank/getMyWalletIds", jwtTokenAuth, function (req, res) {
 
 router.post("/bank/generateOTP", jwtTokenAuth, function (req, res) {
 	let data = new OTP();
-	const { username, page, name, email, mobile, code } = req.body;
+	const { username, page, name, email, mobile, code, bank_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
@@ -652,15 +652,155 @@ router.post("/bank/generateOTP", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			let result = errorMessage(
-				err,
-				bank,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: {$in: ['bankAdmin', 'infraAdmin']},
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								} else {
+									data.user_id = bank_id;
+									data.otp = makeotp(6);
+									data.page = page;
+									if (page == "editPartner") {
+										Partner.findOne(
+											{
+												username,
+											},
+											function (err, partner) {
+												data.mobile = partner.mobile;
+												data.save((err, ot) => {
+													if (err) {
+														console.log(err);
+														var message = err;
+														if (err.message) {
+															message = err.message;
+														}
+														res.status(200).json({
+															status: 0,
+															message: message,
+														});
+													} else {
+														let content = "Your OTP to edit Partner is " + data.otp;
+														sendSMS(content, partner.mobile);
+														sendMail(content, "OTP", partner.email);
+					
+														res.status(200).json({
+															status: 1,
+															id: ot._id,
+														});
+													}
+												});
+											}
+										);
+									} else {
+										Partner.find(
+											{
+												$or: [
+													{ name: name },
+													{ email: email },
+													{ mobile: mobile },
+													{ code: code },
+												],
+											},
+											function (err, partner) {
+												if (
+													partner == null ||
+													partner == undefined ||
+													partner.length == 0
+												) {
+													data.mobile = bank.mobile;
+					
+													data.save((err, ot) => {
+														if (err) {
+															console.log(err);
+															var message = err;
+															if (err.message) {
+																message = err.message;
+															}
+															res.status(200).json({
+																status: 0,
+																message: message,
+															});
+														} else {
+															let content = "Your OTP to add Partner is " + data.otp;
+															sendSMS(content, bank.mobile);
+															sendMail(content, "OTP", bank.email);
+					
+															res.status(200).json({
+																status: 1,
+																id: ot._id,
+															});
+														}
+													});
+												} else {
+													if (name == partner[0].name) {
+														res.status(200).json({
+															status: 0,
+															message: "Name already taken",
+														});
+													} else if (email == partner[0].email) {
+														res.status(200).json({
+															status: 0,
+															message: "Email already taken",
+														});
+													} else if (mobile == partner[0].mobile) {
+														res.status(200).json({
+															status: 0,
+															message: "Mobile already taken",
+														});
+													} else if (code == partner[0].code) {
+														res.status(200).json({
+															status: 0,
+															message: "Code already taken",
+														});
+													} else {
+														res.status(200).json({
+															status: 0,
+															message: "Duplicate entry",
+														});
+													}
+												}
+											}
+										);
+									}
+								}
+							});
+						}	
+					}
+				);
 			} else {
-				data.user_id = bank._id;
+				data.user_id = bank_id;
 				data.otp = makeotp(6);
 				data.page = page;
 				if (page == "editPartner") {
