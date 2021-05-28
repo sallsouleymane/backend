@@ -1946,7 +1946,7 @@ router.post("/addBankUser", jwtTokenAuth, function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, user) {
+		function (err, bank) {
 			if (err) {
 				var message = err;
 				if (err.message) {
@@ -2061,7 +2061,7 @@ router.post("/editBankUser", jwtTokenAuth, function (req, res) {
 		{
 			username: jwtusername,
 		},
-		function (err, user) {
+		function (err, bank) {
 			if (err) {
 				var message = err;
 				if (err.message) {
