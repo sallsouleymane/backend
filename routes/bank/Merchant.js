@@ -391,7 +391,6 @@ router.post("/bank/listMerchants", jwtTokenAuth, function (req, res) {
 
 router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 	var {
-		bank_id,
 		code,
 		name,
 		logo,
@@ -444,19 +443,145 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 								var result = errorMessage(err, adminbank, "Bank is blocked");
 								if (result.status == 0) {
 									res.status(200).json(result);
+								}else{
+									if (!code) {
+										res.status(200).json({
+											status: 0,
+											message: "Code is a required field",
+										});
+									} else {
+										const wallet_ids = getWalletIds("merchant", code, adminbank.code);
+										createWallet([wallet_ids.operational])
+											.then((result) => {
+												if (result != "" && !result.includes("wallet already exists")) {
+													console.log(result);
+													res.status(200).json({
+														status: 0,
+														message: result,
+													});
+												} else {
+													const data = new Merchant();
+													data.name = name;
+													data.logo = logo;
+													data.description = description;
+													data.document_hash = document_hash;
+													data.email = email;
+													data.mobile = mobile;
+													data.code = code;
+													data.username = code;
+													data.password = makeid(8);
+													data.bank_id = adminbank._id;
+													data.status = 0;
+													data.creator = 0;
+													data.wallet_ids.operational = wallet_ids.operational;
+					
+													data.save((err, merchant) => {
+														if (err) {
+															console.log(err);
+															res.status(200).json({
+																status: 0,
+																message:
+																	"Either merchant code / email / mobile already exist",
+															});
+														} else {
+															Bank.updateOne(
+																{
+																	_id: bank_id,
+																},
+																{
+																	$inc: { total_partners: 1 },
+																},
+																function (err) {
+																	if (err) {
+																		console.log(err);
+																		var message = err;
+																		if (err.message) {
+																			message = err.message;
+																		}
+																		res.status(200).json({
+																			status: 0,
+																			message: message,
+																		});
+																	} else {
+																		const group = new InvoiceGroup();
+																		group.merchant_id = merchant._id;
+																		group.name = 'Default';
+																		group.code = `${merchant.name}default`;
+																		group.description = 'default';
+																		group.save((err) => {
+																			if (err) {
+					
+																				console.log(err);
+																				var message = err;
+																				if (err.message) {
+																					message = err.message;
+																				}
+																				res.status(200).json({
+																					status: 0,
+																					message: message,
+																				});
+																			} else {
+																				let content =
+																				"<p>You are added as a Merchant in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+																				config.mainIP +
+																				"/merchant/" +
+																				adminbank.name +
+																				"'>http://" +
+																				config.mainIP +
+																				"/merchant/" +
+																				adminbank.name +
+																				"</a></p><p><p>Your username: " +
+																				data.username +
+																				"</p><p>Your password: " +
+																				data.password +
+																				"</p>";
+																				sendMail(content, "Bank Merchant Created", email);
+																				let content2 =
+																				"You are added as a Merchant in E-Wallet application Login URL: http://" +
+																				config.mainIP +
+																				"/merchant/" +
+																				adminbank.name +
+																				" Your username: " +
+																				data.username +
+																				" Your password: " +
+																				data.password;
+																				sendSMS(content2, mobile);
+																				res.status(200).json({
+																					status: 1,
+																					message: "Merchant created successfully",
+																					blockchain_result: result,
+																				});
+																			}
+																		});
+																		
+																	}
+																}
+															);
+														}
+													});
+												}
+											})
+											.catch((err) => {
+												console.log(err);
+												res.status(200).json({
+													status: 0,
+													message: err.message,
+												});
+											});
+									}
 								}
 							});
 						}	
 					}
 				);
-			}
+			}else{
 				if (!code) {
 					res.status(200).json({
 						status: 0,
 						message: "Code is a required field",
 					});
 				} else {
-					const wallet_ids = getWalletIds("merchant", code, bank_code);
+					const wallet_ids = getWalletIds("merchant", code, bank.code);
 					createWallet([wallet_ids.operational])
 						.then((result) => {
 							if (result != "" && !result.includes("wallet already exists")) {
@@ -476,7 +601,7 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 								data.code = code;
 								data.username = code;
 								data.password = makeid(8);
-								data.bank_id = bank_id;
+								data.bank_id = bank._id;
 								data.status = 0;
 								data.creator = 0;
 								data.wallet_ids.operational = wallet_ids.operational;
@@ -575,7 +700,7 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 							});
 						});
 				}
-			
+			}
 		}
 	);
 });
