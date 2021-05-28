@@ -643,7 +643,6 @@ router.post("/bank/getMyWalletIds", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/bank/generateOTP", jwtTokenAuth, function (req, res) {
-	let data = new OTP();
 	const { username, page, name, email, mobile, code, bank_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
@@ -689,6 +688,7 @@ router.post("/bank/generateOTP", jwtTokenAuth, function (req, res) {
 								if (result.status == 0) {
 									res.status(200).json(result);
 								} else {
+									let data = new OTP();
 									data.user_id = bank_id;
 									data.otp = makeotp(6);
 									data.page = page;
@@ -739,7 +739,7 @@ router.post("/bank/generateOTP", jwtTokenAuth, function (req, res) {
 													partner == undefined ||
 													partner.length == 0
 												) {
-													data.mobile = bank.mobile;
+													data.mobile = adminbank.mobile;
 					
 													data.save((err, ot) => {
 														if (err) {
