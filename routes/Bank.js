@@ -1927,7 +1927,6 @@ router.post("/branchStatus", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/addBankUser", jwtTokenAuth, function (req, res) {
-	let data = new BankUser();
 	const {
 		bank_id,
 		name,
@@ -1983,12 +1982,63 @@ router.post("/addBankUser", jwtTokenAuth, function (req, res) {
 								var result = errorMessage(err, adminbank, "Bank is blocked");
 								if (result.status == 0) {
 									res.status(200).json(result);
+								}else{
+									let data = new BankUser();
+									data.name = name;
+									data.email = email;
+									data.mobile = mobile;
+									data.username = username;
+									data.password = password;
+									data.branch_id = branch_id;
+									data.role = role;
+									data.bank_id = bank_id;
+									data.ccode = ccode;
+									data.logo = logo;
+					
+									data.save((err) => {
+										if (err) {
+											console.log(err);
+											var message = err;
+											if (err.message) {
+												message = err.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message,
+											});
+										} else {
+											let content =
+												"<p>Your have been added as a Bank User in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+												config.mainIP +
+												"/cashier/yourBranchName'>http://" +
+												config.mainIP +
+												"/</a></p><p><p>Your username: " +
+												username +
+												"</p><p>Your password: " +
+												password +
+												"</p>";
+											sendMail(content, "Bank User Account Created", email);
+											let content2 =
+												"Your have been added as Bank User in E-Wallet application Login URL: http://" +
+												config.mainIP +
+												"/cashier/yourBranchName Your username: " +
+												username +
+												" Your password: " +
+												password;
+											sendSMS(content2, mobile);
+											res.status(200).json({
+												status: 1,
+												message: "Added bank user successfully.",
+											});
+										}
+									});
 								}
 							});
 						}	
 					}
 				);
-			}
+			}else{
+				let data = new BankUser();
 				data.name = name;
 				data.email = email;
 				data.mobile = mobile;
@@ -2037,6 +2087,7 @@ router.post("/addBankUser", jwtTokenAuth, function (req, res) {
 						});
 					}
 				});
+			}
 			
 		}
 	);
