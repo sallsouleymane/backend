@@ -754,8 +754,8 @@ router.post("/bank/generateOTP", jwtTokenAuth, function (req, res) {
 															});
 														} else {
 															let content = "Your OTP to add Partner is " + data.otp;
-															sendSMS(content, bank.mobile);
-															sendMail(content, "OTP", bank.email);
+															sendSMS(content, adminbank.mobile);
+															sendMail(content, "OTP", adminbank.email);
 					
 															res.status(200).json({
 																status: 1,
