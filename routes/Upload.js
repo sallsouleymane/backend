@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Bank = require("../models/Bank");
+const BankUser = require("../models/BankUser");
 const Infra = require("../models/Infra");
 const IncomingForm = require("formidable").IncomingForm;
 const fs = require("fs-extra");
@@ -35,7 +36,9 @@ router.post("/fileUpload", jwtTokenAuth, function (req, res) {
 	let table = Infra;
 	if (from && from === "bank") {
 		table = Bank;
-	}
+	} else if  (from && from === "bankuser") {
+		table = BankUser;
+	} 
 	const jwtusername = req.sign_creds.username;
 	table.findOne(
 		{
