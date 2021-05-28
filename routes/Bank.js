@@ -1929,6 +1929,7 @@ router.post("/branchStatus", jwtTokenAuth, function (req, res) {
 router.post("/addBankUser", jwtTokenAuth, function (req, res) {
 	let data = new BankUser();
 	const {
+		bank_id,
 		name,
 		email,
 		ccode,
@@ -1946,14 +1947,48 @@ router.post("/addBankUser", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, user) {
-			let result = errorMessage(
-				err,
-				user,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: {$in: ['bankAdmin', 'infraAdmin']},
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
 				data.name = name;
 				data.email = email;
 				data.mobile = mobile;
@@ -1961,7 +1996,7 @@ router.post("/addBankUser", jwtTokenAuth, function (req, res) {
 				data.password = password;
 				data.branch_id = branch_id;
 				data.role = role;
-				data.bank_id = user._id;
+				data.bank_id = bank_id;
 				data.ccode = ccode;
 				data.logo = logo;
 
@@ -2002,7 +2037,7 @@ router.post("/addBankUser", jwtTokenAuth, function (req, res) {
 						});
 					}
 				});
-			}
+			
 		}
 	);
 });
@@ -2027,14 +2062,48 @@ router.post("/editBankUser", jwtTokenAuth, function (req, res) {
 			username: jwtusername,
 		},
 		function (err, user) {
-			let result = errorMessage(
-				err,
-				user,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: {$in: ['bankAdmin', 'infraAdmin']},
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								}
+							});
+						}	
+					}
+				);
+			}
 				BankUser.findOneAndUpdate(
 					{
 						_id: user_id,
@@ -2069,7 +2138,7 @@ router.post("/editBankUser", jwtTokenAuth, function (req, res) {
 						}
 					}
 				);
-			}
+			
 		}
 	);
 });
