@@ -2911,6 +2911,8 @@ router.post("/addInfraUser", jwtTokenAuth, function (req, res) {
 	const {
 		name,
 		email,
+		country,
+		ccode,
 		mobile,
 		username,
 		password,
@@ -2932,6 +2934,8 @@ router.post("/addInfraUser", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
+				data.country = country;
+				data.ccode = ccode;
 				data.name = name;
 				data.email = email;
 				data.mobile = mobile;
@@ -2989,6 +2993,8 @@ router.post("/editInfraUser", jwtTokenAuth, function (req, res) {
 		password,
 		profile_id,
 		logo,
+		country,
+		ccode,
 		user_id,
 	} = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -3015,6 +3021,8 @@ router.post("/editInfraUser", jwtTokenAuth, function (req, res) {
 						name: name,
 						email: email,
 						mobile: mobile,
+						country: country,
+						ccode: ccode,
 						username: username,
 						password: password,
 						profile_id: profile_id,
