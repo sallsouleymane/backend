@@ -506,7 +506,6 @@ router.post("/bank/editPartner", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/bank/addPartner", jwtTokenAuth, function (req, res) {
-	let data = new Partner();
 	const {
 		bank_id,
 		name,
@@ -567,12 +566,116 @@ router.post("/bank/addPartner", jwtTokenAuth, function (req, res) {
 								var result = errorMessage(err, adminbank, "Bank is blocked");
 								if (result.status == 0) {
 									res.status(200).json(result);
+								} else {
+									OTP.findOne(
+										{
+											_id: otp_id,
+											otp: otp,
+										},
+										function (err, otpd) {
+											if (err) {
+												console.log(err);
+												var message = err;
+												if (err.message) {
+													message = err.message;
+												}
+												res.status(200).json({
+													status: 0,
+													message: message,
+												});
+											} else {
+												if (!otpd) {
+													res.status(200).json({
+														status: 0,
+														message: "OTP Missmatch",
+													});
+												} else {
+													if (otpd.otp === otp) {
+														if (
+															name === "" ||
+															address === "" ||
+															state === "" ||
+															mobile === "" ||
+															email === ""
+														) {
+															return res.status(200).json({
+																status: 0,
+																message: "Please provide valid inputs",
+															});
+														}
+														let data = new Partner();
+														data.name = name;
+														data.code = code;
+														data.address = address;
+														data.state = state;
+														data.country = country;
+														data.zip = zip;
+														data.ccode = ccode;
+														data.mobile = mobile;
+														data.username = mobile;
+														data.email = email;
+														data.verify_user_access = verify_user_access;
+														data.bank_id = bank_id;
+														data.logo = logo;
+														data.contract = contract;
+														data.password = makeid(10);
+					
+														data.save((err, partner) => {
+															if (err) {
+																console.log(err);
+																var message = err;
+																if (err.message) {
+																	message = err.message;
+																}
+																res.status(200).json({
+																	status: 0,
+																	message: message,
+																});
+															} else {
+																let data2 = new Document();
+																data2.partner_id = partner._id;
+																data2.contract = contract;
+																data2.save((err) => {});
+					
+																let content =
+																	"<p>Your partner is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+																	config.mainIP +
+																	"/partner'>http://" +
+																	config.mainIP +
+																	"/partner</a></p><p><p>Your username: " +
+																	data.username +
+																	"</p><p>Your password: " +
+																	data.password +
+																	"</p>";
+																sendMail(content, "Partner Account Created", email);
+																let content2 =
+																	"Your partner is added in E-Wallet application Login URL: http://" +
+																	config.mainIP +
+																	"/partner Your username: " +
+																	data.username +
+																	" Your password: " +
+																	data.password;
+																sendSMS(content2, mobile);
+					
+																return res.status(200).json({ status: 1, partner: data });
+															}
+														});
+													} else {
+														res.status(200).json({
+															status: 0,
+															message: "OTP Missmatch",
+														});
+													}
+												}
+											}
+										}
+									);
 								}
 							});
 						}	
 					}
 				);
-			}
+			} else {
 				OTP.findOne(
 					{
 						_id: otp_id,
@@ -609,7 +712,7 @@ router.post("/bank/addPartner", jwtTokenAuth, function (req, res) {
 											message: "Please provide valid inputs",
 										});
 									}
-
+									let data = new Partner();
 									data.name = name;
 									data.code = code;
 									data.address = address;
@@ -676,7 +779,7 @@ router.post("/bank/addPartner", jwtTokenAuth, function (req, res) {
 						}
 					}
 				);
-			
+			}
 		}
 	);
 });
