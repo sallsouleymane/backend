@@ -450,7 +450,7 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 											message: "Code is a required field",
 										});
 									} else {
-										const wallet_ids = getWalletIds("merchant", code, adminbank.code);
+										const wallet_ids = getWalletIds("merchant", code, adminbank.bcode);
 										createWallet([wallet_ids.operational])
 											.then((result) => {
 												if (result != "" && !result.includes("wallet already exists")) {
@@ -581,7 +581,7 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 						message: "Code is a required field",
 					});
 				} else {
-					const wallet_ids = getWalletIds("merchant", code, bank.code);
+					const wallet_ids = getWalletIds("merchant", code, bank.bcode);
 					createWallet([wallet_ids.operational])
 						.then((result) => {
 							if (result != "" && !result.includes("wallet already exists")) {
