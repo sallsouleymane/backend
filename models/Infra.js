@@ -7,6 +7,7 @@ const InfraSchema = new mongoose.Schema({
 	mobile: { type: String, required: true, unique: true },
 	email: { type: String, required: true, unique: true },
 	password: { type: String, required: true },
+	country: { type: String, required: false },
 	profile_id: { type: String, required: false },
 	logo: { type: String, required: false },
 	isAdmin: { type: Boolean, required: true, default: false },

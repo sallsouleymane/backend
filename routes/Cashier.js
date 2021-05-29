@@ -262,6 +262,11 @@ router.post("/cashier/getUser", jwtTokenAuth, function (req, res) {
 					let result = errorMessage(err, user, "User not found");
 					if (result.status == 0) {
 						res.status(200).json(result);
+					}else if(user.bank_id === null || user.bank_id === undefined ){
+						res.status(200).json({
+							status: 0,
+							message: "User Not Found",
+						});
 					} else {
 						res.status(200).json({
 							status: 1,
