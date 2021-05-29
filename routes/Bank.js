@@ -1823,13 +1823,155 @@ router.post("/addBranch", jwtTokenAuth, function (req, res) {
 			status: 1,
 		},
 		function (err, bank) {
-			let result = errorMessage(
-				err,
-				bank,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank === null || bank === undefined){
+				BankUser.findOne(
+					{
+						username: jwtusername,
+						role: {$in: ['bankAdmin', 'infraAdmin']},
+					},
+					function (err, admin) {
+						if (err) {
+							console.log(err);
+							var message = err;
+							if (err.message) {
+								message = err.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message,
+							});
+						}else if (!admin || admin===null || admin === undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
+								var result = errorMessage(err, adminbank, "Bank is blocked");
+								if (result.status == 0) {
+									res.status(200).json(result);
+								} else {
+								const wallet_ids = getWalletIds("branch", bcode, adminbank.bcode);
+								createWallet([wallet_ids.operational, wallet_ids.master])
+									.then(function (result) {
+										if (result != "" && !result.includes("wallet already exists")) {
+											console.log(result);
+											res.status(200).json({
+												status: 0,
+												message:
+													"Blockchain service was unavailable. Please try again.",
+												result: result,
+											});
+										} else {
+											data.name = name;
+											data.bcode = bcode;
+											if (credit_limit !== "" && credit_limit != null) {
+												data.credit_limit = credit_limit;
+											}
+											if (cash_in_hand !== "" && cash_in_hand != null) {
+												data.cash_in_hand = cash_in_hand;
+											}
+											data.username = username;
+											data.address1 = address1;
+											data.state = state;
+											data.country = country;
+											data.zip = zip;
+											data.ccode = ccode;
+											data.mobile = mobile;
+											data.email = email;
+											data.bank_id = adminbank._id;
+											data.password = makeid(10);
+											data.working_from = working_from;
+											data.working_to = working_to;
+											data.wallet_ids.operational = wallet_ids.operational;
+											data.wallet_ids.master = wallet_ids.master;
+											let bankName = adminbank.name;
+				
+											data.save((err) => {
+												if (err) {
+													console.log(err);
+													var message = err;
+													if (err.message) {
+														message = err.message;
+													}
+													res.status(200).json({
+														status: 0,
+														message: message,
+													});
+												} else {
+													Bank.updateOne(
+														{ _id: adminbank._id },
+														{ $inc: { total_branches: 1 } },
+														(err) => {
+															if (err) {
+																console.log(err);
+																var message = err;
+																if (err.message) {
+																	message = err.message;
+																}
+																res.status(200).json({
+																	status: 0,
+																	message: message,
+																});
+															} else {
+																let content =
+																	"<p>Your branch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+																	config.mainIP +
+																	"/branch/" +
+																	bankName +
+																	"'>http://" +
+																	config.mainIP +
+																	"/branch/" +
+																	bankName +
+																	"</a></p><p><p>Your username: " +
+																	data.username +
+																	"</p><p>Your password: " +
+																	data.password +
+																	"</p>";
+																sendMail(content, "Bank Branch Created", email);
+																let content2 =
+																	"Your branch is added in E-Wallet application Login URL: http://" +
+																	config.mainIP +
+																	"/branch/" +
+																	bankName +
+																	" Your username: " +
+																	data.username +
+																	" Your password: " +
+																	data.password;
+																sendSMS(content2, mobile);
+																res.status(200).json({
+																	status: 1,
+																	message: "Branch Created",
+																	walletStatus: result.toString(),
+																});
+															}
+														}
+													);
+												}
+											});
+										}
+									})
+									.catch((err) => {
+										console.log(err);
+										res.status(200).json({
+											status: 0,
+											message: err.message,
+										});
+									});
+							}
+							});
+						}	
+					}
+				);
 			} else {
 				const wallet_ids = getWalletIds("branch", bcode, bank.bcode);
 				createWallet([wallet_ids.operational, wallet_ids.master])
