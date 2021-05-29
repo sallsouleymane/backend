@@ -745,6 +745,7 @@ router.post("/bankLogin", function (req, res) {
 										contract: adminbank.contract,
 										logo: adminbank.logo,
 										id: adminbank._id,
+										theme: adminbank.theme,
 										admin: true,
 									});
 											
