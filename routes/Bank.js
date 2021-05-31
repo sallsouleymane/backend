@@ -800,6 +800,7 @@ router.post("/bank/generateOTP", jwtTokenAuth, function (req, res) {
 					}
 				);
 			} else {
+				let data = new OTP();
 				data.user_id = bank._id;
 				data.otp = makeotp(6);
 				data.page = page;
