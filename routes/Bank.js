@@ -800,7 +800,7 @@ router.post("/bank/generateOTP", jwtTokenAuth, function (req, res) {
 					}
 				);
 			} else {
-				data.user_id = bank_id;
+				data.user_id = bank._id;
 				data.otp = makeotp(6);
 				data.page = page;
 				if (page == "editPartner") {
