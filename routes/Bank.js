@@ -642,6 +642,44 @@ router.post("/bank/getMyWalletIds", jwtTokenAuth, function (req, res) {
 	);
 });
 
+router.post("/bank/getBanks", jwtTokenAuth, function (req, res) {
+	const jwtusername = req.sign_creds.username;
+	Bank.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, bank) {
+			let result = errorMessage(
+				err,
+				bank,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Bank.find({}, function (err, allbank) {
+					if (err) {
+						console.log(err);
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					} else {
+						res.status(200).json({
+							banks: allbank,
+						});
+					}
+				});
+			}
+		}
+	);
+});
+
 router.post("/bank/generateOTP", jwtTokenAuth, function (req, res) {
 	const { username, page, name, email, mobile, code, bank_id } = req.body;
 	const jwtusername = req.sign_creds.username;

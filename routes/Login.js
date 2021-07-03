@@ -921,7 +921,7 @@ router.post("/cashierLogin", function (req, res) {
 			var result = errorMessage(err, bank, "Incorrect username or password");
 			if (result.status == 0) {
 				res.status(200).json(result);
-			} else if (bank.status == -1) {
+			} else if (bank.status === -1 || bank.status === '-1') {
 				res.status(200).json({
 					status: 0,
 					message: "Your account has been blocked, pls contact the admin!",
@@ -940,6 +940,11 @@ router.post("/cashierLogin", function (req, res) {
 						);
 						if (result.status == 0) {
 							res.status(200).json(result);
+						} else if (cashier.status === -1 || cashier.status === '-1') {
+							res.status(200).json({
+								status: 0,
+								message: "Your account has been blocked, pls contact the admin!",
+							});
 						} else {
 							Branch.findById(cashier.branch_id, function (err, branch) {
 								var result = errorMessage(

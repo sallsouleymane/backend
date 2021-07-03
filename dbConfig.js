@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 
 const dbRoute =
 	"mongodb://" + config.dbHost + ":" + config.dbPort + "/" + config.dbName;
+
 mongoose.set("useNewUrlParser", true);
 mongoose.set("useFindAndModify", false);
 mongoose.set("useCreateIndex", true);

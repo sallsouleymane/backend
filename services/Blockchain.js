@@ -210,8 +210,9 @@ module.exports.initiateMultiTransfer = async function (transactions) {
 			method: "POST",
 			json: { transfers: argument },
 		};
+		console.log(argument);
 		let res = await doRequest(options);
-		console.log(res);
+		console.log("blockchain",res);
 		return res;
 	} catch (err) {
 		throw err;

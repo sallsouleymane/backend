@@ -56,7 +56,7 @@ router.post("/fileUpload", jwtTokenAuth, function (req, res) {
 			} else {
 				let form = new IncomingForm();
 				if (!fs.existsSync(config.uploadPath)) {
-					fs.mkdirSync(config.uploadPath);
+					fs.mkdirSync(config.uploadPath, { recursive: true });
 				}
 				const dir = path.resolve(config.uploadPath + user._id);
 				form.parse(req, function (err, fields, files) {

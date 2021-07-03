@@ -4056,4 +4056,15 @@ router.get("/get-country", async (req, res) => {
 	}
 });
 
+router.post("/delete-country", async (req, res) => {
+	const { id } = req.body;
+	try {
+		console.log(id);
+		const data = await CountryModel.updateOne({ $pull: { 'country_list':  {$elemMatch :{ _id: String(id) } }}})
+		res.status(200).json({ status: 1, message: 'country deleted', data });
+	} catch (err) {
+		res.status(200).json({ status: 0, message: err.message });
+	}
+});
+
 module.exports = router;
