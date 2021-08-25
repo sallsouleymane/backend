@@ -22,7 +22,6 @@ const MerchantPosition = require("../../models/merchant/Position");
 const getWalletIds = require("../utils/getWalletIds");
 const InvoiceGroup = require("../../models/merchant/InvoiceGroup");
 const Invoice = require("../../models/merchant/Invoice");
-const MerchantSettings = require("../../models/merchant/MerchantSettings");
 
 router.post("/bank/changeMerchantAcces", jwtTokenAuth, function (req, res) {
 	const { merchant_id, is_private } = req.body;
@@ -42,33 +41,33 @@ router.post("/bank/changeMerchantAcces", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!bank || bank === null || bank === undefined){
+			}else if (!bank || bank == null || bank == undefined){
 				BankUser.findOne(
 					{
 						username: jwtusername,
 						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-								var result = errorMessage(err, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -78,14 +77,14 @@ router.post("/bank/changeMerchantAcces", jwtTokenAuth, function (req, res) {
 				Merchant.findOneAndUpdate(
 					{ _id: merchant_id },
 					{ is_private: is_private },
-					function (err, merchant) {
-						let errMsg = errorMessage(
-							err,
+					function (err3, merchant) {
+						let errMsg3 = errorMessage(
+							err3,
 							merchant,
 							"Token changed or user not valid. Try to login again or contact system administrator."
 						);
-						if (errMsg.status == 0) {
-							res.status(200).json(errMsg);
+						if (errMsg3.status == 0) {
+							res.status(200).json(errMsg3);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -117,33 +116,33 @@ router.post("/bank/blockMerchant", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!bank || bank === null || bank === undefined){
+			}else if (!bank || bank == null || bank == undefined){
 				BankUser.findOne(
 					{
 						username: jwtusername,
 						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-								var result = errorMessage(err, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -157,10 +156,10 @@ router.post("/bank/blockMerchant", jwtTokenAuth, function (req, res) {
 							status: 0,
 						},
 					},
-					(err, merchant) => {
-						let result = errorMessage(err, merchant, "Merchant not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err3, merchant) => {
+						let result3 = errorMessage(err3, merchant, "Merchant not found");
+						if (result3.status == 0) {
+							res.status(200).json(result3);
 						} else {
 							MerchantBranch.updateMany(
 								{merchant_id: merchant_id},
@@ -169,10 +168,10 @@ router.post("/bank/blockMerchant", jwtTokenAuth, function (req, res) {
 										status: 0,
 									},
 								},
-								(err, branches) => {
-									let result = errorMessage(err, branches, "Branchs not found");
-									if (result.status == 0) {
-										res.status(200).json(result);
+								(err4, branches) => {
+									let result4 = errorMessage(err4, branches, "Branchs not found");
+									if (result4.status == 0) {
+										res.status(200).json(result4);
 									} else {
 										MerchantPosition.updateMany(
 											{merchant_id: merchant_id},
@@ -181,10 +180,10 @@ router.post("/bank/blockMerchant", jwtTokenAuth, function (req, res) {
 													status: 0,
 												},
 											},
-											(err, cashiers) => {
-												let result = errorMessage(err, cashiers, "Cashiers not found");
-												if (result.status == 0) {
-													res.status(200).json(result);
+											(err5, cashiers) => {
+												let result5 = errorMessage(err5, cashiers, "Cashiers not found");
+												if (result5.status == 0) {
+													res.status(200).json(result5);
 												} else {
 													res.status(200).json({
 														status: 1,
@@ -224,33 +223,33 @@ router.post("/bank/unblockMerchant", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!bank || bank === null || bank === undefined){
+			}else if (!bank || bank == null || bank == undefined){
 				BankUser.findOne(
 					{
 						username: jwtusername,
 						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-								var result = errorMessage(err, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -264,10 +263,10 @@ router.post("/bank/unblockMerchant", jwtTokenAuth, function (req, res) {
 							status: 1,
 						},
 					},
-					(err, merchant) => {
-						let result = errorMessage(err, merchant, "Merchant not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err3, merchant) => {
+						let result3 = errorMessage(err3, merchant, "Merchant not found");
+						if (result3.status == 0) {
+							res.status(200).json(result3);
 						} else {
 							MerchantBranch.updateMany(
 								{merchant_id: merchant_id},
@@ -276,10 +275,10 @@ router.post("/bank/unblockMerchant", jwtTokenAuth, function (req, res) {
 										status: 1,
 									},
 								},
-								(err, branches) => {
-									let result = errorMessage(err, branches, "Branchs not found");
-									if (result.status == 0) {
-										res.status(200).json(result);
+								(err4, branches) => {
+									let result4 = errorMessage(err4, branches, "Branchs not found");
+									if (result4.status == 0) {
+										res.status(200).json(result4);
 									} else {
 										MerchantPosition.updateMany(
 											{merchant_id: merchant_id},
@@ -288,10 +287,10 @@ router.post("/bank/unblockMerchant", jwtTokenAuth, function (req, res) {
 													status: 1,
 												},
 											},
-											(err, cashiers) => {
-												let result = errorMessage(err, cashiers, "Cashiers not found");
-												if (result.status == 0) {
-													res.status(200).json(result);
+											(err5, cashiers) => {
+												let result5 = errorMessage(err5, cashiers, "Cashiers not found");
+												if (result5.status == 0) {
+													res.status(200).json(result5);
 												} else {
 													res.status(200).json({
 														status: 1,
@@ -331,33 +330,33 @@ router.post("/bank/listMerchants", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!bank || bank === null || bank === undefined){
+			}else if (!bank || bank == null || bank == undefined){
 				BankUser.findOne(
 					{
 						username: jwtusername,
 						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-								var result = errorMessage(err, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -365,16 +364,16 @@ router.post("/bank/listMerchants", jwtTokenAuth, function (req, res) {
 				);
 			}
 
-				Merchant.find({ bank_id: bank_id }, "-password", (err, merchants) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Merchant.find({ bank_id: bank_id }, "-password", (err2, merchants) => {
+					if (err2) {
+						console.log(err2);
+						var message2 = err2;
+						if (err2.message) {
+							message2 = err2.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message2,
 						});
 					} else {
 						res.status(200).json({
@@ -394,7 +393,6 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 		code,
 		name,
 		logo,
-		bank_code,
 		description,
 		document_hash,
 		email,
@@ -416,33 +414,33 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!bank || bank === null || bank === undefined){
+			}else if (!bank || bank == null || bank == undefined){
 				BankUser.findOne(
 					{
 						username: jwtusername,
 						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-								var result = errorMessage(err, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}else{
 									if (!code) {
 										res.status(200).json({
@@ -475,9 +473,9 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 													data.creator = 0;
 													data.wallet_ids.operational = wallet_ids.operational;
 					
-													data.save((err, merchant) => {
-														if (err) {
-															console.log(err);
+													data.save((err3, merchant) => {
+														if (err3) {
+															console.log(err3);
 															res.status(200).json({
 																status: 0,
 																message:
@@ -491,16 +489,16 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 																{
 																	$inc: { total_partners: 1 },
 																},
-																function (err) {
-																	if (err) {
-																		console.log(err);
-																		var message = err;
-																		if (err.message) {
-																			message = err.message;
+																function (err4) {
+																	if (err4) {
+																		console.log(err4);
+																		var message4 = err4;
+																		if (err4.message) {
+																			message4 = err4.message;
 																		}
 																		res.status(200).json({
 																			status: 0,
-																			message: message,
+																			message: message4,
 																		});
 																	} else {
 																		const group = new InvoiceGroup();
@@ -508,17 +506,17 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 																		group.name = 'Default';
 																		group.code = `${merchant.name}default`;
 																		group.description = 'default';
-																		group.save((err) => {
-																			if (err) {
+																		group.save((err5) => {
+																			if (err5) {
 					
-																				console.log(err);
-																				var message = err;
-																				if (err.message) {
-																					message = err.message;
+																				console.log(err5);
+																				var message5 = err5;
+																				if (err5.message) {
+																					message5 = err5.message;
 																				}
 																				res.status(200).json({
 																					status: 0,
-																					message: message,
+																					message: message5,
 																				});
 																			} else {
 																				let content =
@@ -561,11 +559,11 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 													});
 												}
 											})
-											.catch((err) => {
-												console.log(err);
+											.catch((error) => {
+												console.log(error);
 												res.status(200).json({
 													status: 0,
-													message: err.message,
+													message: error.message,
 												});
 											});
 									}
@@ -606,9 +604,9 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 								data.creator = 0;
 								data.wallet_ids.operational = wallet_ids.operational;
 
-								data.save((err, merchant) => {
-									if (err) {
-										console.log(err);
+								data.save((err6, merchant) => {
+									if (err6) {
+										console.log(err6);
 										res.status(200).json({
 											status: 0,
 											message:
@@ -622,16 +620,16 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 											{
 												$inc: { total_partners: 1 },
 											},
-											function (err) {
-												if (err) {
-													console.log(err);
-													var message = err;
-													if (err.message) {
-														message = err.message;
+											function (err7) {
+												if (err7) {
+													console.log(err7);
+													var message7 = err7;
+													if (err7.message) {
+														message7 = err7.message;
 													}
 													res.status(200).json({
 														status: 0,
-														message: message,
+														message: message7,
 													});
 												} else {
 													const group = new InvoiceGroup();
@@ -639,17 +637,17 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 													group.name = 'Default';
 													group.code = `${merchant.name}default`;
 													group.description = 'default';
-													group.save((err) => {
-														if (err) {
+													group.save((err8) => {
+														if (err8) {
 
-															console.log(err);
-															var message = err;
-															if (err.message) {
-																message = err.message;
+															console.log(err8);
+															var message8= err8;
+															if (err8.message) {
+																message8 = err8.message;
 															}
 															res.status(200).json({
 																status: 0,
-																message: message,
+																message: message8,
 															});
 														} else {
 															let content =
@@ -692,11 +690,11 @@ router.post("/bank/createMerchant", jwtTokenAuth, function (req, res) {
 								});
 							}
 						})
-						.catch((err) => {
-							console.log(err);
+						.catch((error) => {
+							console.log(error);
 							res.status(200).json({
 								status: 0,
-								message: err.message,
+								message: error.message,
 							});
 						});
 				}
@@ -723,33 +721,33 @@ router.post("/bank/editMerchant", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!bank || bank === null || bank === undefined){
+			}else if (!bank || bank == null || bank == undefined){
 				BankUser.findOne(
 					{
 						username: jwtusername,
 						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-								var result = errorMessage(err, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -766,10 +764,10 @@ router.post("/bank/editMerchant", jwtTokenAuth, function (req, res) {
 						email: email,
 						mobile: mobile,
 					},
-					(err, merchant) => {
-						let result = errorMessage(err, merchant, "Merchant not found.");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err3, merchant) => {
+						let result3 = errorMessage(err3, merchant, "Merchant not found.");
+						if (result3.status == 0) {
+							res.status(200).json(result3);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -806,33 +804,33 @@ router.post("/bank/getMerchantDashStats", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!bank || bank === null || bank === undefined){
+			}else if (!bank || bank == null || bank == undefined){
 				BankUser.findOne(
 					{
 						username: jwtusername,
 						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-								var result = errorMessage(err, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -865,9 +863,9 @@ router.post("/bank/getMerchantDashStats", jwtTokenAuth, function (req, res) {
 								bills_paid: { $sum: 1 },
 							},
 						},
-					],async (err, post6) => {
+					],async (err3, post6) => {
 						let result = errorMessage(
-							err,
+							err3,
 							post6,
 							"Error."
 						);
@@ -896,14 +894,14 @@ router.post("/bank/getMerchantDashStats", jwtTokenAuth, function (req, res) {
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
+								],async (err4, post7) => {
+									let result4 = errorMessage(
+										err4,
 										post7,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result4.status == 0) {
+										res.status(200).json(result4);
 									} else {
 										Invoice.aggregate(
 											[
@@ -920,14 +918,14 @@ router.post("/bank/getMerchantDashStats", jwtTokenAuth, function (req, res) {
 														bills_pending: { $sum: 1 },
 													},
 												},
-											],async (err, post8) => {
-												let result = errorMessage(
-													err,
+											],async (err5, post8) => {
+												let result5 = errorMessage(
+													err5,
 													post8,
 													"Error."
 												);
-												if (result.status == 0) {
-													res.status(200).json(result);
+												if (result5.status == 0) {
+													res.status(200).json(result5);
 												} else {
 													let ag = 0;
 													let bg = 0;
@@ -965,16 +963,16 @@ router.post("/bank/getMerchantDashStats", jwtTokenAuth, function (req, res) {
 														post6.length > 0
 													) {
 														const PaidByMC = await post6.filter((val) => {
-															return val._id==='MC'
+															return val._id=='MC'
 														});
 														const PaidByBC = await post6.filter((val) => {
-															return val._id==='BC'
+															return val._id=='BC'
 														});
 														const PaidByPC = await post6.filter((val)=>{
-															return val._id==='PC'
+															return val._id=='PC'
 														});
 														const PaidByUS = await post6.filter((val)=>{
-															return val._id==='US'
+															return val._id=='US'
 														});
 														if(PaidByMC.length > 0){
 															InvoicePaidByMC = PaidByMC[0].bills_paid;
@@ -1080,33 +1078,33 @@ router.post("/getBankDashStatsForMerchants", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!bank || bank === null || bank === undefined){
+			}else if (!bank || bank == null || bank == undefined){
 				BankUser.findOne(
 					{
 						username: jwtusername,
 						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-								var result = errorMessage(err, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -1139,14 +1137,14 @@ router.post("/getBankDashStatsForMerchants", jwtTokenAuth, function (req, res) {
 								bills_paid: { $sum: 1 },
 							},
 						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
+					],async (err3, post6) => {
+						let result3 = errorMessage(
+							err3,
 							post6,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result3.status == 0) {
+							res.status(200).json(result3);
 						} else {
 							Invoice.aggregate(
 								[
@@ -1170,9 +1168,9 @@ router.post("/getBankDashStatsForMerchants", jwtTokenAuth, function (req, res) {
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
+								],async (err4, post7) => {
 									let result = errorMessage(
-										err,
+										err4,
 										post7,
 										"Error."
 									);
@@ -1194,14 +1192,14 @@ router.post("/getBankDashStatsForMerchants", jwtTokenAuth, function (req, res) {
 														bills_pending: { $sum: 1 },
 													},
 												},
-											],async (err, post8) => {
-												let result = errorMessage(
-													err,
+											],async (err5, post8) => {
+												let result5 = errorMessage(
+													err5,
 													post8,
 													"Error."
 												);
-												if (result.status == 0) {
-													res.status(200).json(result);
+												if (result5.status == 0) {
+													res.status(200).json(result5);
 												} else {
 													let ag = 0;
 													let bg = 0;
@@ -1239,16 +1237,16 @@ router.post("/getBankDashStatsForMerchants", jwtTokenAuth, function (req, res) {
 														post6.length > 0
 													) {
 														const PaidByMC = await post6.filter((val) => {
-															return val._id==='MC'
+															return val._id=='MC'
 														});
 														const PaidByBC = await post6.filter((val) => {
-															return val._id==='BC'
+															return val._id=='BC'
 														});
 														const PaidByPC = await post6.filter((val)=>{
-															return val._id==='PC'
+															return val._id=='PC'
 														});
 														const PaidByUS = await post6.filter((val)=>{
-															return val._id==='US'
+															return val._id=='US'
 														});
 														if(PaidByMC.length > 0){
 															InvoicePaidByMC = PaidByMC[0].bills_paid;
@@ -1355,33 +1353,33 @@ router.post("/bank/:type/getMerchantStatsBydate",jwtTokenAuth,function (req, res
 					status: 0,
 					message: message,
 				});
-			}else if (!bank || bank === null || bank === undefined){
+			}else if (!bank || bank == null || bank == undefined){
 				BankUser.findOne(
 					{
 						username: jwtusername,
 						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-								var result = errorMessage(err, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -1416,14 +1414,14 @@ router.post("/bank/:type/getMerchantStatsBydate",jwtTokenAuth,function (req, res
 								bills_paid: { $sum: 1 },
 							},
 						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
+					],async (err3, post6) => {
+						let result3 = errorMessage(
+							err3,
 							post6,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result3.status == 0) {
+							res.status(200).json(result3);
 						} else {
 							Invoice.aggregate(
 								[
@@ -1447,14 +1445,14 @@ router.post("/bank/:type/getMerchantStatsBydate",jwtTokenAuth,function (req, res
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
+								],async (err4, post7) => {
+									let result4 = errorMessage(
+										err4,
 										post7,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result4.status == 0) {
+										res.status(200).json(result4);
 									} else {
 										let ag = 0;
 										let bg = 0;
@@ -1490,16 +1488,16 @@ router.post("/bank/:type/getMerchantStatsBydate",jwtTokenAuth,function (req, res
 											post6.length > 0
 										) {
 											const PaidByMC = await post6.filter((val) => {
-												return val._id==='MC'
+												return val._id=='MC'
 											});
 											const PaidByBC = await post6.filter((val) => {
-												return val._id==='BC'
+												return val._id=='BC'
 											});
 											const PaidByPC = await post6.filter((val)=>{
-												return val._id==='PC'
+												return val._id=='PC'
 											});
 											const PaidByUS = await post6.filter((val)=>{
-												return val._id==='US'
+												return val._id=='US'
 											});
 											if(PaidByMC.length > 0){
 												InvoicePaidByMC = PaidByMC[0].bills_paid;
@@ -1588,33 +1586,33 @@ router.post("/bank/getMerchantzoneList", jwtTokenAuth, (req, res) => {
 					status: 0,
 					message: message,
 				});
-			}else if (!bank || bank === null || bank === undefined){
+			}else if (!bank || bank == null || bank == undefined){
 				BankUser.findOne(
 					{
 						username: jwtusername,
 						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-								var result = errorMessage(err, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -1622,16 +1620,16 @@ router.post("/bank/getMerchantzoneList", jwtTokenAuth, (req, res) => {
 				);
 			}
 		
-				Zone.find({ merchant_id: merchant_id }, async (err, zones) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Zone.find({ merchant_id: merchant_id }, async (err3, zones) => {
+					if (err3) {
+						console.log(err3);
+						var message3 = err3;
+						if (err3.message) {
+							message3 = err.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message3,
 						});
 					} else {
 						res.status(200).json({
@@ -1664,33 +1662,33 @@ router.post("/bank/getMerchantsubzoneList", jwtTokenAuth, (req, res) => {
 					status: 0,
 					message: message,
 				});
-			}else if (!bank || bank === null || bank === undefined){
+			}else if (!bank || bank == null || bank == undefined){
 				BankUser.findOne(
 					{
 						username: jwtusername,
 						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-								var result = errorMessage(err, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -1698,16 +1696,16 @@ router.post("/bank/getMerchantsubzoneList", jwtTokenAuth, (req, res) => {
 				);
 			}
 			
-				Subzone.find({ merchant_id: merchant_id }, async (err, subzones) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Subzone.find({ merchant_id: merchant_id }, async (err3, subzones) => {
+					if (err3) {
+						console.log(err3);
+						var message3 = err3;
+						if (err3.message) {
+							message3 = err3.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message3,
 						});
 					} else {
 						res.status(200).json({
@@ -1740,49 +1738,49 @@ router.post("/bank/getMerchantbranchList", jwtTokenAuth, (req, res) => {
 					status: 0,
 					message: message,
 				});
-			}else if (!bank || bank === null || bank === undefined){
+			}else if (!bank || bank == null || bank == undefined){
 				BankUser.findOne(
 					{
 						username: jwtusername,
 						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-								var result = errorMessage(err, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
 					}
 				);
 			}
-				MerchantBranch.find({ merchant_id: merchant_id }, async (err, branches) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				MerchantBranch.find({ merchant_id: merchant_id }, async (err3, branches) => {
+					if (err3) {
+						console.log(err3);
+						var message3 = err3;
+						if (err3.message) {
+							message3 = err.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message3,
 						});
 					} else {
 						res.status(200).json({
@@ -1819,33 +1817,33 @@ router.post("/bank/getBankMerchantStatsBydate",jwtTokenAuth,function (req, res) 
 					status: 0,
 					message: message,
 				});
-			}else if (!bank || bank === null || bank === undefined){
+			}else if (!bank || bank == null || bank == undefined){
 				BankUser.findOne(
 					{
 						username: jwtusername,
 						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-								var result = errorMessage(err, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -1879,14 +1877,14 @@ router.post("/bank/getBankMerchantStatsBydate",jwtTokenAuth,function (req, res) 
 								bills_paid: { $sum: 1 },
 							},
 						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
+					],async (err3, post6) => {
+						let result3 = errorMessage(
+							err3,
 							post6,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result3.status == 0) {
+							res.status(200).json(result3);
 						} else {
 							Invoice.aggregate(
 								[
@@ -1910,14 +1908,14 @@ router.post("/bank/getBankMerchantStatsBydate",jwtTokenAuth,function (req, res) 
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
+								],async (err4, post7) => {
+									let result4 = errorMessage(
+										err4,
 										post7,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result4.status == 0) {
+										res.status(200).json(result4);
 									} else {
 										let ag = 0;
 										let bg = 0;
@@ -1953,16 +1951,16 @@ router.post("/bank/getBankMerchantStatsBydate",jwtTokenAuth,function (req, res) 
 											post6.length > 0
 										) {
 											const PaidByMC = await post6.filter((val) => {
-												return val._id==='MC'
+												return val._id=='MC'
 											});
 											const PaidByBC = await post6.filter((val) => {
-												return val._id==='BC'
+												return val._id=='BC'
 											});
 											const PaidByPC = await post6.filter((val)=>{
-												return val._id==='PC'
+												return val._id=='PC'
 											});
 											const PaidByUS = await post6.filter((val)=>{
-												return val._id==='US'
+												return val._id=='US'
 											});
 											if(PaidByMC.length > 0){
 												InvoicePaidByMC = PaidByMC[0].bills_paid;
@@ -2051,33 +2049,33 @@ router.post("/bank/:type/getMerchantStatsByPeriod",jwtTokenAuth,function (req, r
 					status: 0,
 					message: message,
 				});
-			}else if (!bank || bank === null || bank === undefined){
+			}else if (!bank || bank == null || bank == undefined){
 				BankUser.findOne(
 					{
 						username: jwtusername,
 						role: {$in: ['bankAdmin', 'infraAdmin']},
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-								var result = errorMessage(err, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -2103,14 +2101,14 @@ router.post("/bank/:type/getMerchantStatsByPeriod",jwtTokenAuth,function (req, r
 								penalty: { $sum: "$penalty"},
 							},
 						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
+					],async (err3, post6) => {
+						let result3 = errorMessage(
+							err3,
 							post6,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result3.status == 0) {
+							res.status(200).json(result3);
 						} else {
 							Invoice.aggregate(
 								[
@@ -2127,14 +2125,14 @@ router.post("/bank/:type/getMerchantStatsByPeriod",jwtTokenAuth,function (req, r
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
+								],async (err4, post7) => {
+									let result4 = errorMessage(
+										err4,
 										post7,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result4.status == 0) {
+										res.status(200).json(result4);
 									} else {
 										let ag = 0;
 										let bg = 0;
@@ -2170,16 +2168,16 @@ router.post("/bank/:type/getMerchantStatsByPeriod",jwtTokenAuth,function (req, r
 											post6.length > 0
 										) {
 											const PaidByMC = await post6.filter((val) => {
-												return val._id==='MC'
+												return val._id=='MC'
 											});
 											const PaidByBC = await post6.filter((val) => {
-												return val._id==='BC'
+												return val._id=='BC'
 											});
 											const PaidByPC = await post6.filter((val)=>{
-												return val._id==='PC'
+												return val._id=='PC'
 											});
 											const PaidByUS = await post6.filter((val)=>{
-												return val._id==='US'
+												return val._id=='US'
 											});
 											if(PaidByMC.length > 0){
 												InvoicePaidByMC = PaidByMC[0].bills_paid;
@@ -2267,33 +2265,33 @@ router.post("/bank/listMerchantSubzonesByZoneId",jwtTokenAuth,function (req, res
 						status: 0,
 						message: message,
 					});
-				}else if (!bank || bank === null || bank === undefined){
+				}else if (!bank || bank == null || bank == undefined){
 					BankUser.findOne(
 						{
 							username: jwtusername,
 							role: {$in: ['bankAdmin', 'infraAdmin']},
 						},
-						function (err, admin) {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						function (err1, admin) {
+							if (err1) {
+								console.log(err1);
+								var message1 = err1;
+								if (err1.message) {
+									message1 = err1.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message1,
 								});
-							}else if (!admin || admin===null || admin === undefined){
+							}else if (!admin || admin==null || admin == undefined){
 								res.status(200).json({
 									status: 0,
 									message: "User not found",
 								});
 							} else {
-								Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-									var result = errorMessage(err, adminbank, "Bank is blocked");
-									if (result.status == 0) {
-										res.status(200).json(result);
+								Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+									var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									}
 								});
 							}	
@@ -2302,16 +2300,16 @@ router.post("/bank/listMerchantSubzonesByZoneId",jwtTokenAuth,function (req, res
 				}
 					Subzone.find(
 						{ zone_id: zone_id },
-						function (err, subzone) {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						function (err3, subzone) {
+							if (err3) {
+								console.log(err3);
+								var message3 = err3;
+								if (err3.message) {
+									message3 = err3.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message3,
 								});
 							} else {
 								res.status(200).json({
@@ -2348,33 +2346,33 @@ router.post(
 						status: 0,
 						message: message,
 					});
-				}else if (!bank || bank === null || bank === undefined){
+				}else if (!bank || bank == null || bank == undefined){
 					BankUser.findOne(
 						{
 							username: jwtusername,
 							role: {$in: ['bankAdmin', 'infraAdmin']},
 						},
-						function (err, admin) {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						function (err1, admin) {
+							if (err1) {
+								console.log(err1);
+								var message1 = err1;
+								if (err1.message) {
+									message1 = err1.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message1,
 								});
-							}else if (!admin || admin===null || admin === undefined){
+							}else if (!admin || admin==null || admin == undefined){
 								res.status(200).json({
 									status: 0,
 									message: "User not found",
 								});
 							} else {
-								Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-									var result = errorMessage(err, adminbank, "Bank is blocked");
-									if (result.status == 0) {
-										res.status(200).json(result);
+								Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+									var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									}
 								});
 							}	
@@ -2384,16 +2382,16 @@ router.post(
 
 					MerchantBranch.find(
 						{  subzone_id: subzone_id },
-						function (err, branch) {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						function (err3, branch) {
+							if (err3) {
+								console.log(err3);
+								var message3 = err3;
+								if (err3.message) {
+									message3 = err3.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message3,
 								});
 							} else {
 								res.status(200).json({

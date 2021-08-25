@@ -26,6 +26,7 @@ const Offering = require("../models/merchant/Offering");
 const Tax = require("../models/merchant/Tax");
 const MerchantSettings = require("../models/merchant/MerchantSettings");
 const Customer = require("../models/merchant/Customer");
+const { errors } = require("formidable");
 
 router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 	const { merchant_id } = req.body;
@@ -50,33 +51,33 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err;
 							if (err.message) {
-								message = err.message;
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -106,14 +107,14 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 								bills_paid: { $sum: 1 },
 							},
 						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
+					],async (err3, post6) => {
+						let result3 = errorMessage(
+							err3,
 							post6,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result3.status == 0) {
+							res.status(200).json(result3);
 						} else {
 							Invoice.aggregate(
 								[
@@ -137,14 +138,14 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
+								],async (err4, post7) => {
+									let result4 = errorMessage(
+										err4,
 										post7,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result4.status == 0) {
+										res.status(200).json(result4);
 									} else {
 										Invoice.aggregate(
 											[
@@ -161,14 +162,14 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 														bills_pending: { $sum: 1 },
 													},
 												},
-											],async (err, post8) => {
-												let result = errorMessage(
-													err,
+											],async (err5, post8) => {
+												let result5 = errorMessage(
+													err5,
 													post8,
 													"Error."
 												);
-												if (result.status == 0) {
-													res.status(200).json(result);
+												if (result5.status == 0) {
+													res.status(200).json(result5);
 												} else {
 													let ap = 0;
 													let bp = 0;
@@ -219,33 +220,33 @@ router.post("/merchant/getSettings", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -255,16 +256,16 @@ router.post("/merchant/getSettings", jwtTokenAuth, function (req, res) {
 
 				MerchantSettings.findOne(
 					{ merchant_id: merchant_id },
-					(err, setting) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err3, setting) => {
+						if (err3) {
+							console.log(err3);
+							var message3 = err3;
+							if (err3.message) {
+								message3 = err3.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message3,
 							});
 						} else if (!setting) {
 							res.status(200).json({
@@ -302,33 +303,33 @@ router.post("/merchant/getzoneList", jwtTokenAuth, (req, res) => {
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -336,16 +337,16 @@ router.post("/merchant/getzoneList", jwtTokenAuth, (req, res) => {
 				);
 			}
 		
-			Zone.find({ merchant_id: merchant_id }, async (err, zones) => {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
+			Zone.find({ merchant_id: merchant_id }, async (err8, zones) => {
+				if (err3) {
+					console.log(err3);
+					var message3 = err3;
+					if (err3.message) {
+						message3 = err3.message;
 					}
 					res.status(200).json({
 						status: 0,
-						message: message,
+						message: message3,
 					});
 				} else {
 					res.status(200).json({
@@ -377,32 +378,32 @@ router.post("/merchant/getsubzoneList", jwtTokenAuth, (req, res) => {
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
 									res.status(200).json(result);
 								}
 							});
@@ -411,16 +412,16 @@ router.post("/merchant/getsubzoneList", jwtTokenAuth, (req, res) => {
 				);
 			}
 			
-			Subzone.find({ merchant_id: merchant_id }, async (err, subzones) => {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
+			Subzone.find({ merchant_id: merchant_id }, async (err7, subzones) => {
+				if (err3) {
+					console.log(err3);
+					var message3 = err3;
+					if (err3.message) {
+						message3 = err3.message;
 					}
 					res.status(200).json({
 						status: 0,
-						message: message,
+						message: message3,
 					});
 				} else {
 					res.status(200).json({
@@ -452,49 +453,49 @@ router.post("/merchant/getbranchList", jwtTokenAuth, (req, res) => {
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
 					}
 				);
 			}
-			MerchantBranch.find({ merchant_id: merchant_id }, async (err, branches) => {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
+			MerchantBranch.find({ merchant_id: merchant_id }, async (err3, branches) => {
+				if (err3) {
+					console.log(err3);
+					var message3 = err3;
+					if (err3.message) {
+						message3 = err3.message;
 					}
 					res.status(200).json({
 						status: 0,
-						message: message,
+						message: message3,
 					});
 				} else {
 					res.status(200).json({
@@ -531,33 +532,33 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -587,14 +588,14 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 								bills_paid: { $sum: 1 },
 							},
 						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
+					],async (err3, post6) => {
+						let result3 = errorMessage(
+							err3,
 							post6,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result3.status == 0) {
+							res.status(200).json(result3);
 						} else {
 							Invoice.aggregate(
 								[
@@ -618,14 +619,14 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
+								],async (err4, post7) => {
+									let result4 = errorMessage(
+										err4,
 										post7,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result4.status == 0) {
+										res.status(200).json(result4);
 									} else {
 										Invoice.aggregate(
 											[
@@ -642,14 +643,14 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 														bills_pending: { $sum: 1 },
 													},
 												},
-											],async (err, post8) => {
-												let result = errorMessage(
-													err,
+											],async (err5, post8) => {
+												let result5 = errorMessage(
+													err5,
 													post8,
 													"Error."
 												);
-												if (result.status == 0) {
-													res.status(200).json(result);
+												if (result5.status == 0) {
+													res.status(200).json(result5);
 												} else {
 													let apen = 0;
 													let bpen = 0;
@@ -723,38 +724,38 @@ router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: username,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								} else {
-									Bank.findOne({ _id: adminmerchant.bank_id }, (err, bank) => {
-										let result = errorMessage(err, bank, "Bank not found");
-										if (result.status == 0) {
-											res.status(200).json(result);
+									Bank.findOne({ _id: adminmerchant.bank_id }, (err3, bank) => {
+										let result3 = errorMessage(err3, bank, "Bank not found");
+										if (result3.status == 0) {
+											res.status(200).json(result3);
 										} else {
 											const wallet_id = adminmerchant.wallet_ids.operational;
 											blockchain
@@ -765,8 +766,8 @@ router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 														balance: result,
 													});
 												})
-												.catch((err) => {
-													res.status(200).json(catchError(err));
+												.catch((error) => {
+													res.status(200).json(catchError(error));
 												});
 										}
 									});
@@ -776,10 +777,10 @@ router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 					}
 				);
 			} else {
-				Bank.findOne({ _id: merchant.bank_id }, (err, bank) => {
-					let result = errorMessage(err, bank, "Bank not found");
-					if (result.status == 0) {
-						res.status(200).json(result);
+				Bank.findOne({ _id: merchant.bank_id }, (err4, bank) => {
+					let result4 = errorMessage(err4, bank, "Bank not found");
+					if (result4.status == 0) {
+						res.status(200).json(result4);
 					} else {
 						const wallet_id = merchant.wallet_ids.operational;
 						blockchain
@@ -790,8 +791,8 @@ router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 									balance: result,
 								});
 							})
-							.catch((err) => {
-								res.status(200).json(catchError(err));
+							.catch((error) => {
+								res.status(200).json(catchError(error));
 							});
 					}
 				});
@@ -823,33 +824,33 @@ router.post("/merchant/getMerchantSubzoneListDashStats", jwtTokenAuth, function 
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -880,14 +881,14 @@ router.post("/merchant/getMerchantSubzoneListDashStats", jwtTokenAuth, function 
 								bills_paid: { $sum: 1 },
 							},
 						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
+					],async (err3, post6) => {
+						let result3 = errorMessage(
+							err3,
 							post6,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result3.status == 0) {
+							res.status(200).json(result3);
 						} else {
 							Invoice.aggregate(
 								[
@@ -911,14 +912,14 @@ router.post("/merchant/getMerchantSubzoneListDashStats", jwtTokenAuth, function 
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
+								],async (err4, post7) => {
+									let result4 = errorMessage(
+										err4,
 										post7,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result4.status == 0) {
+										res.status(200).json(result4);
 									} else {
 										Invoice.aggregate(
 											[
@@ -935,14 +936,14 @@ router.post("/merchant/getMerchantSubzoneListDashStats", jwtTokenAuth, function 
 														bills_pending: { $sum: 1 },
 													},
 												},
-											],async (err, post8) => {
-												let result = errorMessage(
-													err,
+											],async (err5, post8) => {
+												let result5 = errorMessage(
+													err5,
 													post8,
 													"Error."
 												);
-												if (result.status == 0) {
-													res.status(200).json(result);
+												if (result5.status == 0) {
+													res.status(200).json(result5);
 												} else {
 													let ap = 0;
 													let bp = 0;
@@ -998,33 +999,33 @@ router.post("/merchant/getMerchantBranchListDashStats", jwtTokenAuth, function (
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -1054,14 +1055,14 @@ router.post("/merchant/getMerchantBranchListDashStats", jwtTokenAuth, function (
 								bills_paid: { $sum: 1 },
 							},
 						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
+					],async (err3, post6) => {
+						let result3 = errorMessage(
+							err3,
 							post6,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result3.status == 0) {
+							res.status(200).json(result3);
 						} else {
 							Invoice.aggregate(
 								[
@@ -1085,14 +1086,14 @@ router.post("/merchant/getMerchantBranchListDashStats", jwtTokenAuth, function (
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
+								],async (err4, post7) => {
+									let result4 = errorMessage(
+										err4,
 										post7,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result4.status == 0) {
+										res.status(200).json(result4);
 									} else {
 										Invoice.aggregate(
 											[
@@ -1109,14 +1110,14 @@ router.post("/merchant/getMerchantBranchListDashStats", jwtTokenAuth, function (
 														bills_pending: { $sum: 1 },
 													},
 												},
-											],async (err, post8) => {
-												let result = errorMessage(
-													err,
+											],async (err5, post8) => {
+												let result5 = errorMessage(
+													err5,
 													post8,
 													"Error."
 												);
-												if (result.status == 0) {
-													res.status(200).json(result);
+												if (result5.status == 0) {
+													res.status(200).json(result5);
 												} else {
 													let ap = 0;
 													let bp = 0;
@@ -1170,33 +1171,33 @@ router.post(
 						status: 0,
 						message: message,
 					});
-				}else if (!merchant || merchant === null || merchant === undefined){
+				}else if (!merchant || merchant == null || merchant == undefined){
 					MerchantStaff.findOne(
 						{
 							username: jwtusername,
 							role: "admin",
 						},
-						function (err, admin) {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						function (err1, admin) {
+							if (err1) {
+								console.log(err1);
+								var message1 = err1;
+								if (err1.message) {
+									message1 = err1.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message1,
 								});
-							}else if (!admin || admin===null || admin === undefined){
+							}else if (!admin || admin==null || admin == undefined){
 								res.status(200).json({
 									status: 0,
 									message: "User not found",
 								});
 							} else {
-								Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-									var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-									if (result.status == 0) {
-										res.status(200).json(result);
+								Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+									var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									}
 								});
 							}	
@@ -1205,16 +1206,16 @@ router.post(
 				}
 					Subzone.find(
 						{ zone_id: zone_id },
-						function (err, subzone) {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						function (err3, subzone) {
+							if (err3) {
+								console.log(err3);
+								var message3 = err3;
+								if (err3.message) {
+									message3 = err3.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message3,
 								});
 							} else {
 								res.status(200).json({
@@ -1252,33 +1253,33 @@ router.post("/merchant/getSubZoneStats",jwtTokenAuth,function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -1310,14 +1311,14 @@ router.post("/merchant/getSubZoneStats",jwtTokenAuth,function (req, res) {
 								bills_paid: { $sum: 1 },
 							},
 						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
+					],async (err3, post6) => {
+						let result3 = errorMessage(
+							err3,
 							post6,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result3.status == 0) {
+							res.status(200).json(result3);
 						} else {
 							Invoice.aggregate(
 								[
@@ -1341,14 +1342,14 @@ router.post("/merchant/getSubZoneStats",jwtTokenAuth,function (req, res) {
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
+								],async (err4, post7) => {
+									let result4 = errorMessage(
+										err4,
 										post7,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result4.status == 0) {
+										res.status(200).json(result4);
 									} else {
 										let ag = 0;
 										let bg = 0;
@@ -1413,33 +1414,33 @@ router.post("/merchant/getBranchStats",jwtTokenAuth,function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -1471,14 +1472,14 @@ router.post("/merchant/getBranchStats",jwtTokenAuth,function (req, res) {
 								bills_paid: { $sum: 1 },
 							},
 						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
+					],async (err3, post6) => {
+						let result3 = errorMessage(
+							err3,
 							post6,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result3.status == 0) {
+							res.status(200).json(result3);
 						} else {
 							Invoice.aggregate(
 								[
@@ -1502,14 +1503,14 @@ router.post("/merchant/getBranchStats",jwtTokenAuth,function (req, res) {
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
+								],async (err4, post7) => {
+									let result4 = errorMessage(
+										err4,
 										post7,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result4.status == 0) {
+										res.status(200).json(result4);
 									} else {
 										let ag = 0;
 										let bg = 0;
@@ -1572,33 +1573,33 @@ router.post(
 						status: 0,
 						message: message,
 					});
-				}else if (!merchant || merchant === null || merchant === undefined){
+				}else if (!merchant || merchant == null || merchant == undefined){
 					MerchantStaff.findOne(
 						{
 							username: jwtusername,
 							role: "admin",
 						},
-						function (err, admin) {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						function (err1, admin) {
+							if (err1) {
+								console.log(err1);
+								var message1 = err1;
+								if (err1.message) {
+									message1 = err1.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message1,
 								});
-							}else if (!admin || admin===null || admin === undefined){
+							}else if (!admin || admin==null || admin == undefined){
 								res.status(200).json({
 									status: 0,
 									message: "User not found",
 								});
 							} else {
-								Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-									var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-									if (result.status == 0) {
-										res.status(200).json(result);
+								Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+									var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									}
 								});
 							}	
@@ -1607,21 +1608,21 @@ router.post(
 				}
 					MerchantBranch.find(
 						{  subzone_id: subzone_id },
-						function (err, branch) {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						function (err3, branch1) {
+							if (err3) {
+								console.log(err3);
+								var message3= err3;
+								if (err3.message) {
+									message3 = err3.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message3,
 								});
 							} else {
 								res.status(200).json({
 									status: 1,
-									branches: branch,
+									branches: branch1,
 								});
 							}
 						}
@@ -1656,33 +1657,33 @@ router.post("/merchant/:type/getStatsBydate",jwtTokenAuth,function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -1714,14 +1715,14 @@ router.post("/merchant/:type/getStatsBydate",jwtTokenAuth,function (req, res) {
 								bills_paid: { $sum: 1 },
 							},
 						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
+					],async (err3, post6) => {
+						let result3 = errorMessage(
+							err3,
 							post6,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result3.status == 0) {
+							res.status(200).json(result3);
 						} else {
 							Invoice.aggregate(
 								[
@@ -1745,14 +1746,14 @@ router.post("/merchant/:type/getStatsBydate",jwtTokenAuth,function (req, res) {
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
+								],async (err4, post7) => {
+									let result4 = errorMessage(
+										err4,
 										post7,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result4.status == 0) {
+										res.status(200).json(result4);
 									} else {
 										let ag = 0;
 										let bg = 0;
@@ -1780,16 +1781,16 @@ router.post("/merchant/:type/getStatsBydate",jwtTokenAuth,function (req, res) {
 											post6.length > 0
 										) {
 											const PaidByMC = await post6.filter((val) => {
-												return val._id==='MC'
+												return val._id=='MC'
 											});
 											const PaidByBC = await post6.filter((val) => {
-												return val._id==='BC'
+												return val._id=='BC'
 											});
 											const PaidByPC = await post6.filter((val)=>{
-												return val._id==='PC'
+												return val._id=='PC'
 											});
 											const PaidByUS = await post6.filter((val)=>{
-												return val._id==='US'
+												return val._id=='US'
 											});
 											if(PaidByMC.length > 0){
 												InvoicePaidByMC = PaidByMC[0].bills_paid;
@@ -1863,33 +1864,33 @@ router.post("/merchant/:type/getStatsByPeriod",jwtTokenAuth,function (req, res) 
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -1914,14 +1915,14 @@ router.post("/merchant/:type/getStatsByPeriod",jwtTokenAuth,function (req, res) 
 								penalty: { $sum: "$penalty"},
 							},
 						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
+					],async (err3, post6) => {
+						let result3 = errorMessage(
+							err3,
 							post6,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result3.status == 0) {
+							res.status(200).json(result3);
 						} else {
 							Invoice.aggregate(
 								[
@@ -1938,14 +1939,14 @@ router.post("/merchant/:type/getStatsByPeriod",jwtTokenAuth,function (req, res) 
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
+								],async (err4, post7) => {
+									let result4 = errorMessage(
+										err4,
 										post7,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result4.status == 0) {
+										res.status(200).json(result4);
 									} else {
 										let ag = 0;
 										let bg = 0;
@@ -1973,16 +1974,16 @@ router.post("/merchant/:type/getStatsByPeriod",jwtTokenAuth,function (req, res) 
 											post6.length > 0
 										) {
 											const PaidByMC = await post6.filter((val) => {
-												return val._id==='MC'
+												return val._id=='MC'
 											});
 											const PaidByBC = await post6.filter((val) => {
-												return val._id==='BC'
+												return val._id=='BC'
 											});
 											const PaidByPC = await post6.filter((val)=>{
-												return val._id==='PC'
+												return val._id=='PC'
 											});
 											const PaidByUS = await post6.filter((val)=>{
-												return val._id==='US'
+												return val._id=='US'
 											});
 											if(PaidByMC.length > 0){
 												InvoicePaidByMC = PaidByMC[0].bills_paid;
@@ -2055,33 +2056,33 @@ router.post("/merchant/listOfferings", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -2089,16 +2090,16 @@ router.post("/merchant/listOfferings", jwtTokenAuth, function (req, res) {
 				);
 			}
 		
-				Offering.find({ merchant_id: merchant_id }, (err, offerings) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Offering.find({ merchant_id: merchant_id }, (err3, offerings) => {
+					if (err3) {
+						console.log(err3);
+						var message3 = err3;
+						if (err3.message) {
+							message3 = err3.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message3,
 						});
 					} else {
 						res.status(200).json({
@@ -2130,49 +2131,49 @@ router.post("/merchant/listTaxes", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
 					}
 				);
 			}
-				Tax.find({ merchant_id: merchant_id }, (err, taxes) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Tax.find({ merchant_id: merchant_id }, (err3, taxes) => {
+					if (err3) {
+						console.log(err3);
+						var message3 = err3;
+						if (err3.message) {
+							message3 = err3.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message3,
 						});
 					} else {
 						res.status(200).json({
@@ -2203,49 +2204,49 @@ router.post("/merchant/listInvoiceGroups", jwtTokenAuth, (req, res) => {
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
 					}
 				);
 			}
-				InvoiceGroup.find({ merchant_id: merchant_id }, (err, groups) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				InvoiceGroup.find({ merchant_id: merchant_id }, (err3, groups) => {
+					if (err3) {
+						console.log(err3);
+						var message3 = err3;
+						if (err3.message) {
+							message3 = err3.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message3,
 						});
 					} else {
 						res.status(200).json({
@@ -2278,16 +2279,16 @@ router.post("/merchant/createInvoiceGroup", jwtTokenAuth, (req, res) => {
 				data.name = name;
 				data.description = description;
 				data.merchant_id = merchant._id;
-				data.save((err, group) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				data.save((err1, group) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						return res.status(200).json({
@@ -2320,49 +2321,49 @@ router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
 					}
 				);
 			}
-				Customer.find({ merchant_id: merchant_id }, (err, customers) => {
+				Customer.find({ merchant_id: merchant_id }, (err3, customers) => {
 					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+						console.log(err3);
+						var message3 = err3;
+						if (err3.message) {
+							message3 = err3.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message3,
 						});
 					} else {
 						res.status(200).json({
@@ -2393,33 +2394,33 @@ router.post("/merchant/listStaff", jwtTokenAuth, (req, res) => {
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -2428,16 +2429,16 @@ router.post("/merchant/listStaff", jwtTokenAuth, (req, res) => {
 			}
 				MerchantStaff.find(
 					{ merchant_id: merchant_id },
-					(err, staffs) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err3, staffs) => {
+						if (err3) {
+							console.log(err3);
+							var message3= err3;
+							if (err3.message) {
+								message3 = err3.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message3,
 							});
 						} else {
 							res.status(200).json({
@@ -2469,48 +2470,48 @@ router.post("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!merchant || merchant === null || merchant === undefined){
+			}else if (!merchant || merchant == null || merchant == undefined){
 				MerchantStaff.findOne(
 					{
 						username: jwtusername,
 						role: "admin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Merchant.findOne({ _id: admin.merchant_id }, (err, adminmerchant) => {
-								var result = errorMessage(err, adminmerchant, "Merchant is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Merchant.findOne({ _id: admin.merchant_id }, (err2, adminmerchant) => {
+								var result2 = errorMessage(err2, adminmerchant, "Merchant is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}else{
 									Bank.findOne(
 										{
 											_id: adminmerchant.bank_id,
 										},
-										function (err) {
-											if (err) {
-												console.log(err);
-												var message = err;
-												if (err.message) {
-													message = err.message;
+										function (err3) {
+											if (err3) {
+												console.log(err3);
+												var message3 = err3;
+												if (err3.message) {
+													message3 = err3.message;
 												}
 												res.status(200).json({
 													status: 0,
-													message: message,
+													message: message3,
 												});
 											} else {
 												const wallet = adminmerchant.wallet_ids.operational;
@@ -2522,8 +2523,8 @@ router.post("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 															history: history,
 														});
 													})
-													.catch((err) => {
-														res.status(200).json(catchError(err));
+													.catch((error) => {
+														res.status(200).json(catchError(error));
 													});
 											}
 										}
@@ -2538,16 +2539,16 @@ router.post("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 					{
 						_id: merchant.bank_id,
 					},
-					function (err) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err4) {
+						if (err4) {
+							console.log(err4);
+							var message4 = err4;
+							if (err4.message) {
+								message4 = err4.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message4,
 							});
 						} else {
 							const wallet = merchant.wallet_ids.operational;
@@ -2559,8 +2560,8 @@ router.post("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 										history: history,
 									});
 								})
-								.catch((err) => {
-									res.status(200).json(catchError(err));
+								.catch((error) => {
+									res.status(200).json(catchError(errors));
 								});
 						}
 					}
@@ -2585,7 +2586,7 @@ router.post("/merchant/uploadCustomers", jwtTokenAuth, (req, res) => {
 				res.status(200).json(result);
 			} else {
 				let failed = [];
-				for (customer of customers) {
+				for (let customer of customers) {
 					try {
 						var customerFound = await Customer.findOne({
 							merchant_id: merchant._id,
@@ -2617,13 +2618,13 @@ router.post("/merchant/uploadCustomers", jwtTokenAuth, (req, res) => {
 							};
 							await Customer.create(customerDetails);
 						}
-					} catch (err) {
-						console.log(err);
-						var message = err;
-						if (err && err.message) {
-							message = err.message;
+					} catch (error) {
+						console.log(error);
+						var message1 = error;
+						if (error && error.message) {
+							message1 = error.message;
 						}
-						customer.failure_reason = message;
+						customer.failure_reason = message1;
 						failed.push(customer);
 					}
 				}
@@ -2656,39 +2657,39 @@ router.post("/merchant/zoneSetting", jwtTokenAuth, (req, res) => {
 			} else {
 				MerchantSettings.countDocuments(
 					{ merchant_id: merchant._id },
-					(err, count) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, count) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (count == 1) {
 							MerchantSettings.findOneAndUpdate(
 								{ merchant_id: merchant._id },
 								{ zone_name: zone_name, subzone_name: subzone_name },
 								{ new: true },
-								function (err, setting) {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
+								function (err2, setting) {
+									if (err2) {
+										console.log(err2);
+										var message2 = err2;
+										if (err2.message) {
+											message2 = err2.message;
 										}
 										res.status(200).json({
 											status: 0,
-											message: message,
+											message: message2,
 										});
 									} else if (setting == null) {
-										console.log(err);
+										console.log(err3);
 										res.status(200).json({
 											status: 0,
 											message: "Setting not found",
-											err: err,
+											err: err3,
 										});
 									} else {
 										res.status(200).json({
@@ -2703,16 +2704,16 @@ router.post("/merchant/zoneSetting", jwtTokenAuth, (req, res) => {
 							data.merchant_id = merchant._id;
 							data.zone_name = zone_name;
 							data.subzone_name = subzone_name;
-							data.save((err) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
+							data.save((err4) => {
+								if (err4) {
+									console.log(err4);
+									var message4 = err4;
+									if (err4.message) {
+										message4 = err4.message;
 									}
 									res.status(200).json({
 										status: 0,
-										message: message,
+										message: message4,
 									});
 								} else {
 									res.status(200).json({
@@ -2752,39 +2753,39 @@ router.post("/merchant/editPenaltyRule", jwtTokenAuth, (req, res) => {
 			} else {
 				MerchantSettings.countDocuments(
 					{ merchant_id: merchant._id },
-					(err, count) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, count) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (count == 1) {
 							MerchantSettings.findOneAndUpdate(
 								{ merchant_id: merchant._id },
 								{ penalty_rule: penalty_rule },
 								{ new: true },
-								function (err, setting) {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
+								function (err2, setting) {
+									if (err2) {
+										console.log(err2);
+										var message2 = err2;
+										if (err2.message) {
+											message2 = err2.message;
 										}
 										res.status(200).json({
 											status: 0,
-											message: message,
+											message: message2,
 										});
 									} else if (setting == null) {
-										console.log(err);
+										console.log(err2);
 										res.status(200).json({
 											status: 0,
 											message: "Setting not found",
-											err: err,
+											err: err2,
 										});
 									} else {
 										res.status(200).json({
@@ -2798,16 +2799,16 @@ router.post("/merchant/editPenaltyRule", jwtTokenAuth, (req, res) => {
 							const data = new MerchantSettings();
 							data.merchant_id = merchant._id;
 							data.penalty_rule = penalty_rule;
-							data.save((err) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
+							data.save((err3) => {
+								if (err3) {
+									console.log(err3);
+									var message3 = err3;
+									if (err3.message) {
+										message3 = err3.message;
 									}
 									res.status(200).json({
 										status: 0,
-										message: message,
+										message: message3,
 									});
 								} else {
 									res.status(200).json({
@@ -2847,38 +2848,38 @@ router.post("/merchant/addBillPeriod", jwtTokenAuth, (req, res) => {
 			} else {
 				MerchantSettings.countDocuments(
 					{ merchant_id: merchant._id },
-					(err, count) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, count) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (count == 1) {
 							MerchantSettings.updateOne(
 								{ merchant_id: merchant._id },
 								{ $push: { bill_period: billperiod } },
-								function (err, setting) {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
+								function (err2, setting) {
+									if (err2) {
+										console.log(err2);
+										var message2 = err;
+										if (err2.message) {
+											message2 = err2.message;
 										}
 										res.status(200).json({
 											status: 0,
-											message: message,
+											message: message2,
 										});
 									} else if (setting == null) {
-										console.log(err);
+										console.log(err2);
 										res.status(200).json({
 											status: 0,
 											message: "Setting not found",
-											err: err,
+											err: err2,
 										});
 									} else {
 										res.status(200).json({
@@ -2892,16 +2893,16 @@ router.post("/merchant/addBillPeriod", jwtTokenAuth, (req, res) => {
 							const data = new MerchantSettings();
 							data.merchant_id = merchant._id;
 							data.bill_period = [billperiod];
-							data.save((err) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
+							data.save((err3) => {
+								if (err3) {
+									console.log(err3);
+									var message3 = err3;
+									if (err3.message) {
+										message3= err3.message;
 									}
 									res.status(200).json({
 										status: 0,
-										message: message,
+										message: message3,
 									});
 								} else {
 									res.status(200).json({
@@ -2944,10 +2945,10 @@ router.post("/merchant/setDefaultBillPeriod", jwtTokenAuth, (req, res) => {
 					{ merchant_id: merchant._id },
 					{ default_bill_period: period },
 					{ new: true },
-					(err, setting) => {
-						let result = errorMessage(err, setting, "Setting not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, setting) => {
+						let result1 = errorMessage(err1, setting, "Setting not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -2985,12 +2986,12 @@ router.post("/merchant/setDefaultBillterm", jwtTokenAuth, (req, res) => {
 					{ merchant_id: merchant._id },
 					{ default_bill_term: term },
 					{ new: true },
-					(err, setting) => {
-						let result = errorMessage(err, setting, "Setting not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, setting) => {
+						let result1 = errorMessage(err1, setting, "Setting not found");
+						if (result1.status == 0) {
+							res1.status(200).json(result1);
 						} else {
-							res.status(200).json({
+							res1.status(200).json({
 								status: 1,
 								message: "Default bill term updated",
 							});
@@ -3024,38 +3025,38 @@ router.post("/merchant/addBillTerm", jwtTokenAuth, (req, res) => {
 			} else {
 				MerchantSettings.countDocuments(
 					{ merchant_id: merchant._id },
-					(err, count) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, count) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (count == 1) {
 							MerchantSettings.updateOne(
 								{ merchant_id: merchant._id },
 								{ $push: { bill_term: billterm } },
-								function (err, setting) {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
+								function (err2, setting) {
+									if (err2) {
+										console.log(err2);
+										var message2 = err;
+										if (err2.message) {
+											message2 = err2.message;
 										}
 										res.status(200).json({
 											status: 0,
-											message: message,
+											message: message2,
 										});
 									} else if (setting == null) {
-										console.log(err);
+										console.log(err2);
 										res.status(200).json({
 											status: 0,
 											message: "Setting not found",
-											err: err,
+											err: err2,
 										});
 									} else {
 										res.status(200).json({
@@ -3069,16 +3070,16 @@ router.post("/merchant/addBillTerm", jwtTokenAuth, (req, res) => {
 							const data = new MerchantSettings();
 							data.merchant_id = merchant._id;
 							data.bill_term = [billterm];
-							data.save((err) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
+							data.save((err3) => {
+								if (err3) {
+									console.log(err3);
+									var message3 = err3;
+									if (err3.message) {
+										message3 = err3.message;
 									}
 									res.status(200).json({
 										status: 0,
-										message: message,
+										message: message3,
 									});
 								} else {
 									res.status(200).json({
@@ -3108,16 +3109,16 @@ router.post("/merchant/deleteTax", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Tax.deleteOne({ _id: tax_id }, (err) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Tax.deleteOne({ _id: tax_id }, (err1) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -3148,10 +3149,10 @@ router.post("/merchant/editTax", jwtTokenAuth, function (req, res) {
 					{ _id: tax_id },
 					{ code, name, value },
 					{ new: true },
-					(err, tax) => {
-						let result = errorMessage(err, tax, "Tax not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, tax) => {
+						let result1 = errorMessage(err1, tax, "Tax not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -3184,16 +3185,16 @@ router.post("/merchant/createTax", jwtTokenAuth, function (req, res) {
 						code,
 						merchant_id: merchant._id,
 					},
-					(err, tax) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, tax) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (tax) {
 							res.status(200).json({
@@ -3201,21 +3202,21 @@ router.post("/merchant/createTax", jwtTokenAuth, function (req, res) {
 								message: "Tax with this code already exist",
 							});
 						} else {
-							const tax = new Tax();
-							tax.merchant_id = merchant._id;
-							tax.code = code;
-							tax.name = name;
-							tax.value = value;
-							tax.save((err) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
+							const tax1 = new Tax();
+							tax1.merchant_id = merchant._id;
+							tax1.code = code;
+							tax1.name = name;
+							tax1.value = value;
+							tax1.save((err2) => {
+								if (err2) {
+									console.log(err2);
+									var message2 = err2;
+									if (err2.message) {
+										message2 = err2.message;
 									}
 									res.status(200).json({
 										status: 0,
-										message: message,
+										message: message2,
 									});
 								} else {
 									res.status(200).json({
@@ -3245,16 +3246,16 @@ router.post("/merchant/deleteOffering", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Offering.deleteOne({ _id: offering_id }, (err) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Offering.deleteOne({ _id: offering_id }, (err1) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -3306,10 +3307,10 @@ router.post("/merchant/editOffering", jwtTokenAuth, (req, res) => {
 						type,
 					},
 					{ new: true },
-					(err, offering) => {
-						let result = errorMessage(err, offering, "Offering not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, offering) => {
+						let result1 = errorMessage(err1, offering, "Offering not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -3338,7 +3339,7 @@ router.post("/merchant/uploadOfferings", jwtTokenAuth, function (req, res) {
 				res.status(200).json(result);
 			} else {
 				let failed = [];
-				for (offering of offerings) {
+				for (let offering of offerings) {
 					try {
 						var {
 							code,
@@ -3367,11 +3368,11 @@ router.post("/merchant/uploadOfferings", jwtTokenAuth, function (req, res) {
 							offeringObj.type = type;
 							await offeringObj.save();
 						}
-					} catch (err) {
-						console.log(err);
-						var message = err.toString();
-						if (err.message) {
-							message = err.message;
+					} catch (error) {
+						console.log(error);
+						var message = error.toString();
+						if (error.message) {
+							message = error.message;
 						}
 						offering.failure_reason = message;
 						failed.push(offering);
@@ -3409,16 +3410,16 @@ router.get("/merchant/todaysStatus", jwtTokenAuth, function (req, res) {
 					},
 					{ amount_collected: 0 },
 					{ new: true },
-					(err, merchant2) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, merchant2) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (merchant2 != null) {
 							merchant = merchant2;
@@ -3496,10 +3497,10 @@ router.post("/merchant/editZone", jwtTokenAuth, (req, res) => {
 				Zone.findOneAndUpdate(
 					{ _id: zone_id },
 					{ code: code, name: name, description: description, type: type },
-					(err, zone) => {
-						let result = errorMessage(err, zone, "Zone not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, zone) => {
+						let result1 = errorMessage(err1, zone, "Zone not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -3536,18 +3537,18 @@ router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 				data.description = description;
 				data.merchant_id = merchant._id;
 				data.type = type;
-				data.branch_count = 0,
-				data.subzone_count = 0,
-				data.save((err, zone) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				data.branch_count = 0;
+				data.subzone_count = 0;
+				data.save((err1, zone) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						return res
@@ -3583,31 +3584,31 @@ router.post("/merchant/createSubzone", jwtTokenAuth, (req, res) => {
 				data.description = description;
 				data.merchant_id = merchant._id;
 				data.type = type;
-				(data.zone_id = zone_id),
-					(data.branch_count = 0),
-					data.save((err, subzone) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+				data.zone_id = zone_id;
+				data.branch_count = 0;
+					data.save((err1, subzone) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							Zone.updateOne(
 								{ _id: zone_id },
 								{ $inc: { subzone_count: 1 } },
-								function (err, zone) {
-									let result = errorMessage(
-										err,
+								function (err2, zone) {
+									let result2 = errorMessage(
+										err2,
 										zone,
 										"Zone not found"
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									} else {
 										return res.status(200).json({
 											status: 1,
@@ -3647,10 +3648,10 @@ router.post("/merchant/editSubzone", jwtTokenAuth, (req, res) => {
 				Subzone.findOneAndUpdate(
 					{ _id: subzone_id },
 					{ code: code, name: name, description: description, type: type },
-					(err, subzone) => {
-						let result = errorMessage(err, subzone, "Subzone not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, subzone) => {
+						let result1 = errorMessage(err1, subzone, "Subzone not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -3682,10 +3683,10 @@ router.post("/merchant/addPosition", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				MerchantBranch.findOne({ _id: branch_id }, function (err, branch) {
-					let result = errorMessage(err, branch, "Invalid branch");
-					if (result.status == 0) {
-						res.status(200).json(result);
+				MerchantBranch.findOne({ _id: branch_id }, function (err1, branch) {
+					let result1 = errorMessage(err1, branch, "Invalid branch");
+					if (result1.status == 0) {
+						res.status(200).json(result1);
 					} else {
 						data.name = name;
 						data.working_from = working_from;
@@ -3694,25 +3695,25 @@ router.post("/merchant/addPosition", jwtTokenAuth, (req, res) => {
 						data.branch_id = branch_id;
 						data.bank_id = merchant.bank_id;
 						data.type = type;
-						data.save((err, position) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						data.save((err2, position) => {
+							if (err2) {
+								console.log(err2);
+								var message2 = err2;
+								if (err2.message) {
+									message2 = err2.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message2,
 								});
 							} else {
 								MerchantBranch.updateOne(
 									{ _id: branch_id },
 									{ $inc: { total_positions: 1 } },
-									function (err, branch) {
-										let result = errorMessage(err, branch, "Branch not found");
-										if (result.status == 0) {
-											res.status(200).json(result);
+									function (err3, branch3) {
+										let result3 = errorMessage(err3, branch3, "Branch not found");
+										if (result3.status == 0) {
+											res.status(200).json(result3);
 										} else {
 											return res.status(200).json({
 												status: 1,
@@ -3750,10 +3751,10 @@ router.post("/merchant/editPosition", jwtTokenAuth, (req, res) => {
 						working_from: working_from,
 						working_to: working_to,
 					},
-					(err, position) => {
-						let result = errorMessage(err, position, "Position not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, position) => {
+						let result1 = errorMessage(err1, position, "Position not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -3782,16 +3783,16 @@ router.post("/merchant/listPosition", jwtTokenAuth, (req, res) => {
 			} else {
 				MerchantPosition.find(
 					{ merchant_id: merchant._id, branch_id: branch_id },
-					(err, positions) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, positions) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -3849,16 +3850,16 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 				data.ccode = ccode;
 				data.logo = logo;
 
-				data.save((err) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				data.save((err1) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						let content =
@@ -3943,10 +3944,10 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 						branch_id: branch_id,
 						logo: logo,
 					},
-					(err, staff) => {
-						let result = errorMessage(err, staff, "Staff not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, staff) => {
+						let result1 = errorMessage(err1, staff, "Staff not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -3984,10 +3985,10 @@ router.post("/merchant/blockStaff", jwtTokenAuth, (req, res) => {
 							status: 2,
 						},
 					},
-					(err, staff) => {
-						let result = errorMessage(err, staff, "Staff not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, staff) => {
+						let result1 = errorMessage(err1, staff, "Staff not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -4023,10 +4024,10 @@ router.post("/merchant/unblockStaff", jwtTokenAuth, (req, res) => {
 					{
 						status: 1,
 					},
-					(err, staff) => {
-						let result = errorMessage(err, staff, "Staff not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, staff) => {
+						let result1 = errorMessage(err1, staff, "Staff not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -4058,10 +4059,10 @@ router.post("/merchant/blockBranch", jwtTokenAuth, (req, res) => {
 					{
 						status: 2,
 					},
-					(err, branch) => {
-						let result = errorMessage(err, branch, "Branch not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, branch) => {
+						let result1 = errorMessage(err1, branch, "Branch not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -4093,14 +4094,14 @@ router.post("/merchant/unblockBranch", jwtTokenAuth, (req, res) => {
 					{
 						status: 1,
 					},
-					(err, branch) => {
-						let result = errorMessage(
-							err,
+					(err1, branch) => {
+						let result1 = errorMessage(
+							err1,
 							branch,
 							"Branch not found/ not blocked"
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -4170,53 +4171,53 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 				data.working_to = working_to;
 				data.status = 0;
 
-				Subzone.countDocuments({ _id: subzone_id }, (err, count) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Subzone.countDocuments({ _id: subzone_id }, (err1, count) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else if (count == 1) {
-						data.save((err, branch) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						data.save((err2, branch) => {
+							if (err2) {
+								console.log(err2);
+								var message2 = err2;
+								if (err2.message) {
+									message2 = err2.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message2,
 								});
 							} else {
 								Subzone.updateOne(
 									{ _id: subzone_id },
 									{ $inc: { branch_count: 1 } },
-									function (err, subzone) {
-										let result = errorMessage(
-											err,
+									function (err3, subzone) {
+										let result3 = errorMessage(
+											err3,
 											subzone,
 											"Subzone not found"
 										);
-										if (result.status == 0) {
-											res.status(200).json(result);
+										if (result3.status == 0) {
+											res.status(200).json(result3);
 										} else {
 											Zone.updateOne(
 												{ _id: zone_id },
 												{ $inc: { branch_count: 1 } },
-												function (err, zone) {
-													let result = errorMessage(
-														err,
+												function (err4, zone) {
+													let result4 = errorMessage(
+														err4,
 														zone,
 														"Zone not found"
 													);
-													if (result.status == 0) {
-														res.status(200).json(result);
+													if (result4.status == 0) {
+														res.status(200).json(result4);
 													} else {
 														let content =
 														"<p>You are added as a branch for merchant " +
@@ -4324,16 +4325,16 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 						working_to: working_to,
 					},
 					{ new: true },
-					(err, branch) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, branch) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -4367,16 +4368,16 @@ router.get("/merchant/listBranches", jwtTokenAuth, function (req, res) {
 				MerchantBranch.find(
 					{ merchant_id: merchant._id },
 					"-password",
-					function (err, branch) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, branch) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({

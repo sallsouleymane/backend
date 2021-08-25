@@ -40,33 +40,33 @@ router.post("/partner/getBranchDashStats", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!partner || partner === null || partner === undefined){
+			}else if (!partner || partner == null || partner == undefined){
 				PartnerUser.findOne(
 					{
 						username: jwtusername,
 						role: "partnerAdmin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Partner.findOne({ _id: admin.partner_id }, (err, adminpartner) => {
-								var result = errorMessage(err, adminpartner, "Partner is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Partner.findOne({ _id: admin.partner_id }, (err2, adminpartner) => {
+								var result2 = errorMessage(err2, adminpartner, "Partner is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -77,7 +77,7 @@ router.post("/partner/getBranchDashStats", jwtTokenAuth, function (req, res) {
 					{
 						branch_id: branch_id,
 					},
-					(err, count) => {
+					(err3, count) => {
 						if (count == null || !count) {
 							count = 0;
 						}
@@ -111,7 +111,7 @@ router.post("/partner/getBranchDashStats", jwtTokenAuth, function (req, res) {
 									},
 								},
 							],
-							async (err, aggregate) => {
+							async (err4, aggregate) => {
 								Invoice.aggregate(
 									[{ 
 										$match : {
@@ -129,7 +129,7 @@ router.post("/partner/getBranchDashStats", jwtTokenAuth, function (req, res) {
 											},
 										},
 									],
-									async (err, invoices) => {
+									async (err5, invoices) => {
 										let amountpaid = 0;
 										let billpaid = 0;
 										let cin = 0;
@@ -208,33 +208,33 @@ router.post("/partner/getBranchDailyReport", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!partner || partner === null || partner === undefined){
+			}else if (!partner || partner == null || partner == undefined){
 				PartnerUser.findOne(
 					{
 						username: jwtusername,
 						role: "partnerAdmin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Partner.findOne({ _id: admin.partner_id }, (err, adminpartner) => {
-								var result = errorMessage(err, adminpartner, "Partner is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Partner.findOne({ _id: admin.partner_id }, (err2, adminpartner) => {
+								var result2 = errorMessage(err2, adminpartner, "Partner is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -287,9 +287,9 @@ router.post("/partner/getBranchDailyReport", jwtTokenAuth, function (req, res) {
 							},
 						},
 					],
-					async(err, reports) => {
-						if (err) {
-							res.status(200).json(catchError(err));
+					async(err3, reports) => {
+						if (err3) {
+							res.status(200).json(catchError(err3));
 						} else {
 							Invoice.aggregate(
 								[{ 
@@ -316,9 +316,9 @@ router.post("/partner/getBranchDailyReport", jwtTokenAuth, function (req, res) {
 										},
 									},
 								],
-								async (err, invoices) => {
-									if (err) {
-										res.status(200).json(catchError(err));
+								async (err4, invoices) => {
+									if (err4) {
+										res.status(200).json(catchError(err4));
 									} else {
 										let amountpaid = 0;
 										let billpaid = 0;
@@ -381,14 +381,14 @@ router.post(
 				if (errMsg.status == 0) {
 					res.status(200).json(result);
 				} else {
-					PartnerBranch.findById(branch_id, (err, branch) => {
-						let errMsg = errorMessage(
-							err,
+					PartnerBranch.findById(branch_id, (err1, branch) => {
+						let errMsg1 = errorMessage(
+							err1,
 							branch,
 							"Token changed or user not valid. Try to login again or contact system administrator."
 						);
-						if (errMsg.status == 0) {
-							res.status(200).json(result);
+						if (errMsg1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							let wallet_id = branch.wallet_ids[wallet_type];
 
@@ -400,8 +400,8 @@ router.post(
 										balance: result,
 									});
 								})
-								.catch((err) => {
-									res.status(200).json(catchError(err));
+								.catch((error) => {
+									res.status(200).json(catchError(error));
 								});
 						}
 					});
@@ -419,10 +419,10 @@ router.post("/partner/updateBranchStatus", jwtTokenAuth, function (req, res) {
 			username: jwtusername,
 			status: 1,
 		},
-		function (err, Partner) {
+		function (err, partner) {
 			let result = errorMessage(
 				err,
-				Partner,
+				partner,
 				"Token changed or user not valid. Try to login again or contact system administrator."
 			);
 			if (result.status == 0) {
@@ -433,16 +433,16 @@ router.post("/partner/updateBranchStatus", jwtTokenAuth, function (req, res) {
 					{
 						status: status,
 					},
-					(err) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message1: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -474,28 +474,28 @@ router.post("/partner/getHistoryTotal", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
-					let result = errorMessage(
-						err,
+				Bank.findOne({ _id: partner.bank_id }, (err1, bank) => {
+					let result1 = errorMessage(
+						err1,
 						bank,
 						"Bank of the partner is not valid."
 					);
-					if (result.status == 0) {
-						res.status(200).json(result);
+					if (result1.status == 0) {
+						res.status(200).json(result1);
 					} else {
 						const wallet = partner.wallet_ids[from];
 						blockchain
 							.getTransactionCount(wallet)
 							.then(function (count) {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
+								if (err2) {
+									console.log(err2);
+									var message2 = err2;
+									if (err2.message) {
+										message2 = err2.message;
 									}
 									res.status(200).json({
 										status: 0,
-										message: message,
+										message: message2,
 									});
 								} else {
 									res.status(200).json({
@@ -504,11 +504,11 @@ router.post("/partner/getHistoryTotal", jwtTokenAuth, function (req, res) {
 									});
 								}
 							})
-							.catch((err) => {
-								console.log(err);
+							.catch((error) => {
+								console.log(error);
 								res.status(200).json({
 									status: 0,
-									message: err.message,
+									message: error.message,
 								});
 							});
 					}
@@ -544,8 +544,8 @@ router.post("/partner/getHistory", jwtTokenAuth, function (req, res) {
 							history: history,
 						});
 					})
-					.catch((err) => {
-						res.status(200).json(catchError(err));
+					.catch((error) => {
+						res.status(200).json(catchError(error));
 					});
 			}
 		}
@@ -587,18 +587,18 @@ router.post("/partner/dashStats", jwtTokenAuth, function (req, res) {
 							totalCashiers: cashierCount,
 							totalUsers: userCount,
 						});
-					} catch (err) {
-						console.log(err);
-						res.status(200).json({ status: 0, message: err.message });
+					} catch (error) {
+						console.log(error);
+						res.status(200).json({ status: 0, message: error.message });
 					}
 				}
 			}
 		);
-	} catch (err) {
-		console.log(err);
-		var message = err;
-		if (err.message) {
-			message = err.message;
+	} catch (error) {
+		console.log(errpr);
+		var message = error;
+		if (error.message) {
+			message = error.message;
 		}
 		res.status(200).json({ status: 0, message: message });
 	}
@@ -652,49 +652,49 @@ router.post("/partner/listUsers", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!partner || partner === null || partner === undefined){
+			}else if (!partner || partner == null || partner == undefined){
 				PartnerUser.findOne(
 					{
 						username: jwtusername,
 						role: "partnerAdmin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Partner.findOne({ _id: admin.partner_id }, (err, adminpartner) => {
-								var result = errorMessage(err, adminpartner, "Partner is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Partner.findOne({ _id: admin.partner_id }, (err2, adminpartner) => {
+								var result2 = errorMessage(err2, adminpartner, "Partner is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
 					}
 				);
 			}
-				PartnerUser.find({ partner_id: partner_id }, function (err, users) {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				PartnerUser.find({ partner_id: partner_id }, function (err3, users) {
+					if (err3) {
+						console.log(err3);
+						var message3 = err3;
+						if (err3.message) {
+							message3 = err.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message3,
 						});
 					} else {
 						res.status(200).json({
@@ -749,16 +749,16 @@ router.post("/partner/addUser", jwtTokenAuth, (req, res) => {
 				data.ccode = ccode;
 				data.logo = logo;
 
-				data.save((err, partner) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				data.save((err1, partner1) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						let content =
@@ -782,7 +782,7 @@ router.post("/partner/addUser", jwtTokenAuth, (req, res) => {
 						sendSMS(content2, mobile);
 						return res.status(200).json({
 							success: 1,
-							data: partner,
+							data: partner1,
 						});
 					}
 				});
@@ -837,10 +837,10 @@ router.post("/partner/editUser", jwtTokenAuth, (req, res) => {
 						logo: logo,
 					},
 					{ new: true },
-					(err, user) => {
-						let result = errorMessage(err, user, "user not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, user) => {
+						let result1 = errorMessage(err1, user, "user not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							return res.status(200).json({
 								success: 1,
@@ -873,16 +873,16 @@ router.post("/partner/listCashiers", jwtTokenAuth, function (req, res) {
 				const partner_id = partner._id;
 				PartnerCashier.find(
 					{ partner_id: partner_id },
-					function (err, cashiers) {
-						if (err) {
+					function (err1, cashiers) {
+						if (err1) {
 							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+							var message1 = err1;
+							if (err1.message) {
+								message1= err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -935,16 +935,16 @@ router.post("/partner/editCashier", jwtTokenAuth, (req, res) => {
 						max_trans_amt: max_trans_amt,
 					},
 					{ new: true },
-					(err, cashier) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, cashier) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							return res.status(200).json({
@@ -993,10 +993,10 @@ router.post("/partner/addCashier", jwtTokenAuth, (req, res) => {
 					{
 						_id: branch_id,
 					},
-					function (err, branch) {
-						let result = errorMessage(err, branch, "Partner Branch not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					function (err1, branch) {
+						let result1 = errorMessage(err1, branch, "Partner Branch not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							data.name = name;
 							data.code = code;
@@ -1014,46 +1014,46 @@ router.post("/partner/addCashier", jwtTokenAuth, (req, res) => {
 								data.opening_balance = branch.cash_in_hand;
 								data.cash_in_hand = branch.cash_in_hand;
 							}
-							data.save((err) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
+							data.save((err2) => {
+								if (err2) {
+									console.log(err2);
+									var message2 = err2;
+									if (err2.message) {
+										message2 = err2.message;
 									}
 									res.status(200).json({
 										status: 0,
-										message: message,
+										message: message2,
 									});
 								} else {
 									Partner.updateOne(
 										{ _id: partner._id },
 										{ $inc: { total_cashiers: 1 } },
-										(err) => {
-											if (err) {
-												console.log(err);
-												var message = err;
-												if (err.message) {
-													message = err.message;
+										(err3) => {
+											if (err3) {
+												console.log(err3);
+												var message3 = err3;
+												if (err3.message) {
+													message3 = err3.message;
 												}
 												res.status(200).json({
 													status: 0,
-													message: message,
+													message: message3,
 												});
 											} else {
 												PartnerBranch.updateOne(
 													{ _id: branch._id },
 													{ $inc: { total_cashiers: 1 } },
-													function (err) {
-														if (err) {
-															console.log(err);
-															var message = err;
-															if (err.message) {
-																message = err.message;
+													function (err4) {
+														if (err4) {
+															console.log(err4);
+															var message4 = err4;
+															if (err4.message) {
+																message4 = err4.message;
 															}
 															res.status(200).json({
 																status: 0,
-																message: message,
+																message: message4,
 															});
 														} else {
 															res.status(200).json({ status: 1, data: data });
@@ -1091,33 +1091,33 @@ router.post("/partner/listBranches", jwtTokenAuth, function (req, res) {
 					status: 0,
 					message: message,
 				});
-			}else if (!partner || partner === null || partner === undefined){
+			}else if (!partner || partner == null || partner == undefined){
 				PartnerUser.findOne(
 					{
 						username: jwtusername,
 						role: "partnerAdmin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Partner.findOne({ _id: admin.partner_id }, (err, adminpartner) => {
-								var result = errorMessage(err, adminpartner, "Partner is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Partner.findOne({ _id: admin.partner_id }, (err2, adminpartner) => {
+								var result2 = errorMessage(err2, adminpartner, "Partner is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -1127,16 +1127,16 @@ router.post("/partner/listBranches", jwtTokenAuth, function (req, res) {
 
 				PartnerBranch.find(
 					{ partner_id: partner_id },
-					function (err, branches) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err3, branches) {
+						if (err3) {
+							console.log(err3);
+							var message3 = err3;
+							if (err3.message) {
+								message3 = err3.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message3,
 							});
 						} else {
 							res.status(200).json({
@@ -1168,16 +1168,16 @@ router.post("/partner/getBranch", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				PartnerBranch.findOne({ _id: branch_id }, function (err, branch) {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				PartnerBranch.findOne({ _id: branch_id }, function (err1, branch) {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -1224,26 +1224,26 @@ router.post("/partner/addBranch", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
-					let result = errorMessage(
-						err,
+				Bank.findOne({ _id: partner.bank_id }, (err1, bank) => {
+					let result1 = errorMessage(
+						err1,
 						partner,
 						"Token changed or user not valid. Try to login again or contact system administrator."
 					);
-					if (result.status == 0) {
-						res.status(200).json(result);
+					if (result1.status == 0) {
+						res.status(200).json(result1);
 					} else {
 						const wallet_ids = getWalletIds("partnerBranch", code, bank.bcode);
 						blockchain
 							.createWallet([wallet_ids.operational, wallet_ids.master])
-							.then(function (result) {
-								if (result != "" && !result.includes("wallet already exists")) {
-									console.log(result);
+							.then(function (result0) {
+								if (result0 != "" && !result0.includes("wallet already exists")) {
+									console.log(result0);
 									res.status(200).json({
 										status: 0,
 										message:
 											"Blockchain service was unavailable. Please try again.",
-										result: result,
+										result: result0,
 									});
 								} else {
 									data.name = name;
@@ -1271,31 +1271,31 @@ router.post("/partner/addBranch", jwtTokenAuth, (req, res) => {
 									data.wallet_ids.master = wallet_ids.master;
 									let partnerName = partner.name;
 
-									data.save((err) => {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
+									data.save((err2) => {
+										if (err2) {
+											console.log(err2);
+											var message2 = err2;
+											if (err2.message) {
+												message2 = err2.message;
 											}
 											res.status(200).json({
 												status: 0,
-												message: message,
+												message: message2,
 											});
 										} else {
 											Partner.updateOne(
 												{ _id: partner._id },
 												{ $inc: { total_branches: 1 } },
-												(err) => {
-													if (err) {
-														console.log(err);
-														var message = err;
-														if (err.message) {
-															message = err.message;
+												(err3) => {
+													if (err3) {
+														console.log(err3);
+														var message3 = err3;
+														if (err3.message) {
+															message3= err3.message;
 														}
 														res.status(200).json({
 															status: 0,
-															message: message,
+															message: message3,
 														});
 													} else {
 														let content =
@@ -1336,11 +1336,11 @@ router.post("/partner/addBranch", jwtTokenAuth, (req, res) => {
 									});
 								}
 							})
-							.catch((err) => {
-								console.log(err);
+							.catch((error) => {
+								console.log(error);
 								res.status(200).json({
 									status: 0,
-									message: err.message,
+									message: error.message,
 								});
 							});
 					}
@@ -1400,16 +1400,16 @@ router.post("/partner/editBranch", jwtTokenAuth, (req, res) => {
 						working_from: working_from,
 						working_to: working_to,
 					},
-					(err) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1) => {
+						if (err1) {
+							console.log(err1);
+							var message1= err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							return res.status(200).json({ status: 1, data: data });
@@ -1445,7 +1445,7 @@ router.post("/partner/activate", jwtTokenAuth, function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				Bank.findOne({ _id: partner.bank_id }, (err, bank) => {
+				Bank.findOne({ _id: partner.bank_id }, (err1, bank) => {
 					const wallet_ids = getWalletIds("partner", partner.code, bank.bcode);
 					blockchain
 						.createWallet([wallet_ids.operational, wallet_ids.master])
@@ -1469,16 +1469,16 @@ router.post("/partner/activate", jwtTokenAuth, function (req, res) {
 											master: wallet_ids.master,
 										},
 									},
-									(err) => {
-										if (err) {
-											console.log(err);
-											var message = err;
+									(err2) => {
+										if (err2) {
+											console.log(err2);
+											var message2 = err2;
 											if (err.message) {
-												message = err.message;
+												message2 = err2.message;
 											}
 											res.status(200).json({
 												status: 0,
-												message: message,
+												message: message2,
 											});
 										} else {
 											res.status(200).json({
@@ -1490,11 +1490,11 @@ router.post("/partner/activate", jwtTokenAuth, function (req, res) {
 								);
 							}
 						})
-						.catch((err) => {
-							console.log(err);
+						.catch((error) => {
+							console.log(error);
 							res.status(200).json({
 								status: 0,
-								message: err.message,
+								message: error.message,
 							});
 						});
 				});

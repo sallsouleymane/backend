@@ -34,9 +34,9 @@ router.post("/fileUpload", jwtTokenAuth, function (req, res) {
 	const from = req.query.from;
 
 	let table = Infra;
-	if (from && from === "bank") {
+	if (from && from == "bank") {
 		table = Bank;
-	} else if  (from && from === "bankuser") {
+	} else if  (from && from == "bankuser") {
 		table = BankUser;
 	} 
 	const jwtusername = req.sign_creds.username;
@@ -59,9 +59,9 @@ router.post("/fileUpload", jwtTokenAuth, function (req, res) {
 					fs.mkdirSync(config.uploadPath, { recursive: true });
 				}
 				const dir = path.resolve(config.uploadPath + user._id);
-				form.parse(req, function (err, fields, files) {
-					if (err) {
-						res.status(200).json(catchError(err));
+				form.parse(req, function (err1, fields, files) {
+					if (err1) {
+						res.status(200).json(catchError(err1));
 					} else {
 						let fn = files.file.name.split(".").pop();
 						fn = fn.toLowerCase();
@@ -80,28 +80,28 @@ router.post("/fileUpload", jwtTokenAuth, function (req, res) {
 							let newpath = dir + "/" + files.file.name;
 							let savepath = user._id + "/" + files.file.name;
 
-							fs.readFile(oldpath, function (err, data) {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
+							fs.readFile(oldpath, function (err2, data) {
+								if (err2) {
+									console.log(err2);
+									var message2 = err2;
+									if (err2.message) {
+										message2 = err.message;
 									}
 									res.status(200).json({
 										status: 0,
-										message: message,
+										message: message2,
 									});
 								} else {
-									fs.writeFile(newpath, data, function (err) {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
+									fs.writeFile(newpath, data, function (err3) {
+										if (err3) {
+											console.log(err3);
+											var message3 = err3;
+											if (err3.message) {
+												message3 = err3.message;
 											}
 											res.status(200).json({
 												status: 0,
-												message: message,
+												message: message3,
 											});
 										} else {
 											res.status(200).json({
@@ -110,7 +110,7 @@ router.post("/fileUpload", jwtTokenAuth, function (req, res) {
 										}
 									});
 
-									fs.unlink(oldpath, function (err) {});
+									fs.unlink(oldpath, function (err45) {});
 								}
 							});
 						}
@@ -122,7 +122,6 @@ router.post("/fileUpload", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/:user/imageUpload", jwtTokenAuth, function (req, res) {
-	const user = req.params.user;
 	const username = req.sign_creds.username;
 	const Type = getTypeClass(user);
 	Type.findOne(
@@ -144,7 +143,7 @@ router.post("/:user/imageUpload", jwtTokenAuth, function (req, res) {
 					fs.mkdirSync(config.uploadPath);
 				}
 				const dir = path.resolve(config.uploadPath + user._id);
-				form.parse(req, function (err, fields, files) {
+				form.parse(req, function (err2, fields, files) {
 					let fn = files.file.name.split(".").pop();
 					fn = fn.toLowerCase();
 
@@ -162,23 +161,23 @@ router.post("/:user/imageUpload", jwtTokenAuth, function (req, res) {
 						let newpath = dir + "/" + files.file.name;
 						let savepath = user._id + "/" + files.file.name;
 
-						fs.readFile(oldpath, function (err, data) {
-							if (err) {
+						fs.readFile(oldpath, function (err3, data) {
+							if (err3) {
 								res.status(200).json({
 									status: 0,
 									message: "File upload error",
 								});
 							} else {
-								fs.writeFile(newpath, data, function (err) {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
+								fs.writeFile(newpath, data, function (err4) {
+									if (err4) {
+										console.log(err4);
+										var message4 = err4;
+										if (err4.message) {
+											message4 = err4.message;
 										}
 										res.status(200).json({
 											status: 0,
-											message: message,
+											message: message4,
 										});
 									} else {
 										res.status(200).json({
@@ -189,7 +188,7 @@ router.post("/:user/imageUpload", jwtTokenAuth, function (req, res) {
 								});
 							}
 
-							fs.unlink(oldpath, function (err) {});
+							fs.unlink(oldpath, function (err45) {});
 						});
 					}
 				});
@@ -248,7 +247,7 @@ router.post("/ipfsUpload", function (req, res) {
 	});
 });
 
-async function fileUpload(path) {
+async function fileUpload(p) {
 	const options = {
 		method: "POST",
 		uri: "http://" + config.blockChainIP + ":5001/api/v0/add",
@@ -256,7 +255,7 @@ async function fileUpload(path) {
 			"Content-Type": "multipart/form-data",
 		},
 		formData: {
-			file: fs.createReadStream(path),
+			file: fs.createReadStream(p),
 		},
 	};
 	try {

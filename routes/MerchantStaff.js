@@ -64,9 +64,9 @@ router.post(
 								),
 							},
 						},
-						(err, reports) => {
-							if (err) {
-								res.status(200).json(catchError(err));
+						(err1, reports) => {
+							if (err1) {
+								res.status(200).json(catchError(err1));
 							} else {
 								res.status(200).json({ status: 1, reports: reports });
 							}
@@ -84,9 +84,6 @@ router.post(
 	function (req, res) {
 		var today = new Date();
 		today = today.toISOString();
-		var s = today.split("T");
-		var start = s[0] + "T00:00:00.000Z";
-		var end = s[0] + "T23:59:59.999Z";
 
 		const jwtusername = req.sign_creds.username;
 		MerchantPosition.findOne(
@@ -104,8 +101,6 @@ router.post(
 					res.status(200).json(result);
 				} else {
 					let cb = 0,
-						cr = 0,
-						dr = 0;
 					var c = user;
 
 					cb = c.closing_balance;
@@ -156,16 +151,16 @@ router.post(
 					data.opening_time = otpd.opening_time;
 					data.closing_time = new Date();
 					data.descripency =  total - otpd.cash_in_hand - otpd.opening_balance,
-					data.save((err) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					data.save((err1) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							MerchantPosition.findByIdAndUpdate(
@@ -220,16 +215,16 @@ router.post(
 					};
 					console.log(upd);
 
-					MerchantPosition.findByIdAndUpdate(ba._id, upd, (err) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					MerchantPosition.findByIdAndUpdate(ba._id, upd, (err1) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -269,16 +264,16 @@ router.post(
 					};
 					console.log(upd);
 
-					MerchantPosition.findByIdAndUpdate(ba._id, upd, (err) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					MerchantPosition.findByIdAndUpdate(ba._id, upd, (err1) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -317,16 +312,16 @@ router.post(
 					};
 					console.log(upd);
 
-					MerchantPosition.findByIdAndUpdate(ba._id, upd, (err) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					MerchantPosition.findByIdAndUpdate(ba._id, upd, (err1) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -351,14 +346,14 @@ router.post(
 				username: jwtusername,
 				status: 1,
 			},
-			function (err, user) {
-				let result = errorMessage(
-					err,
+			function (err1, user) {
+				let result1 = errorMessage(
+					err1,
 					user,
 					"Token changed or user not valid. Try to login again or contact system administrator."
 				);
-				if (result.status == 0) {
-					res.status(200).json(result);
+				if (result1.status == 0) {
+					res.status(200).json(result1);
 				} else {
 					CashierTransfer.find(
 						{
@@ -406,10 +401,10 @@ router.post(
 							_id: otpId,
 							otp: otp,
 						},
-						function (err, otpd) {
-							let result = errorMessage(err, otpd, "OTP Missmatch");
-							if (result.status == 0) {
-								res.status(200).json(result);
+						function (err1, otpd) {
+							let result1 = errorMessage(err1, otpd, "OTP Missmatch");
+							if (result1.status == 0) {
+								res.status(200).json(result1);
 							} else {
 								let data = new CashierTransfer();
 								data.amount = amount;
@@ -420,16 +415,16 @@ router.post(
 								data.receiver_name = receiver_name;
 								let cashInHand = Number(f.cash_in_hand);
 								cashInHand = cashInHand - Number(amount);
-								data.save((err) => {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
+								data.save((err2) => {
+									if (err2) {
+										console.log(err2);
+										var message2 = err2;
+										if (err2.message) {
+											message2 = err2.message;
 										}
 										res.status(200).json({
 											status: 0,
-											message: message,
+											message: message2,
 										});
 									} else {
 										MerchantPosition.findByIdAndUpdate(
@@ -483,14 +478,14 @@ router.post(
 						{
 							_id: item.receiver_id,
 						},
-						function (err, u) {
-							let result = errorMessage(
-								err,
+						function (err1, u) {
+							let result1 = errorMessage(
+								err1,
 								u,
 								"Token changed or user not valid. Try to login again or contact system administrator."
 							);
-							if (result.status == 0) {
-								res.status(200).json(result);
+							if (result1.status == 0) {
+								res.status(200).json(result1);
 							} else {
 								let cashInHand = Number(u.cash_in_hand) + Number(item.amount);
 								CashierTransfer.findByIdAndUpdate(
@@ -576,36 +571,36 @@ router.post(
 							_id: otpId,
 							otp: otp,
 						},
-						function (err, otpd) {
-							let result = errorMessage(err, otpd, "OTP Missmatch");
-							if (result.status == 0) {
-								res.status(200).json(result);
+						function (err1, otpd) {
+							let result1 = errorMessage(err1, otpd, "OTP Missmatch");
+							if (result1.status == 0) {
+								res.status(200).json(result1);
 							} else {
 								CashierTransfer.findOne(
 									{
 										_id: transfer_id,
 									},
-									function (err, item) {
-										let result = errorMessage(
-											err,
+									function (err2, item) {
+										let result2 = errorMessage(
+											err2,
 											item,
 											"Token changed or user not valid. Try to login again or contact system administrator."
 										);
-										if (result.status == 0) {
-											res.status(200).json(result);
+										if (result2.status == 0) {
+											res.status(200).json(result2);
 										} else {
 											MerchantPosition.findOne(
 												{
 													_id: item.sender_id,
 												},
-												function (err, u) {
-													let result = errorMessage(
-														err,
+												function (err3, u) {
+													let result3 = errorMessage(
+														err3,
 														u,
 														"Token changed or user not valid. Try to login again or contact system administrator."
 													);
-													if (result.status == 0) {
-														res.status(200).json(result);
+													if (result3.status == 0) {
+														res.status(200).json(result3);
 													} else {
 														let cashInHand =
 															Number(u.cash_in_hand) + Number(item.amount);
@@ -620,7 +615,7 @@ router.post(
 																	{
 																		cash_in_hand: cashInHand,
 																	},
-																	(e, data) => {
+																	(e2, data2) => {
 																		res.status(200).json({
 																			status: 1,
 																		});
@@ -751,16 +746,16 @@ router.post("/merchantStaff/listAllInvoices", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Invoice.find({ group_id }, (err, invoices) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Invoice.find({ group_id }, (err1, invoices) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message1) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -825,10 +820,10 @@ router.post(
 				} else {
 					Customer.findOne(
 						{ merchant_id: position.merchant_id, mobile: mobile },
-						(err, customer) => {
-							let result = errorMessage(err, customer, "Customer not found");
-							if (result.status == 0) {
-								res.status(200).json(result);
+						(err1, customer) => {
+							let result1 = errorMessage(err1, customer, "Customer not found");
+							if (result1.status == 0) {
+								res.status(200).json(result1);
 							} else {
 								res.status(200).json({
 									status: 1,
@@ -866,10 +861,10 @@ router.post(
 				} else {
 					Customer.findOne(
 						{ merchant_id: position.merchant_id, customer_code: customer_code },
-						(err, customer) => {
-							let result = errorMessage(err, customer, "Customer not found");
-							if (result.status == 0) {
-								res.status(200).json(result);
+						(err1, customer) => {
+							let result1 = errorMessage(err1, customer, "Customer not found");
+							if (result1.status == 0) {
+								res.status(200).json(result1);
 							} else {
 								res.status(200).json({
 									status: 1,
@@ -920,15 +915,15 @@ router.post("/merchantStaff/createCustomer", jwtTokenAuth, (req, res) => {
 						merchant_id: position.merchant_id,
 						customer_code: customer_code,
 					},
-					(err, customer) => {
-						let result = errorMessage(
-							err,
+					(err1, customer) => {
+						let result1 = errorMessage(
+							err1,
 							customer,
 							"Customer with the same customer code already exist",
 							true
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							var customerDetails = {
 								customer_code: customer_code,
@@ -949,16 +944,16 @@ router.post("/merchantStaff/createCustomer", jwtTokenAuth, (req, res) => {
 								gender: gender,
 								docs_hash: docs_hash,
 							};
-							Customer.create(customerDetails, (err) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err && err.message) {
-										message = err.message;
+							Customer.create(customerDetails, (err2) => {
+								if (err2) {
+									console.log(err2);
+									var message2 = err2;
+									if (err2 && err2.message) {
+										message2 = err2.message;
 									}
 									res.status(200).json({
 										status: 0,
-										message: message,
+										message: message2,
 									});
 								} else {
 									res.status(200).json({
@@ -992,10 +987,10 @@ router.post(
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
-					User.findOne({ mobile }, "-password", function (err, user) {
-						let result = errorMessage(err, user, "User not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					User.findOne({ mobile }, "-password", function (err1, user) {
+						let result1 = errorMessage(err1, user, "User not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -1024,16 +1019,16 @@ router.post("/merchantStaff/listOfferings", jwtTokenAuth, function (req, res) {
 			} else {
 				Offering.find(
 					{ merchant_id: position.merchant_id },
-					(err, offerings) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, offerings) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({

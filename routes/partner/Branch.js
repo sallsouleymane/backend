@@ -37,10 +37,10 @@ router.post("/partnerBranch/getCashierDetails", jwtTokenAuth, function (req, res
 			} else {
 				PartnerCashier.findById(
 					cashier_id,
-					async(err, cashier) => {
-						let result = errorMessage(err, cashier, "Cashier not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					async(err1, cashier) => {
+						let result1 = errorMessage(err1, cashier, "Cashier not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, cashier_id: cashier_id});
 							var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, cashier_id: cashier_id});
@@ -92,16 +92,16 @@ router.post("/partnerBranch/SetupUpdate", jwtTokenAuth, function (req, res) {
 						password: password,
 						initial_setup: true,
 					},
-					(err) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -146,18 +146,18 @@ router.post("/partnerBranch/updateCashierTransferStatus", jwtTokenAuth, function
 				CashierPending.findByIdAndUpdate(
 					transfer_id,
 					{ status: status },
-					function (err, d) {
-						let result = errorMessage(err, d, "History not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					function (err1, d) {
+						let result1 = errorMessage(err1, d, "History not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							PartnerCashier.findByIdAndUpdate(
 								cashier_id,
 								{ $inc: {pending_trans: -1}},
-								function (err, cashier) {
-									let result = errorMessage(err, cashier, "Cashier not found");
-									if (result.status == 0) {
-										res.status(200).json(result);
+								function (err2, cashier) {
+									let result2 = errorMessage(err2, cashier, "Cashier not found");
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									} else {
 										res.status(200).json({
 											status: 1,
@@ -198,15 +198,15 @@ router.post(
 					blockchain
 						.getTransactionCount(wallet)
 						.then(function (count) {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+							if (err1) {
+								console.log(err1);
+								var message1 = err1;
+								if (err1.message) {
+									message1 = err1.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message1,
 								});
 							} else {
 								res.status(200).json({
@@ -215,8 +215,8 @@ router.post(
 								});
 							}
 						})
-						.catch((err) => {
-							console.log(err);
+						.catch((error) => {
+							console.log(error);
 							res.status(200).json({
 								status: 0,
 								message: err.message,
@@ -254,8 +254,8 @@ router.post("/partnerBranch/getHistory", jwtTokenAuth, function (req, res) {
 							history: history,
 						});
 					})
-					.catch((err) => {
-						res.status(200).json(catchError(err));
+					.catch((error) => {
+						res.status(200).json(catchError(error));
 					});
 			}
 		}
@@ -299,16 +299,16 @@ router.post("/partnerBranch/editCashier", jwtTokenAuth, (req, res) => {
 						max_trans_count: max_trans_count,
 						max_trans_amt: max_trans_amt,
 					},
-					(err) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							return res.status(200).json({
@@ -345,7 +345,7 @@ router.post(
 				} else {
 					PartnerCashier.countDocuments(
 						{ partner_user_id: user_id },
-						function (err, count) {
+						function (err1, count) {
 							if (count > 0) {
 								res.status(200).json({
 									status: 0,
@@ -356,16 +356,16 @@ router.post(
 								PartnerCashier.findByIdAndUpdate(
 									cashier_id,
 									{ partner_user_id: user_id },
-									function (err, cashier) {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
+									function (err2, cashier) {
+										if (err2) {
+											console.log(err2);
+											var message2 = err2;
+											if (err2.message) {
+												message2 = err2.message;
 											}
 											res.status(200).json({
 												status: 0,
-												message: message,
+												message: message2,
 											});
 										} else {
 											res.status(200).json({
@@ -433,33 +433,33 @@ router.post("/partnerBranch/getBranchDashStats", jwtTokenAuth, function (req, re
 					status: 0,
 					message: message,
 				});
-			}else if (!branch || branch === null || branch === undefined){
+			}else if (!branch || branch == null || branch == undefined){
 				PartnerUser.findOne(
 					{
 						username: jwtusername,
 						role: "branchAdmin",
 					},
-					function (err, admin) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
-						}else if (!admin || admin===null || admin === undefined){
+						}else if (!admin || admin==null || admin == undefined){
 							res.status(200).json({
 								status: 0,
 								message: "User not found",
 							});
 						} else {
-							Partner.findOne({ _id: admin.partner_id }, (err, adminpartner) => {
-								var result = errorMessage(err, adminpartner, "Partner is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Partner.findOne({ _id: admin.partner_id }, (err2, adminpartner) => {
+								var result2 = errorMessage(err2, adminpartner, "Partner is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
 								}
 							});
 						}	
@@ -472,7 +472,7 @@ router.post("/partnerBranch/getBranchDashStats", jwtTokenAuth, function (req, re
 					{
 						branch_id: branch_id,
 					},
-					(err, count) => {
+					(err3, count) => {
 						if (count == null || !count) {
 							count = 0;
 						}
@@ -506,7 +506,7 @@ router.post("/partnerBranch/getBranchDashStats", jwtTokenAuth, function (req, re
 									},
 								},
 							],
-							async (err, aggregate) => {
+							async (err4, aggregate) => {
 								Invoice.aggregate(
 									[{ 
 										$match : {
@@ -524,7 +524,7 @@ router.post("/partnerBranch/getBranchDashStats", jwtTokenAuth, function (req, re
 											},
 										},
 									],
-									async (err, invoices) => {
+									async (err5, invoices) => {
 										let amountpaid = 0;
 										let billpaid = 0;
 										let cin = 0;

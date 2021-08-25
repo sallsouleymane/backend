@@ -31,5 +31,8 @@
 	"repository": {
 		"type": "git",
 		"url": "git://github.com/beyondewallet/backend-user-services.git"
+	},
+	"devDependencies": {
+		"sonarqube-scanner": "^2.8.1"
 	}
 }

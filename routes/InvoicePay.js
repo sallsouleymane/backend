@@ -60,16 +60,16 @@ router.post(
 							merchant_id: position.merchant_id,
 							customer_code: customer_code,
 						},
-						(err, invoices) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						(err1, invoices) => {
+							if (err1) {
+								console.log(err1);
+								var message1 = err1;
+								if (err1.message) {
+									message1 = err1.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message1,
 								});
 							} else if (invoices.length == 0) {
 								res.status(200).json({
@@ -110,16 +110,16 @@ router.post("/merchantStaff/getInvoicesByNumber", jwtTokenAuth, (req, res) => {
 						merchant_id: position.merchant_id,
 						$or: [{ number: number }, { reference_invoice: number }],
 					},
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (invoices.length == 0) {
 							res.status(200).json({
@@ -158,16 +158,16 @@ router.post("/merchantStaff/getInvoicesByMobile", jwtTokenAuth, (req, res) => {
 						is_validated: 1,
 						merchant_id: position.merchant_id,
 					},
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -216,16 +216,16 @@ router.post(
 							merchant_id: merchant_id,
 							customer_code: customer_code,
 						},
-						(err, invoices) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						(err1, invoices) => {
+							if (err1) {
+								console.log(err1);
+								var message1 = err1;
+								if (err1.message) {
+									message1 = err1.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message1,
 								});
 							} else if (invoices.length == 0) {
 								res.status(200).json({
@@ -269,16 +269,16 @@ router.post("/partnerCashier/getInvoiceDetails", jwtTokenAuth, (req, res) => {
 						merchant_id: merchant_id,
 						$or: [{ number: number }, { reference_invoice: number }],
 					},
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (invoices.length == 0) {
 							res.status(200).json({
@@ -317,16 +317,16 @@ router.post("/partnerCashier/getUserInvoices", jwtTokenAuth, (req, res) => {
 			} else {
 				Invoice.find(
 					{ mobile: mobile, merchant_id: merchant_id, is_validated: 1 },
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -360,16 +360,16 @@ router.post("/cashier/getInvoicesForCustomerCode", jwtTokenAuth, (req, res) => {
 						merchant_id: merchant_id,
 						customer_code: customer_code,
 					},
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (invoices.length == 0) {
 							res.status(200).json({
@@ -408,16 +408,16 @@ router.post("/cashier/getInvoiceDetails", jwtTokenAuth, (req, res) => {
 						merchant_id: merchant_id,
 						$or: [{ number: number }, { reference_invoice: number }],
 					},
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1= err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (invoices.length == 0) {
 							res.status(200).json({
@@ -452,16 +452,16 @@ router.post("/cashier/getUserInvoices", jwtTokenAuth, (req, res) => {
 			} else {
 				Invoice.find(
 					{ mobile: mobile, merchant_id: merchant_id, is_validated: 1 },
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -497,16 +497,16 @@ router.post("/user/getInvoices", jwtTokenAuth, (req, res) => {
 			} else {
 				Invoice.find(
 					{ mobile: user.mobile, merchant_id: merchant_id, is_validated: 1 },
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -540,16 +540,16 @@ router.post("/user/getInvoicesByNumber", jwtTokenAuth, (req, res) => {
 						merchant_id: merchant_id,
 						$or: [{ number: number }, { reference_invoice: number }],
 					},
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (invoices.length == 0) {
 							res.status(200).json({
@@ -588,16 +588,16 @@ router.post("/user/getInvoicesForCustomerCode", jwtTokenAuth, (req, res) => {
 						merchant_id: merchant_id,
 						customer_code: customer_code,
 					},
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (invoices.length == 0) {
 							res.status(200).json({
@@ -632,16 +632,16 @@ router.post("/user/getInvoicesForMobile", jwtTokenAuth, (req, res) => {
 			} else {
 				Invoice.find(
 					{ mobile: mobile, merchant_id: merchant_id, is_validated: 1 },
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({

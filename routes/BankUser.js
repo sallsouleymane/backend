@@ -35,16 +35,16 @@ router.post("/cashierSetupUpdate", jwtTokenAuth, function (req, res) {
 						password: password,
 						initial_setup: true,
 					},
-					(err) => {
-						if (err) {
-							console.log(err);
-							var message = err;
+					(err1) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
 							if (err.message) {
-								message = err.message;
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({

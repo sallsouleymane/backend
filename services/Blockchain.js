@@ -19,7 +19,7 @@ module.exports.createWallet = async (arr) => {
 					},
 				};
 				let res = await doRequest(options);
-				if (res.status === 0) {
+				if (res.status == 0) {
 					console.log(res);
 					err.push(res.message);
 				}
@@ -44,7 +44,7 @@ module.exports.getStatement = async (arr, user_id = "") => {
 		};
 
 		let res = await doRequest(options);
-		if (res.status && res.status === 1) {
+		if (res.status && res.status == 1) {
 			return res.data;
 		} else {
 			console.log(res);
@@ -142,7 +142,7 @@ module.exports.getBalance = async (arr) => {
 		};
 
 		let res = await doRequest(options);
-		if (res.status && res.status === 1) {
+		if (res.status && res.status == 1) {
 			return res.data.balance;
 		} else {
 			console.log(res);

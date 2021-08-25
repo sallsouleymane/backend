@@ -21,7 +21,6 @@ const Fee = require("../../models/Fee");
 const CashierSend = require("../../models/CashierSend");
 const CashierPending = require("../../models/CashierPending");
 const CashierClaim = require("../../models/CashierClaim");
-const CashierLedger = require("../../models/CashierLedger");
 const CashierTransfer = require("../../models/CashierTransfer");
 const OTP = require("../../models/OTP");
 const Merchant = require("../../models/merchant/Merchant");
@@ -62,9 +61,9 @@ router.post("/partnerCashier/queryTransactionStates", jwtTokenAuth, function (re
 					bank_id,
 					cashier._id,
 					req,
-					function (err, txstates) {
-						if (err) {
-							res.status(200).json(catchError(err));
+					function (err1, txstates) {
+						if (err1) {
+							res.status(200).json(catchError(err1));
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -98,9 +97,9 @@ router.post(
 				if (errMsg.status == 0) {
 					res.status(200).json(errMsg);
 				} else {
-					TxState.find({ bankId: bank_id }, (err, txstates) => {
-						if (err) {
-							res.status(200).json(catchError(err));
+					TxState.find({ bankId: bank_id }, (err1, txstates) => {
+						if (err1) {
+							res.status(200).json(catchError(err1));
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -135,9 +134,9 @@ router.post("/partnerCashier/cashierSearchPaidInvoiceByMobile", jwtTokenAuth, fu
 					{ 	paid: 1,
 						mobile: mobile,
 					},
-					(err, invoices) => {
-						if (err) {
-							res.status(200).json(catchError(err));
+					(err1, invoices) => {
+						if (err1) {
+							res.status(200).json(catchError(err1));
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -173,9 +172,9 @@ router.post("/partnerCashier/cashierSearchPaidInvoiceByBillNumber", jwtTokenAuth
 					{ 	paid: 1,
 						$or: [{ number: number }, { reference_invoice: number }],
 					},
-					(err, invoices) => {
+					(err1, invoices) => {
 						if (err) {
-							res.status(200).json(catchError(err));
+							res.status(200).json(catchError(err1));
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -211,9 +210,9 @@ router.post("/partnerCashier/cashierSearchPaidInvoiceByCustomerCode", jwtTokenAu
 					{ 	paid: 1,
 						customer_code: customer_code,
 					},
-					(err, invoices) => {
-						if (err) {
-							res.status(200).json(catchError(err));
+					(err1, invoices) => {
+						if (err1) {
+							res.status(200).json(catchError(err1));
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -245,10 +244,10 @@ router.post(
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
-					User.findOne({ mobile }, "-password", function (err, user) {
-						let result = errorMessage(err, user, "User not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					User.findOne({ mobile }, "-password", function (err1, user) {
+						let result1 = errorMessage(err1, user, "User not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -280,16 +279,16 @@ router.post("/partnerCashier/getDetails", jwtTokenAuth, function (req, res) {
 			} else {
 				PartnerUser.findOne(
 					{ _id: cashier.partner_user_id },
-					function (err, user) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, user) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message1) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -326,16 +325,16 @@ router.post(
 				} else {
 					MerchantSettings.findOne(
 						{ merchant_id: merchant_id },
-						function (err, setting) {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						function (err1, setting) {
+							if (err1) {
+								console.log(err1);
+								var message1 = err;
+								if (err1.message) {
+									message1 = err1.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message1,
 								});
 							} else {
 								res.status(200).json({
@@ -394,16 +393,16 @@ router.post("/partnerCashier/listMerchants", jwtTokenAuth, function (req, res) {
 						],
 					},
 					"-password",
-					(err, merchants) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, merchants) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -459,17 +458,17 @@ router.post("/partnerCashier/addClosingBalance", jwtTokenAuth, (req, res) => {
 					data.cash_in_hand = cashier.cash_in_hand;
 					data.opening_time = cashier.opening_time;
 					data.closing_time = new Date();
-					data.descripency =  total - cashier.cash_in_hand,
-					data.save((err) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					data.descripency =  total - cashier.cash_in_hand;
+					data.save((err1) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 					} else {
 						PartnerCashier.findByIdAndUpdate(
@@ -523,9 +522,9 @@ router.post(
 								),
 							},
 						},
-						(err, reports) => {
+						(err1, reports) => {
 							if (err) {
-								res.status(200).json(catchError(err));
+								res.status(200).json(catchError(err1));
 							} else {
 								res.status(200).json({ status: 1, reports: reports });
 							}
@@ -559,7 +558,7 @@ router.post(
 					let cb = 0,
 						c = cashier;
 					cb = c.closing_balance;
-					da = c.closing_time;
+					let da = c.closing_time;
 					var diff = Number(cb) - Number(cashier.cash_in_hand);
 					res.status(200).json({
 						cashInHand: cashier.cash_in_hand,
@@ -630,7 +629,7 @@ router.post("/partnerCashier/getTransfers", jwtTokenAuth, function (req, res) {
 			} else {
 				CashierTransfer.find({
 					$or: [{ sender_id: cashier._id }, { receiver_id: cashier._id }],
-				}).exec(function (err, b) {
+				}).exec(function (err45, b) {
 					res.status(200).json({
 						status: 1,
 						history: b,
@@ -663,10 +662,10 @@ router.post("/partnerCashier/transferMoney", jwtTokenAuth, function (req, res) {
 						_id: otpId,
 						otp: otp,
 					},
-					function (err, otpd) {
-						let result = errorMessage(err, otpd, "OTP Missmatch");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					function (err1, otpd) {
+						let result1 = errorMessage(err1, otpd, "OTP Missmatch");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							let data = new CashierTransfer();
 							data.amount = amount;
@@ -675,16 +674,16 @@ router.post("/partnerCashier/transferMoney", jwtTokenAuth, function (req, res) {
 							data.receiver_id = receiver_id;
 							data.sender_name = cashier.name;
 							data.receiver_name = receiver_name;
-							data.save((err) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
+							data.save((err2) => {
+								if (err2) {
+									console.log(err2);
+									var message2 = err2;
+									if (err2.message) {
+										message2 = err2.message;
 									}
 									res.status(200).json({
 										status: 0,
-										message: message,
+										message: message2,
 									});
 								} else {
 									PartnerCashier.findByIdAndUpdate(
@@ -774,10 +773,10 @@ router.post("/partnerCashier/editUser", jwtTokenAuth, function (req, res) {
 			User.findOneAndUpdate(
 				{ mobile },
 				{ $set: userDetails },
-				function (err, user) {
-					let result = errorMessage(err, user, "User not found");
-					if (result.status == 0) {
-						res.status(200).json(result);
+				function (err1, user) {
+					let result1 = errorMessage(err1, user, "User not found");
+					if (result1.status == 0) {
+						res.status(200).json(result1);
 					} else {
 						res.status(200).json({
 							status: 1,
@@ -848,16 +847,16 @@ router.post("/partnerCashier/createUser", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-			User.create(userDetails, function (err) {
-				if (err) {
-					console.log(err);
-					var message = err;
-					if (err.message) {
-						message = err.message;
+			User.create(userDetails, function (err1) {
+				if (err1) {
+					console.log(err1);
+					var message1 = err1;
+					if (err1.message) {
+						message1 = err1.message;
 					}
 					res.status(200).json({
 						status: 0,
-						message: message,
+						message: message1,
 					});
 				} else {
 					let content =
@@ -904,23 +903,23 @@ router.post("/partnerCashier/activateUser", jwtTokenAuth, function (req, res) {
 				username: jwtusername,
 				status: 1,
 			},
-			function (err, cashier) {
-				let result = errorMessage(
-					err,
+			function (err1, cashier) {
+				let result1 = errorMessage(
+					err1,
 					cashier,
 					"Token changed or user not valid. Try to login again or contact system administrator."
 				);
-				if (result.status == 0) {
-					res.status(200).json(result);
+				if (result1.status == 0) {
+					res.status(200).json(result1);
 				} else {
-					Bank.findOne({ _id: cashier.bank_id }, async (err, bank) => {
-						let errMsg = errorMessage(
-							err,
+					Bank.findOne({ _id: cashier.bank_id }, async (err2, bank) => {
+						let errMsg1 = errorMessage(
+							err2,
 							bank,
 							"You are either not authorised or not logged in."
 						);
-						if (errMsg.status == 0) {
-							res.status(200).json(errMsg);
+						if (errMsg1.status == 0) {
+							res.status(200).json(errMsg1);
 						} else {
 							try {
 								let wallet_id = getWalletIds("user", mobile, bank.bcode);
@@ -942,10 +941,10 @@ router.post("/partnerCashier/activateUser", jwtTokenAuth, function (req, res) {
 												wallet_id: wallet_id,
 											},
 										},
-										function (err, user) {
-											let errMsg = errorMessage(err, user, "User not found");
-											if (errMsg.status == 0) {
-												res.status(200).json(errMsg);
+										function (err3, user) {
+											let errMsg2 = errorMessage(err3, user, "User not found");
+											if (errMsg2.status == 0) {
+												res.status(200).json(errMsg2);
 											} else {
 												let content =
 													"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
@@ -981,11 +980,11 @@ router.post("/partnerCashier/activateUser", jwtTokenAuth, function (req, res) {
 										}
 									);
 								}
-							} catch (err) {
-								console.log(err);
+							} catch (error) {
+								console.log(error);
 								res.status(200).json({
 									status: 0,
-									message: err.message,
+									message: error.message,
 								});
 							}
 						}
@@ -993,16 +992,16 @@ router.post("/partnerCashier/activateUser", jwtTokenAuth, function (req, res) {
 				}
 			}
 		);
-	} catch (err) {
-		console.log(err);
-		var message = err.toString();
-		if (err.message) {
-			message = err.message;
+	} catch (error) {
+		console.log(error);
+		var message = error.toString();
+		if (error.message) {
+			message = error.message;
 		}
 		res.status(200).json({
 			status: 0,
 			message: message,
-			err: err,
+			err: error,
 		});
 	}
 });
@@ -1034,28 +1033,28 @@ router.post(
 						{
 							$inc: { cash_in_hand: Number(amount) },
 						},
-						function (err, u) {
-							let result = errorMessage(
-								err,
+						function (err1, u) {
+							let result1 = errorMessage(
+								err1,
 								u,
 								"Receiving partner cashier not found."
 							);
-							if (result.status == 0) {
-								res.status(200).json(result);
+							if (result1.status == 0) {
+								res.status(200).json(result1);
 							} else {
 								CashierTransfer.findByIdAndUpdate(
 									transfer_id,
 									{
 										status: 1,
 									},
-									(err, data) => {
-										let result = errorMessage(
-											err,
+									(err2, data) => {
+										let result2 = errorMessage(
+											err2,
 											data,
 											"Cashier transfer record not found"
 										);
-										if (result.status == 0) {
-											res.status(200).json(result);
+										if (result2.status == 0) {
+											res.status(200).json(result2);
 										} else {
 											res.status(200).json({
 												status: 1,
@@ -1099,24 +1098,24 @@ router.post(
 							_id: otpId,
 							otp: otp,
 						},
-						function (err, otpd) {
-							let result = errorMessage(err, otpd, "OTP Missmatch");
-							if (result.status == 0) {
-								res.status(200).json(result);
+						function (err1, otpd) {
+							let result1 = errorMessage(err1, otpd, "OTP Missmatch");
+							if (result1.status == 0) {
+								res.status(200).json(result1);
 							} else {
 								CashierTransfer.findOneAndUpdate(
 									{
 										_id: transfer_id,
 									},
 									{ status: -1 },
-									function (err, item) {
-										let result = errorMessage(
-											err,
+									function (err2, item) {
+										let result2 = errorMessage(
+											err2,
 											item,
 											"No record of cashier transfer found"
 										);
-										if (result.status == 0) {
-											res.status(200).json(result);
+										if (result2.status == 0) {
+											res.status(200).json(result2);
 										} else {
 											PartnerCashier.findOne(
 												{
@@ -1125,14 +1124,14 @@ router.post(
 												{
 													$inc: { cash_in_hand: Number(item.amount) },
 												},
-												function (err, u) {
-													let result = errorMessage(
-														err,
+												function (err3, u) {
+													let result3 = errorMessage(
+														err3,
 														u,
 														"Sending cashier not found"
 													);
-													if (result.status == 0) {
-														res.status(200).json(result);
+													if (result3.status == 0) {
+														res.status(200).json(result3);
 													} else {
 														res.status(200).json({
 															status: 1,
@@ -1173,10 +1172,10 @@ router.post(
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
-					PartnerUser.findOne({ mobile }, "-password", function (err, user) {
-						let result = errorMessage(err, user, "User not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					PartnerUser.findOne({ mobile }, "-password", function (err1, user) {
+						let result1 = errorMessage(err1, user, "User not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -1213,14 +1212,14 @@ router.post("/partnerCashier/checkFee", jwtTokenAuth, function (req, res) {
 					status: 1,
 					active: "Active",
 				};
-				Fee.findOne(find, function (err, fe) {
-					let result = errorMessage(
-						err,
+				Fee.findOne(find, function (err1, fe) {
+					let result1 = errorMessage(
+						err1,
 						fe,
 						"Transaction cannot be done at this time"
 					);
-					if (result.status == 0) {
-						res.status(200).json(result);
+					if (result1.status == 0) {
+						res.status(200).json(result1);
 					} else {
 						amount = Number(amount);
 						var temp;
@@ -1228,7 +1227,7 @@ router.post("/partnerCashier/checkFee", jwtTokenAuth, function (req, res) {
 							console.log(range);
 							if (amount >= range.trans_from && amount <= range.trans_to) {
 								temp = (amount * range.percentage) / 100;
-								fee = temp + range.fixed;
+								let fee = temp + range.fixed;
 								res.status(200).json({
 									status: 1,
 									fee: fee,
@@ -1304,10 +1303,10 @@ router.post(
 							transaction_code: transferCode,
 							otp: otp,
 						},
-						function (err, otpd) {
-							let result = errorMessage(err, otpd, "OTP Missmatch");
-							if (result.status == 0) {
-								res.status(200).json(result);
+						function (err1, otpd) {
+							let result1 = errorMessage(err1, otpd, "OTP Missmatch");
+							if (result1.status == 0) {
+								res.status(200).json(result1);
 							} else {
 								res.status(200).json({
 									status: 1,
@@ -1344,10 +1343,10 @@ router.post("/partnerCashier/verifyClaim", jwtTokenAuth, function (req, res) {
 						_id: otpId,
 						otp: otp,
 					},
-					function (err, otpd) {
-						let result = errorMessage(err, otpd, "OTP Missmatch");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					function (err1, otpd) {
+						let result1 = errorMessage(err1, otpd, "OTP Missmatch");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -1456,16 +1455,16 @@ router.post(
 
 					let pending = Number(cashier.pending_trans) + 1;
 
-					data.save((err, d) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					data.save((err1, de) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message1) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							PartnerCashier.findByIdAndUpdate(
@@ -1515,41 +1514,41 @@ router.post("/partnerCashier/getClaimMoney", jwtTokenAuth, function (req, res) {
 						transaction_code: transferCode,
 						status: 1,
 					},
-					function (err, cs) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, cs) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (cs == null) {
 							CashierSend.findOne(
 								{
 									transaction_code: transferCode,
 								},
-								function (err, cs) {
-									if (err) {
-										console.log(err);
-										var message = err;
+								function (err2, cs2) {
+									if (err2) {
+										console.log(err2);
+										var message2 = err;
 										if (err.message) {
-											message = err.message;
+											message2 = err2.message;
 										}
 										res.status(200).json({
 											status: 0,
-											message: message,
+											message: message2,
 										});
-									} else if (cs == null) {
+									} else if (cs2 == null) {
 										res.status(200).json({
 											status: 0,
 											message: "Record Not Found",
 										});
 									} else {
 										res.status(200).json({
-											row: cs,
+											row: cs2,
 										});
 									}
 								}
@@ -1586,14 +1585,14 @@ router.post("/partnerCashier/getHistory", jwtTokenAuth, function (req, res) {
 			} else {
 				CashierPending.find(
 					{ cashier_id: cashier._id },
-					async (err, pending) => {
-						let errMsg = errorMessage(err, pending, "History not found.");
-						if (errMsg.status == 0) {
-							res.status(200).json(errMsg);
+					async (err1, pending) => {
+						let errMsg1 = errorMessage(err1, pending, "History not found.");
+						if (errMsg1.status == 0) {
+							res.status(200).json(errMsg1);
 						} else {
 							PartnerBranch.findOne(
 								{ _id: cashier.branch_id },
-								(err, branch) => {
+								(err2, branch) => {
 									const wallet = branch.wallet_ids[from];
 									blockchain
 										.getStatement(wallet)
@@ -1604,8 +1603,8 @@ router.post("/partnerCashier/getHistory", jwtTokenAuth, function (req, res) {
 												pending: pending,
 											});
 										})
-										.catch((err) => {
-											res.status(200).json(catchError(err));
+										.catch((error) => {
+											res.status(200).json(catchError(error));
 										});
 								}
 							);
@@ -1641,19 +1640,19 @@ router.post(
 						{
 							name: name,
 						},
-						function (err, branch) {
-							let result = errorMessage(err, branch, "Not found");
-							if (result.status == 0) {
-								res.status(200).json(result);
+						function (err1, branch) {
+							let result1 = errorMessage(err1, branch, "Not found");
+							if (result1.status == 0) {
+								res.status(200).json(result1);
 							} else {
 								Partner.findOne(
 									{
 										_id: branch.partner_id,
 									},
-									function (err, partner) {
-										let result = errorMessage(err, partner, "Not found");
-										if (result.status == 0) {
-											res.status(200).json(result);
+									function (err2, partner) {
+										let result2 = errorMessage(err2, partner, "Not found");
+										if (result2.status == 0) {
+											res.status(200).json(result2);
 										} else {
 											var obj = {};
 											obj["logo"] = partner.logo;
@@ -1733,7 +1732,7 @@ router.post("/partnerCashier/openBalance", jwtTokenAuth, (req, res) => {
 					Number(cashier.closing_balance) > 0
 						? cashier.closing_balance
 						: cashier.opening_balance;
-				upd = {
+				const upd = {
 					opening_balance: bal,
 					cash_received: 0,
 					fee_generated: 0,
@@ -1745,16 +1744,16 @@ router.post("/partnerCashier/openBalance", jwtTokenAuth, (req, res) => {
 					is_closed: false,
 				};
 
-				PartnerCashier.findByIdAndUpdate(cashier._id, upd, (err) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				PartnerCashier.findByIdAndUpdate(cashier._id, upd, (err1) => {
+					if (err1) {
+						console.log(err1);
+						var message1= errMsg1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({

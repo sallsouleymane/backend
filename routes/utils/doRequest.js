@@ -5,7 +5,7 @@ module.exports = (options) => {
 	return new Promise(function (resolve, reject) {
 		request(options, function (error, res, body) {
 			// console.log(res);
-			if (!error && res.statusCode === 200) {
+			if (!error && res.statusCode == 200) {
 				resolve(body);
 			} else {
 				reject(error);

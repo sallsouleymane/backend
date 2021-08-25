@@ -114,7 +114,7 @@ router.post("/infra/getBankDailyReport", jwtTokenAuth, function (req, res) {
 							},
 						},
 					],
-					async (err, aggregate) => {
+					async (err1, aggregate) => {
 
 						DailyReport.aggregate(
 							[
@@ -166,7 +166,7 @@ router.post("/infra/getBankDailyReport", jwtTokenAuth, function (req, res) {
 									},
 								},
 							],
-							async (err, partneraggregate) => {
+							async (err2, partneraggregate) => {
 								Invoice.aggregate(
 									[{ 
 										$match : {
@@ -199,7 +199,7 @@ router.post("/infra/getBankDailyReport", jwtTokenAuth, function (req, res) {
 											},
 										},
 									],
-									async (err, invoices) => {
+									async (err3, invoices) => {
 										let amountpaid = 0;
 										let billpaid = 0;
 										let mfg = 0;
@@ -288,7 +288,7 @@ router.post("/infra/getBankDashStats", jwtTokenAuth, function (req, res) {
 					{
 						bank_id: bank_id,
 					},
-					(err, count) => {
+					(err1, count) => {
 						if (count == null || !count) {
 							count = 0;
 						}
@@ -331,7 +331,7 @@ router.post("/infra/getBankDashStats", jwtTokenAuth, function (req, res) {
 									},
 								},
 							],
-							async (err, aggregate) => {
+							async (err2, aggregate) => {
 
 								PartnerCashier.aggregate(
 									[
@@ -370,7 +370,7 @@ router.post("/infra/getBankDashStats", jwtTokenAuth, function (req, res) {
 											},
 										},
 									],
-									async (err, partneraggregate) => {
+									async (err3, partneraggregate) => {
 										Invoice.aggregate(
 											[{ 
 												$match : {
@@ -395,7 +395,7 @@ router.post("/infra/getBankDashStats", jwtTokenAuth, function (req, res) {
 													},
 												},
 											],
-											async (err, invoices) => {
+											async (err4, invoices) => {
 												let amountpaid = 0;
 												let billpaid = 0;
 												let banktrans = 0;
@@ -575,14 +575,14 @@ router.post("/infra/:type/getMerchantStatsBydate",jwtTokenAuth,function (req, re
 								bills_paid: { $sum: 1 },
 							},
 						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
+					],async (err1, post6) => {
+						let result1 = errorMessage(
+							err1,
 							post6,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							Invoice.aggregate(
 								[
@@ -606,14 +606,14 @@ router.post("/infra/:type/getMerchantStatsBydate",jwtTokenAuth,function (req, re
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
+								],async (err2, post7) => {
+									let result2 = errorMessage(
+										err2,
 										post7,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									} else {
 										let ag = 0;
 										let bg = 0;
@@ -649,16 +649,16 @@ router.post("/infra/:type/getMerchantStatsBydate",jwtTokenAuth,function (req, re
 											post6.length > 0
 										) {
 											const PaidByMC = await post6.filter((val) => {
-												return val._id==='MC'
+												return val._id=='MC'
 											});
 											const PaidByBC = await post6.filter((val) => {
-												return val._id==='BC'
+												return val._id=='BC'
 											});
 											const PaidByPC = await post6.filter((val)=>{
-												return val._id==='PC'
+												return val._id=='PC'
 											});
 											const PaidByUS = await post6.filter((val)=>{
-												return val._id==='US'
+												return val._id=='US'
 											});
 											if(PaidByMC.length > 0){
 												InvoicePaidByMC = PaidByMC[0].bills_paid;
@@ -766,14 +766,14 @@ router.post("/infra/:type/getMerchantStatsByPeriod",jwtTokenAuth,function (req, 
 								commission: {$sum: "$commission"},
 							},
 						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
+					],async (err2, post6) => {
+						let result2 = errorMessage(
+							err2,
 							post6,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result2.status == 0) {
+							res.status(200).json(result2);
 						} else {
 							Invoice.aggregate(
 								[
@@ -790,14 +790,14 @@ router.post("/infra/:type/getMerchantStatsByPeriod",jwtTokenAuth,function (req, 
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
+								],async (err1, post7) => {
+									let result1 = errorMessage(
+										err1,
 										post7,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result1.status == 0) {
+										res.status(200).json(result1);
 									} else {
 										let ag = 0;
 										let bg = 0;
@@ -833,16 +833,16 @@ router.post("/infra/:type/getMerchantStatsByPeriod",jwtTokenAuth,function (req, 
 											post6.length > 0
 										) {
 											const PaidByMC = await post6.filter((val) => {
-												return val._id==='MC'
+												return val._id=='MC'
 											});
 											const PaidByBC = await post6.filter((val) => {
-												return val._id==='BC'
+												return val._id=='BC'
 											});
 											const PaidByPC = await post6.filter((val)=>{
-												return val._id==='PC'
+												return val._id=='PC'
 											});
 											const PaidByUS = await post6.filter((val)=>{
-												return val._id==='US'
+												return val._id=='US'
 											});
 											if(PaidByMC.length > 0){
 												InvoicePaidByMC = PaidByMC[0].bills_paid;
@@ -960,14 +960,14 @@ router.post("/infra/getMerchantStatsBydate",jwtTokenAuth,function (req, res) {
 								bills_paid: { $sum: 1 },
 							},
 						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
+					],async (err1, post6) => {
+						let result1 = errorMessage(
+							err1,
 							post6,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							Invoice.aggregate(
 								[
@@ -991,14 +991,14 @@ router.post("/infra/getMerchantStatsBydate",jwtTokenAuth,function (req, res) {
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
+								],async (err2, post7) => {
+									let result2 = errorMessage(
+										err2,
 										post7,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									} else {
 										let ag = 0;
 										let bg = 0;
@@ -1026,16 +1026,16 @@ router.post("/infra/getMerchantStatsBydate",jwtTokenAuth,function (req, res) {
 											post6.length > 0
 										) {
 											const PaidByMC = await post6.filter((val) => {
-												return val._id==='MC'
+												return val._id=='MC'
 											});
 											const PaidByBC = await post6.filter((val) => {
-												return val._id==='BC'
+												return val._id=='BC'
 											});
 											const PaidByPC = await post6.filter((val)=>{
-												return val._id==='PC'
+												return val._id=='PC'
 											});
 											const PaidByUS = await post6.filter((val)=>{
-												return val._id==='US'
+												return val._id=='US'
 											});
 											if(PaidByMC.length > 0){
 												InvoicePaidByMC = PaidByMC[0].bills_paid;
@@ -1109,26 +1109,26 @@ router.post("/infra/bankAccess",jwtTokenAuth, function (req, res) {
 			} else {
 				BankUser.findOne(
 					{ username: username, bank_id:bank_id, role: "infraAdmin" },
-					function (err, admin) {
-							if (err) {
-								var message = err;
-								if (err.message) {
-									message = err.message;
+					function (err1, admin) {
+							if (err1) {
+								var message1 = err1;
+								if (err1.message) {
+									message1 = err1.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message1,
 								});
-							}else if (!admin || admin===null || admin === undefined){
+							}else if (!admin || admin==null || admin == undefined){
 								res.status(200).json({
 									status: 0,
 									message: "User not found",
 								});
 							} else {
-								Bank.findOne({ _id: admin.bank_id }, (err, adminbank) => {
-									var result = errorMessage(err, adminbank, "Bank is blocked");
-									if (result.status == 0) {
-										res.status(200).json(result);
+								Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+									var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									} else if (adminbank.status == -1) {
 										res.status(200).json({
 											status: 0,
@@ -1181,10 +1181,10 @@ router.post("/infra/transferMasterToOp", jwtTokenAuth, function (req, res) {
 						_id: bank_id,
 						status: 1,
 					},
-					function (err, bank) {
-						let result = errorMessage(err, bank, "Bank not found.");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					function (err1, bank) {
+						let result1 = errorMessage(err1, bank, "Bank not found.");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							const masterWallet = bank.wallet_ids.infra_master;
 							const opWallet = bank.wallet_ids.infra_operational;
@@ -1201,14 +1201,14 @@ router.post("/infra/transferMasterToOp", jwtTokenAuth, function (req, res) {
 								child_code: "",
 							};
 							initiateTransfer(trans)
-								.then((result) => {
-									res.status(200).json(result);
+								.then((result2) => {
+									res.status(200).json(result2);
 								})
-								.catch((err) => {
-									console.log(err);
+								.catch((error) => {
+									console.log(error);
 									res.status(200).json({
 										status: 0,
-										message: err.message,
+										message: error.message,
 									});
 								});
 						}
@@ -1239,14 +1239,14 @@ router.post("/infra/deleteCountry", jwtTokenAuth, function (req, res) {
 				Country.updateOne(
 					{},
 					{ country_list: { $pull: { ccode: ccode } } },
-					function (err, country) {
-						let result = errorMessage(
-							err,
+					function (err1, country) {
+						let result1 = errorMessage(
+							err1,
 							country,
 							"Token changed or user not valid. Try to login again or contact system administrator."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -1277,16 +1277,16 @@ router.post("/infra/bank/listMerchants", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Merchant.find({ bank_id: bank_id }, "-password", (err, merchants) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Merchant.find({ bank_id: bank_id }, "-password", (err1, merchants) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -1317,16 +1317,16 @@ router.post("/infra/listMerchants", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Merchant.find({}, "-password", (err, merchants) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Merchant.find({}, "-password", (err1, merchants) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -1357,16 +1357,16 @@ router.post("/infra/listInfraMerchants", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Merchant.find({creator: 1}, "-password", (err, merchants) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Merchant.find({creator: 1}, "-password", (err1, merchants) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -1428,14 +1428,14 @@ router.post("/infra/getInfraMerchantDashStats", jwtTokenAuth, function (req, res
 								bills_paid: { $sum: 1 },
 							},
 						},
-					],async (err, post6) => {
-						let result = errorMessage(
-							err,
+					],async (err1, post6) => {
+						let result1 = errorMessage(
+							err1,
 							post6,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							Invoice.aggregate(
 								[
@@ -1459,14 +1459,14 @@ router.post("/infra/getInfraMerchantDashStats", jwtTokenAuth, function (req, res
 											bills_generated: { $sum: 1 },
 										},
 									},
-								],async (err, post7) => {
-									let result = errorMessage(
-										err,
+								],async (err2, post7) => {
+									let result2 = errorMessage(
+										err2,
 										post7,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									} else {
 										Invoice.aggregate(
 											[
@@ -1483,14 +1483,14 @@ router.post("/infra/getInfraMerchantDashStats", jwtTokenAuth, function (req, res
 														bills_pending: { $sum: 1 },
 													},
 												},
-											],async (err, post8) => {
-												let result = errorMessage(
-													err,
+											],async (err3, post8) => {
+												let result3 = errorMessage(
+													err3,
 													post8,
 													"Error."
 												);
-												if (result.status == 0) {
-													res.status(200).json(result);
+												if (result3.status == 0) {
+													res.status(200).json(result3);
 												} else {
 													let ag = 0;
 													let bg = 0;
@@ -1528,16 +1528,16 @@ router.post("/infra/getInfraMerchantDashStats", jwtTokenAuth, function (req, res
 														post6.length > 0
 													) {
 														const PaidByMC = await post6.filter((val) => {
-															return val._id==='MC'
+															return val._id=='MC'
 														});
 														const PaidByBC = await post6.filter((val) => {
-															return val._id==='BC'
+															return val._id=='BC'
 														});
 														const PaidByPC = await post6.filter((val)=>{
-															return val._id==='PC'
+															return val._id=='PC'
 														});
 														const PaidByUS = await post6.filter((val)=>{
-															return val._id==='US'
+															return val._id=='US'
 														});
 														if(PaidByMC.length > 0){
 															InvoicePaidByMC = PaidByMC[0].bills_paid;
@@ -1638,16 +1638,16 @@ router.post("/infra/getMerchantzoneList", jwtTokenAuth, (req, res) => {
 				res.status(200).json(result);
 			} else {
 		
-				Zone.find({ merchant_id: merchant_id }, async (err, zones) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Zone.find({ merchant_id: merchant_id }, async (err1, zones) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message1) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -1680,16 +1680,16 @@ router.post("/infra/getMerchantsubzoneList", jwtTokenAuth, (req, res) => {
 				res.status(200).json(result);
 			} else {
 			
-				Subzone.find({ merchant_id: merchant_id }, async (err, subzones) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Subzone.find({ merchant_id: merchant_id }, async (err1, subzones) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message1) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -1720,16 +1720,16 @@ router.post("/infra/getMerchantbranchList", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				MerchantBranch.find({ merchant_id: merchant_id }, async (err, branches) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				MerchantBranch.find({ merchant_id: merchant_id }, async (err1, branches) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err.message1;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -1763,16 +1763,16 @@ router.post("/infra/listMerchantSubzonesByZoneId",jwtTokenAuth,function (req, re
 			} else {
 				Subzone.find(
 					{ zone_id: zone_id },
-					function (err, subzone) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, subzone) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -1811,16 +1811,16 @@ function (req, res) {
 
 				MerchantBranch.find(
 					{  subzone_id: subzone_id },
-					function (err, branch) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, branch) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -1862,10 +1862,10 @@ router.post("/infra/createMerchant", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Bank.findOne({ _id: bank_id }, (err, bank) => {
-					var result = errorMessage(err, bank, "Bank not found");
-					if (result.status == 0) {
-						res.status(200).json(result);
+				Bank.findOne({ _id: bank_id }, (err1, bank) => {
+					var result1 = errorMessage(err1, bank, "Bank not found");
+					if (result1.status == 0) {
+						res.status(200).json(result1);
 					} else {
 						if (!code) {
 							res.status(200).json({
@@ -1879,17 +1879,17 @@ router.post("/infra/createMerchant", jwtTokenAuth, function (req, res) {
 								bank.bcode
 							);
 							createWallet([wallet_ids.operational])
-								.then((result) => {
+								.then((result2) => {
 									if (
-										result != "" &&
-										!result.includes("wallet already exists")
+										result2 != "" &&
+										!result2.includes("wallet already exists")
 									) {
-										console.log(result);
+										console.log(result2);
 										res.status(200).json({
 											status: 0,
 											message:
 												"Blockchain service was unavailable. Please try again.",
-											result: result,
+											result: result2,
 										});
 									} else {
 										const data = new Merchant();
@@ -1908,16 +1908,16 @@ router.post("/infra/createMerchant", jwtTokenAuth, function (req, res) {
 										data.creator = 1;
 										data.wallet_ids.operational = wallet_ids.operational;
 
-										data.save((err) => {
-											if (err) {
-												console.log(err);
-												var message = err;
-												if (err.message) {
-													message = err.message;
+										data.save((err3) => {
+											if (err3) {
+												console.log(err3);
+												var message3 = err3;
+												if (err3.message) {
+													message3 = err3.message;
 												}
 												res.status(200).json({
 													status: 0,
-													message: message,
+													message: message3,
 												});
 											} else {
 												let content =
@@ -1954,11 +1954,11 @@ router.post("/infra/createMerchant", jwtTokenAuth, function (req, res) {
 										});
 									}
 								})
-								.catch((err) => {
-									console.log(err);
+								.catch((error) => {
+									console.log(error);
 									res.status(200).json({
 										status: 0,
-										message: err.message,
+										message: error.message,
 									});
 								});
 						}
@@ -2004,10 +2004,10 @@ router.post("/infra/editMerchant", jwtTokenAuth, function (req, res) {
 						mobile: mobile,
 						email: email,
 					},
-					(err, merchant) => {
-						var result = errorMessage(err, merchant, "Merchant not found.");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, merchant) => {
+						var result1 = errorMessage(err1, merchant, "Merchant not found.");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -2058,7 +2058,7 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 							}
 						},
 					],
-					async (err, bankaggregate) => {
+					async (err1, bankaggregate) => {
 						PartnerCashier.aggregate(
 							[{ 
 								$match : {
@@ -2081,7 +2081,7 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 									}
 								},
 							],
-							async (err, partneraggregate) => {
+							async (err2, partneraggregate) => {
 								Invoice.aggregate(
 									[{ 
 										$match : {
@@ -2105,7 +2105,7 @@ router.post("/getDashStats", jwtTokenAuth, function (req, res) {
 											},
 										},
 									],
-									async (err, invoices) => {
+									async (err3, invoices) => {
 										let bankFee = 0;
 										let bankCommission = 0;
 										let partnerFee = 0;
@@ -2243,16 +2243,16 @@ router.post("/getBanks", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Bank.find({}, function (err, bank) {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Bank.find({}, function (err1, bank) {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -2353,11 +2353,11 @@ router.post("/addBank", jwtTokenAuth, function (req, res) {
 	} = req.body;
 
 	if (
-		name === "" ||
-		address1 === "" ||
-		state === "" ||
-		mobile === "" ||
-		email === ""
+		name == "" ||
+		address1 == "" ||
+		state == "" ||
+		mobile == "" ||
+		email == ""
 	) {
 		res.status(200).json({
 			status: 0,
@@ -2384,16 +2384,16 @@ router.post("/addBank", jwtTokenAuth, function (req, res) {
 					{
 						$or: [{ bcode: bcode }, { mobile: mobile }, { email: email }],
 					},
-					(err, bank) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, bank) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (bank != null) {
 							res.status(200).json({
@@ -2407,16 +2407,16 @@ router.post("/addBank", jwtTokenAuth, function (req, res) {
 									_id: otp_id,
 									otp: otp,
 								},
-								function (err, otpd) {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
+								function (err2, otpd) {
+									if (err2) {
+										console.log(err2);
+										var message2 = err;
+										if (err2.message) {
+											message2 = err2.message;
 										}
 										res.status(200).json({
 											status: 0,
-											message: message,
+											message: message2,
 										});
 									} else if (!otpd) {
 										res.status(200).json({
@@ -2439,22 +2439,22 @@ router.post("/addBank", jwtTokenAuth, function (req, res) {
 										data.contract = contract;
 										data.password = makeid(10);
 
-										data.save((err, d) => {
-											if (err) {
+										data.save((err3, d) => {
+											if (err3) {
 												console.log(err);
-												var message = err;
-												if (err.message) {
-													message = err.message;
+												var message3 = err3;
+												if (err3.message) {
+													message3 = err3.message;
 												}
 												res.status(200).json({
 													status: 0,
-													message: message,
+													message: message3,
 												});
 											} else {
 												let data2 = new Document();
 												data2.bank_id = d._id;
 												data2.contract = contract;
-												data2.save((err) => {});
+												data2.save((err4) => {});
 
 												let content =
 													"<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
@@ -2532,18 +2532,18 @@ router.post("/editBank", jwtTokenAuth, function (req, res) {
 						_id: otp_id,
 						otp: otp,
 					},
-					function (err, otpd) {
-						let result = errorMessage(err, otpd, err);
-						if (result.status == 0) {
-							res.status(200).json(result);
+					function (err1, otpd) {
+						let result1 = errorMessage(err1, otpd, err);
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
-							if (otpd.otp === otp) {
+							if (otpd.otp == otp) {
 								if (
-									name === "" ||
-									address1 === "" ||
-									state === "" ||
-									mobile === "" ||
-									email === ""
+									name == "" ||
+									address1 == "" ||
+									state == "" ||
+									mobile == "" ||
+									email == ""
 								) {
 									return res.status(200).json({
 										status: 0,
@@ -2580,22 +2580,22 @@ router.post("/editBank", jwtTokenAuth, function (req, res) {
 										logo: logo,
 										contract: contract,
 									},
-									(err) => {
-										if (err) {
-											console.log(err);
-											var message = err;
-											if (err.message) {
-												message = err.message;
+									(err2) => {
+										if (err2) {
+											console.log(err2);
+											var message2 = err2;
+											if (err2.message) {
+												message2 = err2.message;
 											}
 											res.status(200).json({
 												status: 0,
-												message: message,
+												message: message2,
 											});
 										} else {
 											let data2 = new Document();
 											data2.bank_id = bank_id;
 											data2.contract = contract;
-											data2.save((err) => {});
+											data2.save((err3) => {});
 											return res.status(200).json(data);
 										}
 									}
@@ -2636,23 +2636,23 @@ router.post("/getInfraHistory", jwtTokenAuth, function (req, res) {
 					{
 						_id: bank_id,
 					},
-					function (err, b) {
-						let result = errorMessage(err, b, "Bank not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					function (err1, b) {
+						let result1 = errorMessage(err1, b, "Bank not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
-							wallet_type = "infra_" + from;
+							const wallet_type = "infra_" + from;
 							const wallet = b.wallet_ids[wallet_type];
 
 							getStatement(wallet)
-								.then(function (result) {
+								.then(function (res1) {
 									res.status(200).json({
 										status: 1,
-										history: result,
+										history: res1,
 									});
 								})
-								.catch((err) => {
-									res.status(200).json(catchError(err));
+								.catch((error) => {
+									res.status(200).json(catchError(error));
 								});
 						}
 					}
@@ -2701,14 +2701,14 @@ router.get("/infra/getMyWalletBalance", jwtTokenAuth, function (req, res) {
 							const wallet_id = ba.wallet_ids[wallet_type];
 
 							getBalance(wallet_id)
-								.then(function (result) {
+								.then(function (result7) {
 									res.status(200).json({
 										status: 1,
-										balance: result,
+										balance: result7,
 									});
 								})
-								.catch((err) => {
-									res.status(200).json(catchError(err));
+								.catch((error) => {
+									res.status(200).json(catchError(error));
 								});
 						}
 					}
@@ -2752,7 +2752,7 @@ router.post("/getPermission", jwtTokenAuth, function (req, res) {
 						{
 							_id: user.profile_id,
 						},
-						function (err, profile) {
+						function (err1, profile) {
 							var p = JSON.parse(profile.permissions);
 							res.status(200).json({
 								permissions: p,
@@ -2820,16 +2820,16 @@ router.post("/addProfile", jwtTokenAuth, function (req, res) {
 				data.permissions = JSON.stringify(c);
 				data.user_id = user_id;
 
-				data.save((err) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				data.save((err1) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						return res.status(200).json({
@@ -2843,7 +2843,6 @@ router.post("/addProfile", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/editProfile", jwtTokenAuth, function (req, res) {
-	let data = new Profile();
 	const {
 		pro_name,
 		pro_description,
@@ -2883,16 +2882,16 @@ router.post("/editProfile", jwtTokenAuth, function (req, res) {
 						description: pro_description,
 						permissions: c2,
 					},
-					(err, d) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, d) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							return res.status(200).json({
@@ -2943,16 +2942,16 @@ router.post("/addInfraUser", jwtTokenAuth, function (req, res) {
 				data.password = password;
 				data.profile_id = profile_id;
 				data.logo = logo;
-				data.save((err) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				data.save((err1) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						let content =
@@ -3028,16 +3027,16 @@ router.post("/editInfraUser", jwtTokenAuth, function (req, res) {
 						profile_id: profile_id,
 						logo: logo,
 					},
-					(err, d) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, d) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							return res.status(200).json({
@@ -3072,16 +3071,16 @@ router.post("/getBank", jwtTokenAuth, function (req, res) {
 					{
 						_id: bank_id,
 					},
-					function (err, bank) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, bank) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -3117,16 +3116,16 @@ router.post("/getRules", jwtTokenAuth, function (req, res) {
 						bank_id,
 						status: { $in: [1, 2] },
 					},
-					function (err, rules) {
-						if (err) {
-							console.log(err);
-							var message = err;
+					function (err1, rules) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err;
 							if (err.message) {
-								message = err.message;
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -3163,16 +3162,16 @@ router.post("/bankStatus", jwtTokenAuth, function (req, res) {
 					{
 						status: status,
 					},
-					(err) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -3207,16 +3206,16 @@ router.post("/getRoles", jwtTokenAuth, function (req, res) {
 					{
 						user_id,
 					},
-					function (err, bank) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					function (err1, bank) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -3246,16 +3245,16 @@ router.post("/getInfraUsers", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Infra.find({}, function (err, bank) {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Infra.find({}, function (err1, bank) {
+					if (err1) {
+						console.log(err1);
+						var message1 = err;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -3329,16 +3328,16 @@ router.post("/editInfraProfile", jwtTokenAuth, function (req, res) {
 					};
 				}
 
-				Infra.findByIdAndUpdate(user._id, upd, (err) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Infra.findByIdAndUpdate(user._id, upd, (err1) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -3377,18 +3376,18 @@ router.post("/generateOTP", jwtTokenAuth, function (req, res) {
 						{
 							username,
 						},
-						function (err, bank) {
+						function (err1, bank) {
 							data.mobile = bank.mobile;
-							data.save((err, ot) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
+							data.save((err2, ot) => {
+								if (err2) {
+									console.log(err2);
+									var message2 = err2;
+									if (err2.message) {
+										message2 = err2.message;
 									}
 									res.status(200).json({
 										status: 0,
-										message: message,
+										message: message2,
 									});
 								} else {
 									let content = "Your OTP to edit Bank is " + data.otp;
@@ -3412,29 +3411,29 @@ router.post("/generateOTP", jwtTokenAuth, function (req, res) {
 								{ bcode: bcode },
 							],
 						},
-						function (err, banks) {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						function (err2, banks) {
+							if (err2) {
+								console.log(err2);
+								var message2 = err2;
+								if (err2.message) {
+									message2 = err2.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message2,
 								});
 							} else if (banks.length == 0) {
 								data.mobile = user.mobile;
-								data.save((err, ot) => {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
+								data.save((err3, ot) => {
+									if (err3) {
+										console.log(err3);
+										var message3 = err3;
+										if (err3.message) {
+											message3 = err3.message;
 										}
 										res.status(200).json({
 											status: 0,
-											message: message,
+											message: message3,
 										});
 									} else {
 										let content = "Your OTP to add Bank is " + data.otp;
@@ -3511,7 +3510,7 @@ router.post("/transferMoney", jwtTokenAuth, function (req, res) {
 						{
 							name: bank,
 						},
-						function (err, b) {
+						function (err1, b) {
 							//var oamount = amount - fee;
 							var oamount = amount;
 
@@ -3529,12 +3528,12 @@ router.post("/transferMoney", jwtTokenAuth, function (req, res) {
 							data.user_id = "";
 
 							transferThis(data)
-								.then(function (result) {})
-								.catch((err) => {
-									console.log(err);
+								.then(function (result1) {})
+								.catch((error) => {
+									console.log(error);
 									res.status(200).json({
 										status: 0,
-										message: err.message,
+										message: error.message,
 									});
 									return;
 								});
@@ -3614,10 +3613,10 @@ router.post("/approveFee", jwtTokenAuth, function (req, res) {
 				{
 					$set: { status: 1 },
 				},
-				function (err, fee) {
-					let result = errorMessage(err, fee, "Infra share not updated");
-					if (result.status == 0) {
-						res.status(200).json(result);
+				function (err1, fee) {
+					let result1 = errorMessage(err1, fee, "Infra share not updated");
+					if (result1.status == 0) {
+						res.status(200).json(result1);
 					} else {
 						res.status(200).json({
 							status: 1,

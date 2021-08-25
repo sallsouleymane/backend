@@ -31,10 +31,10 @@ router.post("/merchantBranch/cashierStats",jwtTokenAuth,function (req, res) {
 			} else {
 				MerchantPosition.findById(
 					cashier_id,
-					async function (err, position) {
-						let result = errorMessage(err, position, "Position is not valid");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					async function (err1, position) {
+						let result1 = errorMessage(err1, position, "Position is not valid");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							try {
 								let status = await Invoice.aggregate([
@@ -91,8 +91,8 @@ router.post("/merchantBranch/cashierStats",jwtTokenAuth,function (req, res) {
 											closing_balance: position.closing_balance,
 										});
 								}
-							} catch (err) {
-								res.status(200).json(catchError(err));
+							} catch (error) {
+								res.status(200).json(catchError(error));
 							}
 						}
 					}
@@ -122,10 +122,10 @@ router.post("/merchantBranch/staffStats",jwtTokenAuth,function (req, res) {
 			} else {
 				MerchantPosition.findById(
 					staff_id,
-					async function (err, position) {
-						let result = errorMessage(err, position, "Position is not valid");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					async function (err1, position) {
+						let result1 = errorMessage(err1, position, "Position is not valid");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							try {
 								let bills_created = await Invoice.countDocuments({
@@ -172,8 +172,8 @@ router.post("/merchantBranch/staffStats",jwtTokenAuth,function (req, res) {
 									opening_time: position.opening_time,
 									closing_time: position.closing_time,
 								});
-							} catch (err) {
-								res.status(200).json(catchError(err));
+							} catch (error) {
+								res.status(200).json(catchError(error));
 							}
 						}
 					}
@@ -198,16 +198,16 @@ router.post("/merchantBranch/listInvoicesByDate", jwtTokenAuth, (req, res) => {
 			} else {
 				Invoice.find(
 					{ branch_id: branch._id, bill_date: date },
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -245,16 +245,16 @@ router.post("/merchantBranch/listInvoicesByPeriod", jwtTokenAuth, (req, res) => 
 							$lte: end_date
 						},
 					},
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -290,16 +290,16 @@ router.post("/merchantBranch/listInvoicesByDateRange", jwtTokenAuth, (req, res) 
 							$lte: end_date,
 						},
 					},
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -329,16 +329,16 @@ router.post("/merchantBranch/getSettings", jwtTokenAuth, function (req, res) {
 			} else {
 				MerchantSettings.findOne(
 					{ merchant_id: branch.merchant_id },
-					(err, setting) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, setting) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (!setting) {
 							res.status(200).json({
@@ -373,16 +373,16 @@ router.post("/merchantBranch/listStaffInvoicesByDate", jwtTokenAuth, (req, res) 
 			} else {
 				Invoice.find(
 					{ creator_id: staff_id, bill_date: date },
-					(err, invoices) => {
-						if (err) {
+					(err1, invoices) => {
+						if (err1) {
 							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -474,16 +474,16 @@ router.get("/merchantBranch/todaysStatus", jwtTokenAuth, function (req, res) {
 					},
 					{ amount_collected: 0 },
 					{ new: true },
-					(err, branch2) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, branch2) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (branch2 != null) {
 							branch = branch2;
@@ -543,14 +543,14 @@ router.post("/merchantBranch/getDashStats", jwtTokenAuth, function (req, res) {
 							},
 						},
 					],
-					async (err, post5) => {
-						let result = errorMessage(
-							err,
+					async (err1, post5) => {
+						let result1 = errorMessage(
+							err1,
 							post5,
 							"Error."
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							Invoice.aggregate(
 								[
@@ -577,14 +577,14 @@ router.post("/merchantBranch/getDashStats", jwtTokenAuth, function (req, res) {
 									},
 
 								],
-								async (err, post6) => {
-									let result = errorMessage(
-										err,
+								async (err2, post6) => {
+									let result2 = errorMessage(
+										err2,
 										post6,
 										"Error."
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									} else {
 										let cin = 0;
 										let ob = 0;
@@ -679,10 +679,10 @@ router.post("/merchantBranch/editPosition", jwtTokenAuth, (req, res) => {
 						working_to: working_to,
 						counter_invoice_access: counter_invoice_access,
 					},
-					(err, position) => {
-						let result = errorMessage(err, position, "position not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, position) => {
+						let result1 = errorMessage(err1, position, "position not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -708,16 +708,16 @@ router.get("/merchantBranch/listPosition", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				MerchantPosition.find({ branch_id: branch._id }, (err, positions) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				MerchantPosition.find({ branch_id: branch._id }, (err1, positions) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -744,16 +744,16 @@ router.get("/merchantBranch/listStaff", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				MerchantStaff.find({ branch_id: branch._id }, (err, staffs) => {
-					if (err) {
-						console.log(err);
-						var message = err;
+				MerchantStaff.find({ branch_id: branch._id }, (err1, staffs) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
 						if (err.message) {
-							message = err.message;
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -784,22 +784,22 @@ router.post("/merchantBranch/assignStaff", jwtTokenAuth, (req, res) => {
 				console.log(branch._id);
 				MerchantStaff.findOne(
 					{ _id: staff_id, status: 1, branch_id: branch._id },
-					(err, staff) => {
-						let result = errorMessage(err, staff, "Staff not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, staff) => {
+						let result1 = errorMessage(err1, staff, "Staff not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							MerchantPosition.findOneAndUpdate(
 								{ _id: position_id, branch_id: branch._id, type: staff.role },
 								{ staff_id: staff_id, username: staff.username },
-								(err, position) => {
-									let result = errorMessage(
-										err,
+								(err2, position) => {
+									let result2 = errorMessage(
+										err2,
 										position,
 										"Position not found or role does not match"
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									} else {
 										res.status(200).json({
 											status: 1,
@@ -832,14 +832,14 @@ router.post("/merchantBranch/disassignStaff", jwtTokenAuth, (req, res) => {
 				MerchantPosition.findOneAndUpdate(
 					{ _id: position_id, branch_id: branch._id },
 					{ staff_id: null, username: null },
-					(err, position) => {
-						let result = errorMessage(
-							err,
+					(err1, position) => {
+						let result1 = errorMessage(
+							err1,
 							position,
 							"Position not found or role does not match"
 					);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -873,10 +873,10 @@ router.post("/merchantBranch/blockPosition", jwtTokenAuth, (req, res) => {
 							status: 0,
 						},
 					},
-					(err, position) => {
-						let result = errorMessage(err, position, "position not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, position) => {
+						let result1 = errorMessage(err1, position, "position not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -910,10 +910,10 @@ router.post("/merchantBranch/unblockPosition", jwtTokenAuth, (req, res) => {
 							status: 1,
 						},
 					},
-					(err, position) => {
-						let result = errorMessage(err, position, "Position not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, position) => {
+						let result1 = errorMessage(err1, position, "Position not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,

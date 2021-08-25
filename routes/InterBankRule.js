@@ -68,14 +68,14 @@ router.post("/user/interBank/checkFee", JWTTokenAuth, function (req, res) {
 						status: 1,
 						active: 1,
 					};
-					InterBankRule.findOne(find, function (err, rule) {
-						let result = errorMessage(
-							err,
+					InterBankRule.findOne(find, function (err1, rule) {
+						let result1 = errorMessage(
+							err1,
 							rule,
 							"Transaction cannot be done at this time"
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							var amnt = Number(amount);
 							var fee = 0;
@@ -172,16 +172,16 @@ router.post(
 					username: jwtusername,
 					status: 1,
 				},
-				function (err, cashier) {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				function (err1, cashier) {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else if (cashier == null) {
 						return res.status(200).json({
@@ -197,15 +197,15 @@ router.post(
 							active: 1,
 						};
 						InterBankRule.findOne(find, function (err, rule) {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+							if (err2) {
+								console.log(err2);
+								var message2 = err2;
+								if (err2.message) {
+									message2 = err2.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message2,
 								});
 							} else if (rule == null) {
 								return res.status(200).json({
@@ -282,16 +282,16 @@ router.post("/cashier/interBank/checkFee", JWTTokenAuth, function (req, res) {
 						status: 1,
 						active: 1,
 					};
-					InterBankRule.findOne(find, function (err, rule) {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					InterBankRule.findOne(find, function (err1, rule) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (rule == null) {
 							return res.status(200).json({
@@ -361,16 +361,16 @@ router.post("/bank/interBank/getRules", JWTTokenAuth, function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				InterBankRule.find({ bank_id: bank._id }, (err, rules) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				InterBankRule.find({ bank_id: bank._id }, (err1, rules) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -415,16 +415,16 @@ router.post("/infra/interBank/getRules", JWTTokenAuth, function (req, res) {
 					{
 						bank_id: bank_id,
 					},
-					(err, rules) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, rules) => {
+						if (err1) {
+							console.log(err1);
+							var message1= err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							rules = rules.map((rule) => {
@@ -479,16 +479,16 @@ router.post("/infra/interBank/declineShare", JWTTokenAuth, function (req, res) {
 					{
 						infra_approval_status: -1,
 					},
-					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, rule) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (rule == null) {
 							res.status(200).json({
@@ -496,16 +496,16 @@ router.post("/infra/interBank/declineShare", JWTTokenAuth, function (req, res) {
 								message: "Rule not found.",
 							});
 						} else {
-							Bank.findOne({ _id: rule.bank_id }, (err, bank) => {
-								if (err) {
-									console.log(err);
-									var message = err;
-									if (err.message) {
-										message = err.message;
+							Bank.findOne({ _id: rule.bank_id }, (errr, bank) => {
+								if (err2) {
+									console.log(err2);
+									var message2 = err2;
+									if (err2.message) {
+										message2 = err2.message;
 									}
 									res.status(200).json({
 										status: 0,
-										message: message,
+										message: message2,
 									});
 								} else if (rule == null) {
 									res.status(200).json({
@@ -566,16 +566,16 @@ router.post("/infra/interBank/approveShare", JWTTokenAuth, function (req, res) {
 					{
 						_id: rule_id,
 					},
-					async (err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					async (err1, rule) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (rule == null) {
 							res.status(200).json({
@@ -610,13 +610,13 @@ router.post("/infra/interBank/approveShare", JWTTokenAuth, function (req, res) {
 										}
 									);
 								}
-							} catch (err) {
-								console.log(err);
-								var message = err.toString();
-								if (err.message) {
-									message = err.message;
+							} catch (error) {
+								console.log(error);
+								var message5 = error.toString();
+								if (error.message) {
+									message5 = error.message;
 								}
-								res.status(200).json({ status: 0, message: message });
+								res.status(200).json({ status: 0, message: message5 });
 							}
 							var content =
 								"Infra has approved the share of " +
@@ -675,16 +675,16 @@ router.post(
 								other_bank_share: other_bank_share,
 							},
 						},
-						(err, rule) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						(err1, rule) => {
+							if (err1) {
+								console.log(err1);
+								var message1 = err1;
+								if (err1.message) {
+									message1 = err1.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message1,
 								});
 							} else if (rule == null) {
 								res.status(200).json({
@@ -748,16 +748,16 @@ router.post("/bank/interBank/editRule", JWTTokenAuth, function (req, res) {
 						},
 					},
 					{ new: true },
-					(err, rule) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, rule) => {
+						if (err1) {
+							console.log(err1);
+							var message1= err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (rule == null) {
 							res.status(200).json({
@@ -815,16 +815,16 @@ router.post("/bank/interBank/createRule", JWTTokenAuth, function (req, res) {
 						"Token changed or user not valid. Try to login again or contact system administrator.",
 				});
 			} else {
-				InterBankRule.findOne({ bank_id: bank._id, type }, (err, rule) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				InterBankRule.findOne({ bank_id: bank._id, type }, (err1, rule) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else if (rule != null) {
 						res.status(200).json({
@@ -847,16 +847,16 @@ router.post("/bank/interBank/createRule", JWTTokenAuth, function (req, res) {
 								percentage: percentage,
 							});
 						});
-						interBankRule.save((err) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						interBankRule.save((err2) => {
+							if (err2) {
+								console.log(err2);
+								var message2 = err2;
+								if (err2.message) {
+									message2 = err2.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message2,
 								});
 							} else {
 								let content =
@@ -914,16 +914,16 @@ router.post(
 							"Token changed or user not valid. Try to login again or contact system administrator.",
 					});
 				} else {
-					Infra.findById({ _id: bank.user_id }, (err, infra) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					Infra.findById({ _id: bank.user_id }, (errr, infra) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (infra == null) {
 							res.status(200).json({
@@ -937,16 +937,16 @@ router.post(
 									_id: rule_id,
 								},
 								{ new: true },
-								async (err, rule) => {
-									if (err) {
-										console.log(err);
-										var message = err;
-										if (err.message) {
-											message = err.message;
+								async (err2, rule) => {
+									if (err2) {
+										console.log(err2);
+										var message2 = err2;
+										if (err2.message) {
+											message2 = err2.message;
 										}
 										res.status(200).json({
 											status: 0,
-											message: message,
+											message: message2,
 										});
 									} else if (rule == null) {
 										res.status(200).json({
@@ -990,15 +990,15 @@ router.post(
 													"Inter Bank " + rule.name + " Rule sent for approval",
 												rule: rule,
 											});
-										} catch (err) {
-											console.log(err);
-											var message = err.toString();
-											if (err && err.message) {
-												message = err.message;
+										} catch (error) {
+											console.log(error);
+											var message5 = error.toString();
+											if (error && error.message) {
+												message5 = error.message;
 											}
 											res
 												.status(200)
-												.json({ status: 0, message: message, err: err });
+												.json({ status: 0, message: message5, err: error });
 										}
 									}
 								}
