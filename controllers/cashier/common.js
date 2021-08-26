@@ -15,9 +15,9 @@ module.exports.queryTransactionStates = function (req, res) {
 				cashier.bank_id,
 				cashier._id,
 				req,
-				function (err, txstates) {
-					if (err) {
-						res.status(200).json(catchError(err));
+				function (err1, txstates) {
+					if (err1) {
+						res.status(200).json(catchError(err1));
 					} else {
 						res.status(200).json({
 							status: 1,
@@ -61,9 +61,9 @@ module.exports.addDailyReport = function (req, res) {
 			data.req_approved = req_approved;
 			data.req_declined = req_declined;
 			data.req_pending = req_pending;
-			data.save((err) => {
-				if (err) {
-					res.status(200).json(catchError(err));
+			data.save((err1) => {
+				if (err1) {
+					res.status(200).json(catchError(err1));
 				} else {
 					res
 						.status(200)
@@ -83,13 +83,13 @@ module.exports.queryDailyReport = function (req, res) {
 		} else {
 			var date_range = [];
 			if (date_after && date_after != "") {
-				date_after = new Date(date_after);
-				date_range[0] = { created_at: { $gte: date_after.toISOString() } };
+				let date_aft = new Date(date_after);
+				date_range[0] = { created_at: { $gte: date_aft.toISOString() } };
 			}
 
 			if (date_before && date_before != "") {
-				date_before = new Date(date_before);
-				date_range[1] = { created_at: { $lte: date_before.toISOString() } };
+				let date_bef = new Date(date_before);
+				date_range[1] = { created_at: { $lte: date_bef.toISOString() } };
 			}
 
 			if (date_range.length == 0) {
@@ -100,9 +100,9 @@ module.exports.queryDailyReport = function (req, res) {
 				{ cashier_id: cashier._id, $and: date_range },
 				null,
 				{ skip: page_start, limit: limit },
-				(err, reports) => {
-					if (err) {
-						res.status(200).json(catchError(err));
+				(err1, reports) => {
+					if (err1) {
+						res.status(200).json(catchError(err1));
 					} else {
 						res.status(200).json({ status: 1, reports: reports });
 					}

@@ -56,28 +56,28 @@ module.exports.cashierSendMoney = async function (req, res) {
 				{
 					_id: cashier.branch_id,
 				},
-				function (err, branch) {
-					let errMsg = errorMessage(err, branch, "Branch Not Found");
-					if (errMsg.status == 0) {
-						res.status(200).json(errMsg);
+				function (err1, branch) {
+					let errMsg1 = errorMessage(err1, branch, "Branch Not Found");
+					if (errMsg1.status == 0) {
+						res.status(200).json(errMsg1);
 					} else {
 						Bank.findOne(
 							{
 								_id: cashier.bank_id,
 							},
-							function (err, bank) {
-								let errMsg = errorMessage(err, bank, "Bank Not Found");
-								if (errMsg.status == 0) {
-									res.status(200).json(errMsg);
+							function (err18, bank) {
+								let errMsg18 = errorMessage(err18, bank, "Bank Not Found");
+								if (errMsg18.status == 0) {
+									res.status(200).json(errMsg18);
 								} else {
 									Infra.findOne(
 										{
 											_id: bank.user_id,
 										},
-										function (err, infra) {
-											let errMsg = errorMessage(err, infra, "Infra Not Found");
-											if (errMsg.status == 0) {
-												res.status(200).json(errMsg);
+										function (err2, infra) {
+											let errMsg2 = errorMessage(err2, infra, "Infra Not Found");
+											if (errMsg2.status == 0) {
+												res.status(200).json(errMsg2);
 											} else {
 												const find = {
 													bank_id: bank._id,
@@ -85,29 +85,29 @@ module.exports.cashierSendMoney = async function (req, res) {
 													status: 1,
 													active: 1,
 												};
-												InterBankRule.findOne(find, function (err, rule1) {
-													let errMsg = errorMessage(
-														err,
+												InterBankRule.findOne(find, function (err3, rule1) {
+													let errMsg3 = errorMessage(
+														err3,
 														rule1,
 														"Inter bank fee Rule Not Found"
 													);
-													if (errMsg.status == 0) {
-														res.status(200).json(errMsg);
+													if (errMsg3.status == 0) {
+														res.status(200).json(errMsg3);
 													} else {
-														const find = {
+														const find1 = {
 															bank_id: bank._id,
 															trans_type: "Non Wallet to Non Wallet",
 															status: 1,
 															active: "Active",
 														};
-														Fee.findOne(find, function (err, rule2) {
-															let errMsg = errorMessage(
-																err,
+														Fee.findOne(find1, function (err4, rule2) {
+															let errMsg4 = errorMessage(
+																err4,
 																rule2,
 																"Revenue Rule Not Found"
 															);
-															if (errMsg.status == 0) {
-																res.status(200).json(errMsg);
+															if (errMsg4.status == 0) {
+																res.status(200).json(errMsg4);
 															} else {
 																var otherInfo = {
 																	cashierId: cashier._id,
@@ -123,9 +123,9 @@ module.exports.cashierSendMoney = async function (req, res) {
 																addCashierSendRecord(
 																	req.body,
 																	otherInfo,
-																	(err, cs) => {
-																		if (err) {
-																			res.status(200).json(catchError(err));
+																	(err5, cs) => {
+																		if (err5) {
+																			res.status(200).json(catchError(err5));
 																		} else {
 																			const transfer = {
 																				amount: receiverIdentificationAmount,
@@ -173,11 +173,11 @@ module.exports.cashierSendMoney = async function (req, res) {
 																						updateCashierRecords(
 																							"cashier",
 																							otherInfo,
-																							(err) => {
-																								if (err) {
+																							(err6) => {
+																								if (err6) {
 																									res
 																										.status(200)
-																										.json(catchError(err));
+																										.json(catchError(err6));
 																								} else {
 																									txstate.waitingForCompletion(
 																										categoryConst.MAIN,
@@ -204,15 +204,15 @@ module.exports.cashierSendMoney = async function (req, res) {
 																						res.status(200).json(result);
 																					}
 																				})
-																				.catch((err) => {
+																				.catch((err7) => {
 																					txstate.failed(
 																						categoryConst.MAIN,
 																						master_code
 																					);
-																					console.log(err);
+																					console.log(err7);
 																					res.status(200).json({
 																						status: 0,
-																						message: err.message,
+																						message: err7.message,
 																					});
 																				});
 																		}
@@ -262,37 +262,37 @@ module.exports.partnerSendMoney = async function (req, res) {
 				{
 					_id: cashier.branch_id,
 				},
-				function (err, branch) {
-					let result = errorMessage(err, branch, "Branch Not Found");
-					if (result.status == 0) {
-						res.status(200).json(result);
+				function (err1, branch) {
+					let result1 = errorMessage(err1, branch, "Branch Not Found");
+					if (result1.status == 0) {
+						res.status(200).json(result1);
 					} else {
-						Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
-							let result = errorMessage(err, partner, "Partner not found");
-							if (result.status == 0) {
-								res.status(200).json(result);
+						Partner.findOne({ _id: cashier.partner_id }, (err2, partner) => {
+							let result2 = errorMessage(err2, partner, "Partner not found");
+							if (result2.status == 0) {
+								res.status(200).json(result2);
 							} else {
 								Bank.findOne(
 									{
 										_id: cashier.bank_id,
 									},
-									function (err, bank) {
-										let result = errorMessage(err, bank, "Bank Not Found");
-										if (result.status == 0) {
-											res.status(200).json(result);
+									function (err3, bank) {
+										let result3 = errorMessage(err3, bank, "Bank Not Found");
+										if (result3.status == 0) {
+											res.status(200).json(result3);
 										} else {
 											Infra.findOne(
 												{
 													_id: bank.user_id,
 												},
-												function (err, infra) {
-													let result = errorMessage(
-														err,
+												function (err4, infra) {
+													let result4= errorMessage(
+														err4,
 														infra,
 														"Infra Not Found"
 													);
-													if (result.status == 0) {
-														res.status(200).json(result);
+													if (result4.status == 0) {
+														res.status(200).json(result4);
 													} else {
 														const find = {
 															bank_id: bank._id,
@@ -300,29 +300,29 @@ module.exports.partnerSendMoney = async function (req, res) {
 															status: 1,
 															active: 1,
 														};
-														InterBankRule.findOne(find, function (err, rule1) {
-															let result = errorMessage(
-																err,
+														InterBankRule.findOne(find, function (err5, rule1) {
+															let result5 = errorMessage(
+																err5,
 																rule1,
 																"Inter Bank Rule Not Found"
 															);
-															if (result.status == 0) {
-																res.status(200).json(result);
+															if (result5.status == 0) {
+																res.status(200).json(result5);
 															} else {
-																const find = {
+																const find1 = {
 																	bank_id: bank._id,
 																	trans_type: "Non Wallet to Non Wallet",
 																	status: 1,
 																	active: "Active",
 																};
-																Fee.findOne(find, function (err, rule2) {
-																	let result = errorMessage(
-																		err,
+																Fee.findOne(find1, function (err6, rule2) {
+																	let result6 = errorMessage(
+																		err6,
 																		rule2,
 																		"Revenue Rule Not Found"
 																	);
-																	if (result.status == 0) {
-																		res.status(200).json(result);
+																	if (result6.status == 0) {
+																		res.status(200).json(result6);
 																	} else {
 																		var otherInfo = {
 																			cashierId: cashier._id,
@@ -338,9 +338,9 @@ module.exports.partnerSendMoney = async function (req, res) {
 																		addCashierSendRecord(
 																			req.body,
 																			otherInfo,
-																			(err, cs) => {
-																				if (err) {
-																					res.status(200).json(catchError(err));
+																			(err7, cs) => {
+																				if (err7) {
+																					res.status(200).json(catchError(err7));
 																				} else {
 																					var transfer = {
 																						master_code: master_code,
@@ -393,11 +393,11 @@ module.exports.partnerSendMoney = async function (req, res) {
 																								updateCashierRecords(
 																									"partnercashier",
 																									otherInfo,
-																									(err) => {
-																										if (err) {
+																									(err8) => {
+																										if (err8) {
 																											res
 																												.status(200)
-																												.json(catchError(err));
+																												.json(catchError(err8));
 																										} else {
 																											txstate.completed(
 																												categoryConst.MAIN,
@@ -424,15 +424,15 @@ module.exports.partnerSendMoney = async function (req, res) {
 																								res.status(200).json(result);
 																							}
 																						})
-																						.catch((err) => {
+																						.catch((err9) => {
 																							txstate.failed(
 																								categoryConst.MAIN,
 																								master_code
 																							);
-																							console.log(err);
+																							console.log(err9);
 																							res.status(200).json({
 																								status: 0,
-																								message: err.message,
+																								message: err9.message,
 																							});
 																						});
 																				}
@@ -464,7 +464,6 @@ module.exports.cashierSendMoneyToWallet = function (req, res) {
 		isInclusive,
 	} = req.body;
 
-	const jwtusername = req.sign_creds.username;
 	jwtAuthentication("cashier", req, async function (err, cashier) {
 		if (err) {
 			res.status(200).json(err);
@@ -482,54 +481,54 @@ module.exports.cashierSendMoneyToWallet = function (req, res) {
 				{
 					mobile: receiverMobile,
 				},
-				function (err, receiver) {
-					let result = errorMessage(err, receiver, "Receiver Not Found");
-					if (result.status == 0) {
-						res.status(200).json(result);
+				function (err1, receiver) {
+					let result1 = errorMessage(err1, receiver, "Receiver Not Found");
+					if (result1.status == 0) {
+						res.status(200).json(result1);
 					} else {
-						Bank.findOne({ _id: receiver.bank_id }, (err, receiverBank) => {
-							let result = errorMessage(
-								err,
+						Bank.findOne({ _id: receiver.bank_id }, (err2, receiverBank) => {
+							let result2 = errorMessage(
+								err2,
 								receiverBank,
 								"Receiver Not Found"
 							);
-							if (result.status == 0) {
-								res.status(200).json(result);
+							if (result2.status == 0) {
+								res.status(200).json(result2);
 							} else {
 								Branch.findOne(
 									{
 										_id: cashier.branch_id,
 									},
-									function (err, branch) {
-										let result = errorMessage(err, branch, "Branch Not Found");
-										if (result.status == 0) {
-											res.status(200).json(result);
+									function (err3, branch) {
+										let result3 = errorMessage(err3, branch, "Branch Not Found");
+										if (result3.status == 0) {
+											res.status(200).json(result3);
 										} else {
 											Bank.findOne(
 												{
 													_id: cashier.bank_id,
 												},
-												function (err, bank) {
-													let result = errorMessage(
-														err,
+												function (err4, bank) {
+													let result4 = errorMessage(
+														err4,
 														bank,
 														"Bank Not Found"
 													);
 													if (result.status == 0) {
-														res.status(200).json(result);
+														res.status(200).json(result4);
 													} else {
 														Infra.findOne(
 															{
 																_id: bank.user_id,
 															},
-															function (err, infra) {
-																let result = errorMessage(
-																	err,
+															function (err5, infra) {
+																let result5 = errorMessage(
+																	err5,
 																	infra,
 																	"Infra Not Found"
 																);
-																if (result.status == 0) {
-																	res.status(200).json(result);
+																if (result5.status == 0) {
+																	res.status(200).json(result5);
 																} else {
 																	var find = {
 																		bank_id: bank._id,
@@ -539,14 +538,14 @@ module.exports.cashierSendMoneyToWallet = function (req, res) {
 																	};
 																	InterBankRule.findOne(
 																		find,
-																		function (err, rule1) {
-																			let result = errorMessage(
-																				err,
+																		function (err6, rule1) {
+																			let result6 = errorMessage(
+																				err6,
 																				rule1,
 																				"Inter Bank Revenue Rule Not Found"
 																			);
-																			if (result.status == 0) {
-																				res.status(200).json(result);
+																			if (result6.status == 0) {
+																				res.status(200).json(result6);
 																			} else {
 																				find = {
 																					bank_id: bank._id,
@@ -556,14 +555,14 @@ module.exports.cashierSendMoneyToWallet = function (req, res) {
 																				};
 																				Fee.findOne(
 																					find,
-																					function (err, rule2) {
-																						let result = errorMessage(
-																							err,
+																					function (err7, rule2) {
+																						let result7 = errorMessage(
+																							err7,
 																							rule2,
 																							"Revenue Rule Not Found"
 																						);
-																						if (result.status == 0) {
-																							res.status(200).json(result);
+																						if (result7.status == 0) {
+																							res.status(200).json(result7);
 																						} else {
 																							//End
 
@@ -601,11 +600,11 @@ module.exports.cashierSendMoneyToWallet = function (req, res) {
 																							addCashierSendRecord(
 																								req.body,
 																								otherInfo,
-																								(err, cs) => {
-																									if (err) {
+																								(err8, cs) => {
+																									if (err8) {
 																										res
 																											.status(200)
-																											.json(catchError(err));
+																											.json(catchError(err8));
 																									} else {
 																										var transfer = {
 																											master_code: master_code,
@@ -644,13 +643,13 @@ module.exports.cashierSendMoneyToWallet = function (req, res) {
 																													updateCashierRecords(
 																														"cashier",
 																														otherInfo,
-																														(err) => {
-																															if (err) {
+																														(err9) => {
+																															if (err9) {
 																																res
 																																	.status(200)
 																																	.json(
 																																		catchError(
-																																			err
+																																			err9
 																																		)
 																																	);
 																															} else {
@@ -684,15 +683,15 @@ module.exports.cashierSendMoneyToWallet = function (req, res) {
 																														.json(result);
 																												}
 																											})
-																											.catch((err) => {
+																											.catch((err10) => {
 																												txstate.failed(
 																													categoryConst.MAIN,
 																													master_code
 																												);
-																												console.log(err);
+																												console.log(err10);
 																												res.status(200).json({
 																													status: 0,
-																													message: err.message,
+																													message: err10.message,
 																												});
 																											});
 																									}
@@ -742,67 +741,67 @@ module.exports.partnerSendMoneyToWallet = function (req, res) {
 				cashier.cash_in_hand,
 				req.body,
 			);
-			Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
-				let result = errorMessage(err, partner, "Partner not found");
-				if (result.status == 0) {
-					res.status(200).json(result);
+			Partner.findOne({ _id: cashier.partner_id }, (err1, partner) => {
+				let result1 = errorMessage(err1, partner, "Partner not found");
+				if (result1.status == 0) {
+					res.status(200).json(result1);
 				} else {
 					User.findOne(
 						{
 							mobile: receiverMobile,
 						},
-						function (err, receiver) {
-							let result = errorMessage(err, receiver, "Receiver Not Found");
-							if (result.status == 0) {
-								res.status(200).json(result);
+						function (err2, receiver) {
+							let result2 = errorMessage(err2, receiver, "Receiver Not Found");
+							if (result2.status == 0) {
+								res.status(200).json(result2);
 							} else {
-								Bank.findOne({ _id: receiver.bank_id }, (err, receiverBank) => {
-									let result = errorMessage(
-										err,
+								Bank.findOne({ _id: receiver.bank_id }, (err3, receiverBank) => {
+									let result3 = errorMessage(
+										err3,
 										receiverBank,
 										"Receiver Bank Not Found"
 									);
-									if (result.status == 0) {
-										res.status(200).json(result);
+									if (result3.status == 0) {
+										res.status(200).json(result3);
 									} else {
 										PartnerBranch.findOne(
 											{
 												_id: cashier.branch_id,
 											},
-											function (err, branch) {
-												let result = errorMessage(
-													err,
+											function (err4, branch) {
+												let result4 = errorMessage(
+													err4,
 													branch,
 													"Branch Not Found"
 												);
-												if (result.status == 0) {
-													res.status(200).json(result);
+												if (result4.status == 0) {
+													res.status(200).json(result4);
 												} else {
 													Bank.findOne(
 														{
 															_id: cashier.bank_id,
 														},
-														function (err, bank) {
-															let result = errorMessage(
-																err,
+														function (err5, bank) {
+															let result5 = errorMessage(
+																err5,
 																bank,
 																"Bank Not Found"
 															);
-															if (result.status == 0) {
-																res.status(200).json(result);
+															if (result5.status == 0) {
+																res.status(200).json(result5);
 															} else {
 																Infra.findOne(
 																	{
 																		_id: bank.user_id,
 																	},
-																	function (err, infra) {
-																		let result = errorMessage(
-																			err,
+																	function (err6, infra) {
+																		let result6 = errorMessage(
+																			err6,
 																			infra,
 																			"Infra Not Found"
 																		);
-																		if (result.status == 0) {
-																			res.status(200).json(result);
+																		if (result6.status == 0) {
+																			res.status(200).json(result6);
 																		} else {
 																			var find = {
 																				bank_id: bank._id,
@@ -812,14 +811,14 @@ module.exports.partnerSendMoneyToWallet = function (req, res) {
 																			};
 																			InterBankRule.findOne(
 																				find,
-																				function (err, rule1) {
-																					let result = errorMessage(
-																						err,
+																				function (err7, rule1) {
+																					let result7 = errorMessage(
+																						err7,
 																						rule1,
 																						"Inter Bank Revenue Rule Not Found"
 																					);
-																					if (result.status == 0) {
-																						res.status(200).json(result);
+																					if (result7.status == 0) {
+																						res.status(200).json(result7);
 																					} else {
 																						find = {
 																							bank_id: bank._id,
@@ -830,16 +829,16 @@ module.exports.partnerSendMoneyToWallet = function (req, res) {
 																						};
 																						Fee.findOne(
 																							find,
-																							function (err, rule2) {
-																								if (err) {
-																									console.log(err);
-																									var message = err;
-																									if (err.message) {
-																										message = err.message;
+																							function (err8, rule2) {
+																								if (err8) {
+																									console.log(err8);
+																									var message8 = err8;
+																									if (err8.message) {
+																										message8= err8.message;
 																									}
 																									res.status(200).json({
 																										status: 0,
-																										message: message,
+																										message: message8,
 																									});
 																								} else if (rule2 == null) {
 																									res.status(200).json({
@@ -882,12 +881,12 @@ module.exports.partnerSendMoneyToWallet = function (req, res) {
 																									addCashierSendRecord(
 																										req.body,
 																										otherInfo,
-																										(err, cs) => {
-																											if (err) {
+																										(err9, cs) => {
+																											if (err9) {
 																												res
 																													.status(200)
 																													.json(
-																														catchError(err)
+																														catchError(err9)
 																													);
 																											} else {
 																												//End
@@ -936,15 +935,15 @@ module.exports.partnerSendMoneyToWallet = function (req, res) {
 																															updateCashierRecords(
 																																"partnerCashier",
 																																otherInfo,
-																																(err) => {
-																																	if (err) {
+																																(err10) => {
+																																	if (err10) {
 																																		res
 																																			.status(
 																																				200
 																																			)
 																																			.json(
 																																				catchError(
-																																					err
+																																					err10
 																																				)
 																																			);
 																																	} else {
@@ -976,20 +975,20 @@ module.exports.partnerSendMoneyToWallet = function (req, res) {
 																																.json(result);
 																														}
 																													})
-																													.catch((err) => {
+																													.catch((err11) => {
 																														txstate.failed(
 																															categoryConst.MAIN,
 																															master_code
 																														);
 																														console.log(
-																															err.toString()
+																															err11.toString()
 																														);
 																														res
 																															.status(200)
 																															.json({
 																																status: 0,
 																																message:
-																																	err.message,
+																																	err11.message,
 																															});
 																													});
 																											}
@@ -1031,9 +1030,9 @@ module.exports.cashierSendToOperational = async function (req, res) {
 		});
 		return;
 	}
-	jwtAuthentication("cashier", req, async function (err, cashier) {
-		if (err) {
-			res.status(200).json(err);
+	jwtAuthentication("cashier", req, async function (err1, cashier) {
+		if (err1) {
+			res.status(200).json(err1);
 		} else {
 			// Initiate transaction state
 			const master_code = await txstate.initiate(
@@ -1043,78 +1042,73 @@ module.exports.cashierSendToOperational = async function (req, res) {
 				cashier._id,
 				""
 			);
-			Branch.findOne({ _id: cashier.branch_id }, (err, branch) => {
-				let result = errorMessage(err, branch, "Branch not found");
-				if (result.status == 0) {
-					res.status(200).json(result);
+			Branch.findOne({ _id: cashier.branch_id }, (err2, branch) => {
+				let result2 = errorMessage(err2, branch, "Branch not found");
+				if (result2.status == 0) {
+					res.status(200).json(result2);
 				} else {
-					Bank.findOne({ _id: branch.bank_id }, (err, bank) => {
-						let result = errorMessage(err, bank, "Bank not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					Bank.findOne({ _id: branch.bank_id }, (err3, bank) => {
+						let result3 = errorMessage(err3, bank, "Bank not found");
+						if (result3.status == 0) {
+							res.status(200).json(result3);
 						} else {
-							Infra.findOne({ _id: bank.user_id }, (err, infra) => {
-								let result = errorMessage(err, infra, "Infra not found");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Infra.findOne({ _id: bank.user_id }, (err4, infra) => {
+								let result4 = errorMessage(err4, infra, "Infra not found");
+								if (result4.status == 0) {
+									res.status(200).json(result4);
 								} else {
-									const find = {
-										bank_id: branch.bank_id,
-										trans_type: "Non Wallet to Operational",
-										status: 1,
-										active: "Active",
-									};
+									
 									const Collection = getTypeClass(code);
 									Collection.findOne(
 										{
 											_id: { $ne: branch._id },
 											"wallet_ids.operational": wallet_id,
 										},
-										(err, toBranch) => {
-											let result = errorMessage(
-												err,
+										(err5, toBranch) => {
+											let result5 = errorMessage(
+												err5,
 												toBranch,
 												"Invalid wallet ID"
 											);
-											if (result.status == 0) {
-												res.status(200).json(result);
+											if (result5.status == 0) {
+												res.status(200).json(result5);
 											} else {
 												Bank.findOne(
 													{ _id: toBranch.bank_id },
-													(err, toBank) => {
-														let result = errorMessage(
-															err,
+													(err6, toBank) => {
+														let result6 = errorMessage(
+															err6,
 															toBank,
 															"To Branch's bank not found"
 														);
-														if (result.status == 0) {
-															res.status(200).json(result);
+														if (result6.status == 0) {
+															res.status(200).json(result6);
 														} else {
-															var find = {
+															var find1 = {
 																bank_id: bank._id,
 																type: "IBNWO",
 																status: 1,
 																active: 1,
 															};
 															InterBankRule.findOne(
-																find,
-																function (err, rule1) {
-																	let result = errorMessage(
-																		err,
+																find1,
+																function (err7, rule1) {
+																	let result7 = errorMessage(
+																		err7,
 																		rule1,
 																		"Inter Bank Revenue Rule Not Found"
 																	);
-																	if (result.status == 0) {
-																		res.status(200).json(result);
+																	if (result7.status == 0) {
+																		res.status(200).json(result7);
 																	} else {
-																		Fee.findOne(find, (err, rule2) => {
-																			let errMsg = errorMessage(
-																				err,
+																		Fee.findOne(find1, (err8, rule2) => {
+																			let errMsg8 = errorMessage(
+																				err8,
 																				rule2,
 																				"Rule not found"
 																			);
-																			if (errMsg.status == 0) {
-																				res.status(200).json(errMsg);
+																			if (errMsg8.status == 0) {
+																				res.status(200).json(errMsg8);
 																			} else {
 																				req.body.withoutID = false;
 																				req.body.receiverccode = toBranch.ccode;
@@ -1149,11 +1143,11 @@ module.exports.cashierSendToOperational = async function (req, res) {
 																				addCashierSendRecord(
 																					req.body,
 																					otherInfo,
-																					(err, cs) => {
-																						if (err) {
+																					(err9, cs) => {
+																						if (err9) {
 																							res
 																								.status(200)
-																								.json(catchError(err));
+																								.json(catchError(err9));
 																						} else {
 																							const transfer = {
 																								amount: amount,
@@ -1185,12 +1179,12 @@ module.exports.cashierSendToOperational = async function (req, res) {
 																										updateCashierRecords(
 																											"cashier",
 																											otherInfo,
-																											(err) => {
-																												if (err) {
+																											(err10) => {
+																												if (err10) {
 																													res
 																														.status(200)
 																														.json(
-																															catchError(err)
+																															catchError(err10)
 																														);
 																												} else {
 																													txstate.completed(
@@ -1216,15 +1210,15 @@ module.exports.cashierSendToOperational = async function (req, res) {
 																											.json(result);
 																									}
 																								})
-																								.catch((err) => {
+																								.catch((err11) => {
 																									txstate.failed(
 																										categoryConst.MAIN,
 																										master_code
 																									);
-																									console.log(err);
+																									console.log(err11);
 																									res.status(200).json({
 																										status: 0,
-																										message: err.message,
+																										message: err11.message,
 																									});
 																								});
 																						}
@@ -1265,25 +1259,25 @@ module.exports.partnerSendToOperational = async function (req, res) {
 				cashier._id,
 				""
 			);
-			Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
-				let result = errorMessage(err, partner, "Partner Not Found");
-				if (result.status == 0) {
-					res.status(200).json(result);
+			Partner.findOne({ _id: cashier.partner_id }, (err1, partner) => {
+				let result1 = errorMessage(err1, partner, "Partner Not Found");
+				if (result1.status == 0) {
+					res.status(200).json(result1);
 				} else {
-					PartnerBranch.findOne({ _id: cashier.branch_id }, (err, branch) => {
-						let result = errorMessage(err, branch, "Branch not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					PartnerBranch.findOne({ _id: cashier.branch_id }, (err2, branch) => {
+						let result2 = errorMessage(err2, branch, "Branch not found");
+						if (result2.status == 0) {
+							res.status(200).json(result2);
 						} else {
-							Bank.findOne({ _id: branch.bank_id }, (err, bank) => {
-								let result = errorMessage(err, bank, "Bank not found");
-								if (result.status == 0) {
-									res.status(200).json(result);
+							Bank.findOne({ _id: branch.bank_id }, (err3, bank) => {
+								let result3 = errorMessage(err3, bank, "Bank not found");
+								if (result3.status == 0) {
+									res.status(200).json(result3);
 								} else {
-									Infra.findOne({ _id: bank.user_id }, (err, infra) => {
-										let result = errorMessage(err, infra, "Infra not found");
-										if (result.status == 0) {
-											res.status(200).json(result);
+									Infra.findOne({ _id: bank.user_id }, (err4, infra) => {
+										let result4 = errorMessage(err4, infra, "Infra not found");
+										if (result4.status == 0) {
+											res.status(200).json(result4);
 										} else {
 											const Collection = getTypeClass(code);
 											Collection.findOne(
@@ -1291,25 +1285,25 @@ module.exports.partnerSendToOperational = async function (req, res) {
 													_id: { $ne: branch._id },
 													"wallet_ids.operational": wallet_id,
 												},
-												(err, toBranch) => {
-													let result = errorMessage(
-														err,
+												(err5, toBranch) => {
+													let result5 = errorMessage(
+														err5,
 														toBranch,
 														"Invalid wallet ID"
 													);
-													if (result.status == 0) {
-														res.status(200).json(result);
+													if (result5.status == 0) {
+														res.status(200).json(result5);
 													} else {
 														Bank.findOne(
 															{ _id: toBranch.bank_id },
-															(err, toBank) => {
-																let result = errorMessage(
-																	err,
+															(err6, toBank) => {
+																let result6 = errorMessage(
+																	err6,
 																	toBank,
 																	"To Branch's bank not found"
 																);
-																if (result.status == 0) {
-																	res.status(200).json(result);
+																if (result6.status == 0) {
+																	res.status(200).json(result6);
 																} else {
 																	var find = {
 																		bank_id: bank._id,
@@ -1319,30 +1313,30 @@ module.exports.partnerSendToOperational = async function (req, res) {
 																	};
 																	InterBankRule.findOne(
 																		find,
-																		function (err, rule1) {
-																			let result = errorMessage(
-																				err,
+																		function (err7, rule1) {
+																			let result7 = errorMessage(
+																				err7,
 																				rule1,
 																				"Inter Bank Revenue Rule Not Found"
 																			);
-																			if (result.status == 0) {
-																				res.status(200).json(result);
+																			if (result7.status == 0) {
+																				res.status(200).json(result7);
 																			} else {
-																				const find = {
+																				const find1 = {
 																					bank_id: bank._id,
 																					trans_type:
 																						"Non Wallet to Operational",
 																					status: 1,
 																					active: "Active",
 																				};
-																				Fee.findOne(find, (err, rule2) => {
-																					let result = errorMessage(
-																						err,
+																				Fee.findOne(find1, (err8, rule2) => {
+																					let result8= errorMessage(
+																						err8,
 																						rule,
 																						"Rule not found"
 																					);
-																					if (result.status == 0) {
-																						res.status(200).json(result);
+																					if (result8.status == 0) {
+																						res.status(200).json(result8);
 																					} else {
 																						req.body.withoutID = false;
 																						req.body.receiverccode =
@@ -1381,11 +1375,11 @@ module.exports.partnerSendToOperational = async function (req, res) {
 																						addCashierSendRecord(
 																							req.body,
 																							otherInfo,
-																							(err, cs) => {
-																								if (err) {
+																							(err9, cs) => {
+																								if (err9) {
 																									res
 																										.status(200)
-																										.json(catchError(err));
+																										.json(catchError(err9));
 																								} else {
 																									const transfer = {
 																										amount: amount,
@@ -1418,13 +1412,13 @@ module.exports.partnerSendToOperational = async function (req, res) {
 																												updateCashierRecords(
 																													"partnercashier",
 																													otherInfo,
-																													(err) => {
-																														if (err) {
+																													(err10) => {
+																														if (err10) {
 																															res
 																																.status(200)
 																																.json(
 																																	catchError(
-																																		err
+																																		err10
 																																	)
 																																);
 																														} else {
@@ -1449,11 +1443,11 @@ module.exports.partnerSendToOperational = async function (req, res) {
 																													.json(result);
 																											}
 																										})
-																										.catch((err) => {
-																											console.log(err);
+																										.catch((err11) => {
+																											console.log(err11);
 																											res.status(200).json({
 																												status: 0,
-																												message: err.message,
+																												message: err11.message,
 																											});
 																										});
 																								}

@@ -114,7 +114,7 @@ module.exports = function (reqData, otherData, next) {
 	if (requireOTP) {
 		data.require_otp = 1;
 		data.otp = makeotp(6);
-		content = data.otp + " - Send this OTP to the Receiver";
+		let content = data.otp + " - Send this OTP to the Receiver";
 		if (mobile && mobile != null) {
 			sendSMS(content, mobile);
 		}
@@ -144,9 +144,9 @@ function saveTransactionCode(mobile, receiverMobile, transactionCode) {
 				data.sender_mobile = mobile;
 				data.receiver_mobile = receiverMobile;
 				data.code = transactionCode;
-				data.save((err) => {
-					if (err) {
-						console.log(err);
+				data.save((err1) => {
+					if (err1) {
+						console.log(err1);
 					}
 				});
 			}

@@ -18,9 +18,9 @@ module.exports.approveCancelRequest = async function (req, res, next) {
 						cancel: { approved: 1 },
 					},
 				},
-				(err, txstate) => {
+				(err1, txstate) => {
 					let errMsg = errorMessage(
-						err,
+						err1,
 						txstate,
 						"Transaction is either not sent for approval or may be it is already rejected. Please check the transaction status first."
 					);
@@ -51,14 +51,14 @@ module.exports.rejectCancelRequest = async function (req, res, next) {
 						cancel: { approved: -1, reason: reason },
 					},
 				},
-				(err, txstate) => {
-					let errMsg = errorMessage(
-						err,
+				(err1, txstate) => {
+					let errMsg1 = errorMessage(
+						err1,
 						txstate,
 						"Transaction is either not sent for approval or may be it is already approved. Please check the transaction status first."
 					);
-					if (errMsg.status == 0) {
-						res.status(200).json(errMsg);
+					if (errMsg1.status == 0) {
+						res.status(200).json(errMsg1);
 					} else {
 						res.status(200).json({
 							status: 1,

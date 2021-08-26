@@ -268,7 +268,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 
 function allTxSuccess(txInfo) {
 	try {
-		for (childtx of txInfo.childTx) {
+		for (let childtx of txInfo.childTx) {
 			if (childtx.state == 0) {
 				return false;
 			}
@@ -282,8 +282,8 @@ function allTxSuccess(txInfo) {
 function getPart(txInfo, masterId, childIds, otherIds) {
 	let myPart = 0;
 	let othersPart = 0;
-	for (childtx of txInfo.childTx) {
-		for (childId of childIds) {
+	for (let childtx of txInfo.childTx) {
+		for (let childId of childIds) {
 			if (childtx.transaction.child_code == masterId + childId) {
 				myPart += childtx.transaction.amount;
 			}
@@ -291,8 +291,8 @@ function getPart(txInfo, masterId, childIds, otherIds) {
 	}
 
 	if (otherIds.length > 0) {
-		for (childtx of txInfo.childTx) {
-			for (otherId of otherIds) {
+		for (let childtx of txInfo.childTx) {
+			for (let otherId of otherIds) {
 				if (childtx.transaction.child_code == masterId + otherId) {
 					othersPart += childtx.transaction.amount;
 				}

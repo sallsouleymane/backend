@@ -3,7 +3,7 @@ const Invoice = require("../../models/merchant/Invoice");
 module.exports = async function (invoices, merchant_id) {
 	try {
 		var total_amount = 0;
-		for (invoice of invoices) {
+		for (let invoice of invoices) {
 			var { id, penalty } = invoice;
 			var inv = await Invoice.findOne({
 				_id: id,

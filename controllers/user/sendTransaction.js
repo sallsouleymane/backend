@@ -51,10 +51,10 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 				contact_list: receiverMobile,
 			},
 		},
-		async function (err, sender) {
-			let result = errorMessage(err, sender, "Sender not found");
-			if (result.status == 0) {
-				res.status(200).json(result);
+		async function (err45, sender) {
+			let result45 = errorMessage(err45, sender, "Sender not found");
+			if (result45.status == 0) {
+				res.status(200).json(result45);
 			} else {
 				// Initiate transaction state
 				const master_code = await txstate.initiate(
@@ -62,31 +62,31 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 					sender.bank_id,
 					"Wallet To Non Wallet"
 				);
-				receiver = {
+				let receiver = {
 					name: receiverGivenName,
 					last_name: receiverFamilyName,
 					mobile: receiverMobile,
 					email: receiverEmail,
 					country: receiverCountry,
 				};
-				NWUser.create(receiver, function (err) {
+				NWUser.create(receiver, function (err1) {
 					Bank.findOne(
 						{
 							_id: sender.bank_id,
 						},
-						function (err, bank) {
-							let result = errorMessage(err, bank, "Bank Not Found");
-							if (result.status == 0) {
-								res.status(200).json(result);
+						function (err2, bank) {
+							let result2 = errorMessage(err2, bank, "Bank Not Found");
+							if (result2.status == 0) {
+								res.status(200).json(result2);
 							} else {
 								Infra.findOne(
 									{
 										_id: bank.user_id,
 									},
-									function (err, infra) {
-										let result = errorMessage(err, infra, "Infra Not Found");
-										if (result.status == 0) {
-											res.status(200).json(result);
+									function (err3, infra) {
+										let result3 = errorMessage(err3, infra, "Infra Not Found");
+										if (result3.status == 0) {
+											res.status(200).json(result3);
 										} else {
 											const find = {
 												bank_id: bank._id,
@@ -94,14 +94,14 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 												status: 1,
 												active: "Active",
 											};
-											Fee.findOne(find, function (err, rule) {
-												let result = errorMessage(
-													err,
+											Fee.findOne(find, function (err4, rule) {
+												let result4 = errorMessage(
+													err4,
 													rule,
 													"Revenue Rule Not Found"
 												);
-												if (result.status == 0) {
-													res.status(200).json(result);
+												if (result4.status == 0) {
+													res.status(200).json(result4);
 												} else {
 													req.body.givenname = sender.name;
 													req.body.familyname = sender.last_name;
@@ -131,9 +131,9 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 													addCashierSendRecord(
 														req.body,
 														otherInfo,
-														(err, cs) => {
-															if (err) {
-																res.status(200).json(catchError(err));
+														(err5, cs) => {
+															if (err5) {
+																res.status(200).json(catchError(err5));
 															} else {
 																const transfer = {
 																	amount: receiverIdentificationAmount,
@@ -177,11 +177,11 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 																					status: 1,
 																					fee: result.fee,
 																				},
-																				(err) => {
-																					if (err) {
+																				(err6) => {
+																					if (err6) {
 																						res
 																							.status(200)
-																							.json(catchError(err));
+																							.json(catchError(err6));
 																					} else {
 																						txstate.waitingForCompletion(
 																							categoryConst.MAIN,
@@ -212,15 +212,15 @@ module.exports.sendMoneyToNonWallet = async function (req, res) {
 																			res.status(200).json(result);
 																		}
 																	})
-																	.catch((err) => {
+																	.catch((err7) => {
 																		txstate.failed(
 																			categoryConst.MAIN,
 																			master_code
 																		);
-																		console.log(err);
+																		console.log(err7);
 																		res.status(200).json({
 																			status: 0,
-																			message: err.message,
+																			message: err7.message,
 																		});
 																	});
 															}
@@ -256,14 +256,14 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 				contact_list: receiverMobile,
 			},
 		},
-		async function (err, sender) {
-			let result = errorMessage(
-				err,
+		async function (err45, sender) {
+			let result45 = errorMessage(
+				err45,
 				sender,
 				"Token changed or user not valid. Try to login again or contact system administrator."
 			);
-			if (result.status == 0) {
-				res.status(200).json(result);
+			if (result45.status == 0) {
+				res.status(200).json(result45);
 			} else {
 				// Initiate transaction state
 				const master_code = await txstate.initiate(
@@ -275,36 +275,36 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 					{
 						mobile: receiverMobile,
 					},
-					(err, receiver) => {
-						let result = errorMessage(
-							err,
+					(err1, receiver) => {
+						let result1 = errorMessage(
+							err1,
 							receiver,
 							"Receiver's wallet do not exist"
 						);
-						if (result.status == 0) {
-							res.status(200).json(result);
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							Bank.findOne(
 								{
 									_id: sender.bank_id,
 								},
-								function (err, bank) {
-									let result = errorMessage(err, bank, "Bank Not Found");
-									if (result.status == 0) {
-										res.status(200).json(result);
+								function (err2, bank) {
+									let result2 = errorMessage(err2, bank, "Bank Not Found");
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									} else {
 										Infra.findOne(
 											{
 												_id: bank.user_id,
 											},
-											function (err, infra) {
-												let result = errorMessage(
-													err,
+											function (err3, infra) {
+												let result3 = errorMessage(
+													err3,
 													infra,
 													"Infra Not Found"
 												);
-												if (result.status == 0) {
-													res.status(200).json(result);
+												if (result3.status == 0) {
+													res.status(200).json(result3);
 												} else {
 													const find = {
 														bank_id: bank._id,
@@ -312,16 +312,16 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 														status: 1,
 														active: "Active",
 													};
-													Fee.findOne(find, function (err, rule) {
-														let result = errorMessage(
-															err,
+													Fee.findOne(find, function (err4, rule) {
+														let result4 = errorMessage(
+															err4,
 															rule,
 															"Revenue Rule Not Found"
 														);
-														if (result.status == 0) {
-															res.status(200).json(result);
+														if (result4.status == 0) {
+															res.status(200).json(result4);
 														} else {
-															transfer = {
+															let transfer = {
 																amount: sending_amount,
 																isInclusive: isInclusive,
 																master_code: master_code,
@@ -365,12 +365,12 @@ module.exports.sendMoneyToWallet = async function (req, res) {
 																		res.status(200).json(result);
 																	}
 																})
-																.catch((err) => {
+																.catch((err5) => {
 																	txstate.failed(
 																		categoryConst.MAIN,
 																		master_code
 																	);
-																	res.status(200).json(catchError(err));
+																	res.status(200).json(catchError(err5));
 																});
 														}
 														//infra

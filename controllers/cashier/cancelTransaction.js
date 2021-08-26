@@ -42,14 +42,14 @@ module.exports.sendForApproval = async function (req, res, next) {
 						cancel: { approved: 2 },
 					},
 				},
-				(err, txstate) => {
-					let errMsg = errorMessage(
-						err,
+				(err1, txstate) => {
+					let errMsg1 = errorMessage(
+						err1,
 						txstate,
 						"Transaction is either already sent for approval or may be it is already approved or rejected. Please check the transaction status first."
 					);
-					if (errMsg.status == 0) {
-						res.status(200).json(errMsg);
+					if (errMsg1.status == 0) {
+						res.status(200).json(errMsg1);
 					} else {
 						res.status(200).json({
 							status: 1,
@@ -69,8 +69,8 @@ module.exports.checkApprovalStatus = async function (req, res, next) {
 		if (err) {
 			res.status(200).json(err);
 		} else {
-			TxState.findOne({ _id: transaction_id }, (err, txstate) => {
-				let errRes = errorMessage(err, txstate, "Transaction not found");
+			TxState.findOne({ _id: transaction_id }, (err1, txstate) => {
+				let errRes = errorMessage(err1, txstate, "Transaction not found");
 				if (errRes.status == 0) {
 					res.status(200).json(errRes);
 				} else {

@@ -106,7 +106,7 @@ module.exports = async function (
 				child_code: transfer.master_code + childType.REVENUE,
 			});
 		}
-		result = await execute(trans, categoryConst.MAIN);
+		let result = await execute(trans, categoryConst.MAIN);
 
 		if (result.status == 0) {
 			res.status(200).json({

@@ -25,7 +25,6 @@ const categoryConst = require("../transactions/constants/category");
 
 module.exports.cashierInvoicePay = (req, res) => {
 	const { invoices, merchant_id } = req.body;
-	const jwtusername = req.sign_creds.username;
 	jwtAuthentication("cashier", req, async function (err, cashier) {
 		if (err) {
 			res.status(200).json(err);
@@ -44,10 +43,10 @@ module.exports.cashierInvoicePay = (req, res) => {
 				status: 1,
 				active: 1,
 			};
-			IBMerchantRule.findOne(find, (err, fee1) => {
-				let errRes = errorMessage(err, fee1, "Inter Bank Fee rule not found");
-				if (errRes.status == 0) {
-					res.status(200).json(errRes);
+			IBMerchantRule.findOne(find, (err1, fee1) => {
+				let errRes1 = errorMessage(err1, fee1, "Inter Bank Fee rule not found");
+				if (errRes1.status == 0) {
+					res.status(200).json(errRes1);
 				} else {
 					find = {
 						merchant_id: merchant_id,
@@ -55,14 +54,14 @@ module.exports.cashierInvoicePay = (req, res) => {
 						status: 1,
 						active: 1,
 					};
-					IBMerchantRule.findOne(find, (err, comm1) => {
-						let errRes = errorMessage(
-							err,
+					IBMerchantRule.findOne(find, (err2, comm1) => {
+						let errRes2 = errorMessage(
+							err2,
 							comm1,
 							"Inter Bank Commission rule not found"
 						);
-						if (errRes.status == 0) {
-							res.status(200).json(errRes);
+						if (errRes2.status == 0) {
+							res.status(200).json(errRes2);
 						} else {
 							MerchantRule.findOne(
 								{
@@ -71,10 +70,10 @@ module.exports.cashierInvoicePay = (req, res) => {
 									status: 1,
 									active: 1,
 								},
-								(err, fee2) => {
-									let errRes = errorMessage(err, fee2, "Fee rule not found");
-									if (errRes.status == 0) {
-										res.status(200).json(errRes);
+								(err3, fee2) => {
+									let errRes3 = errorMessage(err3, fee2, "Fee rule not found");
+									if (errRes3.status == 0) {
+										res.status(200).json(errRes3);
 									} else {
 										MerchantRule.findOne(
 											{
@@ -83,14 +82,14 @@ module.exports.cashierInvoicePay = (req, res) => {
 												status: 1,
 												active: 1,
 											},
-											async (err, comm2) => {
-												let errRes = errorMessage(
-													err,
+											async (err4, comm2) => {
+												let errRes4 = errorMessage(
+													err4,
 													comm2,
 													"Commission rule not found"
 												);
-												if (errRes.status == 0) {
-													res.status(200).json(errRes);
+												if (errRes4.status == 0) {
+													res.status(200).json(errRes4);
 												} else {
 													try {
 														// all the users
@@ -227,9 +226,9 @@ module.exports.cashierInvoicePay = (req, res) => {
 															);
 															res.status(200).json(result);
 														}
-													} catch (err) {
+													} catch (err5) {
 														txstate.failed(categoryConst.MAIN, master_code);
-														res.status(200).json(catchError(err));
+														res.status(200).json(catchError(err5));
 													}
 												}
 											}
@@ -247,7 +246,6 @@ module.exports.cashierInvoicePay = (req, res) => {
 
 module.exports.partnerInvoicePay = (req, res) => {
 	const { invoices, merchant_id } = req.body;
-	const jwtusername = req.sign_creds.username;
 	jwtAuthentication("partnerCashier", req, async function (err, cashier) {
 		if (err) {
 			res.status(200).json(err);
@@ -258,17 +256,17 @@ module.exports.partnerInvoicePay = (req, res) => {
 				cashier.bank_id,
 				"Inter Bank Non Wallet To Merchant"
 			);
-			Partner.findOne({ _id: cashier.partner_id }, (err, partner) => {
+			Partner.findOne({ _id: cashier.partner_id }, (err1, partner) => {
 				var find = {
 					merchant_id: merchant_id,
 					type: "IBNWM-F",
 					status: 1,
 					active: 1,
 				};
-				IBMerchantRule.findOne(find, (err, fee1) => {
-					let errRes = errorMessage(err, fee1, "Inter Bank Fee rule not found");
-					if (errRes.status == 0) {
-						res.status(200).json(errRes);
+				IBMerchantRule.findOne(find, (err2, fee1) => {
+					let errRes2 = errorMessage(err2, fee1, "Inter Bank Fee rule not found");
+					if (errRes2.status == 0) {
+						res.status(200).json(errRes2);
 					} else {
 						find = {
 							merchant_id: merchant_id,
@@ -276,9 +274,9 @@ module.exports.partnerInvoicePay = (req, res) => {
 							status: 1,
 							active: 1,
 						};
-						IBMerchantRule.findOne(find, (err, comm1) => {
+						IBMerchantRule.findOne(find, (err3, comm1) => {
 							let errRes = errorMessage(
-								err,
+								err3,
 								comm1,
 								"Inter Bank Commission rule not found"
 							);
@@ -292,10 +290,10 @@ module.exports.partnerInvoicePay = (req, res) => {
 										status: 1,
 										active: 1,
 									},
-									(err, fee2) => {
-										let errRes = errorMessage(err, fee2, "Fee rule not found");
-										if (errRes.status == 0) {
-											res.status(200).json(errRes);
+									(err30, fee2) => {
+										let errRes30 = errorMessage(err30, fee2, "Fee rule not found");
+										if (errRes30.status == 0) {
+											res.status(200).json(errRes30);
 										} else {
 											MerchantRule.findOne(
 												{
@@ -304,14 +302,14 @@ module.exports.partnerInvoicePay = (req, res) => {
 													status: 1,
 													active: 1,
 												},
-												async (err, comm2) => {
-													let errRes = errorMessage(
-														err,
+												async (err4, comm2) => {
+													let errRes4 = errorMessage(
+														err4,
 														comm2,
 														"Commission rule not found"
 													);
-													if (errRes.status == 0) {
-														res.status(200).json(errRes);
+													if (errRes4.status == 0) {
+														res.status(200).json(errRes4);
 													} else {
 														try {
 															// all the users
@@ -443,11 +441,11 @@ module.exports.partnerInvoicePay = (req, res) => {
 																txstate.failed(categoryConst.MAIN, master_code);
 																res.status(200).json(result);
 															}
-														} catch (err) {
-															console.log(err);
+														} catch (err5) {
+															console.log(err5);
 															var message = err;
-															if (err && err.message) {
-																message = err.message;
+															if (err5 && err5.message) {
+																message = err5.message;
 															}
 															res.status(200).json({
 																status: 0,

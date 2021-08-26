@@ -116,9 +116,9 @@ module.exports.sendMoneyToNonWallet = function (req, res) {
 						ruleType: "Wallet to Non Wallet",
 						masterCode: master_code,
 					};
-					addCashierSendRecord(req.body, otherInfo, async (err, cs) => {
-						if (err) {
-							res.status(200).json(catchError(err));
+					addCashierSendRecord(req.body, otherInfo, async (err1, cs) => {
+						if (err1) {
+							res.status(200).json(catchError(err1));
 						} else {
 							var transfer = {
 								master_code: master_code,
@@ -177,12 +177,12 @@ module.exports.sendMoneyToNonWallet = function (req, res) {
 							}
 						}
 					});
-				} catch (err) {
+				} catch (err2) {
 					txstate.failed(categoryConst.MAIN, master_code);
-					console.log(err);
-					var message = err.toString();
-					if (err.message) {
-						message = err.message;
+					console.log(err2);
+					var message = err2.toString();
+					if (err2.message) {
+						message = err2.message;
 					}
 					res.status(200).json({ status: 0, message: message });
 				}

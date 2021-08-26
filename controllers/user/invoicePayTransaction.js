@@ -41,10 +41,10 @@ module.exports = async (req, res) => {
 				);
 				MerchantRule.findOne(
 					{ merchant_id: merchant_id, type: "WM-F", status: 1, active: 1 },
-					(err, fee) => {
-						let errRes = errorMessage(err, fee, "Fee rule not found");
-						if (errRes.status == 0) {
-							res.status(200).json(errRes);
+					(err1, fee) => {
+						let errRes1 = errorMessage(err1, fee, "Fee rule not found");
+						if (errRes1.status == 0) {
+							res.status(200).json(errRes1);
 						} else {
 							MerchantRule.findOne(
 								{
@@ -53,14 +53,14 @@ module.exports = async (req, res) => {
 									status: 1,
 									active: 1,
 								},
-								async (err, comm) => {
-									let errRes = errorMessage(
-										err,
+								async (err2, comm) => {
+									let errRes2 = errorMessage(
+										err2,
 										comm,
 										"Commission rule not found"
 									);
-									if (errRes.status == 0) {
-										res.status(200).json(errRes);
+									if (errRes2.status == 0) {
+										res.status(200).json(errRes2);
 									} else {
 										try {
 											// all the users
@@ -133,9 +133,9 @@ module.exports = async (req, res) => {
 												txstate.failed(categoryConst.MAIN, master_code);
 												res.status(200).json(result);
 											}
-										} catch (err) {
+										} catch (err3) {
 											txstate.failed(categoryConst.MAIN, master_code);
-											res.status(200).json(catchError(err));
+											res.status(200).json(catchError(err3));
 										}
 									}
 								}

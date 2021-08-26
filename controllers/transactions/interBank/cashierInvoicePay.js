@@ -146,7 +146,7 @@ module.exports = async function (
 			});
 		}
 
-		result = await execute(trans, categoryConst.MAIN);
+		let result = await execute(trans, categoryConst.MAIN);
 
 		// return response
 		if (result.status == 0) {
@@ -307,7 +307,6 @@ async function distributeRevenue(transfer, infra, bank, merchantBank, branch) {
 			transPromises.push(promise);
 		}
 
-		infraShare = calculateShare("infra", transfer.amount, rule1.comm);
 		if (transfer.infraShare.percentage_amount > 0) {
 			let trans = [
 				{

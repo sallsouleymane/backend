@@ -130,28 +130,28 @@ async function distributeRevenue(transfer, infra, bank) {
 			transPromises.push(promise);
 		}
 
-		if (transfer.infraShare.fixed_amount > 0) {
-			let trans22 = [
-				{
-					from: bankOpWallet,
-					to: infraOpWallet,
-					amount: transfer.infraShare.fixed_amount,
-					note:
-						"Bank Send Infra Fixed amount for Inter Bank Non Wallet to Non Wallet transaction",
-					email1: bank.email,
-					email2: infra.email,
-					mobile1: bank.mobile,
-					mobile2: infra.mobile,
-					from_name: bank.name,
-					to_name: infra.name,
-					sender_id: "",
-					receiver_id: "",
-					master_code: transfer.master_code,
-					child_code: transfer.master_code + childType.INFRA_FIXED,
-					created_at: new Date(),
-				},
-			];
-		}
+		// if (transfer.infraShare.fixed_amount > 0) {
+		// 	let trans22 = [
+		// 		{
+		// 			from: bankOpWallet,
+		// 			to: infraOpWallet,
+		// 			amount: transfer.infraShare.fixed_amount,
+		// 			note:
+		// 				"Bank Send Infra Fixed amount for Inter Bank Non Wallet to Non Wallet transaction",
+		// 			email1: bank.email,
+		// 			email2: infra.email,
+		// 			mobile1: bank.mobile,
+		// 			mobile2: infra.mobile,
+		// 			from_name: bank.name,
+		// 			to_name: infra.name,
+		// 			sender_id: "",
+		// 			receiver_id: "",
+		// 			master_code: transfer.master_code,
+		// 			child_code: transfer.master_code + childType.INFRA_FIXED,
+		// 			created_at: new Date(),
+		// 		},
+		// 	];
+		// }
 
 		promise = execute(trans22, categoryConst.DISTRIBUTE, qname.INFRA_FIXED);
 		transPromises.push(promise);

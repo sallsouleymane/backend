@@ -39,10 +39,10 @@ module.exports = (req, res) => {
 					user.bank_id,
 					"Inter Bank Wallet To Merchant"
 				);
-				Bank.findOne({ _id: user.bank_id }, (err, bank) => {
-					let errRes = errorMessage(err, bank, "Bank not found");
-					if (errRes.status == 0) {
-						res.status(200).json(errRes);
+				Bank.findOne({ _id: user.bank_id }, (err1, bank) => {
+					let errRes1 = errorMessage(err1, bank, "Bank not found");
+					if (errRes1.status == 0) {
+						res.status(200).json(errRes1);
 					} else {
 						var find = {
 							merchant_id: merchant_id,
@@ -50,14 +50,14 @@ module.exports = (req, res) => {
 							status: 1,
 							active: 1,
 						};
-						IBMerchantRule.findOne(find, (err, fee) => {
-							let errRes = errorMessage(
-								err,
+						IBMerchantRule.findOne(find, (err2, fee) => {
+							let errRes2 = errorMessage(
+								err2,
 								fee,
 								"Inter Bank Fee rule not found"
 							);
-							if (errRes.status == 0) {
-								res.status(200).json(errRes);
+							if (errRes2.status == 0) {
+								res.status(200).json(errRes2);
 							} else {
 								find = {
 									merchant_id: merchant_id,
@@ -65,14 +65,14 @@ module.exports = (req, res) => {
 									status: 1,
 									active: 1,
 								};
-								IBMerchantRule.findOne(find, async (err, comm) => {
-									let errRes = errorMessage(
-										err,
+								IBMerchantRule.findOne(find, async (err3, comm) => {
+									let errRes3 = errorMessage(
+										err3,
 										comm,
 										"Inter Bank Commission rule not found"
 									);
-									if (errRes.status == 0) {
-										res.status(200).json(errRes);
+									if (errRes3.status == 0) {
+										res.status(200).json(errRes3);
 									} else {
 										try {
 											// all the users
@@ -155,14 +155,14 @@ module.exports = (req, res) => {
 												txstate.failed(categoryConst.MAIN, master_code);
 												res.status(200).json(result);
 											}
-										} catch (err) {
+										} catch (err4) {
 											txstate.failed(categoryConst.MAIN, master_code);
-											console.log(err);
-											var message = err;
-											if (err && err.message) {
-												message = err.message;
+											console.log(err4);
+											var message4 = err4;
+											if (err4 && err4.message) {
+												message4 = err4.message;
 											}
-											res.status(200).json({ status: 0, message: message });
+											res.status(200).json({ status: 0, message: message4 });
 										}
 									}
 								});

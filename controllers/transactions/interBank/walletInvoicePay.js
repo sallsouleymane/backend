@@ -146,7 +146,7 @@ module.exports = async function (
 			});
 		}
 
-		result = await execute(trans1, categoryConst.MAIN);
+		let result = await execute(trans1, categoryConst.MAIN);
 
 		// return response
 		if (result.status == 0) {

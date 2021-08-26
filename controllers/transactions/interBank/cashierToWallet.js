@@ -110,7 +110,7 @@ module.exports = async function (
 				child_code: transfer.master_code + childType.REVENUE,
 			});
 		}
-		result = await execute(trans, categoryConst.MAIN);
+		let result = await execute(trans, categoryConst.MAIN);
 
 		// return response
 		if (result.status == 0) {

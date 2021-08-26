@@ -45,8 +45,8 @@ module.exports.run = async function (transaction_id, next) {
 					stateUpd.cancelled(categoryConst.MAIN, transaction_id);
 				}
 				next(result);
-			} catch (err) {
-				next(catchError(err));
+			} catch (err1) {
+				next(catchError(err1));
 			}
 		} else {
 			next({
@@ -62,10 +62,10 @@ async function revertOnlyAmount(txstate) {
 	var txFound = false;
 	var res;
 	var cancelTx = [];
-	for (i = 0; i < txstate.childTx.length; i++) {
+	for (let i = 0; i < txstate.childTx.length; i++) {
 		let txChildType = fetchChildType(txstate.childTx[i].transaction.child_code);
 		if (txChildType == childType.AMOUNT && txstate.childTx[i].state == 1) {
-			let waitTx = (cancelTx = txstate.childTx[i].transaction);
+			let waitTx = ( cancelTx = txstate.childTx[i].transaction);
 			cancelTx.from = waitTx.to;
 			cancelTx.to = waitTx.from;
 			cancelTx.email1 = waitTx.email2;
@@ -105,7 +105,7 @@ module.exports.revertAll = async function (txstate) {
 		var mainTrans = [];
 		var distributePromises = [];
 		var masterPromises = [];
-		for (i = 0; i < txstate.childTx.length; i++) {
+		for (let i = 0; i < txstate.childTx.length; i++) {
 			if (
 				txstate.childTx[i].category == categoryConst.MAIN &&
 				txstate.childTx[i].state == 1
@@ -195,15 +195,15 @@ module.exports.revertAll = async function (txstate) {
 			});
 			if (allTxSuccess) {
 				txstate.cancelled(categoryConst.DISTRIBUTE, transfer.master_code);
-				Promise.all(masterPromises).then((results) => {
-					let allTxSuccess = results.every((res) => {
+				Promise.all(masterPromises).then((results1) => {
+					let allTxSuccess1 = results1.every((res) => {
 						if (res.status == 0) {
 							return false;
 						} else {
 							return true;
 						}
 					});
-					if (allTxSuccess) {
+					if (allTxSuccess1) {
 						txstate.cancelled(categoryConst.MASTER, transfer.master_code);
 					} else {
 						txstate.failed(categoryConst.MASTER, transfer.master_code);

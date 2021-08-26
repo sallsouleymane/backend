@@ -18,8 +18,8 @@ module.exports.revertTransaction = async function (req, res, next) {
 		if (err) {
 			res.status(200).json(err);
 		} else {
-			TxState.findById(transaction_id, async (err, txstate) => {
-				let errMsg = errorMessage(err, txstate, "Transaction not found");
+			TxState.findById(transaction_id, async (err1, txstate) => {
+				let errMsg = errorMessage(err1, txstate, "Transaction not found");
 				if (errMsg.status == 0) {
 					res.status(200).json(errMsg);
 				} else if (txstate.state.main == stateNames.DONE) {
@@ -40,8 +40,8 @@ module.exports.revertTransaction = async function (req, res, next) {
 							stateUpd.cancelled(categoryConst.MAIN, transaction_id);
 						}
 						res.status(200).json(result);
-					} catch (err) {
-						res.status(200).json(catchError(err));
+					} catch (error) {
+						res.status(200).json(catchError(error));
 					}
 				} else {
 					res.status(200).json({

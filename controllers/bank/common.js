@@ -24,9 +24,9 @@ module.exports.queryTransactionStates = function (req, res) {
 			if (errMsg.status == 0) {
 				res.status(200).json(errMsg);
 			} else {
-				queryTxStates(bank._id, null, req, function (err, txstates) {
-					if (err) {
-						res.status(200).json(catchError(err));
+				queryTxStates(bank._id, null, req, function (err1, txstates) {
+					if (err1) {
+						res.status(200).json(catchError(err1));
 					} else {
 						res.status(200).json({
 							status: 1,
@@ -50,9 +50,9 @@ module.exports.approveTxCancelRequest = function (req, res) {
 				{
 					cancel_approval: 1,
 				},
-				(err) => {
-					if (err) {
-						res.status(200).json(catchError(err));
+				(err1) => {
+					if (err1) {
+						res.status(200).json(catchError(err1));
 					} else {
 						res.status(200).json({
 							status: 1,

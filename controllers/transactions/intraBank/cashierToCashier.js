@@ -106,7 +106,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 		var promise;
 
 		if (transfer.infraShare.percentage_amount > 0) {
-			trans = [
+			let trans = [
 				{
 					from: bankOpWallet,
 					to: infraOpWallet,
@@ -131,7 +131,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 		}
 
 		if (transfer.infraShare.fixed_amount > 0) {
-			trans = [
+			let trans = [
 				{
 					from: bankOpWallet,
 					to: infraOpWallet,
@@ -156,7 +156,7 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 		}
 
 		if (transfer.fee > 0) {
-			trans = [
+			let trans = [
 				{
 					from: bankOpWallet,
 					to: branchOpWallet,

@@ -37,9 +37,9 @@ module.exports = function updateCashierRecords(model, data, next) {
 							total_trans: 1,
 						},
 					},
-					function (err) {
-						if (err) {
-							next(err);
+					function (err1) {
+						if (err1) {
+							next(err1);
 						} else {
 							CashierLedger.findOneAndUpdate(
 								{
@@ -51,20 +51,20 @@ module.exports = function updateCashierRecords(model, data, next) {
 									},
 								},
 								{ $inc: { amount: totalAmount } },
-								function (err, c) {
-									if (err) {
-										next(err);
+								function (err2, c) {
+									if (err2) {
+										next(err2);
 									} else if (c == null) {
-										let data = new CashierLedger();
-										data.amount = totalAmount;
-										data.trans_type = "CR";
-										data.transaction_details = JSON.stringify({
+										let data1 = new CashierLedger();
+										data1.amount = totalAmount;
+										data1.trans_type = "CR";
+										data1.transaction_details = JSON.stringify({
 											fee: fee,
 										});
-										data.cashier_id = cashierId;
-										data.save(function (err) {
-											if (err) {
-												next(err);
+										data1.cashier_id = cashierId;
+										data1.save(function (err3) {
+											if (err3) {
+												next(err3);
 											} else {
 												next(null);
 											}

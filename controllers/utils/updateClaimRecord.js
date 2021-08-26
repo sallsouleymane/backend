@@ -34,9 +34,9 @@ module.exports = function updateClaimRecord(model, data, next) {
 							total_trans: 1,
 						},
 					},
-					function (err) {
-						if (err) {
-							next(err);
+					function (err1) {
+						if (err1) {
+							next(err1);
 						} else {
 							CashierLedger.findOneAndUpdate(
 								{
@@ -52,16 +52,16 @@ module.exports = function updateClaimRecord(model, data, next) {
 										amount: amount,
 									},
 								},
-								function (err, c) {
-									if (err) {
-										next(err);
+								function (err2, c) {
+									if (err2) {
+										next(err2);
 									} else if (c == null) {
-										let data = new CashierLedger();
-										data.amount = amount;
-										data.trans_type = "DR";
-										data.cashier_id = cashierId;
-										data.save(function (err) {
-											next(err);
+										let data1 = new CashierLedger();
+										data1.amount = amount;
+										data1.trans_type = "DR";
+										data1.cashier_id = cashierId;
+										data1.save(function (err3) {
+											next(err3);
 										});
 									} else {
 										next(null);

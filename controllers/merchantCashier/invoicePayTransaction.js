@@ -40,14 +40,14 @@ module.exports = (req, res) => {
 			} else {
 				Merchant.findOne(
 					{ _id: cashier.merchant_id },
-					async (err, merchant) => {
-						let errRes = errorMessage(
-							err,
+					async (err1, merchant) => {
+						let errRes1 = errorMessage(
+							err1,
 							merchant,
 							"Cashier's Merchant not found"
 						);
-						if (errRes.status == 0) {
-							res.status(200).json(errRes);
+						if (errRes1.status == 0) {
+							res.status(200).json(errRes1);
 						} else {
 							// Initiate transaction state
 							const master_code = await txstate.initiate(
@@ -64,14 +64,14 @@ module.exports = (req, res) => {
 									status: 1,
 									active: 1,
 								},
-								async (err, comm) => {
-									let errRes = errorMessage(
-										err,
+								async (err2, comm) => {
+									let errRes2 = errorMessage(
+										err2,
 										comm,
 										"Commission rule not found"
 									);
-									if (errRes.status == 0) {
-										res.status(200).json(errRes);
+									if (errRes2.status == 0) {
+										res.status(200).json(errRes2);
 									} else {
 										try {
 											let bank = await Bank.findOne({
@@ -157,8 +157,8 @@ module.exports = (req, res) => {
 											} else {
 												res.status(200).json(result);
 											}
-										} catch (err) {
-											res.status(200).json(catchError(err));
+										} catch (err3) {
+											res.status(200).json(catchError(err3));
 										}
 									}
 								}

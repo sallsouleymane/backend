@@ -38,7 +38,7 @@ module.exports = async function (reqData, otherData) {
 		throw new Error("Merchant status can not be updated");
 	}
 
-	for (invoice of invoices) {
+	for (let invoice of invoices) {
 		let { id, penalty } = invoice;
 		let i = await Invoice.findOneAndUpdate(
 			{ _id: id },
@@ -73,7 +73,7 @@ module.exports = async function (reqData, otherData) {
 			throw new Error("Invoice group status can not be updated");
 		}
 
-		content =
+		const content =
 			"E-Wallet:  Amount " +
 			i.amount +
 			" is paid for invoice nummber " +

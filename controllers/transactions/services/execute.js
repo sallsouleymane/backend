@@ -18,7 +18,7 @@ const childType = require("../constants/childType");
 module.exports = async function (transactions, category, queue_name = "") {
 	return new Promise(async (resolve, reject) => {
 		var res = await blockchain.initiateMultiTransfer(transactions);
-		for (transaction of transactions) {
+		for (let transaction of transactions) {
 			await saveTxState(transaction, res, category);
 			if (res.status == 1) {
 				sendSuccessMail(transaction);
@@ -166,7 +166,7 @@ async function saveTxState(transaction, res, category) {
 
 function allTxSuccess(category, txstateDoc) {
 	try {
-		for (childtx of txstateDoc.childTx) {
+		for (let childtx of txstateDoc.childTx) {
 			if (childtx.category == category && childtx.state == 0) {
 				return false;
 			}
@@ -177,10 +177,7 @@ function allTxSuccess(category, txstateDoc) {
 	}
 }
 
-function transferToMasterWallets(master_code, txstateDoc) {
-	let share = getShares(txstateDoc);
-	// calling a function to start master wallet transaction pending...
-}
+
 
 function getShares() {
 	let bank_rev = 0;
@@ -191,8 +188,8 @@ function getShares() {
 	let partner_share = 0;
 	let other_bank_share = 0;
 
-	for (childtx of txstateDoc.childTx) {
-		ctype = fetchChildType(childtx.child_code);
+	for (let childtx of txstateDoc.childTx) {
+		let ctype = fetchChildType(childtx.child_code);
 		if (ctype == childType.REVENUE) {
 			bank_rev += childtx.amount;
 		}
