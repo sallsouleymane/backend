@@ -75,10 +75,8 @@ router.post("/:user/getCashierDailyReport",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { cashier_id,  start, end } = req.body;
 	const user = req.params.user;
-	let User = getTypeClass(user);
-	if (user == "partner") {
-		User = getTypeClass("partner");
-	} else if (user == "partnerBranch") {
+	let User = getTypeClass("partner");
+	if (user == "partnerBranch") {
 		User = getTypeClass("partnerBranch");
 	} else if (user == "partnerCashier") {
 		User = getTypeClass("partnerCashier");
@@ -199,10 +197,8 @@ router.post("/:user/getPartnerCashierDashStats", jwtTokenAuth, function (req, re
 	const jwtusername = req.sign_creds.username;
 	const { cashier_id } = req.body;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "partner") {
-		User = getTypeClass("partner");
-	} else if (user == "partnerBranch") {
+	let User = getTypeClass("partner");
+	if (user == "partnerBranch") {
 		User = getTypeClass("partnerBranch");
 	} else if (user == "partnerCashier") {
 		User = getTypeClass("partnerCashier");
@@ -266,10 +262,8 @@ router.post("/:user/getBankCashierDashStats", jwtTokenAuth, function (req, res) 
 	const jwtusername = req.sign_creds.username;
 	const { cashier_id } = req.body;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "bank") {
-		User = getTypeClass("bank");
-	} else if (user == "branch") {
+	let User = getTypeClass("bank");
+	if (user == "branch") {
 		User = getTypeClass("branch");
 	} else if (user == "cashier") {
 		User = getTypeClass("cashier");
@@ -333,10 +327,8 @@ router.post("/:user/getBankTheme", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { bank_id } = req.body;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "bank") {
-		User = getTypeClass("bank");
-	} else if (user == "branch") {
+	let User = getTypeClass("bank");
+	if (user == "branch") {
 		User = getTypeClass("branch");
 	} else if (user == "cashier") {
 		User = getTypeClass("cashier");
@@ -391,10 +383,8 @@ router.post("/:user/queryCashierTransactionStates", jwtTokenAuth, function (req,
 	const jwtusername = req.sign_creds.username;
 	const { bank_id, cashier_id } = req.body;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "partner") {
-		User = getTypeClass("partner");
-	} else if (user == "partnerBranch") {
+	let User = getTypeClass("partner");
+	if (user == "partnerBranch") {
 		User = getTypeClass("partnerBranch");
 	} else if (user == "partnerCashier") {
 		User = getTypeClass("partnerCashier");
@@ -450,10 +440,8 @@ router.post("/:user/getMerchantCashierDashStats", jwtTokenAuth, function (req, r
 	const jwtusername = req.sign_creds.username;
 	const { staff_id } = req.body;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "merchantPosition") {
-		User = getTypeClass("merchantPosition");
-	} else if (user == "merchantBranch") {
+	let User = getTypeClass("merchantPosition");
+	if (user == "merchantBranch") {
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
@@ -530,10 +518,8 @@ router.post("/:user/queryMerchantCashierTransactionStates", jwtTokenAuth, functi
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
 	const { bank_id, staff_id } = req.body;
-	var User = getTypeClass(user);
-	if (user == "merchantPosition") {
-		User = getTypeClass("merchantPosition");
-	} else if (user == "merchantBranch") {
+	let User = getTypeClass("merchantPosition");
+	if (user == "merchantBranch") {
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
@@ -584,10 +570,8 @@ router.post("/:user/getMerchantCashierDailyReport", jwtTokenAuth, function (req,
 	const { start, end, staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "merchantPosition") {
-		User = getTypeClass("merchantPosition");
-	} else if (user == "merchantBranch") {
+	let User = getTypeClass("merchantPosition");
+	if (user == "merchantBranch") {
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
@@ -642,10 +626,8 @@ router.post("/:user/listMerchantStaffInvoicesByDate", jwtTokenAuth, (req, res) =
 	const { date, staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "merchantPosition") {
-		User = getTypeClass("merchantPosition");
-	} else if (user == "merchantBranch") {
+	let User = getTypeClass("merchantPosition");
+	if (user == "merchantBranch") {
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
@@ -706,10 +688,8 @@ router.post("/:user/listMerchantStaffInvoicesByPeriod", jwtTokenAuth, (req, res)
 	const { start_date, end_date, staff_id} = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "merchantPosition") {
-		User = getTypeClass("merchantPosition");
-	} else if (user == "merchantBranch") {
+	let User = getTypeClass("merchantPosition");
+	if (user == "merchantBranch") {
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
@@ -776,10 +756,8 @@ router.post("/:user/listMerchantStaffInvoicesByDateRange", jwtTokenAuth, (req, r
 	const { start_date, end_date, staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "merchantPosition") {
-		User = getTypeClass("merchantPosition");
-	} else if (user == "merchantBranch") {
+	let User = getTypeClass("merchantPosition");
+	if (user == "merchantBranch") {
 		User = getTypeClass("merchantBranch");
 	} else if (user == "merchant") {
 		User = getTypeClass("merchant");
@@ -843,10 +821,8 @@ router.post("/:user/listMerchantBranchInvoicesByDate", jwtTokenAuth, (req, res) 
 	const { date, branch_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "merchantBranch") {
-		User = getTypeClass("merchantBranch");
-	} else if (user == "merchant") {
+	let User = getTypeClass("merchantBranch");
+	if (user == "merchant") {
 		User = getTypeClass("merchant");
 	} else if (user == "merchantStaff") {
 		User = getTypeClass("merchantStaff");
@@ -905,10 +881,8 @@ router.post("/:user/listMerchantStaff", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
 	const { branch_id } = req.body;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "merchantBranch") {
-		User = getTypeClass("merchantBranch");
-	} else if (user == "merchant") {
+	let User = getTypeClass("merchantBranch");
+	if (user == "merchant") {
 		User = getTypeClass("merchant");
 	} else if (user == "merchantStaff") {
 		User = getTypeClass("merchantStaff");
@@ -963,10 +937,8 @@ router.post("/:user/listMerchantPosition", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
 	const { branch_id } = req.body;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "merchantBranch") {
-		User = getTypeClass("merchantBranch");
-	} else if (user == "merchant") {
+	let User = getTypeClass("merchantBranch");
+	if (user == "merchant") {
 		User = getTypeClass("merchant");
 	} else if (user == "merchantStaff") {
 		User = getTypeClass("merchantStaff");
@@ -1026,10 +998,8 @@ router.post("/:user/merchantCashierStats",jwtTokenAuth,function (req, res) {
 	var start = s[0] + "T00:00:00.000Z";
 	var end = s[0] + "T23:59:59.999Z";
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "merchantBranch") {
-		User = getTypeClass("merchantBranch");
-	} else if (user == "merchant") {
+	let User = getTypeClass("merchantBranch");
+	if (user == "merchant") {
 		User = getTypeClass("merchant");
 	} else if (user == "merchantStaff") {
 		User = getTypeClass("merchantStaff");
@@ -1302,10 +1272,8 @@ router.post("/:user/getMerchantBranchDashStats", jwtTokenAuth, function (req, re
 	const { branch_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "merchantBranch") {
-		User = getTypeClass("merchantBranch");
-	} else if (user == "merchant") {
+	let User = getTypeClass("merchantBranch");
+	if (user == "merchant") {
 		User = getTypeClass("merchant");
 	} else if (user == "merchantStaff") {
 		User = getTypeClass("merchantStaff");
@@ -1723,11 +1691,10 @@ router.post("/:user/searchPaidInvoiceByBillNumber", jwtTokenAuth, function (req,
 	const { number } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	var User = getTypeClass(user);
+	let User = getTypeClass("merchantPosition");
 
-	if (user == "merchantStaff") {
-		User = getTypeClass("merchantPosition");
-	} else {
+	if (user !== "merchantStaff") {
+		
 		res.status(200).json({
 			status: 0,
 			message: "The user does not have API support",
@@ -1774,10 +1741,8 @@ router.post("/:user/searchPaidInvoiceByCustomerCode", jwtTokenAuth, function (re
 	const { customer_code } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "merchantStaff") {
-		User = getTypeClass("merchantPosition");
-	} else {
+	let User = getTypeClass("merchantPosition");
+	if (user !== "merchantStaff") {
 		res.status(200).json({
 			status: 0,
 			message: "The user does not have API support",

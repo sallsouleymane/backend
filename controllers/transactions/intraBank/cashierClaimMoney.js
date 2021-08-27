@@ -251,9 +251,7 @@ async function transferToMasterWallets(transfer, bank, branch, txInfo) {
 			let allTxSucc = results.every((res) => {
 				if (res.status == 0) {
 					return false;
-				} else {
-					return true;
-				}
+				} 
 			});
 			if (allTxSucc) {
 				txstate.completed(categoryConst.MASTER, transfer.master_code);

@@ -110,6 +110,8 @@ module.exports.revertAll = async function (txstate) {
 				txstate.childTx[i].category == categoryConst.MAIN &&
 				txstate.childTx[i].state == 1
 			) {
+				var cancelTx;
+				
 				let waitTx = (cancelTx = txstate.childTx[i].transaction);
 				cancelTx.from = waitTx.to;
 				cancelTx.to = waitTx.from;
@@ -189,8 +191,6 @@ module.exports.revertAll = async function (txstate) {
 			let allTxSuccess = results.every((res) => {
 				if (res.status == 0) {
 					return false;
-				} else {
-					return true;
 				}
 			});
 			if (allTxSuccess) {
@@ -199,8 +199,6 @@ module.exports.revertAll = async function (txstate) {
 					let allTxSuccess1 = results1.every((res) => {
 						if (res.status == 0) {
 							return false;
-						} else {
-							return true;
 						}
 					});
 					if (allTxSuccess1) {

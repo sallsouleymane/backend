@@ -115,7 +115,7 @@ module.exports = async function (
 			});
 		}
 
-		distributeRevenue(transfer, infra, bank, bankB, branch, rule1);
+		distributeRevenue(transfer, infra, bank, bankB, branch);
 		return {
 			status: 1,
 			message: result.message,
@@ -391,8 +391,6 @@ async function transferToMasterWallets(transfer, infra, bank, bankB, branch) {
 			let allTxSuccess = results.every((res) => {
 				if (res.status == 0) {
 					return false;
-				} else {
-					return true;
 				}
 			});
 			if (allTxSuccess) {

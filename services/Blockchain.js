@@ -79,8 +79,8 @@ module.exports.rechargeNow = async (arr) => {
 			})
 		);
 		return err.toString();
-	} catch (err) {
-		throw err;
+	} catch (error) {
+		throw error;
 	}
 };
 

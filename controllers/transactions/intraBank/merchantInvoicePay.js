@@ -138,8 +138,6 @@ async function distributeRevenue(transfer, infra, bank) {
 			let allTxSuccess = results.every((res) => {
 				if (res.status == 0) {
 					return false;
-				} else {
-					return true;
 				}
 			});
 			if (allTxSuccess) {
@@ -214,9 +212,7 @@ async function transferToMasterWallets(transfer, infra, bank) {
 			let allTxSuccess = results.every((res) => {
 				if (res.status == 0) {
 					return false;
-				} else {
-					return true;
-				}
+				} 
 			});
 			if (allTxSuccess) {
 				txstate.completed(categoryConst.MASTER, transfer.master_code);

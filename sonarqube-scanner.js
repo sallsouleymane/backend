@@ -5,7 +5,7 @@ scanner(
   login:"admin",
   password:"admin",
   options: {
-    "sonar.sources": "./routes"
+    "sonar.sources": "./"
   },
 },
 () => process.exit()

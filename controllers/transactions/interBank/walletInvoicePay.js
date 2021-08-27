@@ -150,7 +150,7 @@ module.exports = async function (
 
 		// return response
 		if (result.status == 0) {
-			result = {
+			return {
 				status: 0,
 				message: "Transaction failed! - " + result.message,
 			};
@@ -387,8 +387,6 @@ async function distributeRevenue(transfer, infra, bank, merchantBank) {
 			let allTxSuccess = results.every((res) => {
 				if (res.status == 0) {
 					return false;
-				} else {
-					return true;
 				}
 			});
 			if (allTxSuccess) {
@@ -498,8 +496,6 @@ async function transferToMasterWallets(transfer, infra, bank, bankB) {
 			let allTxSuccess = results.every((res) => {
 				if (res.status == 0) {
 					return false;
-				} else {
-					return true;
 				}
 			});
 			if (allTxSuccess) {

@@ -27,7 +27,7 @@ module.exports = async function (
 		const bankOpWallet = bank.wallet_ids.operational;
 		const merBankOpWallet = merchantBank.wallet_ids.operational;
 
-		transfer = getAllShares(transfer, rule1, rule2, branch.bcode);
+		transfer = getAllShares(transfer, rule1, rule2);
 
 		// check branch operational wallet balance
 		var balance = await blockchain.getBalance(branchOpWallet);
@@ -572,8 +572,6 @@ async function transferToMasterWallets(transfer, infra, bank, bankB, branch) {
 			let allTxSuccess = results.every((res) => {
 				if (res.status == 0) {
 					return false;
-				} else {
-					return true;
 				}
 			});
 			if (allTxSuccess) {

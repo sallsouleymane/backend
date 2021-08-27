@@ -77,19 +77,19 @@ module.exports.calculateShare = function (
 			}
 			console.log(rule.revenue_sharing_rule.branch_share);
 			console.log(rule.revenue_sharing_rule.specific_branch_share);
-			var branchRule = rule.revenue_sharing_rule.branch_share;
+			var branchRule1 = rule.revenue_sharing_rule.branch_share;
 			if (
 				rule.revenue_sharing_rule.specific_branch_share &&
 				rule.revenue_sharing_rule.specific_branch_share.length > 0
 			) {
-				var specificBranchRule = rule.revenue_sharing_rule.specific_branch_share.filter(
+				var specificBranchRule1 = rule.revenue_sharing_rule.specific_branch_share.filter(
 					(specific_brule) => specific_brule.branch_code == sharerCode
 				)[0];
 			}
-			if (specificBranchRule) {
-				branchRule = specificBranchRule;
+			if (specificBranchRule1) {
+				branchRule1 = specificBranchRule1;
 			}
-			var { send } = branchRule;
+			var { send } = branchRule1;
 			var sendFee = (Number(send) * bankShare) / 100;
 			sendFee = Math.round((sendFee + Number.EPSILON) * 100) / 100;
 
@@ -118,13 +118,13 @@ module.exports.calculateShare = function (
 			if (specificPartnerRule) {
 				partnerRule = specificPartnerRule;
 			}
-			var { claim } = partnerRule;
-			var claimFee = (claim * bankShare) / 100;
-			claimFee = Math.round((claimFee + Number.EPSILON) * 100) / 100;
+			var { claim1 } = partnerRule;
+			var claimFee1 = (claim1 * bankShare) / 100;
+			claimFee1 = Math.round((claimFee1 + Number.EPSILON) * 100) / 100;
 
 			console.log("Bank Share: ", bankShare);
-			console.log("Claiming Partner Share: ", claimFee);
-			return claimFee;
+			console.log("Claiming Partner Share: ", claimFee1);
+			return claimFee1;
 		case "sendPartner":
 			if (
 				rule2.revenue_sharing_rule &&
@@ -134,25 +134,25 @@ module.exports.calculateShare = function (
 			}
 			console.log(rule.revenue_sharing_rule.partner_share);
 			console.log(rule.revenue_sharing_rule.specific_partner_share);
-			var partnerRule = rule.revenue_sharing_rule.partner_share;
+			var partnerRule1 = rule.revenue_sharing_rule.partner_share;
 			if (
 				rule.revenue_sharing_rule.specific_partner_share &&
 				rule.revenue_sharing_rule.specific_partner_share.length > 0
 			) {
-				var specificPartnerRule = rule.revenue_sharing_rule.specific_partner_share.filter(
+				var specificPartnerRule1 = rule.revenue_sharing_rule.specific_partner_share.filter(
 					(specific_brule) => specific_brule.partner_code == sharerCode
 				)[0];
 			}
-			if (specificPartnerRule) {
-				partnerRule = specificPartnerRule;
+			if (specificPartnerRule1) {
+				partnerRule1 = specificPartnerRule1;
 			}
-			var { send } = partnerRule;
-			var sendFee = (Number(send) * bankShare) / 100;
-			sendFee = Math.round((sendFee + Number.EPSILON) * 100) / 100;
+			var { send1 } = partnerRule1;
+			var sendFee1 = (Number(send1) * bankShare) / 100;
+			sendFee1 = Math.round((sendFee1 + Number.EPSILON) * 100) / 100;
 
 			console.log("Bank Share: ", bankShare);
-			console.log("Sending Partner Share: ", sendFee);
-			return sendFee;
+			console.log("Sending Partner Share: ", sendFee1);
+			return sendFee1;
 		case "branch":
 			if (rule2.branch_share) {
 				rule = rule2;
@@ -161,11 +161,11 @@ module.exports.calculateShare = function (
 			console.log(rule.specific_branch_share);
 			var percent = rule.branch_share;
 			if (rule.specific_branch_share && rule.specific_branch_share.length > 0) {
-				var branchRule = rule.specific_branch_share.filter(
+				var branchRule1 = rule.specific_branch_share.filter(
 					(specific_brule) => specific_brule.code == sharerCode
 				)[0];
-				if (branchRule) {
-					percent = branchRule.percentage;
+				if (branchRule1) {
+					percent = branchRule1.percentage;
 				}
 			}
 			var branchFee = (percent * bankShare) / 100;
@@ -180,7 +180,7 @@ module.exports.calculateShare = function (
 			}
 			console.log(rule.partner_share);
 			console.log(rule.specific_partner_share);
-			var percent = rule.partner_share;
+			var percent1 = rule.partner_share;
 			if (
 				rule.specific_partner_share &&
 				rule.specific_partner_share.length > 0
@@ -189,10 +189,10 @@ module.exports.calculateShare = function (
 					(specific_pbrule) => specific_pbrule.code == sharerCode
 				)[0];
 				if (partnerBRule) {
-					percent = partnerBRule.percentage;
+					percent1 = partnerBRule.percentage;
 				}
 			}
-			var partnerFee = (percent * bankShare) / 100;
+			var partnerFee = (percent1 * bankShare) / 100;
 			partnerFee = Math.round((partnerFee + Number.EPSILON) * 100) / 100;
 
 			console.log("Bank Share: ", bankShare);

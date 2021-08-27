@@ -167,13 +167,11 @@ async function distributeRevenue(transfer, infra, bank) {
 			let allTxSuccess = results.every((res) => {
 				if (res.status == 0) {
 					return false;
-				} else {
-					return true;
 				}
 			});
 			if (allTxSuccess) {
 				txstate.completed(categoryConst.DISTRIBUTE, transfer.master_code);
-				transferToMasterWallets(transfer, infra, bank, branch);
+				transferToMasterWallets(transfer, infra, bank);
 			} else {
 				txstate.failed(categoryConst.DISTRIBUTE, transfer.master_code);
 			}
@@ -244,8 +242,6 @@ async function transferToMasterWallets(transfer, infra, bank) {
 			let allTxSuccess = results.every((res) => {
 				if (res.status == 0) {
 					return false;
-				} else {
-					return true;
 				}
 			});
 			if (allTxSuccess) {

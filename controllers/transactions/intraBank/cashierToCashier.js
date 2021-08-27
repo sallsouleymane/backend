@@ -185,8 +185,6 @@ async function distributeRevenue(transfer, infra, bank, branch) {
 			let allTxSuccess = results.every((res) => {
 				if (res.status == 0) {
 					return false;
-				} else {
-					return true;
 				}
 			});
 			if (allTxSuccess) {
