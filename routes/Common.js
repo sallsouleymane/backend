@@ -75,29 +75,31 @@ router.post("/:user/getCashierDailyReport",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { cashier_id,  start, end } = req.body;
 	const user = req.params.user;
-	let User = getTypeClass("partner");
-	if (user == "partnerBranch") {
-		User = getTypeClass("partnerBranch");
-	} else if (user == "partnerCashier") {
-		User = getTypeClass("partnerCashier");
-	} else if (user == "bankuser") {
-		User = getTypeClass("bankuser");
-	} else if (user == "partnerUser") {
-		User = getTypeClass("partnerUser");
-	} else if (user == "cashier") {
-		User = getTypeClass("cashier");
-	} else if (user == "branch") {
-		User = getTypeClass("branch");
-	} else if (user == "bank") {
-		User = getTypeClass("bank");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'partner' : classUser = getTypeClass("partner");
+		break;
+		case 'partnerCashier' : classUser = getTypeClass("partnerCashier");
+		break;
+		case 'partnerBranch' : classUser = getTypeClass("partnerBranch");
+		break;
+		case 'bankuser' : classUser = getTypeClass("bankuser");
+		break;
+		case 'partnerUser' : classUser = getTypeClass("partnerUser");
+		break;
+		case 'cashier' : classUser = getTypeClass("cashier");
+		break;
+		case 'branch' : classUser = getTypeClass("branch");
+		break;
+		case 'bank' : classUser = getTypeClass("bank");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -197,19 +199,22 @@ router.post("/:user/getPartnerCashierDashStats", jwtTokenAuth, function (req, re
 	const jwtusername = req.sign_creds.username;
 	const { cashier_id } = req.body;
 	const user = req.params.user;
-	let User = getTypeClass("partner");
-	if (user == "partnerBranch") {
-		User = getTypeClass("partnerBranch");
-	} else if (user == "partnerCashier") {
-		User = getTypeClass("partnerCashier");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	
+	let classUser = undefined;
+	switch (user) {
+		case 'partner' : classUser = getTypeClass("partner");
+		break;
+		case 'partnerCashier' : classUser = getTypeClass("partnerCashier");
+		break;
+		case 'partnerBranch' : classUser = getTypeClass("partnerBranch");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -262,19 +267,21 @@ router.post("/:user/getBankCashierDashStats", jwtTokenAuth, function (req, res) 
 	const jwtusername = req.sign_creds.username;
 	const { cashier_id } = req.body;
 	const user = req.params.user;
-	let User = getTypeClass("bank");
-	if (user == "branch") {
-		User = getTypeClass("branch");
-	} else if (user == "cashier") {
-		User = getTypeClass("cashier");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'cashier' : classUser = getTypeClass("cashier");
+		break;
+		case 'branch' : classUser = getTypeClass("branch");
+		break;
+		case 'bank' : classUser = getTypeClass("bank");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -327,19 +334,22 @@ router.post("/:user/getBankTheme", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { bank_id } = req.body;
 	const user = req.params.user;
-	let User = getTypeClass("bank");
-	if (user == "branch") {
-		User = getTypeClass("branch");
-	} else if (user == "cashier") {
-		User = getTypeClass("cashier");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'cashier' : classUser = getTypeClass("cashier");
+		break;
+		case 'branch' : classUser = getTypeClass("branch");
+		break;
+		case 'bank' : classUser = getTypeClass("bank");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -383,25 +393,27 @@ router.post("/:user/queryCashierTransactionStates", jwtTokenAuth, function (req,
 	const jwtusername = req.sign_creds.username;
 	const { bank_id, cashier_id } = req.body;
 	const user = req.params.user;
-	let User = getTypeClass("partner");
-	if (user == "partnerBranch") {
-		User = getTypeClass("partnerBranch");
-	} else if (user == "partnerCashier") {
-		User = getTypeClass("partnerCashier");
-	} else if (user == "cashier") {
-		User = getTypeClass("cashier");
-	} else if (user == "branch") {
-		User = getTypeClass("branch");
-	} else if (user == "bank") {
-		User = getTypeClass("bank");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'partner' : classUser = getTypeClass("partner");
+		break;
+		case 'partnerCashier' : classUser = getTypeClass("partnerCashier");
+		break;
+		case 'partnerBranch' : classUser = getTypeClass("partnerBranch");
+		break;
+		case 'cashier' : classUser = getTypeClass("cashier");
+		break;
+		case 'branch' : classUser = getTypeClass("branch");
+		break;
+		case 'bank' : classUser = getTypeClass("bank");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -440,21 +452,23 @@ router.post("/:user/getMerchantCashierDashStats", jwtTokenAuth, function (req, r
 	const jwtusername = req.sign_creds.username;
 	const { staff_id } = req.body;
 	const user = req.params.user;
-	let User = getTypeClass("merchantPosition");
-	if (user == "merchantBranch") {
-		User = getTypeClass("merchantBranch");
-	} else if (user == "merchant") {
-		User = getTypeClass("merchant");
-	} else if (user == "merchantStaff") {
-		User = getTypeClass("merchantStaff");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantPosition' : classUser = getTypeClass("merchantPosition");
+		break;
+		case 'merchantBranch' : classUser = getTypeClass("merchantBranch");
+		break;
+		case 'merchantStaff' : classUser = getTypeClass("merchantStaff");
+		break;
+		case 'merchant' : classUser = getTypeClass("merchant");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -518,21 +532,24 @@ router.post("/:user/queryMerchantCashierTransactionStates", jwtTokenAuth, functi
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
 	const { bank_id, staff_id } = req.body;
-	let User = getTypeClass("merchantPosition");
-	if (user == "merchantBranch") {
-		User = getTypeClass("merchantBranch");
-	} else if (user == "merchant") {
-		User = getTypeClass("merchant");
-	} else if (user == "merchantStaff") {
-		User = getTypeClass("merchantStaff");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantPosition' : classUser = getTypeClass("merchantPosition");
+		break;
+		case 'merchantBranch' : classUser = getTypeClass("merchantBranch");
+		break;
+		case 'merchantStaff' : classUser = getTypeClass("merchantStaff");
+		break;
+		case 'merchant' : classUser = getTypeClass("merchant");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -570,21 +587,23 @@ router.post("/:user/getMerchantCashierDailyReport", jwtTokenAuth, function (req,
 	const { start, end, staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	let User = getTypeClass("merchantPosition");
-	if (user == "merchantBranch") {
-		User = getTypeClass("merchantBranch");
-	} else if (user == "merchant") {
-		User = getTypeClass("merchant");
-	} else if (user == "merchantStaff") {
-		User = getTypeClass("merchantStaff");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantPosition' : classUser = getTypeClass("merchantPosition");
+		break;
+		case 'merchantBranch' : classUser = getTypeClass("merchantBranch");
+		break;
+		case 'merchantStaff' : classUser = getTypeClass("merchantStaff");
+		break;
+		case 'merchant' : classUser = getTypeClass("merchant");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -626,21 +645,23 @@ router.post("/:user/listMerchantStaffInvoicesByDate", jwtTokenAuth, (req, res) =
 	const { date, staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	let User = getTypeClass("merchantPosition");
-	if (user == "merchantBranch") {
-		User = getTypeClass("merchantBranch");
-	} else if (user == "merchant") {
-		User = getTypeClass("merchant");
-	} else if (user == "merchantStaff") {
-		User = getTypeClass("merchantStaff");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantPosition' : classUser = getTypeClass("merchantPosition");
+		break;
+		case 'merchantBranch' : classUser = getTypeClass("merchantBranch");
+		break;
+		case 'merchantStaff' : classUser = getTypeClass("merchantStaff");
+		break;
+		case 'merchant' : classUser = getTypeClass("merchant");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -688,21 +709,23 @@ router.post("/:user/listMerchantStaffInvoicesByPeriod", jwtTokenAuth, (req, res)
 	const { start_date, end_date, staff_id} = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	let User = getTypeClass("merchantPosition");
-	if (user == "merchantBranch") {
-		User = getTypeClass("merchantBranch");
-	} else if (user == "merchant") {
-		User = getTypeClass("merchant");
-	} else if (user == "merchantStaff") {
-		User = getTypeClass("merchantStaff");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantPosition' : classUser = getTypeClass("merchantPosition");
+		break;
+		case 'merchantBranch' : classUser = getTypeClass("merchantBranch");
+		break;
+		case 'merchantStaff' : classUser = getTypeClass("merchantStaff");
+		break;
+		case 'merchant' : classUser = getTypeClass("merchant");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -756,21 +779,23 @@ router.post("/:user/listMerchantStaffInvoicesByDateRange", jwtTokenAuth, (req, r
 	const { start_date, end_date, staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	let User = getTypeClass("merchantPosition");
-	if (user == "merchantBranch") {
-		User = getTypeClass("merchantBranch");
-	} else if (user == "merchant") {
-		User = getTypeClass("merchant");
-	} else if (user == "merchantStaff") {
-		User = getTypeClass("merchantStaff");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantPosition' : classUser = getTypeClass("merchantPosition");
+		break;
+		case 'merchantBranch' : classUser = getTypeClass("merchantBranch");
+		break;
+		case 'merchantStaff' : classUser = getTypeClass("merchantStaff");
+		break;
+		case 'merchant' : classUser = getTypeClass("merchant");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -821,19 +846,23 @@ router.post("/:user/listMerchantBranchInvoicesByDate", jwtTokenAuth, (req, res) 
 	const { date, branch_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	let User = getTypeClass("merchantBranch");
-	if (user == "merchant") {
-		User = getTypeClass("merchant");
-	} else if (user == "merchantStaff") {
-		User = getTypeClass("merchantStaff");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantPosition' : classUser = getTypeClass("merchantPosition");
+		break;
+		case 'merchantBranch' : classUser = getTypeClass("merchantBranch");
+		break;
+		case 'merchantStaff' : classUser = getTypeClass("merchantStaff");
+		break;
+		case 'merchant' : classUser = getTypeClass("merchant");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -881,19 +910,23 @@ router.post("/:user/listMerchantStaff", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
 	const { branch_id } = req.body;
 	const user = req.params.user;
-	let User = getTypeClass("merchantBranch");
-	if (user == "merchant") {
-		User = getTypeClass("merchant");
-	} else if (user == "merchantStaff") {
-		User = getTypeClass("merchantStaff");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantPosition' : classUser = getTypeClass("merchantPosition");
+		break;
+		case 'merchantBranch' : classUser = getTypeClass("merchantBranch");
+		break;
+		case 'merchantStaff' : classUser = getTypeClass("merchantStaff");
+		break;
+		case 'merchant' : classUser = getTypeClass("merchant");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -937,19 +970,23 @@ router.post("/:user/listMerchantPosition", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
 	const { branch_id } = req.body;
 	const user = req.params.user;
-	let User = getTypeClass("merchantBranch");
-	if (user == "merchant") {
-		User = getTypeClass("merchant");
-	} else if (user == "merchantStaff") {
-		User = getTypeClass("merchantStaff");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantPosition' : classUser = getTypeClass("merchantPosition");
+		break;
+		case 'merchantBranch' : classUser = getTypeClass("merchantBranch");
+		break;
+		case 'merchantStaff' : classUser = getTypeClass("merchantStaff");
+		break;
+		case 'merchant' : classUser = getTypeClass("merchant");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -998,19 +1035,23 @@ router.post("/:user/merchantCashierStats",jwtTokenAuth,function (req, res) {
 	var start = s[0] + "T00:00:00.000Z";
 	var end = s[0] + "T23:59:59.999Z";
 	const user = req.params.user;
-	let User = getTypeClass("merchantBranch");
-	if (user == "merchant") {
-		User = getTypeClass("merchant");
-	} else if (user == "merchantStaff") {
-		User = getTypeClass("merchantStaff");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantPosition' : classUser = getTypeClass("merchantPosition");
+		break;
+		case 'merchantBranch' : classUser = getTypeClass("merchantBranch");
+		break;
+		case 'merchantStaff' : classUser = getTypeClass("merchantStaff");
+		break;
+		case 'merchant' : classUser = getTypeClass("merchant");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -1106,21 +1147,23 @@ router.post("/:user/merchantStaffStats",jwtTokenAuth,function (req, res) {
 	var start = s[0] + "T00:00:00.000Z";
 	var end = s[0] + "T23:59:59.999Z";
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "merchantBranch") {
-		User = getTypeClass("merchantBranch");
-	} else if (user == "merchant") {
-		User = getTypeClass("merchant");
-	} else if (user == "merchantStaff") {
-		User = getTypeClass("merchantStaff");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantPosition' : classUser = getTypeClass("merchantPosition");
+		break;
+		case 'merchantBranch' : classUser = getTypeClass("merchantBranch");
+		break;
+		case 'merchantStaff' : classUser = getTypeClass("merchantStaff");
+		break;
+		case 'merchant' : classUser = getTypeClass("merchant");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -1186,8 +1229,8 @@ router.post("/:user/merchantStaffStats",jwtTokenAuth,function (req, res) {
 									opening_time: position.opening_time,
 									closing_time: position.closing_time,
 								});
-							} catch (err) {
-								res.status(200).json(catchError(err));
+							} catch (error) {
+								res.status(200).json(catchError(error));
 							}
 						}
 					}
@@ -1201,21 +1244,23 @@ router.post("/:user/listMerchantBranchInvoicesByPeriod", jwtTokenAuth, (req, res
 	const { start_date, end_date, branch_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "merchantBranch") {
-		User = getTypeClass("merchantBranch");
-	} else if (user == "merchant") {
-		User = getTypeClass("merchant");
-	} else if (user == "merchantStaff") {
-		User = getTypeClass("merchantStaff");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantPosition' : classUser = getTypeClass("merchantPosition");
+		break;
+		case 'merchantBranch' : classUser = getTypeClass("merchantBranch");
+		break;
+		case 'merchantStaff' : classUser = getTypeClass("merchantStaff");
+		break;
+		case 'merchant' : classUser = getTypeClass("merchant");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -1272,19 +1317,23 @@ router.post("/:user/getMerchantBranchDashStats", jwtTokenAuth, function (req, re
 	const { branch_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	let User = getTypeClass("merchantBranch");
-	if (user == "merchant") {
-		User = getTypeClass("merchant");
-	} else if (user == "merchantStaff") {
-		User = getTypeClass("merchantStaff");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantPosition' : classUser = getTypeClass("merchantPosition");
+		break;
+		case 'merchantBranch' : classUser = getTypeClass("merchantBranch");
+		break;
+		case 'merchantStaff' : classUser = getTypeClass("merchantStaff");
+		break;
+		case 'merchant' : classUser = getTypeClass("merchant");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -1451,21 +1500,23 @@ router.post("/:user/listMerchantBranchInvoicesByDateRange", jwtTokenAuth, (req, 
 	const { start_date, end_date, branch_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "merchantBranch") {
-		User = getTypeClass("merchantBranch");
-	} else if (user == "merchant") {
-		User = getTypeClass("merchant");
-	} else if (user == "merchantStaff") {
-		User = getTypeClass("merchantStaff");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantPosition' : classUser = getTypeClass("merchantPosition");
+		break;
+		case 'merchantBranch' : classUser = getTypeClass("merchantBranch");
+		break;
+		case 'merchantStaff' : classUser = getTypeClass("merchantStaff");
+		break;
+		case 'merchant' : classUser = getTypeClass("merchant");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -1515,25 +1566,27 @@ router.post("/:user/getMerchantSettings", jwtTokenAuth, function (req, res) {
 	const { merchant_id } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "merchantStaff") {
-		User = getTypeClass("merchantPosition");
-	}else if (user == "bank") {
-		User = getTypeClass("bank");
-	}else if (user == "infra") {
-		User = getTypeClass("infra");
-	}else if (user == "bankuser") {
-		User = getTypeClass("bankuser");	
-	} else if (user == "merchantBranch") {
-		User = getTypeClass("merchantBranch");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantStaff' : classUser = getTypeClass("merchantPosition");
+		break;
+		case 'merchantBranch' : classUser = getTypeClass("merchantBranch");
+		break;
+		case 'merchant' : classUser = getTypeClass("merchant");
+		break;
+		case 'bank' : classUser = getTypeClass("bank");
+		break;
+		case 'infra' : classUser = getTypeClass("infra");
+		break;
+		case 'bankuser' : classUser = getTypeClass("bankuser");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -1582,23 +1635,25 @@ router.post("/:user/searchPaidInvoiceList", jwtTokenAuth, function (req, res) {
 	const { from_date, to_date } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	var User = getTypeClass(user);
 	var paid_by;
-	if (user == "merchantStaff") {
-		User = getTypeClass("merchantPosition");
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantStaff' : classUser = getTypeClass("merchantPosition");
 		paid_by = "MC";
-	} else if (user == "partnerCashier") {
+		break;
+		case 'partnerCashier' : classUser = getTypeClass("partnerCashier");
 		paid_by = "PC";
-	} else if (user == "user") {
+		break;
+		case 'user' : classUser = getTypeClass("user");
 		paid_by = "US";
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -1641,17 +1696,18 @@ router.post("/:user/searchPaidInvoiceByMobile", jwtTokenAuth, function (req, res
 	const { mobile } = req.body;
 	const jwtusername = req.sign_creds.username;
 	const user = req.params.user;
-	var User = getTypeClass(user);
-	if (user == "merchantStaff") {
-		User = getTypeClass("merchantPosition");
-	} else {
-		res.status(200).json({
-			status: 0,
-			message: "The user does not have API support",
-		});
-		return;
+	let classUser = undefined;
+	switch (user) {
+		case 'merchantStaff' : classUser = getTypeClass("merchantPosition");
+		break;
+		default: res.status(200).json({
+					status: 0,
+					message: "The user does not have API support",
+				});
+				return;
 	}
-	User.findOne(
+	
+	classUser.findOne(
 		{
 			username: jwtusername,
 			status: 1,
@@ -1902,8 +1958,8 @@ router.post("/getPartner/:code", async (req, res) => {
 		if (partner.length == 0) throw { message: "Partner not found" };
 
 		res.send({ status: 1, partner });
-	} catch (err) {
-		res.send({ status: 0, message: err.message });
+	} catch (error) {
+		res.send({ status: 0, message: error.message });
 	}
 });
 

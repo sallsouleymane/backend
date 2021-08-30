@@ -949,8 +949,7 @@ router.post("/partnerCashier/activateUser", jwtTokenAuth, function (req, res) {
 												let content =
 													"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
 													config.mainIP +
-													"/user";
-												"'>http://" +
+													"/user>http://" +
 													config.mainIP +
 													"/user" +
 													"</a></p><p><p>Your username: " +

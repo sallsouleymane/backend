@@ -547,8 +547,7 @@ router.post("/cashier/activateUser", jwtTokenAuth, function (req, res) {
 												let content =
 													"<p>Your account is activated</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
 													config.mainIP +
-													"/user";
-												"'>http://" +
+													"/user>http://" +
 													config.mainIP +
 													"/user" +
 													"</a></p><p><p>Your username: " +
@@ -741,8 +740,6 @@ router.post("/cashierAcceptIncoming", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/getClosingBalance", jwtTokenAuth, function (req, res) {
-	let today = new Date();
-	today = today.toISOString();
 
 	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
@@ -1034,8 +1031,6 @@ router.post("/cashierCancelTransfer", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/getCashierTransLimit", jwtTokenAuth, function (req, res) {
-	let today = new Date();
-	today = today.toISOString();
 
 	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(

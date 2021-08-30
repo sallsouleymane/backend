@@ -82,8 +82,6 @@ router.post(
 	"/merchantStaff/getClosingBalance",
 	jwtTokenAuth,
 	function (req, res) {
-		var today = new Date();
-		today = today.toISOString();
 
 		const jwtusername = req.sign_creds.username;
 		MerchantPosition.findOne(
