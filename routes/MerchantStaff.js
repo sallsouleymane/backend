@@ -100,11 +100,11 @@ router.post(
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
-					let cb = 0,
+					let cb = 0;
 					var c = user;
 
 					cb = c.closing_balance;
-					da = c.closing_time;
+					var da = c.closing_time;
 					var diff = Number(cb) - Number(user.cash_in_hand);
 					res.status(200).json({
 						status: 1,
@@ -125,7 +125,7 @@ router.post(
 	"/merchantStaff/addClosingBalance",
 	jwtTokenAuth,
 	function (req, res) {
-		const { denomination, total, note } = req.body;
+		const { total } = req.body;
 		const jwtusername = req.sign_creds.username;
 		MerchantPosition.findOne(
 			{
@@ -150,7 +150,7 @@ router.post(
 					data.cash_in_hand = otpd.cash_in_hand;
 					data.opening_time = otpd.opening_time;
 					data.closing_time = new Date();
-					data.descripency =  total - otpd.cash_in_hand - otpd.opening_balance,
+					data.descripency =  total - otpd.cash_in_hand - otpd.opening_balance;
 					data.save((err1) => {
 						if (err1) {
 							console.log(err1);
@@ -205,7 +205,7 @@ router.post(
 					res.status(200).json(result);
 				} else {
 					var bal = ba.closing_balance;
-					upd = {
+					const upd = {
 						cash_in_hand: bal,
 						opening_balance: bal,
 						closing_balance: 0,
@@ -258,7 +258,7 @@ router.post(
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
-					upd = {
+					const upd = {
 						is_closed: false,
 						opening_time: new Date(),
 					};
@@ -269,7 +269,7 @@ router.post(
 							console.log(err1);
 							var message1 = err1;
 							if (err1.message) {
-								message = err1.message;
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
@@ -307,7 +307,7 @@ router.post(
 				if (result.status == 0) {
 					res.status(200).json(result);
 				} else {
-					upd = {
+					const upd = {
 						is_closed: true,
 					};
 					console.log(upd);
@@ -413,8 +413,6 @@ router.post(
 								data.receiver_id = receiver_id;
 								data.sender_name = f.name;
 								data.receiver_name = receiver_name;
-								let cashInHand = Number(f.cash_in_hand);
-								cashInHand = cashInHand - Number(amount);
 								data.save((err2) => {
 									if (err2) {
 										console.log(err2);
@@ -493,34 +491,34 @@ router.post(
 									{
 										status: 1,
 									},
-									(e, data) => {
+									(e, data21) => {
 										MerchantPosition.findByIdAndUpdate(
 											item.receiver_id,
 											{
 												cash_in_hand: cashInHand,
 											},
-											(err, data) => {
-												let result = errorMessage(
-													err,
-													data,
+											(err2, data2) => {
+												let result2 = errorMessage(
+													err2,
+													data2,
 													"Cashier transfer record not found"
 												);
-												if (result.status == 0) {
-													res.status(200).json(result);
+												if (result2.status == 0) {
+													res.status(200).json(result2);
 												} else {
 													MerchantPosition.findByIdAndUpdate(
 														item.sender_id,
 														{
 															$inc: { cash_in_hand: -Number(item.amount) },
 														},
-														(err, data) => {
-															let result = errorMessage(
-																err,
-																data,
+														(err3, data3) => {
+															let result3 = errorMessage(
+																err3,
+																data3,
 																"Cashier transfer record not found"
 															);
-															if (result.status == 0) {
-																res.status(200).json(result);
+															if (result3.status == 0) {
+																res.status(200).json(result3);
 															} else {
 																res.status(200).json({
 																	status: 1,
@@ -659,7 +657,7 @@ router.post(
 				} else {
 					CashierTransfer.find({
 						$or: [{ sender_id: f._id }, { receiver_id: f._id }],
-					}).exec(function (err, b) {
+					}).exec(function (err1, b) {
 						res.status(200).json({
 							status: 1,
 							history: b,
@@ -948,7 +946,7 @@ router.post("/merchantStaff/createCustomer", jwtTokenAuth, (req, res) => {
 								if (err2) {
 									console.log(err2);
 									var message2 = err2;
-									if (err2 && err2.message) {
+									if (err2.message) {
 										message2 = err2.message;
 									}
 									res.status(200).json({
@@ -1056,16 +1054,16 @@ router.post("/merchantStaff/listTaxes", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Tax.find({ merchant_id: position.merchant_id }, (err, taxes) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Tax.find({ merchant_id: position.merchant_id }, (err1, taxes) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -1097,16 +1095,16 @@ router.post("/merchantStaff/deleteInvoice", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Invoice.deleteOne({ _id: invoice_id, is_created: 1 }, (err) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				Invoice.deleteOne({ _id: invoice_id, is_created: 1 }, (err1) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -1216,8 +1214,8 @@ router.get(
 								penalty_collected: 0,
 							});
 						}
-					} catch (err) {
-						res.status(200).json(catchError(err));
+					} catch (error) {
+						res.status(200).json(catchError(error));
 					}
 				}
 			}
@@ -1278,8 +1276,8 @@ router.post("/merchantStaff/staffDashStatus", jwtTokenAuth, function (req, res) 
 						is_closed:position.is_closed,
 						opening_time: position.opening_time,
 					});
-				} catch (err) {
-					res.status(200).json(catchError(err));
+				} catch (error) {
+					res.status(200).json(catchError(error));
 				}
 			}
 		}
@@ -1305,16 +1303,16 @@ router.post("/merchantStaff/createInvoiceGroup", jwtTokenAuth, (req, res) => {
 				data.name = name;
 				data.description = description;
 				data.position_id = position._id;
-				data.save((err, group) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				data.save((err1, group) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						return res.status(200).json({
@@ -1346,10 +1344,10 @@ router.post("/merchantStaff/editInvoiceGroup", jwtTokenAuth, (req, res) => {
 				InvoiceGroup.findOneAndUpdate(
 					{ _id: group_id, position_id: position._id },
 					{ code: code, name: name, description: description },
-					(err, group) => {
-						let result = errorMessage(err, group, "Invoice Group not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					(err1, group) => {
+						let result1 = errorMessage(err1, group, "Invoice Group not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -1377,16 +1375,16 @@ router.post("/merchantStaff/listInvoiceGroups", jwtTokenAuth, (req, res) => {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				InvoiceGroup.find({ merchant_id: merchant_id }, (err, groups) => {
-					if (err) {
-						console.log(err);
-						var message = err;
-						if (err.message) {
-							message = err.message;
+				InvoiceGroup.find({ merchant_id: merchant_id }, (err1, groups) => {
+					if (err1) {
+						console.log(err1);
+						var message1 = err1;
+						if (err1.message) {
+							message1 = err1.message;
 						}
 						res.status(200).json({
 							status: 0,
-							message: message,
+							message: message1,
 						});
 					} else {
 						res.status(200).json({
@@ -1415,16 +1413,16 @@ router.post("/merchantStaff/getSettings", jwtTokenAuth, function (req, res) {
 			} else {
 				MerchantSettings.findOne(
 					{ merchant_id: position.merchant_id },
-					(err, setting) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, setting) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else if (!setting) {
 							res.status(200).json({
@@ -1492,25 +1490,25 @@ router.post("/merchantStaff/createInvoice", jwtTokenAuth, (req, res) => {
 			} else {
 				MerchantBranch.findById(
 					position.branch_id,
-					async function (err, branch) {
-						let result = errorMessage(err, branch, "Branch not Found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					async function (err1, branch) {
+						let result1 = errorMessage(err1, branch, "Branch not Found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							Merchant.findById(
 								branch.merchant_id,
-								async function (err, merchant) {
-									let result = errorMessage(err, merchant, "Merchant not Found");
-									if (result.status == 0) {
-										res.status(200).json(result);
+								async function (err2, merchant) {
+									let result2 = errorMessage(err2, merchant, "Merchant not Found");
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									} else {
 							
 										InvoiceGroup.findOne(
 											{ _id: group_id },
-											async (err, group) => {
-												let result = errorMessage(err, group, "Group not found");
-												if (result.status == 0) {
-													res.status(200).json(result);
+											async (err3, group) => {
+												let result3 = errorMessage(err3, group, "Group not found");
+												if (result3.status == 0) {
+													res.status(200).json(result3);
 												} else {
 													try {
 														if (is_counter) {
@@ -1610,15 +1608,15 @@ router.post("/merchantStaff/createInvoice", jwtTokenAuth, (req, res) => {
 															message: "Invoice created",
 															branch: branch,
 														});
-													} catch (err) {
-														console.log(err);
-														var message = err;
-														if (err && err.message) {
-															message = err.message;
+													} catch (error1) {
+														console.log(error1);
+														var message12 = error1;
+														if (error12 && error1.message) {
+															message12 = error12.message;
 														}
 														res.status(200).json({
 															status: 0,
-															message: message,
+															message: message12,
 															branch: branch,
 														});
 													}
@@ -1653,13 +1651,13 @@ router.post("/merchantStaff/uploadInvoices", jwtTokenAuth, (req, res) => {
 			} else {
 				InvoiceGroup.findOne(
 					{ _id: group_id },
-					async (err, group) => {
-						let result = errorMessage(err, group, "Group not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					async (err1, group) => {
+						let result1 = errorMessage(err1, group, "Group not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							let failed = [];
-							for (invoice of invoices) {
+							for (let invoice of invoices) {
 								try {
 									var {
 										number,
@@ -1721,7 +1719,7 @@ router.post("/merchantStaff/uploadInvoices", jwtTokenAuth, (req, res) => {
 											total_amount: total_amount,
 										});
 									}
-									invoiceFound = await Invoice.findOne({
+									let invoiceFound = await Invoice.findOne({
 										number,
 										merchant_id: position.merchant_id,
 										paid: 0,
@@ -1848,11 +1846,11 @@ router.post("/merchantStaff/uploadInvoices", jwtTokenAuth, (req, res) => {
 											);
 										}
 									}
-								} catch (err) {
-									console.log(err);
-									var message = err.toString();
-									if (err.message) {
-										message = err.message;
+								} catch (error) {
+									console.log(error);
+									var message = error.toString();
+									if (error.message) {
+										message = error.message;
 									}
 									invoice.failure_reason = message;
 									console.log(failed);
@@ -1904,10 +1902,10 @@ router.post("/merchantStaff/editInvoice", jwtTokenAuth, (req, res) => {
 			} else {
 				InvoiceGroup.findOne(
 					{ _id: group_id },
-					async (err, group) => {
-						let result = errorMessage(err, group, "Group not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+					async (err1, group) => {
+						let result1 = errorMessage(err1, group, "Group not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							var updatedItems = [];
 							try {
@@ -1964,27 +1962,27 @@ router.post("/merchantStaff/editInvoice", jwtTokenAuth, (req, res) => {
 										is_validated,
 										term,
 									},
-									(err, invoice) => {
-										let result = errorMessage(
-											err,
+									(err4, invoice) => {
+										let result4 = errorMessage(
+											err4,
 											invoice,
 											"Invoice might already be paid or validated. Or Does not belong to this group."
 										);
-										if (result.status == 0) {
-											res.status(200).json(result);
+										if (result4.status == 0) {
+											res.status(200).json(result4);
 										} else {
 											var biasAmount = amount - invoice.amount;
 											MerchantBranch.findOneAndUpdate(
 												{ _id: position.branch_id, status: 1 },
 												{ $inc: { amount_due: biasAmount } },
-												(err, branch) => {
-													let result = errorMessage(
-														err,
+												(err2, branch) => {
+													let result2 = errorMessage(
+														err2,
 														branch,
 														"Branch is blocked"
 													);
-													if (result.status == 0) {
-														res.status(200).json(result);
+													if (result2.status == 0) {
+														res.status(200).json(result2);
 													} else {
 														Merchant.findOneAndUpdate(
 															{ _id: branch.merchant_id },
@@ -1993,14 +1991,14 @@ router.post("/merchantStaff/editInvoice", jwtTokenAuth, (req, res) => {
 																	amount_due: biasAmount,
 																},
 															},
-															(err, merchant) => {
-																let result = errorMessage(
-																	err,
+															(err3, merchant) => {
+																let result3 = errorMessage(
+																	err3,
 																	merchant,
 																	"Merchant is not valid"
 																);
-																if (result.status == 0) {
-																	res.status(200).json(result);
+																if (result3.status == 0) {
+																	res.status(200).json(result3);
 																} else {
 																	res.status(200).json({
 																		status: 1,
@@ -2015,11 +2013,11 @@ router.post("/merchantStaff/editInvoice", jwtTokenAuth, (req, res) => {
 										}
 									}
 								);
-							} catch (err) {
-								console.log(err);
-								var message = err;
-								if (err && err.message) {
-									message = err.message;
+							} catch (error) {
+								console.log(error);
+								var message = error;
+								if (error && error.message) {
+									message = error.message;
 								}
 								res.status(200).json({
 									status: 0,
@@ -2050,16 +2048,16 @@ router.post("/merchantStaff/listInvoicesByDate", jwtTokenAuth, (req, res) => {
 			} else {
 				Invoice.find(
 					{ creator_id: position._id, bill_date: date },
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -2098,16 +2096,16 @@ router.post("/merchantStaff/listInvoicesByPeriod", jwtTokenAuth, (req, res) => {
 							$lte: end_date
 						},
 					},
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -2144,16 +2142,16 @@ router.post("/merchantStaff/listInvoicesByDateRange", jwtTokenAuth, (req, res) =
 							$lte: end_date,
 						},
 					},
-					(err, invoices) => {
-						if (err) {
-							console.log(err);
-							var message = err;
-							if (err.message) {
-								message = err.message;
+					(err1, invoices) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message,
+								message: message1,
 							});
 						} else {
 							res.status(200).json({
@@ -2195,16 +2193,16 @@ router.post("/merchantStaff/listInvoices", jwtTokenAuth, (req, res) => {
 								$lt: endOfDay
 							},
 						},
-						(err, invoices) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						(err1, invoices) => {
+							if (err1) {
+								console.log(err1);
+								var message1 = err1;
+								if (err1.message) {
+									message1 = err1.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message1,
 								});
 							} else {
 								res.status(200).json({
@@ -2224,16 +2222,16 @@ router.post("/merchantStaff/listInvoices", jwtTokenAuth, (req, res) => {
 								$lt: endOfDay
 							},
 						},
-						(err, invoices) => {
-							if (err) {
-								console.log(err);
-								var message = err;
-								if (err.message) {
-									message = err.message;
+						(err2, invoices) => {
+							if (err2) {
+								console.log(err2);
+								var message2 = err2;
+								if (err2.message) {
+									message2 = err2.message;
 								}
 								res.status(200).json({
 									status: 0,
-									message: message,
+									message: message2,
 								});
 							} else {
 								res.status(200).json({

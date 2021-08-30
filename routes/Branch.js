@@ -279,8 +279,8 @@ router.post("/getBranchDashStats", jwtTokenAuth, function (req, res) {
 						trans_type: "CR",
 					},
 					(e, post2) => {
-						let received = 0,
-						if (post2 != null) {
+						let received = 0;
+						if (post2 !== null) {
 							received = Number(post2.amount);
 						}
 						BranchLedger.findOne(
@@ -703,17 +703,17 @@ router.post("/updateCashierTransferStatus", jwtTokenAuth, function (req, res) {
 					transfer_id,
 					{ status: status },
 					function (err1, d) {
-						let result = errorMessage(err1, d, "History not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+						let result1 = errorMessage(err1, d, "History not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							Cashier.findByIdAndUpdate(
 								cashier_id,
 								{ $inc: { pending_trans: -1 } },
-								function (err, cashier) {
-									let result = errorMessage(err, cashier, "Cashier not found");
-									if (result.status == 0) {
-										res.status(200).json(result);
+								function (err2, cashier) {
+									let result2 = errorMessage(err2, cashier, "Cashier not found");
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									} else {
 										res.status(200).json({
 											status: 1,
@@ -856,9 +856,9 @@ router.post("/branch/getCashierDetails", jwtTokenAuth, function (req, res) {
 				Cashier.findById(
 					cashier_id,
 					async(err1, cashier) => {
-						let result = errorMessage(err1, cashier, "Cashier not found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+						let result1 = errorMessage(err1, cashier, "Cashier not found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, cashier_id: cashier_id});
 							var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, cashier_id: cashier_id});
@@ -898,9 +898,9 @@ router.post("/getCashierDetails", jwtTokenAuth, function (req, res) {
 				res.status(200).json(result);
 			} else {
 				Cashier.findById(cashier_id, async (err1, cashier) => {
-					let result = errorMessage(err1, cashier, "Cashier not found");
-					if (result.status == 0) {
-						res.status(200).json(result);
+					let result1 = errorMessage(err1, cashier, "Cashier not found");
+					if (result1.status == 0) {
+						res.status(200).json(result1);
 					} else {
 						var totalPendingTransfers = await CashierTransfer.countDocuments({
 							status: 0,
@@ -952,9 +952,9 @@ router.post("/branchVerifyClaim", jwtTokenAuth, function (req, res) {
 						otp: otp,
 					},
 					function (err1, otpd) {
-						let result = errorMessage(err1, otpd, "OTP Missmatch");
-						if (result.status == 0) {
-							res.status(200).json(result);
+						let result1 = errorMessage(err1, otpd, "OTP Missmatch");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							res.status(200).json({
 								status: 1,
@@ -1004,40 +1004,40 @@ router.post("/branchClaimMoney", jwtTokenAuth, function (req, res) {
 						transaction_code: transferCode,
 					},
 					function (err1, otpd) {
-						let result = errorMessage(err1, otpd, "Transaction Not Found");
-						if (result.status == 0) {
-							res.status(200).json(result);
+						let result1 = errorMessage(err1, otpd, "Transaction Not Found");
+						if (result1.status == 0) {
+							res.status(200).json(result1);
 						} else {
 							Branch.findOne(
 								{
 									_id: f._id,
 								},
 								function (err2, f2) {
-									let result = errorMessage(err2, f2, "Branch Not Found");
-									if (result.status == 0) {
-										res.status(200).json(result);
+									let result2 = errorMessage(err2, f2, "Branch Not Found");
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									} else {
 										Bank.findOne(
 											{
 												_id: f.bank_id,
 											},
 											function (err3, f3) {
-												let result = errorMessage(err3, f3, "Bank Not Found");
-												if (result.status == 0) {
-													res.status(200).json(result);
+												let result3 = errorMessage(err3, f3, "Bank Not Found");
+												if (result3.status == 0) {
+													res.status(200).json(result3);
 												} else {
 													Infra.findOne(
 														{
 															_id: f3.user_id,
 														},
 														function (err4, f4) {
-															let result1 = errorMessage(
+															let result4 = errorMessage(
 																err4,
 																f4,
 																"Infra Not Found"
 															);
-															if (result1.status == 0) {
-																res.status(200).json(result1);
+															if (result4.status == 0) {
+																res.status(200).json(result4);
 															} else {
 																let data = new BranchClaim();
 																data.transaction_code = transferCode;
@@ -1084,8 +1084,8 @@ router.post("/branchClaimMoney", jwtTokenAuth, function (req, res) {
 																		trans1.master_code = master_code;
 																		trans1.child_code = child_code;
 																		initiateTransfer(trans1)
-																			.then(function (result1) {
-																				if (result1.length <= 0) {
+																			.then(function (result15) {
+																				if (result15.length <= 0) {
 																					BranchClaim.findByIdAndUpdate(
 																						d._id,
 																						{
@@ -1131,8 +1131,8 @@ router.post("/branchClaimMoney", jwtTokenAuth, function (req, res) {
 																											data1.trans_type = "DR";
 																											data1.branch_id = f._id;
 																											data1.save(function (
-																												err,
-																												c
+																												err67,
+																												c67
 																											) {});
 																										} else {
 																											var amt =
@@ -1141,7 +1141,7 @@ router.post("/branchClaimMoney", jwtTokenAuth, function (req, res) {
 																											BranchLedger.findByIdAndUpdate(
 																												c._id,
 																												{ amount: amt },
-																												function (err8, c) {}
+																												function (err8, c8) {}
 																											);
 																										}
 																									}

@@ -741,7 +741,7 @@ router.post("/cashierAcceptIncoming", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/getClosingBalance", jwtTokenAuth, function (req, res) {
-	var today = new Date();
+	let today = new Date();
 	today = today.toISOString();
 
 	const jwtusername = req.sign_creds.username;
@@ -759,7 +759,7 @@ router.post("/getClosingBalance", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				let cb = 0,
+				let cb = 0;
 				var c = user;
 
 				cb = c.closing_balance;
@@ -1034,7 +1034,7 @@ router.post("/cashierCancelTransfer", jwtTokenAuth, function (req, res) {
 });
 
 router.post("/getCashierTransLimit", jwtTokenAuth, function (req, res) {
-	var today = new Date();
+	let today = new Date();
 	today = today.toISOString();
 
 	const jwtusername = req.sign_creds.username;

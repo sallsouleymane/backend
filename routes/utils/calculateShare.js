@@ -161,11 +161,11 @@ module.exports.calculateShare = function (
 			console.log(rule.specific_branch_share);
 			var percent = rule.branch_share;
 			if (rule.specific_branch_share && rule.specific_branch_share.length > 0) {
-				var branchRule1 = rule.specific_branch_share.filter(
+				var branchRule2 = rule.specific_branch_share.filter(
 					(specific_brule) => specific_brule.code == sharerCode
 				)[0];
-				if (branchRule1) {
-					percent = branchRule1.percentage;
+				if (branchRule2) {
+					percent = branchRule2.percentage;
 				}
 			}
 			var branchFee = (percent * bankShare) / 100;
