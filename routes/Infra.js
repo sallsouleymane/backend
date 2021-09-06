@@ -1680,6 +1680,16 @@ router.post("/infra/getInfraMerchantDashStats", jwtTokenAuth, function (req, res
 	);
 });
 
+/**
+ * @swagger
+ * /infra/getMerchantzoneList:
+ *  post:
+ *    description: Use to list merchant's zones by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/infra/getMerchantzoneList", jwtTokenAuth, (req, res) => {
 	const { merchant_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -1764,6 +1774,16 @@ router.post("/infra/getMerchantsubzoneList", jwtTokenAuth, (req, res) => {
 	);
 });
 
+/**
+ * @swagger
+ * /infra/getMerchantbranchList:
+ *  post:
+ *    description: Use to list merchant's branches by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/infra/getMerchantbranchList", jwtTokenAuth, (req, res) => {
 	const { merchant_id } = req.body;
 	Infra.findOne(
@@ -1803,6 +1823,16 @@ router.post("/infra/getMerchantbranchList", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /infra/listMerchantSubzonesByZoneId:
+ *  post:
+ *    description: Use to list merchant's subzones of a zone by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/infra/listMerchantSubzonesByZoneId",jwtTokenAuth,function (req, res) {
 	const { zone_id } = req.body;
@@ -3214,6 +3244,16 @@ router.post("/getBank", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /getRules:
+ *  post:
+ *    description: Use to get bank's rules by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/getRules", jwtTokenAuth, function (req, res) {
 	const { bank_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -3348,6 +3388,17 @@ router.post("/getRoles", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /getInfraUsers:
+ *  post:
+ *    description: Use to get all infra users by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 
 router.post("/getInfraUsers", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;

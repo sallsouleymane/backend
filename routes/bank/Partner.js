@@ -28,6 +28,17 @@ const Document = require("../../models/Document");
 const Invoice = require("../../models/merchant/Invoice");
 const DailyReport = require("../../models/cashier/DailyReport");
 
+
+/**
+ * @swagger
+ * /bank/blockPartner:
+ *  post:
+ *    description: Use to block partner by bank
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/bank/blockPartner", jwtTokenAuth, function (req, res) {
 	var { partner_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -136,6 +147,16 @@ router.post("/bank/blockPartner", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /bank/unblockPartner:
+ *  post:
+ *    description: Use to unblock partner by bank
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/bank/unblockPartner", jwtTokenAuth, function (req, res) {
 	var { partner_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -243,6 +264,16 @@ router.post("/bank/unblockPartner", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /bank/listPartners:
+ *  post:
+ *    description: Use to list all partners by bank
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/bank/listPartners", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { bank_id } = req.body;
@@ -317,6 +348,16 @@ router.post("/bank/listPartners", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /bank/getPartner:
+ *  post:
+ *    description: Use to get a partner by bank
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/bank/getPartner", jwtTokenAuth, function (req, res) {
 	const { partner_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -354,6 +395,16 @@ router.post("/bank/getPartner", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /bank/editPartner:
+ *  post:
+ *    description: Use to eit a partner by bank
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/bank/editPartner", jwtTokenAuth, function (req, res) {
 	const {
@@ -504,6 +555,16 @@ router.post("/bank/editPartner", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /bank/addPartner:
+ *  post:
+ *    description: Use to create a partner by bank
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/bank/addPartner", jwtTokenAuth, function (req, res) {
 	const {
@@ -970,6 +1031,7 @@ router.post("/bank/getPartnerDashStats", jwtTokenAuth, function (req, res) {
 	);
 });
 
+
 router.post("/getBankDashStatsForPartners", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { bank_id } = req.body;
@@ -1158,6 +1220,16 @@ router.post("/getBankDashStatsForPartners", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /bank/listPartnerBranches:
+ *  post:
+ *    description: Use to list all partner's branches by bank
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/bank/listPartnerBranches", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const {partner_id} = req.body;
@@ -1235,6 +1307,16 @@ router.post("/bank/listPartnerBranches", jwtTokenAuth, function (req, res) {
 		
 	);
 });
+
+/**
+ * @swagger
+ * /bank/getPartnerBranchDailyReport:
+ *  post:
+ *    description: Use to get partner's branch's daily report by date 
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/bank/getPartnerBranchDailyReport", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -1404,6 +1486,16 @@ router.post("/bank/getPartnerBranchDailyReport", jwtTokenAuth, function (req, re
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /bank/getPartnerDailyReport:
+ *  post:
+ *    description: Use to get partner's daily report by date 
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/bank/getPartnerDailyReport", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
