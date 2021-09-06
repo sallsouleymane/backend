@@ -80,6 +80,16 @@ router.post(
 	cashierCommonContrl.queryDailyReport
 );
 
+/**
+ * @swagger
+ * /cashier/getDailyReport":
+ *  post:
+ *    description: Use to get cashier's daily report
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post(
 	"/cashier/getDailyReport",
 	jwtTokenAuth,
@@ -124,6 +134,16 @@ router.post(
 		);
 	}
 );
+
+/**
+ * @swagger
+ * /cashier/getTransactionHistory:
+ *  post:
+ *    description: Use to get cashier's transaction history
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post(
 	"/cashier/getTransactionHistory",
@@ -192,6 +212,17 @@ router.post(
 	}
 );
 
+/**
+ * @swagger
+ * /cashier/listMerchants:
+ *  post:
+ *    description: Use to get all merchants for bank cashier
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
+
 router.post("/cashier/listMerchants", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
@@ -242,6 +273,16 @@ router.post("/cashier/listMerchants", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /cashier/getUser:
+ *  post:
+ *    description: Use to get the user assigned for this cashier
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/cashier/getUser", jwtTokenAuth, function (req, res) {
 	const { mobile } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -278,6 +319,16 @@ router.post("/cashier/getUser", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /cashier/getMerchantPenaltyRule:
+ *  post:
+ *    description: Use to get penalty rule of a particular merchant 
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post(
 	"/cashier/getMerchantPenaltyRule",
@@ -603,6 +654,17 @@ router.post("/cashier/activateUser", jwtTokenAuth, function (req, res) {
 	}
 });
 
+
+/**
+ * @swagger
+ * /getCashierDashStats:
+ *  post:
+ *    description: Use to get cashier's ashboard stats
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/getCashierDashStats", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
@@ -739,6 +801,16 @@ router.post("/cashierAcceptIncoming", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /getClosingBalance:
+ *  post:
+ *    description: Use to get the closing balance for this cashier
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/getClosingBalance", jwtTokenAuth, function (req, res) {
 
 	const jwtusername = req.sign_creds.username;
@@ -775,6 +847,16 @@ router.post("/getClosingBalance", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /openCashierBalance:
+ *  post:
+ *    description: Use to open cashier's counter
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/openCashierBalance", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -836,6 +918,17 @@ router.post("/openCashierBalance", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /addClosingBalance:
+ *  post:
+ *    description: Use to add the closing balance for this cashier
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 
 router.post("/addClosingBalance", jwtTokenAuth, function (req, res) {
 	const { denomination, total, note } = req.body;
@@ -1065,6 +1158,16 @@ router.post("/getCashierTransLimit", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * getCashier:
+ *  post:
+ *    description: Use to get this cashier details
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/getCashier", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	Cashier.findOne(
@@ -1118,6 +1221,16 @@ router.post("/getCashier", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /checkCashierFee:
+ *  post:
+ *    description: Use to check the fee for transaction
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/checkCashierFee", jwtTokenAuth, function (req, res) {
 	var { amount, trans_type } = req.body;
@@ -1212,11 +1325,31 @@ router.post("/cashierVerifyOTPClaim", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /cashierSendMoney:
+ *  post:
+ *    description: Use to do non wallet to non wallet send money transaction by cashier
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post(
 	"/cashierSendMoney",
 	jwtTokenAuth,
 	cashSendTransCntrl.cashierSendMoney
 );
+
+/**
+ * @swagger
+ * /cashier/sendMoneyToWallet:
+ *  post:
+ *    description: Use to do non wallet to wallet send money transaction by cashier
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post(
 	"/cashier/sendMoneyToWallet",
@@ -1475,6 +1608,18 @@ router.post(
 	cashClaimTransCntrl.cashierClaimMoney
 );
 
+
+/**
+ * @swagger
+ * /cashierSearchPaidInvoiceByMobile:
+ *  post:
+ *    description: Use to get all the paid invoices by mobile number
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
+
 router.post("/cashierSearchPaidInvoiceByMobile", jwtTokenAuth, function (req, res) {
 	const { mobile } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -1513,6 +1658,16 @@ router.post("/cashierSearchPaidInvoiceByMobile", jwtTokenAuth, function (req, re
 	);
 });
 
+/**
+ * @swagger
+ * /cashierSearchPaidInvoiceByBillNumber:
+ *  post:
+ *    description: Use to get all the paid invoices by bill number
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/cashierSearchPaidInvoiceByBillNumber", jwtTokenAuth, function (req, res) {
 	const { number } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -1550,6 +1705,16 @@ router.post("/cashierSearchPaidInvoiceByBillNumber", jwtTokenAuth, function (req
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /cashierSearchPaidInvoiceByCustomerCode:
+ *  post:
+ *    description: Use to get all the paid invoices by customer code
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/cashierSearchPaidInvoiceByCustomerCode", jwtTokenAuth, function (req, res) {
 	const { customer_code } = req.body;

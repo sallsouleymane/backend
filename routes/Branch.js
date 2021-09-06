@@ -35,6 +35,16 @@ router.post(
 	cancelTransCntrl.rejectCancelRequest
 );
 
+/**
+ * @swagger
+ * /branch/cashierStats:
+ *  post:
+ *    description: Use to get cashier dashboard stats by branch
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/branch/cashierStats",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { cashier_id } = req.body;
@@ -98,6 +108,16 @@ router.post("/branch/cashierStats",jwtTokenAuth,function (req, res) {
 		}
 	);	
 });
+
+/**
+ * @swagger
+ * /branch/getBranchDashStats:
+ *  post:
+ *    description: Use to get branch dashboard stats by branch
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/branch/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -249,6 +269,17 @@ router.post("/branch/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	);
 });
 
+
+/**
+ * @swagger
+ * /getBranchDashStats:
+ *  post:
+ *    description: Use to get branch dashboard 
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	var today = new Date();
 	today = today.toISOString();
@@ -378,6 +409,17 @@ router.post("/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /addBranchCashier:
+ *  post:
+ *    description: Use to create a cashier position 
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
+
 router.post("/addBranchCashier", jwtTokenAuth, function (req, res) {
 	let data = new Cashier();
 	const {
@@ -438,6 +480,16 @@ router.post("/addBranchCashier", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /addOpeningBalance:
+ *  post:
+ *    description: Use to add opening balance
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/addOpeningBalance", jwtTokenAuth, function (req, res) {
 	const {
@@ -519,6 +571,16 @@ router.post("/getBranch", jwtTokenAuth, function (req, res) {
 	});
 });
 
+/**
+ * @swagger
+ * /getBranchInfo":
+ *  post:
+ *    description: Use to get branch info
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/getBranchInfo", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	Branch.findOne(
@@ -553,6 +615,18 @@ router.post("/getBranchInfo", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+
+/**
+ * @swagger
+ * /branchSetupUpdate":
+ *  post:
+ *    description: Use to setup branch creentials
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 
 router.post("/branchSetupUpdate", jwtTokenAuth, function (req, res) {
 	const { password } = req.body;
@@ -730,6 +804,17 @@ router.post("/updateCashierTransferStatus", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /branch/updateCashierUser":
+ *  post:
+ *    description: Use to update the cashier user
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
+
 router.post(
 	"/branch/updateCashierUser",
 	jwtTokenAuth,
@@ -791,6 +876,17 @@ router.post(
 	}
 );
 
+/**
+ * @swagger
+ * /branch/disassignUser":
+ *  post:
+ *    description: Use to disassign a user from a cashier position
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
+
 router.post("/branch/disassignUser", jwtTokenAuth, (req, res) => {
 	const { cashier_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -834,6 +930,17 @@ router.post("/branch/disassignUser", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+
+/**
+ * @swagger
+ * /branch/getCashierDetails":
+ *  post:
+ *    description: Use to get cashier details
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/branch/getCashierDetails", jwtTokenAuth, function (req, res) {
 	const { cashier_id } = req.body;

@@ -45,6 +45,16 @@ const MerchantPosition = require("../models/merchant/Position");
 
 const mainFee = config.mainFee;
 
+/**
+ * @swagger
+ * /infra/getBankDailyReport:
+ *  post:
+ *    description: Use to get bank's daily report by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/infra/getBankDailyReport", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { bank_id, start, end} = req.body;
@@ -264,6 +274,16 @@ router.post("/infra/getBankDailyReport", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /infra/getBankDashStats:
+ *  post:
+ *    description: Use to get bank's dashboard stats by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 
 router.post("/infra/getBankDashStats", jwtTokenAuth, function (req, res) {
@@ -526,6 +546,16 @@ router.post("/infra/getBankDashStats", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /infra/:type/getMerchantStatsBydate:
+ *  post:
+ *    description: Use to get merchant's stats searched by date  by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/infra/:type/getMerchantStatsBydate",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const type = req.params.type;
@@ -728,6 +758,16 @@ router.post("/infra/:type/getMerchantStatsBydate",jwtTokenAuth,function (req, re
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /infra/:type/getMerchantStatsByPeriod:
+ *  post:
+ *    description: Use to get merchant's stats searched by date  by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/infra/:type/getMerchantStatsByPeriod",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -1260,6 +1300,16 @@ router.post("/infra/deleteCountry", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /infra/bank/listMerchants:
+ *  post:
+ *    description: Use to list bank's merchants by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/infra/bank/listMerchants", jwtTokenAuth, function (req, res) {
 	var { bank_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -1340,6 +1390,16 @@ router.post("/infra/listMerchants", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /infra/listInfraMerchants:
+ *  post:
+ *    description: Use to list infra's merchants by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/infra/listInfraMerchants", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -1836,6 +1896,16 @@ function (req, res) {
 }
 );
 
+/**
+ * @swagger
+ * /infra/createMerchant:
+ *  post:
+ *    description: Use to create merchant by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/infra/createMerchant", jwtTokenAuth, function (req, res) {
 	var {
 		code,
@@ -1968,6 +2038,16 @@ router.post("/infra/createMerchant", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /infra/editMerchant:
+ *  post:
+ *    description: Use to edit merchant by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/infra/editMerchant", jwtTokenAuth, function (req, res) {
 	var {
@@ -2227,6 +2307,16 @@ router.post("/infraSetupUpdate", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /getBanks:
+ *  post:
+ *    description: Use to get all banksby infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/getBanks", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	Infra.findOne(
@@ -2333,6 +2423,16 @@ router.get("/checkInfra", function (req, res) {
 		}
 	});
 });
+
+/**
+ * @swagger
+ * /addBank:
+ *  post:
+ *    description: Use to create bank by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/addBank", jwtTokenAuth, function (req, res) {
 	let data = new Bank();
@@ -2492,6 +2592,16 @@ router.post("/addBank", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /editBank:
+ *  post:
+ *    description: Use to edit bank by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/editBank", jwtTokenAuth, function (req, res) {
 	let data = new Bank();
@@ -3049,6 +3159,16 @@ router.post("/editInfraUser", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /getBank:
+ *  post:
+ *    description: Use to get a bank by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/getBank", jwtTokenAuth, function (req, res) {
 	const { bank_id } = req.body;

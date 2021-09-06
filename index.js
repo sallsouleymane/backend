@@ -26,6 +26,8 @@ var cors = require("cors");
 const bodyParser = require("body-parser");
 const logger = require("morgan");
 const cookieParser = require("cookie-parser");
+const swaggerJsDoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 
 const API_PORT = 3001;
 
@@ -34,6 +36,19 @@ app.use(cors());
 app.use(cookieParser());
 app.use(express.static("public"));
 const router = express.Router();
+
+const swaggerOptions = {
+	swaggerDefinition : {
+		info: {
+			title: "ewallet-backend",
+			description: "ewallet-backend",
+			servers: ["http://localhost:3001"]
+		},
+	},
+	apis: ['./routes/*/*.js', './routes/*.js']
+};
+
+
 
 app.use(logger("dev"));
 app.use(
@@ -47,6 +62,9 @@ app.use(
 		extended: true,
 	})
 );
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.use("/api", router);
 app.use("/api", userRouter);

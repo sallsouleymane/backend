@@ -218,6 +218,15 @@ router.post("/bank/cashierStats",jwtTokenAuth,function (req, res) {
 });
 
 
+/**
+ * @swagger
+ * /bank/getBranchDashStats:
+ *  post:
+ *    description: Use to get Branch Dashboard stats
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/bank/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -425,7 +434,15 @@ router.post("/bank/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	);
 });
 
-
+/**
+ * @swagger
+ * /bank/getBranchWalletBalance:
+ *  post:
+ *    description: Use to get Branch Wallet Balance
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 router.post("/bank/getBranchWalletBalance", jwtTokenAuth, function (req, res) {
 	const { branch_id, wallet_type } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -504,6 +521,16 @@ router.post("/bank/getBranchWalletBalance", jwtTokenAuth, function (req, res) {
 	);
 });
 
+
+/**
+ * @swagger
+ * /bank/getBankWalletBalance:
+ *  post:
+ *    description: Use to get Bank Wallet Balance
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 router.post("/bank/getBankWalletBalance", jwtTokenAuth, function (req, res) {
 	const { bank_id, wallet_type } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -582,6 +609,16 @@ router.post("/bank/getBankWalletBalance", jwtTokenAuth, function (req, res) {
 	);
 });
 
+
+/**
+ * @swagger
+ * /bank/getMerchantById:
+ *  post:
+ *    description: Use to get Merchant details
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 router.post("/bank/getMerchantById", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { merchant_id } = req.body;
@@ -618,6 +655,15 @@ router.post("/bank/getMerchantById", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /bank/getMyWalletIds:
+ *  post:
+ *    description: Use to get Wallet IDs
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 router.post("/bank/getMyWalletIds", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
@@ -639,6 +685,16 @@ router.post("/bank/getMyWalletIds", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /bank/getBanks:
+ *  post:
+ *    description: Use to get all banks
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/bank/getBanks", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -677,6 +733,17 @@ router.post("/bank/getBanks", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+
+/**
+ * @swagger
+ * /bank/generateOTP:
+ *  post:
+ *    description: Use to generate OTP
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/bank/generateOTP", jwtTokenAuth, function (req, res) {
 	const { username, page, name, email, mobile, code, bank_id } = req.body;
