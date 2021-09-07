@@ -22,6 +22,16 @@ const Invoice = require("../../models/merchant/Invoice");
 const getWalletIds = require("../utils/getWalletIds");
 const DailyReport = require("../../models/cashier/DailyReport");
 
+/**
+ * @swagger
+ * /partner/getBranchDashStats:
+ *  post:
+ *    description: Use to partner branch's dashboard stats
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/partner/getBranchDashStats", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { branch_id } = req.body;
@@ -189,6 +199,16 @@ router.post("/partner/getBranchDashStats", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /partner/getBranchDailyReport:
+ *  post:
+ *    description: Use to partner branch's daily report by date
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/partner/getBranchDailyReport", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -361,6 +381,16 @@ router.post("/partner/getBranchDailyReport", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /partner/getBranchWalletBalnce:
+ *  post:
+ *    description: Use to partner branch's wallet balance
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post(
 	"/partner/getBranchWalletBalnce",
 	jwtTokenAuth,
@@ -410,6 +440,16 @@ router.post(
 		);
 	}
 );
+
+/**
+ * @swagger
+ * /partner/updateBranchStatus:
+ *  post:
+ *    description: Use to update partner branch's status
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/partner/updateBranchStatus", jwtTokenAuth, function (req, res) {
 	const { status, branch_id } = req.body;
@@ -552,6 +592,16 @@ router.post("/partner/getHistory", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /partner/dashStats:
+ *  post:
+ *    description: Use to get partner's dashboard stats
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/partner/dashStats", jwtTokenAuth, function (req, res) {
 	try {
 		const jwtusername = req.sign_creds.username;
@@ -634,6 +684,16 @@ router.post("/partner/setupUpdate", jwtTokenAuth, (req, res) => {
 	);
 });
 
+/**
+ * @swagger
+ * /partner/listUsers:
+ *  post:
+ *    description: Use to list all partner user
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/partner/listUsers", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { partner_id } = req.body;
@@ -707,6 +767,16 @@ router.post("/partner/listUsers", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /partner/addUser:
+ *  post:
+ *    description: Use to create partner user
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/partner/addUser", jwtTokenAuth, (req, res) => {
 	let data = new PartnerUser();
@@ -791,6 +861,16 @@ router.post("/partner/addUser", jwtTokenAuth, (req, res) => {
 	);
 });
 
+/**
+ * @swagger
+ * /partner/editUser:
+ *  post:
+ *    description: Use to edit partner user
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/partner/editUser", jwtTokenAuth, (req, res) => {
 	const {
 		name,
@@ -854,6 +934,16 @@ router.post("/partner/editUser", jwtTokenAuth, (req, res) => {
 	);
 });
 
+/**
+ * @swagger
+ * /partner/listCashiers:
+ *  post:
+ *    description: Use to list all partner cashier
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/partner/listCashiers", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	Partner.findOne(
@@ -896,6 +986,16 @@ router.post("/partner/listCashiers", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /partner/editCashier:
+ *  post:
+ *    description: Use to edit partner cashier
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/partner/editCashier", jwtTokenAuth, (req, res) => {
 	const {
@@ -959,6 +1059,16 @@ router.post("/partner/editCashier", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /partner/addCashier:
+ *  post:
+ *    description: Use to create partner cashier
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/partner/addCashier", jwtTokenAuth, (req, res) => {
 	let data = new PartnerCashier();
@@ -1073,6 +1183,16 @@ router.post("/partner/addCashier", jwtTokenAuth, (req, res) => {
 	);
 });
 
+/**
+ * @swagger
+ * /partner/listBranches:
+ *  post:
+ *    description: Use to list all partner branchs
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/partner/listBranches", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const {partner_id} = req.body;
@@ -1151,6 +1271,16 @@ router.post("/partner/listBranches", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /partner/getBranch:
+ *  post:
+ *    description: Use to get partner branch
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/partner/getBranch", jwtTokenAuth, function (req, res) {
 	const { branch_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -1190,6 +1320,16 @@ router.post("/partner/getBranch", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /partner/addBranch:
+ *  post:
+ *    description: Use to create partner branch
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/partner/addBranch", jwtTokenAuth, (req, res) => {
 	let data = new PartnerBranch();
@@ -1350,6 +1490,16 @@ router.post("/partner/addBranch", jwtTokenAuth, (req, res) => {
 	);
 });
 
+/**
+ * @swagger
+ * /partner/editBranch:
+ *  post:
+ *    description: Use to edit partner branch
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/partner/editBranch", jwtTokenAuth, (req, res) => {
 	let data = new PartnerBranch();
 	const {
@@ -1420,6 +1570,16 @@ router.post("/partner/editBranch", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /partner/activate:
+ *  post:
+ *    description: Use to activate partner
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/partner/activate", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;

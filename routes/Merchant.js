@@ -28,6 +28,16 @@ const MerchantSettings = require("../models/merchant/MerchantSettings");
 const Customer = require("../models/merchant/Customer");
 const { errors } = require("formidable");
 
+/**
+ * @swagger
+ * /merchant/getDashStats:
+ *  post:
+ *    description: Use to get merchant's dashboard stats
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 	const { merchant_id } = req.body;
 	var today = new Date();
@@ -202,6 +212,16 @@ router.post("/merchant/getDashStats", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/getSettings:
+ *  post:
+ *    description: Use to get merchant's settings
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/getSettings", jwtTokenAuth, function (req, res) {
 	const { merchant_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -285,6 +305,16 @@ router.post("/merchant/getSettings", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/getzoneList:
+ *  post:
+ *    description: Use to get merchant's zone list
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/getzoneList", jwtTokenAuth, (req, res) => {
 	const { merchant_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -359,6 +389,16 @@ router.post("/merchant/getzoneList", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /merchant/getsubzoneList:
+ *  post:
+ *    description: Use to get merchant's subzone list
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/getsubzoneList", jwtTokenAuth, (req, res) => {
 	const { merchant_id } = req.body;
@@ -435,6 +475,16 @@ router.post("/merchant/getsubzoneList", jwtTokenAuth, (req, res) => {
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/getbranchList:
+ *  post:
+ *    description: Use to get merchant's branch list
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/getbranchList", jwtTokenAuth, (req, res) => {
 	const { merchant_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -508,6 +558,16 @@ router.post("/merchant/getbranchList", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /merchant/getZoneStats:
+ *  post:
+ *    description: Use to get merchant's zone's stats
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -707,6 +767,16 @@ router.post("/merchant/getZoneStats",jwtTokenAuth,function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/getWalletBalance:
+ *  post:
+ *    description: Use to get merchant's wallet balance
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 	const username = req.sign_creds.username;
 	Merchant.findOne(
@@ -800,6 +870,16 @@ router.get("/merchant/getWalletBalance", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /merchant/getMerchantSubzoneListDashStats:
+ *  post:
+ *    description: Use to get merchant's subzone's stats
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/getMerchantSubzoneListDashStats", jwtTokenAuth, function (req, res) {
 	const { zone_id } = req.body;
@@ -976,6 +1056,16 @@ router.post("/merchant/getMerchantSubzoneListDashStats", jwtTokenAuth, function 
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/getMerchantBranchListDashStats:
+ *  post:
+ *    description: Use to get merchant's branch's stats
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/getMerchantBranchListDashStats", jwtTokenAuth, function (req, res) {
 	const { subzone_id } = req.body;
 	var today = new Date();
@@ -1150,6 +1240,16 @@ router.post("/merchant/getMerchantBranchListDashStats", jwtTokenAuth, function (
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/listSubzonesByZoneId:
+ *  post:
+ *    description: Use to get subzones by zone id
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post(
 	"/merchant/listSubzonesByZoneId",
 	jwtTokenAuth,
@@ -1229,6 +1329,16 @@ router.post(
 		);
 	}
 );
+
+/**
+ * @swagger
+ * /merchant/getSubZoneStats:
+ *  post:
+ *    description: Use to get subzone's stats
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/getSubZoneStats",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -1390,6 +1500,16 @@ router.post("/merchant/getSubZoneStats",jwtTokenAuth,function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /merchant/getBranchStats:
+ *  post:
+ *    description: Use to get branch's stats
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/getBranchStats",jwtTokenAuth,function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -2038,6 +2158,16 @@ router.post("/merchant/:type/getStatsByPeriod",jwtTokenAuth,function (req, res) 
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/listOfferings:
+ *  post:
+ *    description: Use to get offering list
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/listOfferings", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { merchant_id } = req.body;
@@ -2113,6 +2243,16 @@ router.post("/merchant/listOfferings", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/listTaxes:
+ *  post:
+ *    description: Use to get tax list
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/listTaxes", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
 	const { merchant_id } = req.body;
@@ -2185,6 +2325,16 @@ router.post("/merchant/listTaxes", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /merchant/listInvoiceGroups:
+ *  post:
+ *    description: Use to get list of invoice groups 
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/listInvoiceGroups", jwtTokenAuth, (req, res) => {
 	const { merchant_id } = req.body;
@@ -2261,6 +2411,16 @@ router.post("/merchant/listInvoiceGroups", jwtTokenAuth, (req, res) => {
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/createInvoiceGroup:
+ *  post:
+ *    description: Use to create invoice group
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/createInvoiceGroup", jwtTokenAuth, (req, res) => {
 	let data = new InvoiceGroup();
 	const { code, name, description } = req.body;
@@ -2302,6 +2462,16 @@ router.post("/merchant/createInvoiceGroup", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /merchant/listCustomers:
+ *  post:
+ *    description: Use to get list of customers 
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -2375,6 +2545,17 @@ router.post("/merchant/listCustomers", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+
+/**
+ * @swagger
+ * /merchant/listStaff:
+ *  post:
+ *    description: Use to get list of merchant staffs 
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/listStaff", jwtTokenAuth, (req, res) => {
 	const jwtusername = req.sign_creds.username;
@@ -2452,6 +2633,17 @@ router.post("/merchant/listStaff", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+
+/**
+ * @swagger
+ * /merchant/listStaff:
+ *  post:
+ *    description: Use to get merchant's transaction history
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
  
 router.post("/merchant/getTransHistory", jwtTokenAuth, function (req, res) {
 	const jwtusername = req.sign_creds.username;
@@ -2825,6 +3017,17 @@ router.post("/merchant/editPenaltyRule", jwtTokenAuth, (req, res) => {
 	);
 });
 
+
+/**
+ * @swagger
+ * /merchant/addBillPeriod:
+ *  post:
+ *    description: Use to create bill period
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/addBillPeriod", jwtTokenAuth, (req, res) => {
 	const billperiod = {
 		start_date: req.body.start_date,
@@ -2919,6 +3122,15 @@ router.post("/merchant/addBillPeriod", jwtTokenAuth, (req, res) => {
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/setDefaultBillPeriod:
+ *  post:
+ *    description: Use to set default bill period
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/setDefaultBillPeriod", jwtTokenAuth, (req, res) => {
 	const period = {
@@ -3002,6 +3214,16 @@ router.post("/merchant/setDefaultBillterm", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /merchant/addBillTerm:
+ *  post:
+ *    description: Use to add bill term
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/addBillTerm", jwtTokenAuth, (req, res) => {
 	const billterm = {
@@ -3096,6 +3318,16 @@ router.post("/merchant/addBillTerm", jwtTokenAuth, (req, res) => {
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/deleteTax:
+ *  post:
+ *    description: Use to delete tax
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/deleteTax", jwtTokenAuth, function (req, res) {
 	const { tax_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -3132,6 +3364,16 @@ router.post("/merchant/deleteTax", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/editTax:
+ *  post:
+ *    description: Use to edit tax
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/editTax", jwtTokenAuth, function (req, res) {
 	const { tax_id, code, name, value } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -3166,6 +3408,16 @@ router.post("/merchant/editTax", jwtTokenAuth, function (req, res) {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /merchant/createTax:
+ *  post:
+ *    description: Use to create tax
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/createTax", jwtTokenAuth, function (req, res) {
 	const { code, name, value } = req.body;
@@ -3269,6 +3521,16 @@ router.post("/merchant/deleteOffering", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/editOffering:
+ *  post:
+ *    description: Use to edit offering
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/editOffering", jwtTokenAuth, (req, res) => {
 	const {
 		offering_id,
@@ -3324,6 +3586,16 @@ router.post("/merchant/editOffering", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /merchant/uploadOfferings:
+ *  post:
+ *    description: Use to upload offerings
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/uploadOfferings", jwtTokenAuth, function (req, res) {
 	const { offerings } = req.body;
@@ -3477,6 +3749,16 @@ router.post("/merchant/editDetails", jwtTokenAuth, function (req, res) {
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/editZone:
+ *  post:
+ *    description: Use to edit merchant zone
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/editZone", jwtTokenAuth, (req, res) => {
 	const { zone_id, code, name, type, description } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -3513,6 +3795,16 @@ router.post("/merchant/editZone", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /merchant/createZone:
+ *  post:
+ *    description: Use to create merchant zone
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 	let data = new Zone();
@@ -3560,6 +3852,16 @@ router.post("/merchant/createZone", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /merchant/createSubzone:
+ *  post:
+ *    description: Use to create merchant subzone
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/createSubzone", jwtTokenAuth, (req, res) => {
 	let data = new Subzone();
@@ -3627,6 +3929,17 @@ router.post("/merchant/createSubzone", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+
+/**
+ * @swagger
+ * /merchant/editSubzone:
+ *  post:
+ *    description: Use to edit merchant subzone
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/editSubzone", jwtTokenAuth, (req, res) => {
 	const { subzone_id, code, name, type, description } = req.body;
@@ -3898,6 +4211,16 @@ router.post("/merchant/addStaff", jwtTokenAuth, (req, res) => {
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/editStaff:
+ *  post:
+ *    description: Use to edit merchant staff
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 	const {
 		role,
@@ -3961,6 +4284,16 @@ router.post("/merchant/editStaff", jwtTokenAuth, (req, res) => {
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/blockStaff:
+ *  post:
+ *    description: Use to block merchant staff
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/blockStaff", jwtTokenAuth, (req, res) => {
 	const { staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -4002,6 +4335,16 @@ router.post("/merchant/blockStaff", jwtTokenAuth, (req, res) => {
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/unblockStaff:
+ *  post:
+ *    description: Use to unblock merchant staff
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/unblockStaff", jwtTokenAuth, (req, res) => {
 	const { staff_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -4041,6 +4384,16 @@ router.post("/merchant/unblockStaff", jwtTokenAuth, (req, res) => {
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/blockBranch:
+ *  post:
+ *    description: Use to block merchant branch
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/blockBranch", jwtTokenAuth, (req, res) => {
 	const { branch_id } = req.body;
 	const jwtusername = req.sign_creds.username;
@@ -4075,6 +4428,16 @@ router.post("/merchant/blockBranch", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /merchant/createBranch:
+ *  post:
+ *    description: Use to create merchant branch
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/unblockBranch", jwtTokenAuth, (req, res) => {
 	const { branch_id } = req.body;
@@ -4114,6 +4477,16 @@ router.post("/merchant/unblockBranch", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /merchant/createBranch:
+ *  post:
+ *    description: Use to create merchant branch
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 	let data = new MerchantBranch();
@@ -4277,6 +4650,16 @@ router.post("/merchant/createBranch", jwtTokenAuth, (req, res) => {
 	);
 });
 
+/**
+ * @swagger
+ * /merchant/editBranch:
+ *  post:
+ *    description: Use to edit merchant branch
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
 router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 	const {
 		branch_id,
@@ -4348,6 +4731,16 @@ router.post("/merchant/editBranch", jwtTokenAuth, (req, res) => {
 		}
 	);
 });
+
+/**
+ * @swagger
+ * /merchant/listBranches":
+ *  post:
+ *    description: Use to get all merchant branches
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
 
 router.get("/merchant/listBranches", jwtTokenAuth, function (req, res) {
 	const username = req.sign_creds.username;
