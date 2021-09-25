@@ -10,7 +10,7 @@ module.exports.createWallet = async (arr) => {
 		await Promise.all(
 			arr.map(async (url) => {
 				let options = {
-					uri: "http://" + config.blockChainIP + ":18000/createEWallet",
+					uri: "http://" + config.blockChainIP + ":3000/createEWallet",
 					method: "POST",
 					json: {
 						wallet_id: url,
