@@ -936,7 +936,13 @@ router.post(
 								{
 									_id: rule_id,
 								},
-								{ new: true },
+								{
+									$set: {
+										infra_approval_status: 2,
+										infra_share: infra_share,
+										
+									},
+								},
 								async (err2, rule) => {
 									if (err2) {
 										console.log(err2);

@@ -10,7 +10,7 @@ module.exports.createWallet = async (arr) => {
 		await Promise.all(
 			arr.map(async (url) => {
 				let options = {
-					uri: "http://" + config.blockChainIP + ":3000/createEWallet",
+					uri: config.blockChainIP + "/createEWallet",
 					method: "POST",
 					json: {
 						wallet_id: url,
@@ -35,7 +35,7 @@ module.exports.getStatement = async (arr, user_id = "") => {
 	try {
 		console.log("Blockchain service: getStatement " + arr);
 		let options = {
-			uri: "http://" + config.blockChainIP + ":8000/getEWalletStatement",
+			uri: config.blockChainIP + "/getEWalletStatement",
 			method: "POST",
 			json: {
 				wallet_id: arr.toString(),
@@ -62,7 +62,7 @@ module.exports.rechargeNow = async (arr) => {
 		await Promise.all(
 			arr.map(async (url) => {
 				var options = {
-					uri: "http://" + config.blockChainIP + ":8000/rechargeEWallet",
+					uri: config.blockChainIP + "/rechargeEWallet",
 					method: "POST",
 					json: {
 						wallet_id: url.to.toString(),
@@ -88,7 +88,7 @@ module.exports.getChildStatements = async (arr) => {
 	try {
 		console.log("Blockchain service: getChildStatements " + arr);
 		var options = {
-			uri: "http://" + config.blockChainIP + ":8000/getChildIds",
+			uri: config.blockChainIP + "/getChildIds",
 			method: "POST",
 			json: {
 				master_id: arr.toString(),
@@ -111,7 +111,7 @@ module.exports.getTransactionCount = async (arr) => {
 	try {
 		console.log("Blockchain service: getTransactionCount " + arr);
 		var options = {
-			uri: "http://" + config.blockChainIP + ":8000/getEWalletTransactionCount",
+			uri: config.blockChainIP + "/getEWalletTransactionCount",
 			method: "POST",
 			json: {
 				wallet_id: arr.toString(),
@@ -134,7 +134,7 @@ module.exports.getBalance = async (arr) => {
 	try {
 		console.log("Blockchain service: getBalance " + arr);
 		var options = {
-			uri: "http://" + config.blockChainIP + ":8000/showEWalletBalance",
+			uri: config.blockChainIP + "/showEWalletBalance",
 			method: "POST",
 			json: {
 				wallet_id: arr.toString(),
@@ -158,7 +158,7 @@ module.exports.initiateTransfer = async function (transaction) {
 		console.log("Blockchain service: initiateTransfer " + transaction);
 
 		var options = {
-			uri: "http://" + config.blockChainIP + ":8000/transferBtwEWallets",
+			uri: config.blockChainIP + "/transferBtwEWallets",
 			method: "POST",
 			json: {
 				tx_name: transaction.transaction_type
@@ -206,7 +206,7 @@ module.exports.initiateMultiTransfer = async function (transactions) {
 		});
 
 		var options = {
-			uri: "http://" + config.blockChainIP + ":8000/multipleTransfers",
+			uri: config.blockChainIP + "/multipleTransfers",
 			method: "POST",
 			json: { transfers: argument },
 		};
