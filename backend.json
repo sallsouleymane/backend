@@ -1,7 +1,7 @@
 {
     "apps" : [{
       "name"        : "backend",
-      "script"      : "bin/www",
+      "script"      : "nodemon index.js",
       "watch"       : "../",
       "log_date_format"  : "YYYY-MM-DD HH:mm Z"
     }]
