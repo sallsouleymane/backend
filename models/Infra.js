@@ -1,5 +1,6 @@
 // Infra.js
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 const InfraSchema = new mongoose.Schema({
 	name: { type: String, required: true },
 	username: { type: String, required: true, unique: true },
@@ -13,6 +14,18 @@ const InfraSchema = new mongoose.Schema({
 	isAdmin: { type: Boolean, required: true, default: false },
 	status: { type: Number, required: true, default: 1 },
 });
+
+InfraSchema.pre('save', async function (next){
+	try{
+		const hashedPassword = await bcrypt.hash(this.password,12);
+		this.password = hashedPassword;
+		next();
+
+	}catch(err){
+		next(err);
+	}
+});
+
 module.exports = mongoose.model("Infra", InfraSchema);
 
 InfraSchema.methods.isCorrectPassword = function (password, callback) {

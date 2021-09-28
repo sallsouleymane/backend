@@ -1586,7 +1586,7 @@ router.post("/cashierVerifyClaim", jwtTokenAuth, function (req, res) {
 						otp: otp,
 					},
 					function (err10, otpd) {
-						let result1 = errorMessage(err1, otpd, "OTP Missmatch");
+						let result1 = errorMessage(err10, otpd, "OTP Missmatch");
 						if (result1.status == 0) {
 							res.status(200).json(result1);
 						} else {

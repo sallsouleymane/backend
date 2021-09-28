@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const bcrypt = require("bcrypt");
 
 //utils
 const jwtsign = require("./utils/jwtsign");
@@ -629,55 +630,70 @@ router.post("/merchant/login", (req, res) => {
 	);
 });
 
-router.post("/login", function (req, res) {
+router.post("/login", async function (req, res) {
 	const { username, password } = req.body;
 	Infra.findOne(
 		{
 			username: { $regex: new RegExp(username, "i") },
-			password,
 		},
 		function (err, user) {
-			var result = errorMessage(err, user, "Incorrect username or password");
+			var result = errorMessage(err, user, "Incorrect username");
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				let sign_creds = { username: username, type: "infra" };
-				const token = jwtsign(sign_creds);
+				bcrypt.compare(password, user.password, function(passerr, isValid) {
+					if (passerr) {
+						res.status(200).json({
+							status: 0,
+							message: passerr,
+						});
+					} else if (!isValid){
+						res.status(200).json({
+							status: 0,
+							message: errmessage,
+						});
+					} else{
+						let sign_creds = { username: username, type: "infra" };
+						const token = jwtsign(sign_creds);
 
-				if (user.profile_id && user.profile_id !== "") {
-					Profile.findOne(
-						{
-							_id: user.profile_id,
-						},
-						function (err1, profile) {
-							res.status(200).json({
-								token: token,
-								permissions: profile.permissions,
-								name: user.name,
-								isAdmin: user.isAdmin,
-								initial_setup: user.initial_setup,
-							});
-						}
-					);
-				} else {
-					if (user.isAdmin) {
-						res.status(200).json({
-							token: token,
-							permissions: "all",
-							name: user.name,
-							isAdmin: user.isAdmin,
-							initial_setup: user.initial_setup,
-						});
-					} else {
-						res.status(200).json({
-							token: token,
-							permissions: "",
-							name: user.name,
-							isAdmin: user.isAdmin,
-							initial_setup: user.initial_setup,
-						});
+						if (user.profile_id && user.profile_id !== "") {
+						Profile.findOne(
+								{
+									_id: user.profile_id,
+								},
+								function (err1, profile) {
+									res.status(200).json({
+										token: token,
+										permissions: profile.permissions,
+										name: user.name,
+										isAdmin: user.isAdmin,
+										initial_setup: user.initial_setup,
+									});
+								}
+							);
+								} else {
+									if (user.isAdmin) {
+										res.status(200).json({
+											token: token,
+											permissions: "all",
+											name: user.name,
+											isAdmin: user.isAdmin,
+											initial_setup: user.initial_setup,
+										});
+									} else {
+										res.status(200).json({
+											token: token,
+											permissions: "",
+											name: user.name,
+											isAdmin: user.isAdmin,
+											initial_setup: user.initial_setup,
+										});
+									}
+								}
+
 					}
-				}
+
+				});
 			}
 		}
 	);
