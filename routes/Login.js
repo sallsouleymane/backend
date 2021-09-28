@@ -642,15 +642,17 @@ router.post("/login", async function (req, res) {
 				res.status(200).json(result);
 			} else {
 				bcrypt.compare(password, user.password, function(passerr, isValid) {
+					console.log(isValid);
 					if (passerr) {
 						res.status(200).json({
 							status: 0,
 							message: passerr,
 						});
-					} else if (!isValid){
+					} else if (isValid === false || isValid === "false"){
+						console.log("dwfdw");
 						res.status(200).json({
 							status: 0,
-							message: errmessage,
+							message: "Incorrect Password",
 						});
 					} else{
 						let sign_creds = { username: username, type: "infra" };
