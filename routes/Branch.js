@@ -1,5 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const bcrypt = require("bcrypt");
+
+
 
 //services
 const { getStatement, initiateTransfer } = require("../services/Blockchain.js");
@@ -628,8 +631,9 @@ router.post("/getBranchInfo", jwtTokenAuth, function (req, res) {
  */
 
 
-router.post("/branchSetupUpdate", jwtTokenAuth, function (req, res) {
+router.post("/branchSetupUpdate", jwtTokenAuth, async function (req, res) {
 	const { password } = req.body;
+	const hashedPassword = await bcrypt.hash(password,12);
 	const jwtusername = req.sign_creds.username;
 	Branch.findOne(
 		{
@@ -657,7 +661,7 @@ router.post("/branchSetupUpdate", jwtTokenAuth, function (req, res) {
 				Branch.findByIdAndUpdate(
 					bank._id,
 					{
-						password: password,
+						password: hashedPassword,
 						initial_setup: true,
 					},
 					(err1) => {

@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+
 const BranchSchema = new mongoose.Schema({
 	name: { type: String, required: true, unique: true },
 	bcode: { type: String, required: true, unique: true },
@@ -26,4 +28,16 @@ const BranchSchema = new mongoose.Schema({
 		master: { type: String, required: false },
 	},
 });
+
+BranchSchema.pre('save', async function (next){
+	try{
+		const hashedPassword = await bcrypt.hash(this.password,12);
+		this.password = hashedPassword;
+		next();
+
+	}catch(err){
+		next(err);
+	}
+});
+
 module.exports = mongoose.model("Branch", BranchSchema);

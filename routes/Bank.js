@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const config = require("../config.json");
+const bcrypt = require("bcrypt");
 
 //utils
 const makeid = require("./utils/idGenerator");
@@ -1242,8 +1243,9 @@ router.post("/bank/sendShareForApproval", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/bankSetupUpdate", jwtTokenAuth, function (req, res) {
+router.post("/bankSetupUpdate", jwtTokenAuth, async function (req, res) {
 	const { username, password } = req.body;
+	const hashedPassword = await bcrypt.hash(password,12);
 	const jwtusername = req.sign_creds.username;
 	Bank.findOne(
 		{
@@ -1258,32 +1260,34 @@ router.post("/bankSetupUpdate", jwtTokenAuth, function (req, res) {
 			if (result.status == 0) {
 				res.status(200).json(result);
 			} else {
-				Bank.findByIdAndUpdate(
-					bank._id,
-					{
-						username: username,
-						password: password,
-						initial_setup: true,
-					},
-					(err2) => {
-						if (err2) {
-							console.log(err2);
-							var message2 = err2;
-							if (err2.message) {
-								message2 = err2.message;
+				
+						Bank.findByIdAndUpdate(
+							bank._id,
+							{
+								username: username,
+								password: hashedPassword,
+								initial_setup: true,
+							},
+							(err2) => {
+								if (err2) {
+									console.log(err2);
+									var message2 = err2;
+									if (err2.message) {
+										message2 = err2.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message2,
+									});
+								} else {
+									res.status(200).json({
+										status: 1,
+										success: "Updated successfully",
+									});
+								}
 							}
-							res.status(200).json({
-								status: 0,
-								message: message2,
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								success: "Updated successfully",
-							});
-						}
-					}
-				);
+						);
+				
 			}
 		}
 	);
@@ -1901,6 +1905,7 @@ router.post("/broadcastMessage", jwtTokenAuth, function (req, res) {
 
 router.post("/addBranch", jwtTokenAuth, function (req, res) {
 	let data = new Branch();
+	const password = makeid(10);
 	const {
 		name,
 		bcode,
@@ -1991,7 +1996,7 @@ router.post("/addBranch", jwtTokenAuth, function (req, res) {
 											data.mobile = mobile;
 											data.email = email;
 											data.bank_id = adminbank._id;
-											data.password = makeid(10);
+											data.password = password;
 											data.working_from = working_from;
 											data.working_to = working_to;
 											data.wallet_ids.operational = wallet_ids.operational;
@@ -2037,7 +2042,7 @@ router.post("/addBranch", jwtTokenAuth, function (req, res) {
 																	"</a></p><p><p>Your username: " +
 																	data.username +
 																	"</p><p>Your password: " +
-																	data.password +
+																	password +
 																	"</p>";
 																sendMail(content, "Bank Branch Created", email);
 																let content2 =
@@ -2048,7 +2053,7 @@ router.post("/addBranch", jwtTokenAuth, function (req, res) {
 																	" Your username: " +
 																	data.username +
 																	" Your password: " +
-																	data.password;
+																	password;
 																sendSMS(content2, mobile);
 																res.status(200).json({
 																	status: 1,
@@ -2104,7 +2109,7 @@ router.post("/addBranch", jwtTokenAuth, function (req, res) {
 							data.mobile = mobile;
 							data.email = email;
 							data.bank_id = bank._id;
-							data.password = makeid(10);
+							data.password = password;
 							data.working_from = working_from;
 							data.working_to = working_to;
 							data.wallet_ids.operational = wallet_ids.operational;
@@ -2150,7 +2155,7 @@ router.post("/addBranch", jwtTokenAuth, function (req, res) {
 													"</a></p><p><p>Your username: " +
 													data.username +
 													"</p><p>Your password: " +
-													data.password +
+													password +
 													"</p>";
 												sendMail(content, "Bank Branch Created", email);
 												let content2 =
@@ -2161,7 +2166,7 @@ router.post("/addBranch", jwtTokenAuth, function (req, res) {
 													" Your username: " +
 													data.username +
 													" Your password: " +
-													data.password;
+													password;
 												sendSMS(content2, mobile);
 												res.status(200).json({
 													status: 1,
@@ -2724,7 +2729,7 @@ router.post("/addCashier", jwtTokenAuth, function (req, res) {
 									_id: branch_id,
 								},
 								function (err3, branch) {
-									let result1 = errorMessage(err3, branch, message);
+									let result1 = errorMessage(err3, branch, "Branch not found");
 									if (result1.status == 0) {
 										res.status(200).json(result1);
 									} else {

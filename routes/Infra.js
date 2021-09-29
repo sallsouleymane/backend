@@ -2466,6 +2466,7 @@ router.get("/checkInfra", function (req, res) {
 
 router.post("/addBank", jwtTokenAuth, function (req, res) {
 	let data = new Bank();
+	const password = makeid(10);
 	const {
 		name,
 		bcode,
@@ -2567,7 +2568,7 @@ router.post("/addBank", jwtTokenAuth, function (req, res) {
 										data.user_id = user._id;
 										data.logo = logo;
 										data.contract = contract;
-										data.password = makeid(10);
+										data.password = password;
 
 										data.save((err3, d) => {
 											if (err3) {
@@ -2594,7 +2595,7 @@ router.post("/addBank", jwtTokenAuth, function (req, res) {
 													"/bank</a></p><p><p>Your username: " +
 													data.username +
 													"</p><p>Your password: " +
-													data.password +
+													password +
 													"</p>";
 												sendMail(content, "Bank Account Created", email);
 												let content2 =
@@ -2603,7 +2604,7 @@ router.post("/addBank", jwtTokenAuth, function (req, res) {
 													"/bank Your username: " +
 													data.username +
 													" Your password: " +
-													data.password;
+													password;
 												sendSMS(content2, mobile);
 
 												res.status(200).json({

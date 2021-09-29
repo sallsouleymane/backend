@@ -1,5 +1,6 @@
 // BankUser.js
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 const BankUserSchema = new mongoose.Schema({
 	name: { type: String, required: true },
 	username: { type: String, required: true, unique: true },
@@ -13,4 +14,16 @@ const BankUserSchema = new mongoose.Schema({
 	logo: { type: String, required: false },
 	status: { type: Number, required: true, default: 1 },
 });
+
+BankUserSchema.pre('save', async function (next){
+	try{
+		const hashedPassword = await bcrypt.hash(this.password,12);
+		this.password = hashedPassword;
+		next();
+
+	}catch(err){
+		next(err);
+	}
+});
+
 module.exports = mongoose.model("BankUser", BankUserSchema);

@@ -706,7 +706,6 @@ router.post("/bankLogin", function (req, res) {
 	Bank.findOne(
 		{
 			username,
-			password,
 		},
 		function (err, bank) {
 			if (err) {
@@ -777,21 +776,37 @@ router.post("/bankLogin", function (req, res) {
 					message: "Your account has been blocked, pls contact the admin!",
 				});
 			} else {
-				let sign_creds = { username: username, type: "bank" };
-				const token = jwtsign(sign_creds);
+				bcrypt.compare(password, bank.password, function(passerr, isValid) {
+					console.log(isValid);
+					if (passerr) {
+						res.status(200).json({
+							status: 0,
+							message: passerr,
+						});
+					} else if (isValid === false || isValid === "false"){
+						console.log("dwfdw");
+						res.status(200).json({
+							status: 0,
+							message: "Incorrect Password",
+						});
+					} else{
+							let sign_creds = { username: username, type: "bank" };
+							const token = jwtsign(sign_creds);
 
-				res.status(200).json({
-					token: token,
-					name: bank.name,
-					initial_setup: bank.initial_setup,
-					username: bank.username,
-					mobile: bank.mobile,
-					status: bank.status,
-					theme: bank.theme,
-					contract: bank.contract,
-					logo: bank.logo,
-					id: bank._id,
-					admin: false,
+							res.status(200).json({
+								token: token,
+								name: bank.name,
+								initial_setup: bank.initial_setup,
+								username: bank.username,
+								mobile: bank.mobile,
+								status: bank.status,
+								theme: bank.theme,
+								contract: bank.contract,
+								logo: bank.logo,
+								id: bank._id,
+								admin: false,
+							});
+					}
 				});
 			}
 		}
@@ -803,7 +818,6 @@ router.post("/branchLogin", function (req, res) {
 	Branch.findOne(
 		{
 			username,
-			password,
 		},
 		function (err, branch) {
 			if (err) {
@@ -898,25 +912,43 @@ router.post("/branchLogin", function (req, res) {
 						if (result4.status == 0) {
 							res.status(200).json(result4);
 						} else {
-							let logo = ba.logo;
-							let sign_creds = { username: username, type: "branch" };
-							const token = jwtsign(sign_creds);
 
-							res.status(200).json({
-								token: token,
-								name: branch.name,
-								initial_setup: branch.initial_setup,
-								username: branch.username,
-								status: branch.status,
-								email: branch.email,
-								bank_name: ba.name,
-								mobile: branch.mobile,
-								logo: logo,
-								theme: ba.theme,
-								bank_id: ba._id,
-								id: branch._id,
-								credit_limit: branch.credit_limit,
-								admin: false,
+							bcrypt.compare(password, branch.password, function(passerr, isValid) {
+								console.log(isValid);
+								if (passerr) {
+									res.status(200).json({
+										status: 0,
+										message: passerr,
+									});
+								} else if (isValid === false || isValid === "false"){
+									console.log("dwfdw");
+									res.status(200).json({
+										status: 0,
+										message: "Incorrect Password",
+									});
+								} else{
+
+									let logo = ba.logo;
+									let sign_creds = { username: username, type: "branch" };
+									const token = jwtsign(sign_creds);
+
+									res.status(200).json({
+										token: token,
+										name: branch.name,
+										initial_setup: branch.initial_setup,
+										username: branch.username,
+										status: branch.status,
+										email: branch.email,
+										bank_name: ba.name,
+										mobile: branch.mobile,
+										logo: logo,
+										theme: ba.theme,
+										bank_id: ba._id,
+										id: branch._id,
+										credit_limit: branch.credit_limit,
+										admin: false,
+									});
+								}
 							});
 						}
 					}
@@ -931,7 +963,6 @@ router.post("/cashierLogin", function (req, res) {
 	BankUser.findOne(
 		{
 			username,
-			password,
 		},
 		function (err, bank) {
 			var result = errorMessage(err, bank, "Incorrect username or password");
@@ -980,22 +1011,38 @@ router.post("/cashierLogin", function (req, res) {
 										if (result3.status == 0) {
 											res.status(200).json(result3);
 										} else {
-											let sign_creds = { username: username, type: "cashier" };
-											const token = jwtsign(sign_creds);
-											res.status(200).json({
-												token: token,
-												name: cashier.name,
-												username: bank1.username,
-												status: cashier.status,
-												email: bank1.email,
-												mobile: bank1.mobile,
-												cashier_id: cashier._id,
-												bank_id: cashier.bank_id,
-												branch_id: cashier.branch_id,
-												bank_name: bank1.name,
-												branch_name: branch.name,
-												id: bank1._id,
-												max_trans_amt: cashier.per_trans_amt,
+											bcrypt.compare(password, bank.password, function(passerr, isValid) {
+												console.log(isValid);
+												if (passerr) {
+													res.status(200).json({
+														status: 0,
+														message: passerr,
+													});
+												} else if (isValid === false || isValid === "false"){
+													console.log("dwfdw");
+													res.status(200).json({
+														status: 0,
+														message: "Incorrect Password",
+													});
+												} else{
+													let sign_creds = { username: username, type: "cashier" };
+													const token = jwtsign(sign_creds);
+													res.status(200).json({
+														token: token,
+														name: cashier.name,
+														username: bank1.username,
+														status: cashier.status,
+														email: bank1.email,
+														mobile: bank1.mobile,
+														cashier_id: cashier._id,
+														bank_id: cashier.bank_id,
+														branch_id: cashier.branch_id,
+														bank_name: bank1.name,
+														branch_name: branch.name,
+														id: bank1._id,
+														max_trans_amt: cashier.per_trans_amt,
+													});
+												}
 											});
 										}	
 									});

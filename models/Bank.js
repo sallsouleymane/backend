@@ -1,5 +1,7 @@
 // User.js
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+
 const BankSchema = new mongoose.Schema({
 	name: { type: String, required: true, unique: true },
 	bcode: { type: String, required: true, unique: true },
@@ -37,4 +39,16 @@ const BankSchema = new mongoose.Schema({
 		secondary: { type: String, required: false, default: '#6cac69' },
 	}
 });
+
+BankSchema.pre('save', async function (next){
+	try{
+		const hashedPassword = await bcrypt.hash(this.password,12);
+		this.password = hashedPassword;
+		next();
+
+	}catch(err){
+		next(err);
+	}
+});
+
 module.exports = mongoose.model("Bank", BankSchema);
