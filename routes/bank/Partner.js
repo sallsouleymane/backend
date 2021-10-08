@@ -9,6 +9,8 @@ const sendSMS = require("../utils/sendSMS");
 const sendMail = require("../utils/sendMail");
 const getTypeClass = require("../utils/getTypeClass");
 const makeotp = require("../utils/makeotp");
+const keyclock = require("../utils/keyClock");
+const keyclock_constant = require("../../keyclockConstants");
 
 //services
 const {
@@ -1032,192 +1034,199 @@ router.post("/bank/getPartnerDashStats", jwtTokenAuth, function (req, res) {
 });
 
 
-router.post("/getBankDashStatsForPartners", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	const { bank_id } = req.body;
-	Bank.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, bank) {
-			if (err) {
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			}else if (!bank || bank == null || bank == undefined){
-				BankUser.findOne(
-					{
-						username: jwtusername,
-						role: {$in: ['bankAdmin', 'infraAdmin']},
-					},
-					function (err1, admin) {
-						if (err1) {
-							console.log(err1);
-							var message1 = err1;
-							if (err1.message) {
-								message1 = err1.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message1,
-							});
-						}else if (!admin || admin==null || admin == undefined){
-							res.status(200).json({
-								status: 0,
-								message: "User not found",
-							});
-						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
-								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
-								if (result2.status == 0) {
-									res.status(200).json(result2);
+router.post("/getBankDashStatsForPartners", function (req, res) {
+	const { bank_id, token } = req.body;
+	var username = keyclock.getUsername(token);
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.BANK_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+		Bank.findOne(
+			{
+				username: username,
+				status: 1,
+			},
+			function (err, bank) {
+				if (err) {
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				}else if (!bank || bank == null || bank == undefined){
+					BankUser.findOne(
+						{
+							username: username,
+							role: {$in: ['bankAdmin', 'infraAdmin']},
+						},
+						function (err1, admin) {
+							if (err1) {
+								console.log(err1);
+								var message1 = err1;
+								if (err1.message) {
+									message1 = err1.message;
 								}
-							});
-						}	
-					}
-				);
-			}	
-				PartnerCashier.countDocuments(
-					{
-						bank_id: bank_id,
-					},
-					(err3, count) => {
-						if (count == null || !count) {
-							count = 0;
-						}
-						PartnerCashier.aggregate(
-							[
-								{ $match : {bank_id: bank_id}},
-								{
-									$group: {
-										_id: null,
-										total: {
-											$sum: "$cash_in_hand",
-										},
-										totalFee: {
-											$sum: "$fee_generated",
-										},
-										totalCommission: {
-											$sum: "$commission_generated",
-										},
-										openingBalance: {
-											$sum: "$opening_balance",
-										},
-										closingBalance: {
-											$sum: "$closing_balance",
-										},
-										cashReceived: {
-											$sum: "$cash_received",
-										},
-										cashReceivedFee: {
-											$sum: "$cash_received_fee",
-										},
-										cashReceivedComm: {
-											$sum: "$cash_received_commission",
-										},
-										cashPaid: {
-											$sum: "$cash_paid",
-										},
-										cashPaidFee: {
-											$sum: "$cash_paid_fee",
-										},
-										cashPaidComm: {
-											$sum: "$cash_paid_commission",
-										}
-									},
-								},
-							],
-							async (err4, aggregate) => {
-								Invoice.aggregate(
-									[{ 
-										$match : {
-											payer_bank_id: bank_id,
-											paid:1,
-										}
-									},
-										{
-											$group: {
-												_id: null,
-												totalAmountPaid: {
-													$sum: "$amount",
-												},
-												bills_paid: { $sum: 1 },
-											},
-										},
-									],
-									async (err5, invoices) => {
-										let amountpaid = 0;
-										let billpaid = 0;
-										let cin = 0;
-										let fg = 0;
-										let cg = 0;
-										let ob = 0;
-										let cr = 0;
-										let crf = 0;
-										let crc = 0;
-										let cp = 0;
-										let cpf = 0;
-										let cpc = 0;
-										let cb = 0;
-										if (
-											aggregate != undefined &&
-											aggregate != null &&
-											aggregate.length > 0
-										) {
-											cin = aggregate[0].total;
-											fg = aggregate[0].totalFee;
-											cg = aggregate[0].totalCommission;
-											ob = aggregate[0].openingBalance;
-											cr = aggregate[0].cashReceived;
-											cp = aggregate[0].cashPaid;
-											cb = aggregate[0].closingBalance;
-											crf = aggregate[0].cashReceivedFee;
-											crc = aggregate[0].cashReceivedComm;
-											cpf = aggregate[0].cashPaidFee;
-											cpc = aggregate[0].cashPaidComm;
-										}
-										if (
-											invoices != undefined &&
-											invoices != null &&
-											invoices.length > 0
-										) {
-											amountpaid = invoices[0].totalAmountPaid;
-											billpaid = invoices[0].bills_paid;
-										}
-										var totalPartners = await Partner.countDocuments({bank_id: bank_id});
-										res.status(200).json({
-											status: 1,
-											invoicePaid: billpaid,
-											amountPaid: amountpaid,
-											totalCashier: count,
-											cashInHand: cin,
-											feeGenerated : fg,
-										 	cashReceived: cr,
-											cashPaid: cp,
-											cashReceivedFee: crf,
-											cashReceivedComm: crc,
-											cashPaidFee: cpf,
-											cashPaidComm: cpc,
-											commissionGenerated: cg,
-											openingBalance: ob,
-											closingBalance: cb,
-											totalPartners:totalPartners,
-										});
+								res.status(200).json({
+									status: 0,
+									message: message1,
+								});
+							}else if (!admin || admin==null || admin == undefined){
+								res.status(200).json({
+									status: 0,
+									message: "User not found",
+								});
+							} else {
+								Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+									var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+									if (result2.status == 0) {
+										res.status(200).json(result2);
 									}
-								);
+								});
+							}	
+						}
+					);
+				}	
+					PartnerCashier.countDocuments(
+						{
+							bank_id: bank_id,
+						},
+						(err3, count) => {
+							if (count == null || !count) {
+								count = 0;
 							}
-						);
-					}
-				);
-			
-		}
-	);
+							PartnerCashier.aggregate(
+								[
+									{ $match : {bank_id: bank_id}},
+									{
+										$group: {
+											_id: null,
+											total: {
+												$sum: "$cash_in_hand",
+											},
+											totalFee: {
+												$sum: "$fee_generated",
+											},
+											totalCommission: {
+												$sum: "$commission_generated",
+											},
+											openingBalance: {
+												$sum: "$opening_balance",
+											},
+											closingBalance: {
+												$sum: "$closing_balance",
+											},
+											cashReceived: {
+												$sum: "$cash_received",
+											},
+											cashReceivedFee: {
+												$sum: "$cash_received_fee",
+											},
+											cashReceivedComm: {
+												$sum: "$cash_received_commission",
+											},
+											cashPaid: {
+												$sum: "$cash_paid",
+											},
+											cashPaidFee: {
+												$sum: "$cash_paid_fee",
+											},
+											cashPaidComm: {
+												$sum: "$cash_paid_commission",
+											}
+										},
+									},
+								],
+								async (err4, aggregate) => {
+									Invoice.aggregate(
+										[{ 
+											$match : {
+												payer_bank_id: bank_id,
+												paid:1,
+											}
+										},
+											{
+												$group: {
+													_id: null,
+													totalAmountPaid: {
+														$sum: "$amount",
+													},
+													bills_paid: { $sum: 1 },
+												},
+											},
+										],
+										async (err5, invoices) => {
+											let amountpaid = 0;
+											let billpaid = 0;
+											let cin = 0;
+											let fg = 0;
+											let cg = 0;
+											let ob = 0;
+											let cr = 0;
+											let crf = 0;
+											let crc = 0;
+											let cp = 0;
+											let cpf = 0;
+											let cpc = 0;
+											let cb = 0;
+											if (
+												aggregate != undefined &&
+												aggregate != null &&
+												aggregate.length > 0
+											) {
+												cin = aggregate[0].total;
+												fg = aggregate[0].totalFee;
+												cg = aggregate[0].totalCommission;
+												ob = aggregate[0].openingBalance;
+												cr = aggregate[0].cashReceived;
+												cp = aggregate[0].cashPaid;
+												cb = aggregate[0].closingBalance;
+												crf = aggregate[0].cashReceivedFee;
+												crc = aggregate[0].cashReceivedComm;
+												cpf = aggregate[0].cashPaidFee;
+												cpc = aggregate[0].cashPaidComm;
+											}
+											if (
+												invoices != undefined &&
+												invoices != null &&
+												invoices.length > 0
+											) {
+												amountpaid = invoices[0].totalAmountPaid;
+												billpaid = invoices[0].bills_paid;
+											}
+											var totalPartners = await Partner.countDocuments({bank_id: bank_id});
+											res.status(200).json({
+												status: 1,
+												invoicePaid: billpaid,
+												amountPaid: amountpaid,
+												totalCashier: count,
+												cashInHand: cin,
+												feeGenerated : fg,
+												cashReceived: cr,
+												cashPaid: cp,
+												cashReceivedFee: crf,
+												cashReceivedComm: crc,
+												cashPaidFee: cpf,
+												cashPaidComm: cpc,
+												commissionGenerated: cg,
+												openingBalance: ob,
+												closingBalance: cb,
+												totalPartners:totalPartners,
+											});
+										}
+									);
+								}
+							);
+						}
+					);
+				
+			}
+		);
+	}
 });
 
 /**

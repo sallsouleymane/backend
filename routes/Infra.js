@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const config = require("../config.json");
 const jwtTokenAuth = require("./JWTTokenAuth");
+const jwt_decode = require("jwt-decode");
+var request = require('request');
 
 //utils
 const makeid = require("./utils/idGenerator");
@@ -11,6 +13,9 @@ const makeotp = require("./utils/makeotp");
 const getWalletIds = require("./utils/getWalletIds");
 const { errorMessage, catchError } = require("./utils/errorHandler");
 const jwtsign = require("./utils/jwtsign");
+const keyclock = require('./utils/keyClock')
+const keyclock_constant = require("../keyclockConstants");
+
 
 //services
 const {
@@ -44,6 +49,1368 @@ const Subzone = require("../models/merchant/Subzone");
 const MerchantPosition = require("../models/merchant/Position");
 
 const mainFee = config.mainFee;
+
+
+
+
+router.post("/setupUpdate", async function (req, res) {
+	const { username, password, email, mobile, ccode } = req.body;
+	//get token
+	const tokenResponse = await keyclock.getToken(keyclock_constant.ADMIN_USERNAME, keyclock_constant.ADMIN_PASSWORD);
+	if(tokenResponse.error){
+		res.status(200).json({
+			status: 0,
+			message: "Error getting token",
+		});
+
+	}else{
+		const token =JSON.parse(tokenResponse).access_token;
+		const createUserResponse = await keyclock.createUser(token,username,password,email,keyclock_constant.groups.INFRA_GROUP);
+		if(createUserResponse){
+			res.status(200).json({
+				status: 0,
+				message: "Error creating infra",
+			});
+		} else {
+			let data = new Infra();
+			data.name = "Infra Admin";
+			data.username = username;
+			data.password = password;
+			data.mobile = mobile;
+			data.email = email;
+			data.ccode = ccode;
+			data.isAdmin = true;
+			data.save((err) => {
+				if (err) {
+					var message = err;
+					if (err.message) {
+						message = err.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else {
+					let content =
+						"<p>Your Infra account is activated in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+						config.mainIP +
+						"'>http://" +
+						config.mainIP +
+						"</a></p><p><p>Your username: " +
+						data.username +
+						"</p><p>Your password: " +
+						password +
+						"</p>";
+						sendMail(content, "Infra Account Activated", data.email);
+						let content2 =
+						"Your Infra account is activated in E-Wallet application. Login URL: http://" +
+						config.mainIP +
+						" Your username: " +
+						data.username +
+						" Your password: " +
+						password;
+						sendSMS(content2, mobile);
+						res.status(200).json({
+							success: true,
+						});
+					}
+			});
+		} 
+	}
+});
+
+
+router.post("/getDashStats", function (req, res) {
+	const { token } = req.body;
+	console.log(token);
+	var username = keyclock.getUsername(token);
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.INFRA_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+		Infra.findOne(
+			{
+				username: username,
+				status: 1,
+			},
+			async function (err, infra) {
+				let result = errorMessage(
+					err,
+					infra,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					Cashier.aggregate(
+						[{ 
+							$match : {
+								status:1,
+							}
+						},
+							{
+								$group: {
+									_id: null,
+									totalFee: {
+										$sum: "$fee_generated",
+									},
+									totalCommission: {
+										$sum: "$commission_generated",
+									},
+									totalTrans:{
+										$sum: "$total_trans",
+									},
+								}
+							},
+						],
+						async (err1, bankaggregate) => {
+							PartnerCashier.aggregate(
+								[{ 
+									$match : {
+										status:1,
+									}
+								},
+									{
+										$group: {
+											_id: null,
+											
+											totalFee: {
+												$sum: "$fee_generated",
+											},
+											totalCommission: {
+												$sum: "$commission_generated",
+											},
+											totalTrans:{
+												$sum: "$total_trans",
+											},
+										}
+									},
+								],
+								async (err2, partneraggregate) => {
+									Invoice.aggregate(
+										[{ 
+											$match : {
+												paid:1,
+												date_paid: {
+													$gte: new Date(),
+													$lte: new Date(),
+												},
+											}
+										},
+											{
+												$group: {
+													_id: null,
+													totalFee: {
+														$sum: "$fee",
+													},
+													totalCommission:  {
+														$sum: "$commission",
+													},
+													billsPaid: { $sum: 1 },
+												},
+											},
+										],
+										async (err3, invoices) => {
+											let bankFee = 0;
+											let bankCommission = 0;
+											let partnerFee = 0;
+											let partnerCommission = 0;
+											let bankTransCount = 0;
+											let partnerTransCount = 0;
+											let merchantFee = 0;
+											let merchantCommission = 0;
+											let merchantInvoice = 0;
+											if (
+												bankaggregate != undefined &&
+												bankaggregate != null &&
+												bankaggregate.length > 0
+											) {
+												bankFee = bankaggregate[0].totalFee;
+												bankCommission = bankaggregate[0].totalCommission;
+												bankTransCount = bankaggregate[0].totalTrans;
+											}
+											if (
+												partneraggregate != undefined &&
+												partneraggregate != null &&
+												partneraggregate.length > 0
+											) {
+												partnerFee = partneraggregate[0].totalFee;
+												partnerCommission = partneraggregate[0].totalCommission;
+												partnerTransCount = partneraggregate[0].totalTrans;
+											}
+											if (
+												invoices != undefined &&
+												invoices != null &&
+												invoices.length > 0
+											) {
+												merchantFee = invoices[0].totalFee;
+												merchantCommission = invoices[0].totalCommission;
+												merchantInvoice = invoices[0].billsPaid;
+											}
+											var totalBanks = await Bank.countDocuments({});
+											var totalbranches = await Branch.countDocuments({});
+											var totalcashiers = await Cashier.countDocuments({});
+											var totalpartners = await Partner.countDocuments({});
+											var totalpartnerbranches = await PartnerBranch.countDocuments({});
+											var totalpartnercashiers = await PartnerCashier.countDocuments({});
+											var totalbankmerchants = await Merchant.countDocuments({creator:0});
+											var totalInframerchants = await Merchant.countDocuments({creator:1});
+											var totalusers = await User.countDocuments({});
+											var totalmerchantbranches = await MerchantBranch.countDocuments({});
+											var totalmerchantstaff = await MerchantPosition.countDocuments({type:'staff'});
+											var totalmerchantcashier = await MerchantPosition.countDocuments({type:'cashier'});
+											var totalinvoicecreated = await Invoice.countDocuments(
+												{
+													created_at: {
+														$gte: new Date(),
+														$lte: new Date(),
+													},
+												}
+											);
+											res.status(200).json({
+												status: 1,
+												totalBanks: totalBanks,
+												totalBankMerchants: totalbankmerchants,
+												totalInfraMerchants: totalInframerchants,
+												totalMerchantStaff: totalmerchantstaff,
+												totalMerchantCashier: totalmerchantcashier,
+												totalusers: totalusers,
+												totalcashiers: totalcashiers,
+												totalmerchantbranches: totalmerchantbranches,
+												totalpartners: totalpartners,
+												totalpartnerbrances:totalpartnerbranches,
+												totalpartnercashiers:totalpartnercashiers,
+												totalbranches: totalbranches,
+												bankfee: bankFee,
+												bankcommission: bankCommission,
+												partnerfee: partnerFee,
+												partnercommission: partnerCommission,
+												banktranscount: bankTransCount,
+												partnertranscount: partnerTransCount,
+												merchanfee: merchantFee,
+												merchantcommission: merchantCommission,
+												merchantinvoice: merchantInvoice,
+												merchantinvoicecreated: totalinvoicecreated,
+											});
+
+										}
+									);
+								}
+							);
+						}
+
+					);
+				}
+			}
+		);
+	}
+});
+
+router.post("/getProfile", function (req, res) {
+	const { token } = req.body;
+	var username = keyclock.getUsername(token);
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.INFRA_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+		Infra.findOne(
+			{
+				username: username,
+				status: 1,
+			},
+			function (err, user) {
+				let result = errorMessage(
+					err,
+					user,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					res.status(200).json({
+						users: user,
+					});
+				}
+			}
+		);
+	}
+});
+
+
+/**
+ * @swagger
+ * /getInfraUsers:
+ *  post:
+ *    description: Use to get all infra users by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
+
+ router.post("/getInfraUsers", function (req, res) {
+	const { token } = req.body;
+	var username = keyclock.getUsername(token);
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.INFRA_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+		Infra.findOne(
+			{
+				username: username,
+				status: 1,
+			},
+			function (err, user) {
+				let result = errorMessage(
+					err,
+					user,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					Infra.find({}, function (err1, bank) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err;
+							if (err1.message) {
+								message1 = err1.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message1,
+							});
+						} else {
+							res.status(200).json({
+								users: bank,
+							});
+						}
+					});
+				}
+			}
+		);
+	}
+});
+
+router.post("/addProfile", function (req, res) {
+	let data = new Profile();
+	const {
+		token,
+		pro_name,
+		pro_description,
+		create_bank,
+		edit_bank,
+		create_fee,
+	} = req.body;
+	var decodedToken = jwt_decode(token);
+	var roles = decodedToken.realm_access.roles;
+	var username = decodedToken.preferred_username;
+	if(roles.indexOf("infraadmin") == -1){
+		res.status(200).json({
+			status: 0,
+			message: "Invalid User",
+		});
+	} else{ 
+		Infra.findOne(
+			{
+				username: username,
+				status: 1,
+			},
+			function (err, user) {
+				let result = errorMessage(
+					err,
+					user,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					const user_id = user._id;
+
+					data.name = pro_name;
+					data.description = pro_description;
+					var c = {
+						create_bank,
+						edit_bank,
+						create_fee,
+					};
+					data.permissions = JSON.stringify(c);
+					data.user_id = user_id;
+
+					data.save((err1) => {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message1,
+							});
+						} else {
+							return res.status(200).json({
+								success: "True",
+							});
+						}
+					});
+				}
+			}
+		);
+	}
+});
+
+router.post("/getRoles", function (req, res) {
+	const { token } = req.body;
+	var username = keyclock.getUsername(token);
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.INFRA_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+		Infra.findOne(
+			{
+				username: username,
+				status: 1,
+			},
+			function (err, user) {
+				let result = errorMessage(
+					err,
+					user,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					const user_id = user._id;
+					Profile.find(
+						{
+							user_id,
+						},
+						function (err1, bank) {
+							if (err1) {
+								console.log(err1);
+								var message1 = err1;
+								if (err1.message) {
+									message1 = err1.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message1,
+								});
+							} else {
+								res.status(200).json({
+									roles: bank,
+								});
+							}
+						}
+					);
+				}
+			}
+		);
+	}
+});
+
+
+/**
+ * @swagger
+ * /getRules:
+ *  post:
+ *    description: Use to get bank's rules by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
+ router.post("/getRules", jwtTokenAuth, function (req, res) {
+	const { bank_id } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Infra.findOne(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		function (err, user) {
+			let result = errorMessage(
+				err,
+				user,
+				"Token changed or user not valid. Try to login again or contact system administrator."
+			);
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				Fee.find(
+					{
+						bank_id,
+						status: { $in: [1, 2] },
+					},
+					function (err1, rules) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err;
+							if (err.message) {
+								message1 = err1.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message1,
+							});
+						} else {
+							res.status(200).json({
+								rules: rules,
+							});
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
+
+/**
+ * @swagger
+ * /getBanks:
+ *  post:
+ *    description: Use to get all banksby infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
+ router.post("/getBanks", function (req, res) {
+	const { token } = req.body;
+	var username = keyclock.getUsername(token);
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.INFRA_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+		Infra.findOne(
+			{
+				username: username,
+				status: 1,
+			},
+			function (err, user) {
+				let result = errorMessage(
+					err,
+					user,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					Bank.find({}, function (err1, bank) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message1,
+							});
+						} else {
+							res.status(200).json({
+								banks: bank,
+							});
+						}
+					});
+				}
+			}
+		);
+	}
+});
+
+/**
+ * @swagger
+ * /infra/getBankDashStats:
+ *  post:
+ *    description: Use to get bank's dashboard stats by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
+
+ router.post("/infra/getBankDashStats", function (req, res) {
+	const { token, bank_id } = req.body;
+	console.log(token);
+	var username = keyclock.getUsername(token);
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.INFRA_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+		Infra.findOne(
+			{
+				username: username,
+				status: 1,
+			},
+			function (err, infra) {
+				let result = errorMessage(
+					err,
+					infra,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+
+					Cashier.countDocuments(
+						{
+							bank_id: bank_id,
+						},
+						(err1, count) => {
+							if (count == null || !count) {
+								count = 0;
+							}
+							Cashier.aggregate(
+								[
+									{ $match : {bank_id: bank_id}},
+									{
+										$group: {
+											_id: null,
+											total: {
+												$sum: "$cash_in_hand",
+											},
+											totalFee: {
+												$sum: "$fee_generated",
+											},
+											totalCommission: {
+												$sum: "$commission_generated",
+											},
+											cashReceived: {
+												$sum: "$cash_received",
+											},
+											cashReceivedFee: {
+												$sum: "$cash_received_fee",
+											},
+											cashReceivedComm: {
+												$sum: "$cash_received_commission",
+											},
+											cashPaid: {
+												$sum: "$cash_paid",
+											},
+											cashPaidFee: {
+												$sum: "$cash_paid_fee",
+											},
+											cashPaidComm: {
+												$sum: "$cash_paid_commission",
+											},
+											totalTrans:{
+												$sum: "$total_trans",
+											}
+										},
+									},
+								],
+								async (err2, aggregate) => {
+
+									PartnerCashier.aggregate(
+										[
+											{ $match : {bank_id: bank_id}},
+											{
+												$group: {
+													_id: null,
+													totalFee: {
+														$sum: "$fee_generated",
+													},
+													totalCommission: {
+														$sum: "$commission_generated",
+													},
+													totalTrans:{
+														$sum: "$total_trans",
+													},
+													cashReceived: {
+														$sum: "$cash_received",
+													},
+													cashReceivedFee: {
+														$sum: "$cash_received_fee",
+													},
+													cashReceivedComm: {
+														$sum: "$cash_received_commission",
+													},
+													cashPaid: {
+														$sum: "$cash_paid",
+													},
+													cashPaidFee: {
+														$sum: "$cash_paid_fee",
+													},
+													cashPaidComm: {
+														$sum: "$cash_paid_commission",
+													},
+													partnerCashier: { $sum: 1 },
+												},
+											},
+										],
+										async (err3, partneraggregate) => {
+											Invoice.aggregate(
+												[{ 
+													$match : {
+														payer_bank_id: bank_id,
+														paid:1,
+													}
+												},
+													{
+														$group: {
+															_id: null,
+															totalAmountPaid: {
+																$sum: "$amount",
+															},
+															fee: {
+																$sum: "$fee",
+															},
+															comm: {
+																$sum: "$commission",
+															},
+															bills_paid: { $sum: 1 },
+
+														},
+													},
+												],
+												async (err4, invoices) => {
+													let amountpaid = 0;
+													let billpaid = 0;
+													let banktrans = 0;
+													let cr = 0;
+													let cp = 0;
+													let crf = 0;
+													let cpc = 0;
+													let crc = 0;
+													let cpf = 0;
+													let cin = 0;
+													let fg = 0;
+													let cg = 0;
+													let partnertrans = 0;
+													let partnercashier = 0;
+													let pcr = 0;
+													let pcp = 0;
+													let pcrf = 0;
+													let pcpc = 0;
+													let pcrc = 0;
+													let pcpf = 0;
+													let pfg = 0;
+													let pcg = 0;
+													let mfg = 0;
+													let mcg = 0;
+													if (
+														aggregate != undefined &&
+														aggregate != null &&
+														aggregate.length > 0
+													) {
+														cin = aggregate[0].total;
+														fg = aggregate[0].totalFee;
+														cg = aggregate[0].totalCommission;
+														cr = aggregate[0].cashReceived;
+														crf = aggregate[0].cashReceivedFee;
+														crc = aggregate[0].cashReceivedComm;
+														cp = aggregate[0].cashPaid;
+														cpf = aggregate[0].cashPaidFee;
+														cpc = aggregate[0].cashPaidComm;
+														banktrans = aggregate[0].totalTrans;
+													}
+													if (
+														partneraggregate != undefined &&
+														partneraggregate != null &&
+														partneraggregate.length > 0
+													) {
+														partnertrans = partneraggregate[0].totalTrans;
+														partnercashier = partneraggregate[0].partnerCashier;
+														pfg = partneraggregate[0].totalFee;
+														pcg = partneraggregate[0].totalCommission;
+														pcr = partneraggregate[0].cashReceived;
+														pcrf = partneraggregate[0].cashReceivedFee;
+														pcrc = partneraggregate[0].cashReceivedComm;
+														pcp = partneraggregate[0].cashPaid;
+														pcpf = partneraggregate[0].cashPaidFee;
+														pcpc = partneraggregate[0].cashPaidComm;
+													}
+													if (
+														invoices != undefined &&
+														invoices != null &&
+														invoices.length > 0
+													) {
+														amountpaid = invoices[0].totalAmountPaid;
+														billpaid = invoices[0].bills_paid;
+														mfg = invoices[0].fee;
+														mcg = invoices[0].comm;
+													}
+
+													var bankmerchants = await Merchant.countDocuments({bank_id:bank_id});
+													var merchantBranches = await MerchantBranch.countDocuments({bank_id:bank_id});
+													var merchantStaffs = await MerchantPosition.countDocuments({bank_id:bank_id, type:'staff'});
+													var merchantCashiers = await MerchantPosition.countDocuments({bank_id:bank_id,type:'cashier'});
+													var partnerBranches = await PartnerBranch.countDocuments({bank_id:bank_id});
+													var totalinvoicecreated = await Invoice.countDocuments(
+														{
+															bank_id:bank_id,
+															created_at: {
+																$gte: new Date(),
+																$lte: new Date(),
+															},
+														}
+													);
+													res.status(200).json({
+														status: 1,
+														totalCashier: count,
+														cashInHand: cin,
+														cashReceived: cr,
+														cashReceivedFee: crf,
+														cashReceivedComm: crc,
+														cashPaid: cp,
+														cashPaidFee: cpf,
+														cashPaidComm: cpc,
+														partnerCashReceived: pcr,
+														partnerCashReceivedFee: pcrf,
+														partnerCashReceivedComm: pcrc,
+														partnerCashPaid: pcp,
+														partnerCashPaidFee: pcpf,
+														partnerCashPaidComm: pcpc,
+														commissionGenerated: cg,
+														feeGenerated : fg,
+														totalTrans: banktrans,
+														partnerCashier:partnercashier,
+														partnerBranch:partnerBranches,
+														partnerCommissionGenerated: pcg,
+														partnerFeeGenerated : pfg,
+														partnerTotalTrans: partnertrans,
+														totalMerchant:bankmerchants,
+														merchantBranch:merchantBranches,
+														merchantStaff: merchantStaffs,
+														merchantCashiers:merchantCashiers,
+														invoicePaid: billpaid,
+														amountPaid: amountpaid,
+														invoiceCreated:totalinvoicecreated,
+														merchantCommissionGenerated: mcg,
+														merchantFeeGenerated : mfg,
+													});
+												}
+											);
+
+										}
+									);
+
+								}
+							);
+						}
+					);
+				}
+			}
+		);
+	}
+});
+
+/**
+ * @swagger
+ * /addBank:
+ *  post:
+ *    description: Use to create bank by infra
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+
+ router.post("/addBank", function (req, res) {
+	let data = new Bank();
+	const password = makeid(10);
+	
+	const {
+		token,
+		name,
+		bcode,
+		address1,
+		state,
+		zip,
+		country,
+		ccode,
+		mobile,
+		email,
+		logo,
+		contract,
+		otp_id,
+		otp,
+	} = req.body;
+	console.log(mobile, password);
+
+	if (
+		name == "" ||
+		address1 == "" ||
+		state == "" ||
+		mobile == "" ||
+		email == ""
+	) {
+		res.status(200).json({
+			status: 0,
+			message: "Please provide valid inputs",
+		});
+		return;
+	}
+	var username = keyclock.getUsername(token);
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.INFRA_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+		Infra.findOne(
+			{
+				username: username,
+				status: 1,
+			},
+			function (err, user) {
+				var result = errorMessage(
+					err,
+					user,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					Bank.findOne(
+						{
+							$or: [{ bcode: bcode }, { mobile: mobile }, { email: email }],
+						},
+						(err1, bank) => {
+							if (err1) {
+								console.log(err1);
+								var message1 = err1;
+								if (err1.message) {
+									message1 = err1.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message1,
+								});
+							} else if (bank != null) {
+								res.status(200).json({
+									status: 0,
+									message:
+										"Bank with either same code/mobile/email already exist.",
+								});
+							} else {
+								OTP.findOne(
+									{
+										_id: otp_id,
+										otp: otp,
+									},
+									async function (err2, otpd) {
+										if (err2) {
+											console.log(err2);
+											var message2 = err;
+											if (err2.message) {
+												message2 = err2.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message2,
+											});
+										} else if (!otpd) {
+											res.status(200).json({
+												status: 0,
+												message: "OTP Missmatch",
+											});
+										} else {
+											const createUserResponse = await keyclock.createUser(token,mobile,password,email,keyclock_constant.groups.BANK_GROUP);
+											console.log(createUserResponse);
+											if(createUserResponse){
+												res.status(200).json({
+													status: 0,
+													message: "Error creating Bank",
+												});
+											} else {
+
+													data.name = name;
+													data.bcode = bcode;
+													data.address1 = address1;
+													data.state = state;
+													data.country = country;
+													data.zip = zip;
+													data.ccode = ccode;
+													data.mobile = mobile;
+													data.username = mobile;
+													data.email = email;
+													data.user_id = user._id;
+													data.logo = logo;
+													data.contract = contract;
+													data.password = password;
+
+													data.save((err3, d) => {
+														if (err3) {
+															console.log(err);
+															var message3 = err3;
+															if (err3.message) {
+																message3 = err3.message;
+															}
+															res.status(200).json({
+																status: 0,
+																message: message3,
+															});
+														} else {
+															let data2 = new Document();
+															data2.bank_id = d._id;
+															data2.contract = contract;
+															data2.save((err4) => {});
+
+															let content =
+																"<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+																config.mainIP +
+																"/bank'>http://" +
+																config.mainIP +
+																"/bank</a></p><p><p>Your username: " +
+																data.username +
+																"</p><p>Your password: " +
+																password +
+																"</p>";
+															sendMail(content, "Bank Account Created", email);
+															let content2 =
+																"Your bank is added in E-Wallet application Login URL: http://" +
+																config.mainIP +
+																"/bank Your username: " +
+																data.username +
+																" Your password: " +
+																password;
+															sendSMS(content2, mobile);
+
+															res.status(200).json({
+																status: 1,
+																message: "Added Bank successfully",
+															});
+														}
+													});
+											}
+											
+										}
+									}
+								);
+							}
+						}
+					);
+				}
+			}
+		);
+	}
+});
+
+router.post("/addInfraUser", function (req, res) {
+	let data = new Infra();
+	const {
+		token,
+		name,
+		email,
+		country,
+		ccode,
+		mobile,
+		username,
+		password,
+		profile_id,
+		logo,
+	} = req.body;
+	var decodedToken = jwt_decode(token);
+	var roles = decodedToken.realm_access.roles;
+	var infraUsername = decodedToken.preferred_username;
+	console.log(roles);
+	if(roles.indexOf("infra-admin") == -1){
+		res.status(200).json({
+			status: 0,
+			message: "Invalid User",
+		});
+	} else{ 
+	
+		Infra.findOne(
+			{
+				username: infraUsername,
+				status: 1,
+			},
+			function (err, user) {
+				let result = errorMessage(
+					err,
+					user,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					var options = {
+						'method': 'POST',
+						'url': config.keyclockIP + "/admin/realms/" + config.realm + "/users",
+						'headers': {
+						  'Content-Type': 'application/json',
+						  'Authorization': `Bearer ${token}`,
+						},
+						body: JSON.stringify({
+						  "createdTimestamp": 1588880747548,
+						  "username": name,
+						  "enabled": true,
+						  "totp": false,
+						  "emailVerified": true,
+						  "firstName": name,
+						  "email": email,
+						  "disableableCredentialTypes": [],
+						  "requiredActions": [],
+						  "notBefore": 0,
+						  "access": {
+							"manageGroupMembership": true,
+							"view": true,
+							"mapRoles": true,
+							"impersonate": true,
+							"manage": true
+						  },
+						  "credentials":[
+								  {
+									"type":"password",
+									  "value":password,
+									  "temporary":false
+								  }
+							],
+						  "groups": [
+							  "Infra"
+						  ]
+						}),
+					}
+					request(options, function (err1, response1) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message1,
+							});
+						} else {
+							data.country = country;
+							data.ccode = ccode;
+							data.name = name;
+							data.email = email;
+							data.mobile = mobile;
+							data.username = username;
+							data.password = password;
+							data.profile_id = profile_id;
+							data.logo = logo;
+							data.save((err1) => {
+								if (err1) {
+									console.log(err1);
+									var message1 = err1;
+									if (err1.message) {
+										message1 = err1.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message1,
+									});
+								} else {
+									let content =
+										"<p>Your have been added as Infra in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+										config.mainIP +
+										"/'>http://" +
+										config.mainIP +
+										"/</a></p><p><p>Your username: " +
+										username +
+										"</p><p>Your password: " +
+										password +
+										"</p>";
+									sendMail(content, "Infra Account Created", email);
+									let content2 =
+										"Your have been added as Infra in E-Wallet application Login URL: http://" +
+										config.mainIP +
+										" Your username: " +
+										username +
+										" Your password: " +
+										password;
+									sendSMS(content2, mobile);
+									return res.status(200).json({
+										success: "True",
+									});
+								}
+							});
+						}
+					});
+				}
+			}
+		);
+	}
+});
+
+
+router.post("/generateOTP",  function (req, res) {
+	let data = new OTP();
+	const { username, page, name, email, mobile, bcode,token } = req.body;
+	var infraUsername = keyclock.getUsername(token);
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.INFRA_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+		Infra.findOne(
+			{
+				username: infraUsername,
+				status: 1,
+			},
+			function (err, user) {
+				let result = errorMessage(
+					err,
+					user,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					data.user_id = user._id;
+					data.otp = makeotp(6);
+					data.page = page;
+					if (page == "editBank") {
+						Bank.findOne(
+							{
+								username,
+							},
+							function (err1, bank) {
+								data.mobile = bank.mobile;
+								data.save((err2, ot) => {
+									if (err2) {
+										console.log(err2);
+										var message2 = err2;
+										if (err2.message) {
+											message2 = err2.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message2,
+										});
+									} else {
+										let content = "Your OTP to edit Bank is " + data.otp;
+										sendSMS(content, bank.mobile);
+										sendMail(content, "OTP", bank.email);
+
+										res.status(200).json({
+											id: ot._id,
+										});
+									}
+								});
+							}
+						);
+					} else {
+						Bank.find(
+							{
+								$or: [
+									{ name: name },
+									{ email: email },
+									{ mobile: mobile },
+									{ bcode: bcode },
+								],
+							},
+							function (err2, banks) {
+								if (err2) {
+									console.log(err2);
+									var message2 = err2;
+									if (err2.message) {
+										message2 = err2.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message2,
+									});
+								} else if (banks.length == 0) {
+									data.mobile = user.mobile;
+									data.save((err3, ot) => {
+										if (err3) {
+											console.log(err3);
+											var message3 = err3;
+											if (err3.message) {
+												message3 = err3.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message3,
+											});
+										} else {
+											let content = "Your OTP to add Bank is " + data.otp;
+											sendSMS(content, user.mobile);
+											sendMail(content, "OTP", user.email);
+
+											res.status(200).json({
+												status: 1,
+												id: ot._id,
+											});
+										}
+									});
+								} else {
+									if (banks[0].name == name) {
+										res.status(200).json({
+											status: 0,
+											message: "Bank already exist with the same name.",
+										});
+									} else if (banks[0].bcode == bcode) {
+										res.status(200).json({
+											status: 0,
+											message: "Bank already exist with the same code.",
+										});
+									} else if (banks[0].mobile == mobile) {
+										res.status(200).json({
+											status: 0,
+											message: "Bank already exist with the same mobile.",
+										});
+									} else if (banks[0].email == email) {
+										res.status(200).json({
+											status: 0,
+											message: "Bank already exist with the same email.",
+										});
+									} else {
+										res.status(200).json({
+											status: 0,
+											message: "Can not add bank.",
+										});
+									}
+								}
+							}
+						);
+					}
+				}
+			}
+		);
+	}
+});
+
+
+
+router.post("/infraSetupUpdate", jwtTokenAuth, function (req, res) {
+	const { username, password } = req.body;
+	const jwtusername = req.sign_creds.username;
+	Infra.findOneAndUpdate(
+		{
+			username: jwtusername,
+			status: 1,
+		},
+		{
+			$set: {
+				username: username,
+				password: password,
+			},
+		},
+		function (err, infra) {
+			var result = errorMessage(err, infra, "Incorrect username or password");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				res.status(200).json({
+					success: "Updated successfully",
+				});
+			}
+		}
+	);
+});
+
 
 /**
  * @swagger
@@ -275,276 +1642,7 @@ router.post("/infra/getBankDailyReport", jwtTokenAuth, function (req, res) {
 	);
 });
 
-/**
- * @swagger
- * /infra/getBankDashStats:
- *  post:
- *    description: Use to get bank's dashboard stats by infra
- *    responses:
- *      '200':
- *        description: A successful response
- */
 
-
-router.post("/infra/getBankDashStats", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	const { bank_id } = req.body;
-	Infra.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, infra) {
-			let result = errorMessage(
-				err,
-				infra,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-
-				Cashier.countDocuments(
-					{
-						bank_id: bank_id,
-					},
-					(err1, count) => {
-						if (count == null || !count) {
-							count = 0;
-						}
-						Cashier.aggregate(
-							[
-								{ $match : {bank_id: bank_id}},
-								{
-									$group: {
-										_id: null,
-										total: {
-											$sum: "$cash_in_hand",
-										},
-										totalFee: {
-											$sum: "$fee_generated",
-										},
-										totalCommission: {
-											$sum: "$commission_generated",
-										},
-										cashReceived: {
-											$sum: "$cash_received",
-										},
-										cashReceivedFee: {
-											$sum: "$cash_received_fee",
-										},
-										cashReceivedComm: {
-											$sum: "$cash_received_commission",
-										},
-										cashPaid: {
-											$sum: "$cash_paid",
-										},
-										cashPaidFee: {
-											$sum: "$cash_paid_fee",
-										},
-										cashPaidComm: {
-											$sum: "$cash_paid_commission",
-										},
-										totalTrans:{
-											$sum: "$total_trans",
-										}
-									},
-								},
-							],
-							async (err2, aggregate) => {
-
-								PartnerCashier.aggregate(
-									[
-										{ $match : {bank_id: bank_id}},
-										{
-											$group: {
-												_id: null,
-												totalFee: {
-													$sum: "$fee_generated",
-												},
-												totalCommission: {
-													$sum: "$commission_generated",
-												},
-												totalTrans:{
-													$sum: "$total_trans",
-												},
-												cashReceived: {
-													$sum: "$cash_received",
-												},
-												cashReceivedFee: {
-													$sum: "$cash_received_fee",
-												},
-												cashReceivedComm: {
-													$sum: "$cash_received_commission",
-												},
-												cashPaid: {
-													$sum: "$cash_paid",
-												},
-												cashPaidFee: {
-													$sum: "$cash_paid_fee",
-												},
-												cashPaidComm: {
-													$sum: "$cash_paid_commission",
-												},
-												partnerCashier: { $sum: 1 },
-											},
-										},
-									],
-									async (err3, partneraggregate) => {
-										Invoice.aggregate(
-											[{ 
-												$match : {
-													payer_bank_id: bank_id,
-													paid:1,
-												}
-											},
-												{
-													$group: {
-														_id: null,
-														totalAmountPaid: {
-															$sum: "$amount",
-														},
-														fee: {
-															$sum: "$fee",
-														},
-														comm: {
-															$sum: "$commission",
-														},
-														bills_paid: { $sum: 1 },
-
-													},
-												},
-											],
-											async (err4, invoices) => {
-												let amountpaid = 0;
-												let billpaid = 0;
-												let banktrans = 0;
-												let cr = 0;
-												let cp = 0;
-												let crf = 0;
-												let cpc = 0;
-												let crc = 0;
-												let cpf = 0;
-												let cin = 0;
-												let fg = 0;
-												let cg = 0;
-												let partnertrans = 0;
-												let partnercashier = 0;
-												let pcr = 0;
-												let pcp = 0;
-												let pcrf = 0;
-												let pcpc = 0;
-												let pcrc = 0;
-												let pcpf = 0;
-												let pfg = 0;
-												let pcg = 0;
-												let mfg = 0;
-												let mcg = 0;
-												if (
-													aggregate != undefined &&
-													aggregate != null &&
-													aggregate.length > 0
-												) {
-													cin = aggregate[0].total;
-													fg = aggregate[0].totalFee;
-													cg = aggregate[0].totalCommission;
-													cr = aggregate[0].cashReceived;
-													crf = aggregate[0].cashReceivedFee;
-													crc = aggregate[0].cashReceivedComm;
-													cp = aggregate[0].cashPaid;
-													cpf = aggregate[0].cashPaidFee;
-													cpc = aggregate[0].cashPaidComm;
-													banktrans = aggregate[0].totalTrans;
-												}
-												if (
-													partneraggregate != undefined &&
-													partneraggregate != null &&
-													partneraggregate.length > 0
-												) {
-													partnertrans = partneraggregate[0].totalTrans;
-													partnercashier = partneraggregate[0].partnerCashier;
-													pfg = partneraggregate[0].totalFee;
-													pcg = partneraggregate[0].totalCommission;
-													pcr = partneraggregate[0].cashReceived;
-													pcrf = partneraggregate[0].cashReceivedFee;
-													pcrc = partneraggregate[0].cashReceivedComm;
-													pcp = partneraggregate[0].cashPaid;
-													pcpf = partneraggregate[0].cashPaidFee;
-													pcpc = partneraggregate[0].cashPaidComm;
-												}
-												if (
-													invoices != undefined &&
-													invoices != null &&
-													invoices.length > 0
-												) {
-													amountpaid = invoices[0].totalAmountPaid;
-													billpaid = invoices[0].bills_paid;
-													mfg = invoices[0].fee;
-													mcg = invoices[0].comm;
-												}
-
-												var bankmerchants = await Merchant.countDocuments({bank_id:bank_id});
-												var merchantBranches = await MerchantBranch.countDocuments({bank_id:bank_id});
-												var merchantStaffs = await MerchantPosition.countDocuments({bank_id:bank_id, type:'staff'});
-												var merchantCashiers = await MerchantPosition.countDocuments({bank_id:bank_id,type:'cashier'});
-												var partnerBranches = await PartnerBranch.countDocuments({bank_id:bank_id});
-												var totalinvoicecreated = await Invoice.countDocuments(
-													{
-														bank_id:bank_id,
-														created_at: {
-															$gte: new Date(),
-															$lte: new Date(),
-														},
-													}
-												);
-												res.status(200).json({
-													status: 1,
-													totalCashier: count,
-													cashInHand: cin,
-													cashReceived: cr,
-													cashReceivedFee: crf,
-													cashReceivedComm: crc,
-													cashPaid: cp,
-													cashPaidFee: cpf,
-													cashPaidComm: cpc,
-													partnerCashReceived: pcr,
-													partnerCashReceivedFee: pcrf,
-													partnerCashReceivedComm: pcrc,
-													partnerCashPaid: pcp,
-													partnerCashPaidFee: pcpf,
-													partnerCashPaidComm: pcpc,
-													commissionGenerated: cg,
-													feeGenerated : fg,
-													totalTrans: banktrans,
-													partnerCashier:partnercashier,
-													partnerBranch:partnerBranches,
-													partnerCommissionGenerated: pcg,
-													partnerFeeGenerated : pfg,
-													partnerTotalTrans: partnertrans,
-													totalMerchant:bankmerchants,
-													merchantBranch:merchantBranches,
-													merchantStaff: merchantStaffs,
-													merchantCashiers:merchantCashiers,
-													invoicePaid: billpaid,
-													amountPaid: amountpaid,
-													invoiceCreated:totalinvoicecreated,
-													merchantCommissionGenerated: mcg,
-													merchantFeeGenerated : mfg,
-												});
-											}
-										);
-
-									}
-								);
-
-							}
-						);
-					}
-				);
-			}
-		}
-	);
-});
 
 /**
  * @swagger
@@ -2131,310 +3229,9 @@ router.post("/infra/editMerchant", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/getDashStats", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	Infra.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		async function (err, infra) {
-			let result = errorMessage(
-				err,
-				infra,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Cashier.aggregate(
-					[{ 
-						$match : {
-							status:1,
-						}
-					},
-						{
-							$group: {
-								_id: null,
-								totalFee: {
-									$sum: "$fee_generated",
-								},
-								totalCommission: {
-									$sum: "$commission_generated",
-								},
-								totalTrans:{
-									$sum: "$total_trans",
-								},
-							}
-						},
-					],
-					async (err1, bankaggregate) => {
-						PartnerCashier.aggregate(
-							[{ 
-								$match : {
-									status:1,
-								}
-							},
-								{
-									$group: {
-										_id: null,
-										
-										totalFee: {
-											$sum: "$fee_generated",
-										},
-										totalCommission: {
-											$sum: "$commission_generated",
-										},
-										totalTrans:{
-											$sum: "$total_trans",
-										},
-									}
-								},
-							],
-							async (err2, partneraggregate) => {
-								Invoice.aggregate(
-									[{ 
-										$match : {
-											paid:1,
-											date_paid: {
-												$gte: new Date(),
-												$lte: new Date(),
-											},
-										}
-									},
-										{
-											$group: {
-												_id: null,
-												totalFee: {
-													$sum: "$fee",
-												},
-												totalCommission:  {
-													$sum: "$commission",
-												},
-												billsPaid: { $sum: 1 },
-											},
-										},
-									],
-									async (err3, invoices) => {
-										let bankFee = 0;
-										let bankCommission = 0;
-										let partnerFee = 0;
-										let partnerCommission = 0;
-										let bankTransCount = 0;
-										let partnerTransCount = 0;
-										let merchantFee = 0;
-										let merchantCommission = 0;
-										let merchantInvoice = 0;
-										if (
-											bankaggregate != undefined &&
-											bankaggregate != null &&
-											bankaggregate.length > 0
-										) {
-											bankFee = bankaggregate[0].totalFee;
-											bankCommission = bankaggregate[0].totalCommission;
-											bankTransCount = bankaggregate[0].totalTrans;
-										}
-										if (
-											partneraggregate != undefined &&
-											partneraggregate != null &&
-											partneraggregate.length > 0
-										) {
-											partnerFee = partneraggregate[0].totalFee;
-											partnerCommission = partneraggregate[0].totalCommission;
-											partnerTransCount = partneraggregate[0].totalTrans;
-										}
-										if (
-											invoices != undefined &&
-											invoices != null &&
-											invoices.length > 0
-										) {
-											merchantFee = invoices[0].totalFee;
-											merchantCommission = invoices[0].totalCommission;
-											merchantInvoice = invoices[0].billsPaid;
-										}
-										var totalBanks = await Bank.countDocuments({});
-										var totalbranches = await Branch.countDocuments({});
-										var totalcashiers = await Cashier.countDocuments({});
-										var totalpartners = await Partner.countDocuments({});
-										var totalpartnerbranches = await PartnerBranch.countDocuments({});
-										var totalpartnercashiers = await PartnerCashier.countDocuments({});
-										var totalbankmerchants = await Merchant.countDocuments({creator:0});
-										var totalInframerchants = await Merchant.countDocuments({creator:1});
-										var totalusers = await User.countDocuments({});
-										var totalmerchantbranches = await MerchantBranch.countDocuments({});
-										var totalmerchantstaff = await MerchantPosition.countDocuments({type:'staff'});
-										var totalmerchantcashier = await MerchantPosition.countDocuments({type:'cashier'});
-										var totalinvoicecreated = await Invoice.countDocuments(
-											{
-												created_at: {
-													$gte: new Date(),
-													$lte: new Date(),
-												},
-											}
-										);
-										res.status(200).json({
-											status: 1,
-											totalBanks: totalBanks,
-											totalBankMerchants: totalbankmerchants,
-											totalInfraMerchants: totalInframerchants,
-											totalMerchantStaff: totalmerchantstaff,
-											totalMerchantCashier: totalmerchantcashier,
-											totalusers: totalusers,
-											totalcashiers: totalcashiers,
-											totalmerchantbranches: totalmerchantbranches,
-											totalpartners: totalpartners,
-											totalpartnerbrances:totalpartnerbranches,
-											totalpartnercashiers:totalpartnercashiers,
-											totalbranches: totalbranches,
-											bankfee: bankFee,
-											bankcommission: bankCommission,
-											partnerfee: partnerFee,
-											partnercommission: partnerCommission,
-											banktranscount: bankTransCount,
-											partnertranscount: partnerTransCount,
-											merchanfee: merchantFee,
-											merchantcommission: merchantCommission,
-											merchantinvoice: merchantInvoice,
-											merchantinvoicecreated: totalinvoicecreated,
-										});
 
-									}
-								);
-							}
-						);
-					}
 
-				);
-			}
-		}
-	);
-});
 
-router.post("/infraSetupUpdate", jwtTokenAuth, function (req, res) {
-	const { username, password } = req.body;
-	const jwtusername = req.sign_creds.username;
-	Infra.findOneAndUpdate(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		{
-			$set: {
-				username: username,
-				password: password,
-			},
-		},
-		function (err, infra) {
-			var result = errorMessage(err, infra, "Incorrect username or password");
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				res.status(200).json({
-					success: "Updated successfully",
-				});
-			}
-		}
-	);
-});
-
-/**
- * @swagger
- * /getBanks:
- *  post:
- *    description: Use to get all banksby infra
- *    responses:
- *      '200':
- *        description: A successful response
- */
-
-router.post("/getBanks", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	Infra.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, user) {
-			let result = errorMessage(
-				err,
-				user,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Bank.find({}, function (err1, bank) {
-					if (err1) {
-						console.log(err1);
-						var message1 = err1;
-						if (err1.message) {
-							message1 = err1.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message1,
-						});
-					} else {
-						res.status(200).json({
-							banks: bank,
-						});
-					}
-				});
-			}
-		}
-	);
-});
-
-router.post("/setupUpdate", function (req, res) {
-	let data = new Infra();
-	const { username, password, email, mobile, ccode } = req.body;
-
-	data.name = "Infra Admin";
-	data.username = username;
-
-	data.password = password;
-	data.mobile = mobile;
-	data.email = email;
-	data.ccode = ccode;
-	data.isAdmin = true;
-
-	data.save((err) => {
-		if (err) {
-			console.log(err);
-			var message = err;
-			if (err.message) {
-				message = err.message;
-			}
-			res.status(200).json({
-				status: 0,
-				message: message,
-			});
-		} else {
-			let content =
-				"<p>Your Infra account is activated in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-				config.mainIP +
-				"'>http://" +
-				config.mainIP +
-				"</a></p><p><p>Your username: " +
-				data.username +
-				"</p><p>Your password: " +
-				data.password +
-				"</p>";
-			sendMail(content, "Infra Account Activated", data.email);
-			let content2 =
-				"Your Infra account is activated in E-Wallet application. Login URL: http://" +
-				config.mainIP +
-				" Your username: " +
-				data.username +
-				" Your password: " +
-				data.password;
-			sendSMS(content2, mobile);
-			res.status(200).json({
-				success: true,
-			});
-		}
-	});
-});
 
 router.get("/checkInfra", function (req, res) {
 	Infra.countDocuments({}, function (err, c) {
@@ -2454,175 +3251,7 @@ router.get("/checkInfra", function (req, res) {
 	});
 });
 
-/**
- * @swagger
- * /addBank:
- *  post:
- *    description: Use to create bank by infra
- *    responses:
- *      '200':
- *        description: A successful response
- */
 
-router.post("/addBank", jwtTokenAuth, function (req, res) {
-	let data = new Bank();
-	const password = makeid(10);
-	const {
-		name,
-		bcode,
-		address1,
-		state,
-		zip,
-		country,
-		ccode,
-		mobile,
-		email,
-		logo,
-		contract,
-		otp_id,
-		otp,
-	} = req.body;
-
-	if (
-		name == "" ||
-		address1 == "" ||
-		state == "" ||
-		mobile == "" ||
-		email == ""
-	) {
-		res.status(200).json({
-			status: 0,
-			message: "Please provide valid inputs",
-		});
-		return;
-	}
-	const jwtusername = req.sign_creds.username;
-	Infra.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, user) {
-			var result = errorMessage(
-				err,
-				user,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Bank.findOne(
-					{
-						$or: [{ bcode: bcode }, { mobile: mobile }, { email: email }],
-					},
-					(err1, bank) => {
-						if (err1) {
-							console.log(err1);
-							var message1 = err1;
-							if (err1.message) {
-								message1 = err1.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message1,
-							});
-						} else if (bank != null) {
-							res.status(200).json({
-								status: 0,
-								message:
-									"Bank with either same code/mobile/email already exist.",
-							});
-						} else {
-							OTP.findOne(
-								{
-									_id: otp_id,
-									otp: otp,
-								},
-								function (err2, otpd) {
-									if (err2) {
-										console.log(err2);
-										var message2 = err;
-										if (err2.message) {
-											message2 = err2.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message2,
-										});
-									} else if (!otpd) {
-										res.status(200).json({
-											status: 0,
-											message: "OTP Missmatch",
-										});
-									} else {
-										data.name = name;
-										data.bcode = bcode;
-										data.address1 = address1;
-										data.state = state;
-										data.country = country;
-										data.zip = zip;
-										data.ccode = ccode;
-										data.mobile = mobile;
-										data.username = mobile;
-										data.email = email;
-										data.user_id = user._id;
-										data.logo = logo;
-										data.contract = contract;
-										data.password = password;
-
-										data.save((err3, d) => {
-											if (err3) {
-												console.log(err);
-												var message3 = err3;
-												if (err3.message) {
-													message3 = err3.message;
-												}
-												res.status(200).json({
-													status: 0,
-													message: message3,
-												});
-											} else {
-												let data2 = new Document();
-												data2.bank_id = d._id;
-												data2.contract = contract;
-												data2.save((err4) => {});
-
-												let content =
-													"<p>Your bank is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-													config.mainIP +
-													"/bank'>http://" +
-													config.mainIP +
-													"/bank</a></p><p><p>Your username: " +
-													data.username +
-													"</p><p>Your password: " +
-													password +
-													"</p>";
-												sendMail(content, "Bank Account Created", email);
-												let content2 =
-													"Your bank is added in E-Wallet application Login URL: http://" +
-													config.mainIP +
-													"/bank Your username: " +
-													data.username +
-													" Your password: " +
-													password;
-												sendSMS(content2, mobile);
-
-												res.status(200).json({
-													status: 1,
-													message: "Added Bank successfully",
-												});
-											}
-										});
-									}
-								}
-							);
-						}
-					}
-				);
-			}
-		}
-	);
-});
 
 /**
  * @swagger
@@ -2925,63 +3554,7 @@ router.post("/getPermission", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/addProfile", jwtTokenAuth, function (req, res) {
-	let data = new Profile();
-	const {
-		pro_name,
-		pro_description,
-		create_bank,
-		edit_bank,
-		create_fee,
-	} = req.body;
-	const jwtusername = req.sign_creds.username;
-	Infra.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, user) {
-			let result = errorMessage(
-				err,
-				user,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				const user_id = user._id;
 
-				data.name = pro_name;
-				data.description = pro_description;
-				var c = {
-					create_bank,
-					edit_bank,
-					create_fee,
-				};
-				data.permissions = JSON.stringify(c);
-				data.user_id = user_id;
-
-				data.save((err1) => {
-					if (err1) {
-						console.log(err1);
-						var message1 = err1;
-						if (err1.message) {
-							message1 = err1.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message1,
-						});
-					} else {
-						return res.status(200).json({
-							success: "True",
-						});
-					}
-				});
-			}
-		}
-	);
-});
 
 router.post("/editProfile", jwtTokenAuth, function (req, res) {
 	const {
@@ -3046,83 +3619,6 @@ router.post("/editProfile", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/addInfraUser", jwtTokenAuth, function (req, res) {
-	let data = new Infra();
-	const {
-		name,
-		email,
-		country,
-		ccode,
-		mobile,
-		username,
-		password,
-		profile_id,
-		logo,
-	} = req.body;
-	const jwtusername = req.sign_creds.username;
-	Infra.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, user) {
-			let result = errorMessage(
-				err,
-				user,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				data.country = country;
-				data.ccode = ccode;
-				data.name = name;
-				data.email = email;
-				data.mobile = mobile;
-				data.username = username;
-				data.password = password;
-				data.profile_id = profile_id;
-				data.logo = logo;
-				data.save((err1) => {
-					if (err1) {
-						console.log(err1);
-						var message1 = err1;
-						if (err1.message) {
-							message1 = err1.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message1,
-						});
-					} else {
-						let content =
-							"<p>Your have been added as Infra in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-							config.mainIP +
-							"/'>http://" +
-							config.mainIP +
-							"/</a></p><p><p>Your username: " +
-							username +
-							"</p><p>Your password: " +
-							password +
-							"</p>";
-						sendMail(content, "Infra Account Created", email);
-						let content2 =
-							"Your have been added as Infra in E-Wallet application Login URL: http://" +
-							config.mainIP +
-							" Your username: " +
-							username +
-							" Your password: " +
-							password;
-						sendSMS(content2, mobile);
-						return res.status(200).json({
-							success: "True",
-						});
-					}
-				});
-			}
-		}
-	);
-});
 
 router.post("/editInfraUser", jwtTokenAuth, function (req, res) {
 	const {
@@ -3245,60 +3741,7 @@ router.post("/getBank", jwtTokenAuth, function (req, res) {
 	);
 });
 
-/**
- * @swagger
- * /getRules:
- *  post:
- *    description: Use to get bank's rules by infra
- *    responses:
- *      '200':
- *        description: A successful response
- */
 
-router.post("/getRules", jwtTokenAuth, function (req, res) {
-	const { bank_id } = req.body;
-	const jwtusername = req.sign_creds.username;
-	Infra.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, user) {
-			let result = errorMessage(
-				err,
-				user,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Fee.find(
-					{
-						bank_id,
-						status: { $in: [1, 2] },
-					},
-					function (err1, rules) {
-						if (err1) {
-							console.log(err1);
-							var message1 = err;
-							if (err.message) {
-								message1 = err1.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message1,
-							});
-						} else {
-							res.status(200).json({
-								rules: rules,
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
 
 router.post("/bankStatus", jwtTokenAuth, function (req, res) {
 	const { status, bank_id } = req.body;
@@ -3346,122 +3789,9 @@ router.post("/bankStatus", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/getRoles", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	Infra.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, user) {
-			let result = errorMessage(
-				err,
-				user,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				const user_id = user._id;
-				Profile.find(
-					{
-						user_id,
-					},
-					function (err1, bank) {
-						if (err1) {
-							console.log(err1);
-							var message1 = err1;
-							if (err1.message) {
-								message1 = err1.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message1,
-							});
-						} else {
-							res.status(200).json({
-								roles: bank,
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
-
-/**
- * @swagger
- * /getInfraUsers:
- *  post:
- *    description: Use to get all infra users by infra
- *    responses:
- *      '200':
- *        description: A successful response
- */
 
 
-router.post("/getInfraUsers", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	Infra.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, user) {
-			let result = errorMessage(
-				err,
-				user,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				Infra.find({}, function (err1, bank) {
-					if (err1) {
-						console.log(err1);
-						var message1 = err;
-						if (err1.message) {
-							message1 = err1.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message1,
-						});
-					} else {
-						res.status(200).json({
-							users: bank,
-						});
-					}
-				});
-			}
-		}
-	);
-});
 
-router.post("/getProfile", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	Infra.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, user) {
-			let result = errorMessage(
-				err,
-				user,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				res.status(200).json({
-					users: user,
-				});
-			}
-		}
-	);
-});
 
 router.post("/editInfraProfile", jwtTokenAuth, function (req, res) {
 	const { name, username, email, mobile, password, ccode } = req.body;
@@ -3522,137 +3852,6 @@ router.post("/editInfraProfile", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/generateOTP", jwtTokenAuth, function (req, res) {
-	let data = new OTP();
-	const { username, page, name, email, mobile, bcode } = req.body;
-	const jwtusername = req.sign_creds.username;
-	Infra.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, user) {
-			let result = errorMessage(
-				err,
-				user,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				data.user_id = user._id;
-				data.otp = makeotp(6);
-				data.page = page;
-				if (page == "editBank") {
-					Bank.findOne(
-						{
-							username,
-						},
-						function (err1, bank) {
-							data.mobile = bank.mobile;
-							data.save((err2, ot) => {
-								if (err2) {
-									console.log(err2);
-									var message2 = err2;
-									if (err2.message) {
-										message2 = err2.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message2,
-									});
-								} else {
-									let content = "Your OTP to edit Bank is " + data.otp;
-									sendSMS(content, bank.mobile);
-									sendMail(content, "OTP", bank.email);
-
-									res.status(200).json({
-										id: ot._id,
-									});
-								}
-							});
-						}
-					);
-				} else {
-					Bank.find(
-						{
-							$or: [
-								{ name: name },
-								{ email: email },
-								{ mobile: mobile },
-								{ bcode: bcode },
-							],
-						},
-						function (err2, banks) {
-							if (err2) {
-								console.log(err2);
-								var message2 = err2;
-								if (err2.message) {
-									message2 = err2.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message2,
-								});
-							} else if (banks.length == 0) {
-								data.mobile = user.mobile;
-								data.save((err3, ot) => {
-									if (err3) {
-										console.log(err3);
-										var message3 = err3;
-										if (err3.message) {
-											message3 = err3.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message3,
-										});
-									} else {
-										let content = "Your OTP to add Bank is " + data.otp;
-										sendSMS(content, user.mobile);
-										sendMail(content, "OTP", user.email);
-
-										res.status(200).json({
-											status: 1,
-											id: ot._id,
-										});
-									}
-								});
-							} else {
-								if (banks[0].name == name) {
-									res.status(200).json({
-										status: 0,
-										message: "Bank already exist with the same name.",
-									});
-								} else if (banks[0].bcode == bcode) {
-									res.status(200).json({
-										status: 0,
-										message: "Bank already exist with the same code.",
-									});
-								} else if (banks[0].mobile == mobile) {
-									res.status(200).json({
-										status: 0,
-										message: "Bank already exist with the same mobile.",
-									});
-								} else if (banks[0].email == email) {
-									res.status(200).json({
-										status: 0,
-										message: "Bank already exist with the same email.",
-									});
-								} else {
-									res.status(200).json({
-										status: 0,
-										message: "Can not add bank.",
-									});
-								}
-							}
-						}
-					);
-				}
-			}
-		}
-	);
-});
 
 router.post("/transferMoney", jwtTokenAuth, function (req, res) {
 	const { from, to, note, amount, auth } = req.body;

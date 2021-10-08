@@ -12,7 +12,8 @@ const makeotp = require("./utils/makeotp");
 const jwtsign = require("./utils/jwtsign");
 const { errorMessage, catchError } = require("./utils/errorHandler");
 const { queryTxStates } = require("../controllers/utils/common");
-
+const keyclock = require('./utils/keyClock')
+const keyclock_constant = require("../keyclockConstants");
 const jwtTokenAuth = require("./JWTTokenAuth");
 
 //services
@@ -2004,14 +2005,15 @@ router.post("/getPartnerBranchByName", function (req, res) {
 	);
 });
 
-router.post("/:user/getWalletBalance", jwtTokenAuth, function (req, res) {
+router.post("/:user/getWalletBalance",  function (req, res) {
 	const { page, wallet_id } = req.query;
+	const { token } = req.body;
 	const user = req.params.user;
-	const jwtusername = req.sign_creds.username;
+	var username = keyclock.getUsername(token);
 	const Type = getTypeClass(user);
 	Type.findOne(
 		{
-			username: jwtusername,
+			username: username,
 			status: 1,
 		},
 		function (e, b) {

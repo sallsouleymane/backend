@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
+const jwt_decode = require("jwt-decode");
 
-
-
+const keyclock_constant = require("../keyclockConstants");
+const keyclock = require("./utils/keyClock");
 //services
 const { getStatement, initiateTransfer } = require("../services/Blockchain.js");
 const jwtTokenAuth = require("./JWTTokenAuth");
@@ -631,61 +632,79 @@ router.post("/getBranchInfo", jwtTokenAuth, function (req, res) {
  */
 
 
-router.post("/branchSetupUpdate", jwtTokenAuth, async function (req, res) {
-	const { password } = req.body;
-	const hashedPassword = await bcrypt.hash(password,12);
-	const jwtusername = req.sign_creds.username;
-	Branch.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, bank) {
-			if (err) {
-				console.log(err);
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			} else if (!bank) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				Branch.findByIdAndUpdate(
-					bank._id,
-					{
-						password: hashedPassword,
-						initial_setup: true,
-					},
-					(err1) => {
-						if (err1) {
-							console.log(err1);
-							var message1 = err1;
-							if (err1.message) {
-								message1 = err1.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message1,
-							});
-						} else {
-							res.status(200).json({
-								status: 1,
-								message: "Updated successfully",
-							});
-						}
+router.post("/branchSetupUpdate", async function (req, res) {
+	const { password, token } = req.body;
+	var decodedToken = jwt_decode(token);
+	var username = decodedToken.preferred_username;
+	var userId = decodedToken.sub;
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.BANK_BRANCH_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+		Branch.findOne(
+			{
+				username: username,
+				status: 1,
+			},
+			async function (err, bank) {
+				if (err) {
+					console.log(err);
+					var message = err;
+					if (err.message) {
+						message = err.message;
 					}
-				);
+					res.status(200).json({
+						status: 0,
+						message: message,
+					});
+				} else if (!bank) {
+					res.status(200).json({
+						status: 0,
+						message:
+							"Token changed or user not valid. Try to login again or contact system administrator.",
+					});
+				} else {
+					console.log(password);
+					const passwordResetResponse = await keyclock.passwordReset(token, userId, password);
+					console.log(passwordResetResponse);
+					if(JSON.parse(passwordResetResponse).hasOwnProperty('error')){
+						res.status(200).json({
+							status: 1,
+							message: "Error updating credentials"
+						});
+					} else {
+						Branch.findByIdAndUpdate(
+							bank._id,
+							{
+								password: password,
+								initial_setup: true,
+							},
+							(err1) => {
+								if (err1) {
+									console.log(err1);
+									var message1 = err1;
+									if (err1.message) {
+										message1 = err1.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message1,
+									});
+								} else {
+									res.status(200).json({
+										status: 1,
+										message: "Updated successfully",
+									});
+								}
+							}
+						);
+					}
+				}
 			}
-		}
-	);
+		);
+	}
 });
 
 router.post("/checkBranchFee", jwtTokenAuth, function (req, res) {

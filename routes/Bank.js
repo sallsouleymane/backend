@@ -2,9 +2,11 @@ const express = require("express");
 const router = express.Router();
 const config = require("../config.json");
 const bcrypt = require("bcrypt");
+const jwt_decode = require("jwt-decode");
 
 //utils
 const makeid = require("./utils/idGenerator");
+const keyclock = require("./utils/keyClock");
 const sendSMS = require("./utils/sendSMS");
 const sendMail = require("./utils/sendMail");
 const makeotp = require("./utils/makeotp");
@@ -13,6 +15,7 @@ const jwtTokenAuth = require("./JWTTokenAuth");
 const { errorMessage, catchError } = require("./utils/errorHandler");
 const execute = require("../controllers/transactions/services/execute");
 const bankCommonContrl = require("../controllers/bank/common");
+const keyclock_constant = require("../keyclockConstants");
 
 //services
 const {
@@ -39,6 +42,71 @@ const CashierTransfer = require("../models/CashierTransfer");
 
 //controllers
 const cancelTransCntrl = require("../controllers/bank/transactions");
+
+router.post("/bankSetupUpdate",  async function (req, res) {
+	const { password, token } = req.body;
+	var decodedToken = jwt_decode(token);
+	var username = decodedToken.preferred_username;
+	var userId = decodedToken.sub;
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.BANK_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+		Bank.findOne(
+			{
+				username: username,
+			},
+			async function (err1, bank) {
+				let result = errorMessage(
+					err1,
+					bank,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					const passwordResetResponse = await keyclock.passwordReset(token, userId, password);
+					if(passwordResetResponse.error){
+						res.status(200).json({
+							status: 1,
+							success: error,
+						});
+					} else {
+							Bank.findByIdAndUpdate(
+								bank._id,
+								{
+									username: username,
+									password: password,
+									initial_setup: true,
+								},
+								(err2) => {
+									if (err2) {
+										console.log(err2);
+										var message2 = err2;
+										if (err2.message) {
+											message2 = err2.message;
+										}
+										res.status(200).json({
+											status: 0,
+											message: message2,
+										});
+									} else {
+										res.status(200).json({
+											status: 1,
+											success: "Updated successfully",
+										});
+									}
+								}
+							);
+					}
+				}
+			}
+		);
+	}
+});
+
 
 router.post(
 	"/bank/revertTransaction",
@@ -229,210 +297,217 @@ router.post("/bank/cashierStats",jwtTokenAuth,function (req, res) {
  *        description: A successful response
  */
 
-router.post("/bank/getBranchDashStats", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	const { branch_id } = req.body;
+router.post("/bank/getBranchDashStats", function (req, res) {
+	const { branch_id, token } = req.body;
 	var today = new Date();
 	today = today.toISOString();
 	var s = today.split("T");
 	var start = s[0] + "T00:00:00.000Z";
 	var end = s[0] + "T23:59:59.999Z";
-	Bank.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err1, bank) {
-			if (err1) {
-				var message1 = err1;
-				if (err1.message) {
-					message1 = err1.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message1,
-				});
-			}else if (!bank || bank == null || bank == undefined){
-				BankUser.findOne(
-					{
-						username: jwtusername,
-						role: {$in: ['bankAdmin', 'infraAdmin']},
-					},
-					function (err2, admin) {
-						if (err2) {
-							var message2 = err2;
-							if (err2.message) {
-								message2 = err.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message2,
-							});
-						}else if (!admin || admin==null || admin == undefined){
-							res.status(200).json({
-								status: 0,
-								message: "User not found",
-							});
-						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err3, adminbank) => {
-								var result = errorMessage(err3, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+	var bankusername = keyclock.getUsername(token);
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.BANK_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+		Bank.findOne(
+			{
+				username: bankusername,
+				status: 1,
+			},
+			function (err1, bank) {
+				if (err1) {
+					var message1 = err1;
+					if (err1.message) {
+						message1 = err1.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message1,
+					});
+				}else if (!bank || bank == null || bank == undefined){
+					BankUser.findOne(
+						{
+							username: bankusername,
+							role: {$in: ['bankAdmin', 'infraAdmin']},
+						},
+						function (err2, admin) {
+							if (err2) {
+								var message2 = err2;
+								if (err2.message) {
+									message2 = err.message;
 								}
-							});
-						}	
-					}
-				);
-			}
-				Cashier.countDocuments(
-					{
-						branch_id: branch_id,
-					},
-					(err4, count) => {
-						if (count == null || !count) {
-							count = 0;
-						}
-						Cashier.aggregate(
-							[
-								{ $match : {branch_id: branch_id}},
-								{
-									$group: {
-										_id: null,
-										total: {
-											$sum: "$cash_in_hand",
-										},
-										totalFee: {
-											$sum: "$fee_generated",
-										},
-										totalCommission: {
-											$sum: "$commission_generated",
-										},
-										openingBalance: {
-											$sum: "$opening_balance",
-										},
-										closingBalance: {
-											$sum: "$closing_balance",
-										},
-										cashReceived: {
-											$sum: "$cash_received",
-										},
-										cashPaid: {
-											$sum: "$cash_paid",
-										},
-										cashReceivedFee: {
-											$sum: "$cash_received_fee",
-										},
-										cashReceivedComm: {
-											$sum: "$cash_received_commission",
-										},
-										cashPaidFee: {
-											$sum: "$cash_paid_fee",
-										},
-										cashPaidComm: {
-											$sum: "$cash_paid_commission",
-										}
-									},
-								},
-							],
-							async (err5, aggregate) => {
-								Invoice.aggregate(
-									[{ 
-										$match : {
-											payer_branch_id: branch_id,
-											paid:1,
-											date_paid: {
-												$gte: new Date(
-													start
-												),
-												$lte: new Date(
-													end
-												),
-											},
-										}
-									},
-										{
-											$group: {
-												_id: null,
-												totalAmountPaid: {
-													$sum: "$amount",
-												},
-												bills_paid: { $sum: 1 },
-											},
-										},
-									],
-									async (err6, invoices) => {
-										let amountpaid = 0;
-										let billpaid = 0;
-										let cin = 0;
-										let fg = 0;
-										let cg = 0;
-										let ob = 0;
-										let cr = 0;
-										let crf = 0;
-										let crc = 0;
-										let cp = 0;
-										let cpf = 0;
-										let cpc = 0;
-										let cb = 0;
-										if (
-											aggregate != undefined &&
-											aggregate != null &&
-											aggregate.length > 0
-										) {
-											cin = aggregate[0].total;
-											fg = aggregate[0].totalFee;
-											cg = aggregate[0].totalCommission;
-											ob = aggregate[0].openingBalance;
-											cr = aggregate[0].cashReceived;
-											cp = aggregate[0].cashPaid;
-											cb = aggregate[0].closingBalance;
-											crf= aggregate[0].cashReceivedFee;
-											crc = aggregate[0].cashReceivedComm;
-											cpf = aggregate[0].cashPaidFee;
-											cpc= aggregate[0].cashPaidComm;
-										}
-										if (
-											invoices != undefined &&
-											invoices != null &&
-											invoices.length > 0
-										) {
-											amountpaid = invoices[0].totalAmountPaid;
-											billpaid = invoices[0].bills_paid;
-										}
-										var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, branch_id: branch_id});
-										var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, branch_id: branch_id});
-										var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, branch_id: branch_id});
-
-										res.status(200).json({
-											status: 1,
-											invoicePaid: billpaid,
-											amountPaid: amountpaid,
-											totalCashier: count,
-											cashInHand: cin,
-											feeGenerated : fg,
-										 	cashReceived: cr,
-											cashPaid: cp,
-											cashReceivedFee: crf,
-											cashReceivedComm: crc,
-											cashPaidFee: cpf,
-											cashPaidComm: cpc,
-											commissionGenerated: cg,
-											openingBalance: ob,
-											closingBalance: cb,
-											cancelled: totalcancelledTransfers,
-											pending: totalPendingTransfers,
-											accepted: totalAcceptedTransfers,
-										});
+								res.status(200).json({
+									status: 0,
+									message: message2,
+								});
+							}else if (!admin || admin==null || admin == undefined){
+								res.status(200).json({
+									status: 0,
+									message: "User not found",
+								});
+							} else {
+								Bank.findOne({ _id: admin.bank_id }, (err3, adminbank) => {
+									var result = errorMessage(err3, adminbank, "Bank is blocked");
+									if (result.status == 0) {
+										res.status(200).json(result);
 									}
-								);
+								});
+							}	
+						}
+					);
+				}
+					Cashier.countDocuments(
+						{
+							branch_id: branch_id,
+						},
+						(err4, count) => {
+							if (count == null || !count) {
+								count = 0;
 							}
-						);
-					}
-				);
-			
-			
-		}
-	);
+							Cashier.aggregate(
+								[
+									{ $match : {branch_id: branch_id}},
+									{
+										$group: {
+											_id: null,
+											total: {
+												$sum: "$cash_in_hand",
+											},
+											totalFee: {
+												$sum: "$fee_generated",
+											},
+											totalCommission: {
+												$sum: "$commission_generated",
+											},
+											openingBalance: {
+												$sum: "$opening_balance",
+											},
+											closingBalance: {
+												$sum: "$closing_balance",
+											},
+											cashReceived: {
+												$sum: "$cash_received",
+											},
+											cashPaid: {
+												$sum: "$cash_paid",
+											},
+											cashReceivedFee: {
+												$sum: "$cash_received_fee",
+											},
+											cashReceivedComm: {
+												$sum: "$cash_received_commission",
+											},
+											cashPaidFee: {
+												$sum: "$cash_paid_fee",
+											},
+											cashPaidComm: {
+												$sum: "$cash_paid_commission",
+											}
+										},
+									},
+								],
+								async (err5, aggregate) => {
+									Invoice.aggregate(
+										[{ 
+											$match : {
+												payer_branch_id: branch_id,
+												paid:1,
+												date_paid: {
+													$gte: new Date(
+														start
+													),
+													$lte: new Date(
+														end
+													),
+												},
+											}
+										},
+											{
+												$group: {
+													_id: null,
+													totalAmountPaid: {
+														$sum: "$amount",
+													},
+													bills_paid: { $sum: 1 },
+												},
+											},
+										],
+										async (err6, invoices) => {
+											let amountpaid = 0;
+											let billpaid = 0;
+											let cin = 0;
+											let fg = 0;
+											let cg = 0;
+											let ob = 0;
+											let cr = 0;
+											let crf = 0;
+											let crc = 0;
+											let cp = 0;
+											let cpf = 0;
+											let cpc = 0;
+											let cb = 0;
+											if (
+												aggregate != undefined &&
+												aggregate != null &&
+												aggregate.length > 0
+											) {
+												cin = aggregate[0].total;
+												fg = aggregate[0].totalFee;
+												cg = aggregate[0].totalCommission;
+												ob = aggregate[0].openingBalance;
+												cr = aggregate[0].cashReceived;
+												cp = aggregate[0].cashPaid;
+												cb = aggregate[0].closingBalance;
+												crf= aggregate[0].cashReceivedFee;
+												crc = aggregate[0].cashReceivedComm;
+												cpf = aggregate[0].cashPaidFee;
+												cpc= aggregate[0].cashPaidComm;
+											}
+											if (
+												invoices != undefined &&
+												invoices != null &&
+												invoices.length > 0
+											) {
+												amountpaid = invoices[0].totalAmountPaid;
+												billpaid = invoices[0].bills_paid;
+											}
+											var totalPendingTransfers = await CashierTransfer.countDocuments({status: 0, branch_id: branch_id});
+											var totalAcceptedTransfers = await CashierTransfer.countDocuments({status: 1, branch_id: branch_id});
+											var totalcancelledTransfers = await CashierTransfer.countDocuments({status: -1, branch_id: branch_id});
+
+											res.status(200).json({
+												status: 1,
+												invoicePaid: billpaid,
+												amountPaid: amountpaid,
+												totalCashier: count,
+												cashInHand: cin,
+												feeGenerated : fg,
+												cashReceived: cr,
+												cashPaid: cp,
+												cashReceivedFee: crf,
+												cashReceivedComm: crc,
+												cashPaidFee: cpf,
+												cashPaidComm: cpc,
+												commissionGenerated: cg,
+												openingBalance: ob,
+												closingBalance: cb,
+												cancelled: totalcancelledTransfers,
+												pending: totalPendingTransfers,
+												accepted: totalAcceptedTransfers,
+											});
+										}
+									);
+								}
+							);
+						}
+					);
+				
+				
+			}
+		);
+	}
 });
 
 /**
@@ -1243,205 +1318,40 @@ router.post("/bank/sendShareForApproval", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/bankSetupUpdate", jwtTokenAuth, async function (req, res) {
-	const { username, password } = req.body;
-	const hashedPassword = await bcrypt.hash(password,12);
-	const jwtusername = req.sign_creds.username;
-	Bank.findOne(
-		{
-			username: jwtusername,
-		},
-		function (err1, bank) {
-			let result = errorMessage(
-				err1,
-				bank,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				
-						Bank.findByIdAndUpdate(
-							bank._id,
-							{
-								username: username,
-								password: hashedPassword,
-								initial_setup: true,
-							},
-							(err2) => {
-								if (err2) {
-									console.log(err2);
-									var message2 = err2;
-									if (err2.message) {
-										message2 = err2.message;
-									}
-									res.status(200).json({
-										status: 0,
-										message: message2,
-									});
-								} else {
-									res.status(200).json({
-										status: 1,
-										success: "Updated successfully",
-									});
-								}
-							}
-						);
-				
-			}
-		}
-	);
-});
 
-router.post("/bankActivate", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	Bank.findOne(
-		{
-			username: jwtusername,
-		},
-		function (err1, bank) {
-			if (err1) {
-				console.log(err1);
-				var message1 = err1;
-				if (err1.message) {
-					message1 = err1.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message1,
-				});
-			} else if (!bank) {
-				res.status(200).json({
-					status: 0,
-					message:
-						"Token changed or user not valid. Try to login again or contact system administrator.",
-				});
-			} else {
-				Infra.findOne({ _id: bank.user_id }, (err2, infra) => {
-					if (err2) {
-						console.log(err2);
-						var message2 = err2;
-						if (err2.message) {
-							message2 = err2.message;
-						}
-						res.status(200).json({
-							status: 0,
-							message: message2,
-						});
-					} else if (!infra) {
-						res.status(200).json({
-							status: 0,
-							message: "Infra not found.",
-						});
-					} else {
-						const bank_wallet_ids = getWalletIds(
-							"bank",
-							bank.bcode,
-							bank.bcode
-						);
-						const infra_wallet_ids = getWalletIds(
-							"infra",
-							infra.username,
-							bank.bcode
-						);
-						createWallet([
-							bank_wallet_ids.operational,
-							bank_wallet_ids.escrow,
-							bank_wallet_ids.master,
-							infra_wallet_ids.operational,
-							infra_wallet_ids.master,
-						])
-							.then(function (result) {
-								if (result != "" && !result.includes("wallet already exists")) {
-									console.log(result);
-									res.status(200).json({
-										status: 0,
-										message:
-											"Blockchain service was unavailable. Please try again.",
-										result: result,
-									});
-								} else {
-									Bank.findByIdAndUpdate(
-										bank._id,
-										{
-											status: 1,
-											wallet_ids: {
-												operational: bank_wallet_ids.operational,
-												master: bank_wallet_ids.master,
-												escrow: bank_wallet_ids.escrow,
-												infra_operational: infra_wallet_ids.operational,
-												infra_master: infra_wallet_ids.master,
-											},
-										},
-										(err3) => {
-											if (err3) {
-												console.log(err3);
-												var message3 = err3;
-												if (err3.message) {
-													message3 = err3.message;
-												}
-												res.status(200).json({
-													status: 0,
-													message: message3,
-												});
-											} else {
-												res.status(200).json({
-													status: 1,
-													walletStatus: result,
-												});
-											}
-										}
-									);
-								}
-							})
-							.catch((error) => {
-								console.log(error);
-								let message4 = error;
-								if (error && error.message) {
-									message4 = error.message;
-								}
-								res.status(200).json({
-									status: 0,
-									message: message4,
-								});
-							});
+
+router.post("/bankActivate", function (req, res) {
+	const { token } = req.body;
+	var username = keyclock.getUsername(token);
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.BANK_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+		Bank.findOne(
+			{
+				username: username,
+			},
+			function (err1, bank) {
+				if (err1) {
+					console.log(err1);
+					var message1 = err1;
+					if (err1.message) {
+						message1 = err1.message;
 					}
-				});
-			}
-		}
-	);
-});
-
-router.post("/getBankDashStatsForAgencies", jwtTokenAuth, function (req, res) {
-	const { bank_id } = req.body;
-	const jwtusername = req.sign_creds.username;
-	var today = new Date();
-	today = today.toISOString();
-	var s = today.split("T");
-	var start = s[0] + "T00:00:00.000Z";
-	var end = s[0] + "T23:59:59.999Z";
-	Bank.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err1, bank) {
-			if (err1) {
-				var message1 = err1;
-				if (err1.message) {
-					message1 = err1.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message1,
-				});
-			}else if (!bank || bank == null || bank == undefined){
-				BankUser.findOne(
-					{
-						username: jwtusername,
-						role: {$in: ['bankAdmin', 'infraAdmin']},
-					},
-					function (err2, admin) {
+					res.status(200).json({
+						status: 0,
+						message: message1,
+					});
+				} else if (!bank) {
+					res.status(200).json({
+						status: 0,
+						message:
+							"Token changed or user not valid. Try to login again or contact system administrator.",
+					});
+				} else {
+					Infra.findOne({ _id: bank.user_id }, (err2, infra) => {
 						if (err2) {
 							console.log(err2);
 							var message2 = err2;
@@ -1452,167 +1362,301 @@ router.post("/getBankDashStatsForAgencies", jwtTokenAuth, function (req, res) {
 								status: 0,
 								message: message2,
 							});
-						}else if (!admin || admin==null || admin == undefined){
+						} else if (!infra) {
 							res.status(200).json({
 								status: 0,
-								message: "User not found",
+								message: "Infra not found.",
 							});
 						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err3, adminbank) => {
-								var result = errorMessage(err3, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
-								}
-							});
-						}	
-					}
-				);
-			}
-				Cashier.countDocuments(
-					{
-						bank_id: bank_id,
-					},
-					(err4, count) => {
-						if (count == null || !count) {
-							count = 0;
-						}
-						Cashier.aggregate(
-							[
-								{ $match : {bank_id: bank_id}},
-								{
-									$group: {
-										_id: null,
-										total: {
-											$sum: "$cash_in_hand",
-										},
-										totalFee: {
-											$sum: "$fee_generated",
-										},
-										totalCommission: {
-											$sum: "$commission_generated",
-										},
-										openingBalance: {
-											$sum: "$opening_balance",
-										},
-										closingBalance: {
-											$sum: "$closing_balance",
-										},
-										cashReceived: {
-											$sum: "$cash_received",
-										},
-										cashReceivedFee: {
-											$sum: "$cash_received_fee",
-										},
-										cashReceivedComm: {
-											$sum: "$cash_received_commission",
-										},
-										cashPaid: {
-											$sum: "$cash_paid",
-										},
-										cashPaidFee: {
-											$sum: "$cash_paid_fee",
-										},
-										cashPaidComm: {
-											$sum: "$cash_paid_commission",
-										}
-									},
-								},
-							],
-							async (err5, aggregate) => {
-								Invoice.aggregate(
-									[{ 
-										$match : {
-											payer_bank_id: bank_id,
-											paid:1,
-											date_paid: {
-												$gte: new Date(
-													start
-												),
-												$lte: new Date(
-													end
-												),
-											},
-										}
-									},
-										{
-											$group: {
-												_id: null,
-												totalAmountPaid: {
-													$sum: "$amount",
-												},
-												bills_paid: { $sum: 1 },
-											},
-										},
-									],
-									async (err6, invoices) => {
-										let amountpaid = 0;
-										let billpaid = 0;
-										let cin = 0;
-										let fg = 0;
-										let cg = 0;
-										let ob = 0;
-										let cr = 0;
-										let crf = 0;
-										let crc = 0;
-										let cp = 0;
-										let cpc = 0;
-										let cpf = 0;
-										let cb = 0;
-										if (
-											aggregate != undefined &&
-											aggregate != null &&
-											aggregate.length > 0
-										) {
-											cin = aggregate[0].total;
-											fg = aggregate[0].totalFee;
-											cg = aggregate[0].totalCommission;
-											ob = aggregate[0].openingBalance;
-											cr = aggregate[0].cashReceived;
-											crf = aggregate[0].cashReceivedFee;
-											crc = aggregate[0].cashReceivedComm;
-											cp = aggregate[0].cashPaid;
-											cpf = aggregate[0].cashPaidFee;
-											cpc = aggregate[0].cashPaidComm;
-											cb = aggregate[0].closingBalance;
-										}
-										if (
-											invoices != undefined &&
-											invoices != null &&
-											invoices.length > 0
-										) {
-											amountpaid = invoices[0].totalAmountPaid;
-											billpaid = invoices[0].bills_paid;
-										}
-										var totalAgencies = await Branch.countDocuments({bank_id: bank_id});
-									
+							const bank_wallet_ids = getWalletIds(
+								"bank",
+								bank.bcode,
+								bank.bcode
+							);
+							const infra_wallet_ids = getWalletIds(
+								"infra",
+								infra.username,
+								bank.bcode
+							);
+							createWallet([
+								bank_wallet_ids.operational,
+								bank_wallet_ids.escrow,
+								bank_wallet_ids.master,
+								infra_wallet_ids.operational,
+								infra_wallet_ids.master,
+							])
+								.then(function (result) {
+									console.log(result);
+									if (result != "" && !result.includes("wallet already exists")) {
+										console.log(result);
 										res.status(200).json({
-											status: 1,
-											invoicePaid: billpaid,
-											amountPaid: amountpaid,
-											totalCashier: count,
-											cashInHand: cin,
-											feeGenerated : fg,
-										 	cashReceived: cr,
-											cashReceivedFee: crf,
-											cashReceivedComm: crc,
-											cashPaid: cp,
-											cashPaidFee: cpf,
-											cashPaidComm: cpc,
-											commissionGenerated: cg,
-											openingBalance: ob,
-											closingBalance: cb,
-											totalAgencies: totalAgencies,
+											status: 0,
+											message:
+												"Blockchain service was unavailable. Please try again.",
+											result: result,
 										});
+									} else {
+										Bank.findByIdAndUpdate(
+											bank._id,
+											{
+												status: 1,
+												wallet_ids: {
+													operational: bank_wallet_ids.operational,
+													master: bank_wallet_ids.master,
+													escrow: bank_wallet_ids.escrow,
+													infra_operational: infra_wallet_ids.operational,
+													infra_master: infra_wallet_ids.master,
+												},
+											},
+											(err3) => {
+												if (err3) {
+													console.log(err3);
+													var message3 = err3;
+													if (err3.message) {
+														message3 = err3.message;
+													}
+													res.status(200).json({
+														status: 0,
+														message: message3,
+													});
+												} else {
+													res.status(200).json({
+														status: 1,
+														walletStatus: result,
+													});
+												}
+											}
+										);
 									}
-								);
-							}
-						);
+								})
+								.catch((error) => {
+									console.log(error);
+									let message4 = error;
+									if (error && error.message) {
+										message4 = error.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message4,
+									});
+								});
+						}
+					});
+				}
+			}
+		);
+	}
+});
+
+router.post("/getBankDashStatsForAgencies", function (req, res) {
+	const { bank_id, token } = req.body;
+	console.log(token);
+	var today = new Date();
+	today = today.toISOString();
+	var s = today.split("T");
+	var start = s[0] + "T00:00:00.000Z";
+	var end = s[0] + "T23:59:59.999Z";
+	var username = keyclock.getUsername(token);
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.BANK_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+		Bank.findOne(
+			{
+				username: username,
+				status: 1,
+			},
+			function (err1, bank) {
+				if (err1) {
+					var message1 = err1;
+					if (err1.message) {
+						message1 = err1.message;
 					}
-				);
-			
-			
-		}
-	);
+					res.status(200).json({
+						status: 0,
+						message: message1,
+					});
+				}else if (!bank || bank == null || bank == undefined){
+					BankUser.findOne(
+						{
+							username: username,
+							role: {$in: ['bankAdmin', 'infraAdmin']},
+						},
+						function (err2, admin) {
+							if (err2) {
+								console.log(err2);
+								var message2 = err2;
+								if (err2.message) {
+									message2 = err2.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message2,
+								});
+							}else if (!admin || admin==null || admin == undefined){
+								res.status(200).json({
+									status: 0,
+									message: "User not found",
+								});
+							} else {
+								Bank.findOne({ _id: admin.bank_id }, (err3, adminbank) => {
+									var result = errorMessage(err3, adminbank, "Bank is blocked");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									}
+								});
+							}	
+						}
+					);
+				}
+					Cashier.countDocuments(
+						{
+							bank_id: bank_id,
+						},
+						(err4, count) => {
+							if (count == null || !count) {
+								count = 0;
+							}
+							Cashier.aggregate(
+								[
+									{ $match : {bank_id: bank_id}},
+									{
+										$group: {
+											_id: null,
+											total: {
+												$sum: "$cash_in_hand",
+											},
+											totalFee: {
+												$sum: "$fee_generated",
+											},
+											totalCommission: {
+												$sum: "$commission_generated",
+											},
+											openingBalance: {
+												$sum: "$opening_balance",
+											},
+											closingBalance: {
+												$sum: "$closing_balance",
+											},
+											cashReceived: {
+												$sum: "$cash_received",
+											},
+											cashReceivedFee: {
+												$sum: "$cash_received_fee",
+											},
+											cashReceivedComm: {
+												$sum: "$cash_received_commission",
+											},
+											cashPaid: {
+												$sum: "$cash_paid",
+											},
+											cashPaidFee: {
+												$sum: "$cash_paid_fee",
+											},
+											cashPaidComm: {
+												$sum: "$cash_paid_commission",
+											}
+										},
+									},
+								],
+								async (err5, aggregate) => {
+									Invoice.aggregate(
+										[{ 
+											$match : {
+												payer_bank_id: bank_id,
+												paid:1,
+												date_paid: {
+													$gte: new Date(
+														start
+													),
+													$lte: new Date(
+														end
+													),
+												},
+											}
+										},
+											{
+												$group: {
+													_id: null,
+													totalAmountPaid: {
+														$sum: "$amount",
+													},
+													bills_paid: { $sum: 1 },
+												},
+											},
+										],
+										async (err6, invoices) => {
+											let amountpaid = 0;
+											let billpaid = 0;
+											let cin = 0;
+											let fg = 0;
+											let cg = 0;
+											let ob = 0;
+											let cr = 0;
+											let crf = 0;
+											let crc = 0;
+											let cp = 0;
+											let cpc = 0;
+											let cpf = 0;
+											let cb = 0;
+											if (
+												aggregate != undefined &&
+												aggregate != null &&
+												aggregate.length > 0
+											) {
+												cin = aggregate[0].total;
+												fg = aggregate[0].totalFee;
+												cg = aggregate[0].totalCommission;
+												ob = aggregate[0].openingBalance;
+												cr = aggregate[0].cashReceived;
+												crf = aggregate[0].cashReceivedFee;
+												crc = aggregate[0].cashReceivedComm;
+												cp = aggregate[0].cashPaid;
+												cpf = aggregate[0].cashPaidFee;
+												cpc = aggregate[0].cashPaidComm;
+												cb = aggregate[0].closingBalance;
+											}
+											if (
+												invoices != undefined &&
+												invoices != null &&
+												invoices.length > 0
+											) {
+												amountpaid = invoices[0].totalAmountPaid;
+												billpaid = invoices[0].bills_paid;
+											}
+											var totalAgencies = await Branch.countDocuments({bank_id: bank_id});
+										
+											res.status(200).json({
+												status: 1,
+												invoicePaid: billpaid,
+												amountPaid: amountpaid,
+												totalCashier: count,
+												cashInHand: cin,
+												feeGenerated : fg,
+												cashReceived: cr,
+												cashReceivedFee: crf,
+												cashReceivedComm: crc,
+												cashPaid: cp,
+												cashPaidFee: cpf,
+												cashPaidComm: cpc,
+												commissionGenerated: cg,
+												openingBalance: ob,
+												closingBalance: cb,
+												totalAgencies: totalAgencies,
+											});
+										}
+									);
+								}
+							);
+						}
+					);
+				
+				
+			}
+		);
+	}
 });
 
 
@@ -1649,78 +1693,85 @@ router.get("/getBankOperationalBalance", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/getBranches", jwtTokenAuth, function (req, res) {
-	const jwtusername = req.sign_creds.username;
-	const { bank_id } = req.body;
-	Bank.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err1, bank) {
-			if (err1) {
-				var message1 = err1;
-				if (err1.message) {
-					message1 = err1.message;
+router.post("/getBranches", function (req, res) {
+	const { bank_id, token } = req.body;
+	var username = keyclock.getUsername(token);
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.BANK_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+		Bank.findOne(
+			{
+				username: username,
+				status: 1,
+			},
+			function (err1, bank) {
+				if (err1) {
+					var message1 = err1;
+					if (err1.message) {
+						message1 = err1.message;
+					}
+					res.status(200).json({
+						status: 0,
+						message: message1,
+					});
+				}else if (!bank || bank == null || bank == undefined){
+					BankUser.findOne(
+						{
+							username: jwtusername,
+							role: {$in: ['bankAdmin', 'infraAdmin']},
+						},
+						function (err2, admin) {
+							if (err2) {
+								console.log(err2);
+								var message2 = err2;
+								if (err2.message) {
+									message2 = err2.message;
+								}
+								res.status(200).json({
+									status: 0,
+									message: message2,
+								});
+							}else if (!admin || admin==null || admin == undefined){
+								res.status(200).json({
+									status: 0,
+									message: "User not found",
+								});
+							} else {
+								Bank.findOne({ _id: admin.bank_id }, (err3, adminbank) => {
+									var result = errorMessage(err3, adminbank, "Bank is blocked");
+									if (result.status == 0) {
+										res.status(200).json(result);
+									}
+								});
+							}	
+						}
+					);
 				}
-				res.status(200).json({
-					status: 0,
-					message: message1,
-				});
-			}else if (!bank || bank == null || bank == undefined){
-				BankUser.findOne(
-					{
-						username: jwtusername,
-						role: {$in: ['bankAdmin', 'infraAdmin']},
-					},
-					function (err2, admin) {
-						if (err2) {
-							console.log(err2);
-							var message2 = err2;
-							if (err2.message) {
-								message2 = err2.message;
+					Branch.find({ bank_id: bank_id }, function (err4, branch) {
+						if (err4) {
+							console.log(err4);
+							var message4 = err4;
+							if (err4.message) {
+								message4 = err4.message;
 							}
 							res.status(200).json({
 								status: 0,
-								message: message2,
-							});
-						}else if (!admin || admin==null || admin == undefined){
-							res.status(200).json({
-								status: 0,
-								message: "User not found",
+								message: message4,
 							});
 						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err3, adminbank) => {
-								var result = errorMessage(err3, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
-								}
+							res.status(200).json({
+								status: 1,
+								branches: branch,
 							});
-						}	
-					}
-				);
-			}
-				Branch.find({ bank_id: bank_id }, function (err4, branch) {
-					if (err4) {
-						console.log(err4);
-						var message4 = err4;
-						if (err4.message) {
-							message4 = err4.message;
 						}
-						res.status(200).json({
-							status: 0,
-							message: message4,
-						});
-					} else {
-						res.status(200).json({
-							status: 1,
-							branches: branch,
-						});
-					}
-				});
-			
-		}
-	);
+					});
+				
+			}
+		);
+	}
 });
 
 router.post("/getBankUsers", jwtTokenAuth, function (req, res) {
@@ -1903,10 +1954,11 @@ router.post("/broadcastMessage", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/addBranch", jwtTokenAuth, function (req, res) {
+router.post("/addBranch", function (req, res) {
 	let data = new Branch();
 	const password = makeid(10);
 	const {
+		token,
 		name,
 		bcode,
 		username,
@@ -1923,62 +1975,190 @@ router.post("/addBranch", jwtTokenAuth, function (req, res) {
 		working_to,
 	} = req.body;
 
-	const jwtusername = req.sign_creds.username;
-	Bank.findOne(
-		{
-			username: jwtusername,
-			status: 1,
-		},
-		function (err, bank) {
-			if (err) {
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			}else if (!bank || bank == null || bank == undefined){
-				BankUser.findOne(
-					{
-						username: jwtusername,
-						role: {$in: ['bankAdmin', 'infraAdmin']},
-					},
-					function (err2, admin) {
-						if (err2) {
-							console.log(err2);
-							var message2 = err2;
-							if (err2.message) {
-								message2 = err2.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message2,
-							});
-						}else if (!admin || admin==null || admin == undefined){
-							res.status(200).json({
-								status: 0,
-								message: "User not found",
-							});
-						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err3, adminbank) => {
-								var result = errorMessage(err3, adminbank, "Bank is blocked");
-								if (result.status == 0) {
-									res.status(200).json(result);
+	var bankusername = keyclock.getUsername(token);
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.BANK_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+			Bank.findOne(
+				{
+					username: bankusername,
+					status: 1,
+				},
+				function (err, bank) {
+					if (err) {
+						var message = err;
+						if (err.message) {
+							message = err.message;
+						}
+						res.status(200).json({
+							status: 0,
+							message: message,
+						});
+					}else if (!bank || bank == null || bank == undefined){
+						BankUser.findOne(
+							{
+								username: bankusername,
+								role: {$in: ['bankAdmin', 'infraAdmin']},
+							},
+							function (err2, admin) {
+								if (err2) {
+									console.log(err2);
+									var message2 = err2;
+									if (err2.message) {
+										message2 = err2.message;
+									}
+									res.status(200).json({
+										status: 0,
+										message: message2,
+									});
+								}else if (!admin || admin==null || admin == undefined){
+									res.status(200).json({
+										status: 0,
+										message: "User not found",
+									});
 								} else {
-								const wallet_ids = getWalletIds("branch", bcode, adminbank.bcode);
-								createWallet([wallet_ids.operational, wallet_ids.master])
-									.then(function (result1) {
-										if (result1 != "" && !result1.includes("wallet already exists")) {
-											console.log(result1);
-											res.status(200).json({
-												status: 0,
-												message:
-													"Blockchain service was unavailable. Please try again.",
-												result: result1,
-											});
+									Bank.findOne({ _id: admin.bank_id }, (err3, adminbank) => {
+										var result = errorMessage(err3, adminbank, "Bank is blocked");
+										if (result.status == 0) {
+											res.status(200).json(result);
 										} else {
+										const wallet_ids = getWalletIds("branch", bcode, adminbank.bcode);
+										createWallet([wallet_ids.operational, wallet_ids.master])
+											.then(function (result1) {
+												if (result1 != "" && !result1.includes("wallet already exists")) {
+													console.log(result1);
+													res.status(200).json({
+														status: 0,
+														message:
+															"Blockchain service was unavailable. Please try again.",
+														result: result1,
+													});
+												} else {
+													data.name = name;
+													data.bcode = bcode;
+													if (credit_limit !== "" && credit_limit != null) {
+														data.credit_limit = credit_limit;
+													}
+													if (cash_in_hand !== "" && cash_in_hand != null) {
+														data.cash_in_hand = cash_in_hand;
+													}
+													data.username = username;
+													data.address1 = address1;
+													data.state = state;
+													data.country = country;
+													data.zip = zip;
+													data.ccode = ccode;
+													data.mobile = mobile;
+													data.email = email;
+													data.bank_id = adminbank._id;
+													data.password = password;
+													data.working_from = working_from;
+													data.working_to = working_to;
+													data.wallet_ids.operational = wallet_ids.operational;
+													data.wallet_ids.master = wallet_ids.master;
+													let bankName = adminbank.name;
+						
+													data.save((err4) => {
+														if (err4) {
+															console.log(err4);
+															var message4 = err4;
+															if (err4.message) {
+																message4 = err4.message;
+															}
+															res.status(200).json({
+																status: 0,
+																message: message4,
+															});
+														} else {
+															Bank.updateOne(
+																{ _id: adminbank._id },
+																{ $inc: { total_branches: 1 } },
+																(err5) => {
+																	if (err5) {
+																		console.log(err5);
+																		var message5 = err5;
+																		if (err5.message) {
+																			message5 = err5.message;
+																		}
+																		res.status(200).json({
+																			status: 0,
+																			message: message5,
+																		});
+																	} else {
+																		let content =
+																			"<p>Your branch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
+																			config.mainIP +
+																			"/branch/" +
+																			bankName +
+																			"'>http://" +
+																			config.mainIP +
+																			"/branch/" +
+																			bankName +
+																			"</a></p><p><p>Your username: " +
+																			data.username +
+																			"</p><p>Your password: " +
+																			password +
+																			"</p>";
+																		sendMail(content, "Bank Branch Created", email);
+																		let content2 =
+																			"Your branch is added in E-Wallet application Login URL: http://" +
+																			config.mainIP +
+																			"/branch/" +
+																			bankName +
+																			" Your username: " +
+																			data.username +
+																			" Your password: " +
+																			password;
+																		sendSMS(content2, mobile);
+																		res.status(200).json({
+																			status: 1,
+																			message: "Branch Created",
+																			walletStatus: result.toString(),
+																		});
+																	}
+																}
+															);
+														}
+													});
+												}
+											})
+											.catch((error) => {
+												console.log(error);
+												res.status(200).json({
+													status: 0,
+													message: error.message,
+												});
+											});
+									}
+									});
+								}	
+							}
+						);
+					} else {
+						const wallet_ids = getWalletIds("branch", bcode, bank.bcode);
+						createWallet([wallet_ids.operational, wallet_ids.master])
+							.then(async function (result) {
+								if (result != "" && !result.includes("wallet already exists")) {
+									console.log(result);
+									res.status(200).json({
+										status: 0,
+										message:
+											"Blockchain service was unavailable. Please try again.",
+										result: result,
+									});
+								} else {
+									const createUserResponse = await keyclock.createUser(token,username,password,email,keyclock_constant.groups.BANK_BRANCH_GROUP);
+									console.log(createUserResponse);
+									if(createUserResponse){
+										res.status(200).json({
+											status: 0,
+											message: "Error creating Branch",
+										});
+									} else {
+
 											data.name = name;
 											data.bcode = bcode;
 											if (credit_limit !== "" && credit_limit != null) {
@@ -1995,39 +2175,39 @@ router.post("/addBranch", jwtTokenAuth, function (req, res) {
 											data.ccode = ccode;
 											data.mobile = mobile;
 											data.email = email;
-											data.bank_id = adminbank._id;
+											data.bank_id = bank._id;
 											data.password = password;
 											data.working_from = working_from;
 											data.working_to = working_to;
 											data.wallet_ids.operational = wallet_ids.operational;
 											data.wallet_ids.master = wallet_ids.master;
-											let bankName = adminbank.name;
-				
-											data.save((err4) => {
-												if (err4) {
-													console.log(err4);
-													var message4 = err4;
-													if (err4.message) {
-														message4 = err4.message;
+											let bankName = bank.name;
+
+											data.save((err6) => {
+												if (err6) {
+													console.log(err6);
+													var message6 = err6;
+													if (err6.message) {
+														message6 = err6.message;
 													}
 													res.status(200).json({
 														status: 0,
-														message: message4,
+														message: message6,
 													});
 												} else {
 													Bank.updateOne(
-														{ _id: adminbank._id },
+														{ _id: bank._id },
 														{ $inc: { total_branches: 1 } },
-														(err5) => {
-															if (err5) {
-																console.log(err5);
-																var message5 = err5;
-																if (err5.message) {
-																	message5 = err5.message;
+														(err7) => {
+															if (err7) {
+																console.log(err7);
+																var message7 = err7;
+																if (err7.message) {
+																	message7 = err7.message;
 																}
 																res.status(200).json({
 																	status: 0,
-																	message: message5,
+																	message: message7,
 																});
 															} else {
 																let content =
@@ -2065,131 +2245,20 @@ router.post("/addBranch", jwtTokenAuth, function (req, res) {
 													);
 												}
 											});
-										}
-									})
-									.catch((error) => {
-										console.log(error);
-										res.status(200).json({
-											status: 0,
-											message: error.message,
-										});
-									});
-							}
-							});
-						}	
-					}
-				);
-			} else {
-				const wallet_ids = getWalletIds("branch", bcode, bank.bcode);
-				createWallet([wallet_ids.operational, wallet_ids.master])
-					.then(function (result) {
-						if (result != "" && !result.includes("wallet already exists")) {
-							console.log(result);
-							res.status(200).json({
-								status: 0,
-								message:
-									"Blockchain service was unavailable. Please try again.",
-								result: result,
-							});
-						} else {
-							data.name = name;
-							data.bcode = bcode;
-							if (credit_limit !== "" && credit_limit != null) {
-								data.credit_limit = credit_limit;
-							}
-							if (cash_in_hand !== "" && cash_in_hand != null) {
-								data.cash_in_hand = cash_in_hand;
-							}
-							data.username = username;
-							data.address1 = address1;
-							data.state = state;
-							data.country = country;
-							data.zip = zip;
-							data.ccode = ccode;
-							data.mobile = mobile;
-							data.email = email;
-							data.bank_id = bank._id;
-							data.password = password;
-							data.working_from = working_from;
-							data.working_to = working_to;
-							data.wallet_ids.operational = wallet_ids.operational;
-							data.wallet_ids.master = wallet_ids.master;
-							let bankName = bank.name;
-
-							data.save((err6) => {
-								if (err6) {
-									console.log(err6);
-									var message6 = err6;
-									if (err6.message) {
-										message6 = err6.message;
 									}
-									res.status(200).json({
-										status: 0,
-										message: message6,
-									});
-								} else {
-									Bank.updateOne(
-										{ _id: bank._id },
-										{ $inc: { total_branches: 1 } },
-										(err7) => {
-											if (err7) {
-												console.log(err7);
-												var message7 = err7;
-												if (err7.message) {
-													message7 = err7.message;
-												}
-												res.status(200).json({
-													status: 0,
-													message: message7,
-												});
-											} else {
-												let content =
-													"<p>Your branch is added in E-Wallet application</p><p<p>&nbsp;</p<p>Login URL: <a href='http://" +
-													config.mainIP +
-													"/branch/" +
-													bankName +
-													"'>http://" +
-													config.mainIP +
-													"/branch/" +
-													bankName +
-													"</a></p><p><p>Your username: " +
-													data.username +
-													"</p><p>Your password: " +
-													password +
-													"</p>";
-												sendMail(content, "Bank Branch Created", email);
-												let content2 =
-													"Your branch is added in E-Wallet application Login URL: http://" +
-													config.mainIP +
-													"/branch/" +
-													bankName +
-													" Your username: " +
-													data.username +
-													" Your password: " +
-													password;
-												sendSMS(content2, mobile);
-												res.status(200).json({
-													status: 1,
-													message: "Branch Created",
-													walletStatus: result.toString(),
-												});
-											}
-										}
-									);
 								}
+							})
+							.catch((error) => {
+								console.log(error);
+								res.status(200).json({
+									status: 0,
+									message: error.message,
+								});
 							});
-						}
-					})
-					.catch((error) => {
-						console.log(error);
-						res.status(200).json({
-							status: 0,
-							message: error.message,
-						});
-					});
-			}
-		}
-	);
+					}
+				}
+			);
+	}
 });
 
 router.post("/editBranch", jwtTokenAuth, function (req, res) {

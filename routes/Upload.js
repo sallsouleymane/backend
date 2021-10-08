@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const jwt_decode = require("jwt-decode");
 const Bank = require("../models/Bank");
 const BankUser = require("../models/BankUser");
 const Infra = require("../models/Infra");
@@ -11,6 +12,9 @@ const path = require("path");
 const jwtTokenAuth = require("./JWTTokenAuth");
 const getTypeClass = require("./utils/getTypeClass");
 const { errorMessage, catchError } = require("./utils/errorHandler");
+const keyclock = require('./utils/keyClock')
+const keyclock_constant = require("../keyclockConstants");
+
 
 router.get("/uploads/:id/:filePath", (req, res) => {
 	const id = req.params.id;
@@ -121,80 +125,89 @@ router.post("/fileUpload", jwtTokenAuth, function (req, res) {
 	);
 });
 
-router.post("/:user/imageUpload", jwtTokenAuth, function (req, res) {
-	const username = req.sign_creds.username;
-	const Type = getTypeClass(user);
-	Type.findOne(
-		{
-			username,
-			status: 1,
-		},
-		function (err, user) {
-			let result = errorMessage(
-				err,
-				user,
-				"Token changed or user not valid. Try to login again or contact system administrator."
-			);
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				let form = new IncomingForm();
-				if (!fs.existsSync(config.uploadPath)) {
-					fs.mkdirSync(config.uploadPath);
-				}
-				const dir = path.resolve(config.uploadPath + user._id);
-				form.parse(req, function (err2, fields, files) {
-					let fn = files.file.name.split(".").pop();
-					fn = fn.toLowerCase();
+router.post("/:user/imageUpload", function (req, res) {
+	const user = req.params.user;
+	const { token } = req.query;
+	var username = keyclock.getUsername(token);
+	if(!keyclock.checkRoles(token, keyclock_constant.roles.INFRA_ADMIN_ROLE)) {
+		res.status(200).json({
+			status: 0,
+			message: "Unauthorized to login",
+		});
+	}else{
+		const Type = getTypeClass(user);
+		Type.findOne(
+			{
+				username,
+				status: 1,
+			},
+			function (err, user) {
+				let result = errorMessage(
+					err,
+					user,
+					"Token changed or user not valid. Try to login again or contact system administrator."
+				);
+				if (result.status == 0) {
+					res.status(200).json(result);
+				} else {
+					let form = new IncomingForm();
+					if (!fs.existsSync(config.uploadPath)) {
+						fs.mkdirSync(config.uploadPath);
+					}
+					const dir = path.resolve(config.uploadPath + user._id);
+					form.parse(req, function (err2, fields, files) {
+						let fn = files.file.name.split(".").pop();
+						fn = fn.toLowerCase();
 
-					if (fn !== "jpeg" && fn !== "png" && fn !== "jpg") {
-						res.status(200).json({
-							status: 0,
-							message: "Only JPG / PNG files are accepted",
-						});
-					} else {
-						if (!fs.existsSync(dir)) {
-							fs.mkdirSync(dir);
-						}
-
-						let oldpath = files.file.path;
-						let newpath = dir + "/" + files.file.name;
-						let savepath = user._id + "/" + files.file.name;
-
-						fs.readFile(oldpath, function (err3, data) {
-							if (err3) {
-								res.status(200).json({
-									status: 0,
-									message: "File upload error",
-								});
-							} else {
-								fs.writeFile(newpath, data, function (err4) {
-									if (err4) {
-										console.log(err4);
-										var message4 = err4;
-										if (err4.message) {
-											message4 = err4.message;
-										}
-										res.status(200).json({
-											status: 0,
-											message: message4,
-										});
-									} else {
-										res.status(200).json({
-											status: 1,
-											name: savepath,
-										});
-									}
-								});
+						if (fn !== "jpeg" && fn !== "png" && fn !== "jpg") {
+							res.status(200).json({
+								status: 0,
+								message: "Only JPG / PNG files are accepted",
+							});
+						} else {
+							if (!fs.existsSync(dir)) {
+								fs.mkdirSync(dir);
 							}
 
-							fs.unlink(oldpath, function (err45) {});
-						});
-					}
-				});
+							let oldpath = files.file.path;
+							let newpath = dir + "/" + files.file.name;
+							let savepath = user._id + "/" + files.file.name;
+
+							fs.readFile(oldpath, function (err3, data) {
+								if (err3) {
+									res.status(200).json({
+										status: 0,
+										message: "File upload error",
+									});
+								} else {
+									fs.writeFile(newpath, data, function (err4) {
+										if (err4) {
+											console.log(err4);
+											var message4 = err4;
+											if (err4.message) {
+												message4 = err4.message;
+											}
+											res.status(200).json({
+												status: 0,
+												message: message4,
+											});
+										} else {
+											res.status(200).json({
+												status: 1,
+												name: savepath,
+											});
+										}
+									});
+								}
+
+								fs.unlink(oldpath, function (err45) {});
+							});
+						}
+					});
+				}
 			}
-		}
-	);
+		);
+	}
 });
 
 router.post("/ipfsUpload", function (req, res) {
@@ -247,6 +260,7 @@ router.post("/ipfsUpload", function (req, res) {
 	});
 });
 
+
 async function fileUpload(p) {
 	const options = {
 		method: "POST",
@@ -265,5 +279,7 @@ async function fileUpload(p) {
 		throw err;
 	}
 }
+
+
 
 module.exports = router;

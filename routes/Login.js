@@ -1,10 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
+const jwt_decode = require("jwt-decode");
+const config = require("../config.json");
+var request = require('request');
 
 //utils
 const jwtsign = require("./utils/jwtsign");
 const { errorMessage, catchError } = require("./utils/errorHandler");
+const keyclock = require('./utils/keyClock')
+const keyclock_constant = require("../keyclockConstants");
 
 const Infra = require("../models/Infra");
 const User = require("../models/User");
@@ -21,6 +26,333 @@ const Partner = require("../models/partner/Partner");
 const PartnerBranch = require("../models/partner/Branch");
 const PartnerCashier = require("../models/partner/Cashier");
 const PartnerUser = require("../models/partner/User");
+const { validate } = require("node-cron");
+
+
+
+
+router.post("/login", async function (req, res) {
+	const { username, password } = req.body;
+	Infra.findOne(
+		{
+			username: { $regex: new RegExp(username, "i") },
+		},
+		async function (err, user) {
+			var result = errorMessage(err, user, "Incorrect username");
+			if (result.status == 0) {
+				res.status(200).json(result);
+			} else {
+				const tokenResponse = await keyclock.getToken(username, password);
+					if(JSON.parse(tokenResponse).hasOwnProperty('error')){
+						res.status(200).json({
+							status: 0,
+							message: "Error getting token",
+						});
+
+					}else{
+						const token =JSON.parse(tokenResponse).access_token;
+						if(!keyclock.checkRoles(token, keyclock_constant.roles.INFRA_ADMIN_ROLE)) {
+							res.status(200).json({
+								status: 0,
+								message: "Unauthorized to login",
+							});
+						}else{
+							if (user.profile_id && user.profile_id !== "") {
+								Profile.findOne(
+									{
+										_id: user.profile_id,
+									},
+									function (err1, profile) {
+										res.status(200).json({
+											token: token,
+											permissions: profile.permissions,
+											name: user.name,
+											isAdmin: user.isAdmin,
+											initial_setup: user.initial_setup,
+										});
+									}
+								);
+							} else {
+								if (user.isAdmin) {
+									res.status(200).json({
+										token: token,
+										permissions: "all",
+										name: user.name,
+										isAdmin: user.isAdmin,
+										initial_setup: user.initial_setup,
+									});
+								} else {
+									res.status(200).json({
+										token: token,
+										permissions: "",
+										name: user.name,
+										isAdmin: user.isAdmin,
+										initial_setup: user.initial_setup,
+									});
+								}
+							}
+						}
+				}
+						
+			}
+		}
+	);
+});
+
+router.post("/bankLogin", function (req, res) {
+	const { username, password } = req.body;
+	console.log(username);
+	Bank.findOne(
+		{
+			username,
+		},
+		async function (err, bank) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!bank || bank == null || bank == undefined){
+				BankUser.findOne(
+					{ username, password, role: "bankAdmin" },
+					"-password",
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message1,
+							});
+						}else if (!admin || admin==null || admin == undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
+								} else if (adminbank.status == -1) {
+									res.status(200).json({
+										status: 0,
+										message: "Your account has been blocked, pls contact the admin!",
+									});	
+								} else {
+									let sign_creds = { username: username, type: "bankUser" };
+									const token = jwtsign(sign_creds);
+									res.status(200).json({
+										token: token,
+										name: adminbank.name,
+										initial_setup: adminbank.initial_setup,
+										username: adminbank.username,
+										mobile: adminbank.mobile,
+										status: adminbank.status,
+										contract: adminbank.contract,
+										logo: adminbank.logo,
+										id: adminbank._id,
+										theme: adminbank.theme,
+										admin: true,
+									});
+											
+								}
+							});
+						}	
+					}
+				);
+			
+			} else if (bank.status == -1) {
+				res.status(200).json({
+					status: 0,
+					message: "Your account has been blocked, pls contact the admin!",
+				});
+			} else {
+				const tokenResponse = await keyclock.getToken(username, password);
+					if(JSON.parse(tokenResponse).hasOwnProperty('error')){
+						res.status(200).json({
+							status: 0,
+							message: "Error getting token",
+						});
+
+					}else{
+						const token =JSON.parse(tokenResponse).access_token;
+						if(!keyclock.checkRoles(token, keyclock_constant.roles.BANK_ADMIN_ROLE)) {
+							res.status(200).json({
+								status: 0,
+								message: "Unauthorized to login",
+							});
+						}else{
+
+							res.status(200).json({
+								token: token,
+								name: bank.name,
+								initial_setup: bank.initial_setup,
+								username: bank.username,
+								mobile: bank.mobile,
+								status: bank.status,
+								theme: bank.theme,
+								contract: bank.contract,
+								logo: bank.logo,
+								id: bank._id,
+								admin: false,
+							});
+						}
+					}
+				
+			}
+		}
+	);
+});
+
+router.post("/branchLogin", function (req, res) {
+	const { username, password } = req.body;
+	Branch.findOne(
+		{
+			username,
+		},
+		function (err, branch) {
+			if (err) {
+				var message = err;
+				if (err.message) {
+					message = err.message;
+				}
+				res.status(200).json({
+					status: 0,
+					message: message,
+				});
+			}else if (!branch || branch == null || branch == undefined){
+				BankUser.findOne(
+					{ username, password, role: "branchAdmin" },
+					"-password",
+					function (err1, admin) {
+						if (err1) {
+							console.log(err1);
+							var message1 = err1;
+							if (err1.message) {
+								message1 = err1.message;
+							}
+							res.status(200).json({
+								status: 0,
+								message: message1,
+							});
+						}else if (!admin || admin==null || admin == undefined){
+							res.status(200).json({
+								status: 0,
+								message: "User not found",
+							});
+						} else {
+							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
+								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
+								if (result2.status == 0) {
+									res.status(200).json(result2);
+								} else if (adminbank.status == -1) {
+									res.status(200).json({
+										status: 0,
+										message: "Your account has been blocked, pls contact the admin!",
+									});	
+								} else {
+									Branch.findOne({ _id: admin.branch_id }, (err3, adminbranch) => {
+										var result3 = errorMessage(err3, adminbranch, "Bank is blocked");
+										if (result3.status == 0) {
+											res.status(200).json(result3);
+										} else if (adminbranch.status == -1) {
+											res.status(200).json({
+												status: 0,
+												message: "Your account has been blocked, pls contact the admin!",
+											});	
+										} else {
+											let sign_creds = { username: username, type: "bankUser" };
+											const token = jwtsign(sign_creds);
+											res.status(200).json({
+												token: token,
+												name: adminbranch.name,
+												initial_setup: adminbranch.initial_setup,
+												username: adminbranch.username,
+												status: adminbranch.status,
+												email: adminbranch.email,
+												bank_name: adminbank.name,
+												theme: adminbank.theme,
+												mobile: adminbranch.mobile,
+												logo: adminbank.logo,
+												bank_id: adminbank._id,
+												id: adminbranch._id,
+												credit_limit: adminbranch.credit_limit,
+												admin: true,
+											});
+
+										}
+									});	
+								}
+							});
+						}	
+					}
+				);
+			
+			} else if (branch.status == -1) {
+				res.status(200).json({
+					status: 0,
+					message: "Your account has been blocked, pls contact the admin!",
+				});
+			} else {
+				Bank.findOne(
+					{
+						_id: branch.bank_id,
+					},
+					async function (err4, ba) {
+						var result4 = errorMessage(err4, ba, "Bank not found");
+						if (result4.status == 0) {
+							res.status(200).json(result4);
+						} else {
+							const tokenResponse = await keyclock.getToken(username, password);
+							if(JSON.parse(tokenResponse).hasOwnProperty('error')){
+								res.status(200).json({
+									status: 0,
+									message: "Invalid Credentials",
+								});
+							}else{
+								const token =JSON.parse(tokenResponse).access_token;
+								if(!keyclock.checkRoles(token, keyclock_constant.roles.BANK_BRANCH_ADMIN_ROLE)) {
+									res.status(200).json({
+										status: 0,
+										message: "Unauthorized to login",
+									});
+								}else{
+									let logo = ba.logo;
+									res.status(200).json({
+										token: token,
+										name: branch.name,
+										initial_setup: branch.initial_setup,
+										username: branch.username,
+										status: branch.status,
+										email: branch.email,
+										bank_name: ba.name,
+										mobile: branch.mobile,
+										logo: logo,
+										theme: ba.theme,
+										bank_id: ba._id,
+										id: branch._id,
+										credit_limit: branch.credit_limit,
+										admin: false,
+									});
+								}
+							}
+							
+						}
+					}
+				);
+			}
+		}
+	);
+});
+
 
 router.post("/partnerCashier/login", function (req, res) {
 	const { username, password } = req.body;
@@ -630,333 +962,6 @@ router.post("/merchant/login", (req, res) => {
 	);
 });
 
-router.post("/login", async function (req, res) {
-	const { username, password } = req.body;
-	Infra.findOne(
-		{
-			username: { $regex: new RegExp(username, "i") },
-		},
-		function (err, user) {
-			var result = errorMessage(err, user, "Incorrect username");
-			if (result.status == 0) {
-				res.status(200).json(result);
-			} else {
-				bcrypt.compare(password, user.password, function(passerr, isValid) {
-					console.log(isValid);
-					if (passerr) {
-						res.status(200).json({
-							status: 0,
-							message: passerr,
-						});
-					} else if (isValid === false || isValid === "false"){
-						console.log("dwfdw");
-						res.status(200).json({
-							status: 0,
-							message: "Incorrect Password",
-						});
-					} else{
-						let sign_creds = { username: username, type: "infra" };
-						const token = jwtsign(sign_creds);
-
-						if (user.profile_id && user.profile_id !== "") {
-						Profile.findOne(
-								{
-									_id: user.profile_id,
-								},
-								function (err1, profile) {
-									res.status(200).json({
-										token: token,
-										permissions: profile.permissions,
-										name: user.name,
-										isAdmin: user.isAdmin,
-										initial_setup: user.initial_setup,
-									});
-								}
-							);
-								} else {
-									if (user.isAdmin) {
-										res.status(200).json({
-											token: token,
-											permissions: "all",
-											name: user.name,
-											isAdmin: user.isAdmin,
-											initial_setup: user.initial_setup,
-										});
-									} else {
-										res.status(200).json({
-											token: token,
-											permissions: "",
-											name: user.name,
-											isAdmin: user.isAdmin,
-											initial_setup: user.initial_setup,
-										});
-									}
-								}
-
-					}
-
-				});
-			}
-		}
-	);
-});
-
-router.post("/bankLogin", function (req, res) {
-	const { username, password } = req.body;
-	Bank.findOne(
-		{
-			username,
-		},
-		function (err, bank) {
-			if (err) {
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			}else if (!bank || bank == null || bank == undefined){
-				BankUser.findOne(
-					{ username, password, role: "bankAdmin" },
-					"-password",
-					function (err1, admin) {
-						if (err1) {
-							console.log(err1);
-							var message1 = err1;
-							if (err1.message) {
-								message1 = err1.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message1,
-							});
-						}else if (!admin || admin==null || admin == undefined){
-							res.status(200).json({
-								status: 0,
-								message: "User not found",
-							});
-						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
-								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
-								if (result2.status == 0) {
-									res.status(200).json(result2);
-								} else if (adminbank.status == -1) {
-									res.status(200).json({
-										status: 0,
-										message: "Your account has been blocked, pls contact the admin!",
-									});	
-								} else {
-									let sign_creds = { username: username, type: "bankUser" };
-									const token = jwtsign(sign_creds);
-									res.status(200).json({
-										token: token,
-										name: adminbank.name,
-										initial_setup: adminbank.initial_setup,
-										username: adminbank.username,
-										mobile: adminbank.mobile,
-										status: adminbank.status,
-										contract: adminbank.contract,
-										logo: adminbank.logo,
-										id: adminbank._id,
-										theme: adminbank.theme,
-										admin: true,
-									});
-											
-								}
-							});
-						}	
-					}
-				);
-			
-			} else if (bank.status == -1) {
-				res.status(200).json({
-					status: 0,
-					message: "Your account has been blocked, pls contact the admin!",
-				});
-			} else {
-				bcrypt.compare(password, bank.password, function(passerr, isValid) {
-					console.log(isValid);
-					if (passerr) {
-						res.status(200).json({
-							status: 0,
-							message: passerr,
-						});
-					} else if (isValid === false || isValid === "false"){
-						console.log("dwfdw");
-						res.status(200).json({
-							status: 0,
-							message: "Incorrect Password",
-						});
-					} else{
-							let sign_creds = { username: username, type: "bank" };
-							const token = jwtsign(sign_creds);
-
-							res.status(200).json({
-								token: token,
-								name: bank.name,
-								initial_setup: bank.initial_setup,
-								username: bank.username,
-								mobile: bank.mobile,
-								status: bank.status,
-								theme: bank.theme,
-								contract: bank.contract,
-								logo: bank.logo,
-								id: bank._id,
-								admin: false,
-							});
-					}
-				});
-			}
-		}
-	);
-});
-
-router.post("/branchLogin", function (req, res) {
-	const { username, password } = req.body;
-	Branch.findOne(
-		{
-			username,
-		},
-		function (err, branch) {
-			if (err) {
-				var message = err;
-				if (err.message) {
-					message = err.message;
-				}
-				res.status(200).json({
-					status: 0,
-					message: message,
-				});
-			}else if (!branch || branch == null || branch == undefined){
-				BankUser.findOne(
-					{ username, password, role: "branchAdmin" },
-					"-password",
-					function (err1, admin) {
-						if (err1) {
-							console.log(err1);
-							var message1 = err1;
-							if (err1.message) {
-								message1 = err1.message;
-							}
-							res.status(200).json({
-								status: 0,
-								message: message1,
-							});
-						}else if (!admin || admin==null || admin == undefined){
-							res.status(200).json({
-								status: 0,
-								message: "User not found",
-							});
-						} else {
-							Bank.findOne({ _id: admin.bank_id }, (err2, adminbank) => {
-								var result2 = errorMessage(err2, adminbank, "Bank is blocked");
-								if (result2.status == 0) {
-									res.status(200).json(result2);
-								} else if (adminbank.status == -1) {
-									res.status(200).json({
-										status: 0,
-										message: "Your account has been blocked, pls contact the admin!",
-									});	
-								} else {
-									Branch.findOne({ _id: admin.branch_id }, (err3, adminbranch) => {
-										var result3 = errorMessage(err3, adminbranch, "Bank is blocked");
-										if (result3.status == 0) {
-											res.status(200).json(result3);
-										} else if (adminbranch.status == -1) {
-											res.status(200).json({
-												status: 0,
-												message: "Your account has been blocked, pls contact the admin!",
-											});	
-										} else {
-											let sign_creds = { username: username, type: "bankUser" };
-											const token = jwtsign(sign_creds);
-											res.status(200).json({
-												token: token,
-												name: adminbranch.name,
-												initial_setup: adminbranch.initial_setup,
-												username: adminbranch.username,
-												status: adminbranch.status,
-												email: adminbranch.email,
-												bank_name: adminbank.name,
-												theme: adminbank.theme,
-												mobile: adminbranch.mobile,
-												logo: adminbank.logo,
-												bank_id: adminbank._id,
-												id: adminbranch._id,
-												credit_limit: adminbranch.credit_limit,
-												admin: true,
-											});
-
-										}
-									});	
-								}
-							});
-						}	
-					}
-				);
-			
-			} else if (branch.status == -1) {
-				res.status(200).json({
-					status: 0,
-					message: "Your account has been blocked, pls contact the admin!",
-				});
-			} else {
-				Bank.findOne(
-					{
-						_id: branch.bank_id,
-					},
-					function (err4, ba) {
-						var result4 = errorMessage(err4, ba, "Bank not found");
-						if (result4.status == 0) {
-							res.status(200).json(result4);
-						} else {
-
-							bcrypt.compare(password, branch.password, function(passerr, isValid) {
-								console.log(isValid);
-								if (passerr) {
-									res.status(200).json({
-										status: 0,
-										message: passerr,
-									});
-								} else if (isValid === false || isValid === "false"){
-									console.log("dwfdw");
-									res.status(200).json({
-										status: 0,
-										message: "Incorrect Password",
-									});
-								} else{
-
-									let logo = ba.logo;
-									let sign_creds = { username: username, type: "branch" };
-									const token = jwtsign(sign_creds);
-
-									res.status(200).json({
-										token: token,
-										name: branch.name,
-										initial_setup: branch.initial_setup,
-										username: branch.username,
-										status: branch.status,
-										email: branch.email,
-										bank_name: ba.name,
-										mobile: branch.mobile,
-										logo: logo,
-										theme: ba.theme,
-										bank_id: ba._id,
-										id: branch._id,
-										credit_limit: branch.credit_limit,
-										admin: false,
-									});
-								}
-							});
-						}
-					}
-				);
-			}
-		}
-	);
-});
 
 router.post("/cashierLogin", function (req, res) {
 	const { username, password } = req.body;
