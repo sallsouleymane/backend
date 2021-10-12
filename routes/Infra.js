@@ -101,7 +101,7 @@ router.post("/setupUpdate", async function (req, res) {
 						"</p><p>Your password: " +
 						password +
 						"</p>";
-						sendMail(content, "Infra Account Activated", data.email);
+						// sendMail(content, "Infra Account Activated", data.email);
 						let content2 =
 						"Your Infra account is activated in E-Wallet application. Login URL: http://" +
 						config.mainIP +

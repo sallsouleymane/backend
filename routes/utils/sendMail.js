@@ -7,8 +7,8 @@ module.exports = (content, subject, email) => {
 		port: 587,
 		secure: false, // true for 465, false for other ports
 		auth: {
-			user: "beyond.ewallet@gmail.com", // generated ethereal user
-			pass: "rwwbfeydrgjafutc", // generated ethereal password
+			user: "siliconvalley.beyonwallet@gmail.com", // generated ethereal user
+			pass: "life2work4SV!", // generated ethereal password
 		},
 	});
 	return transporter.sendMail({
